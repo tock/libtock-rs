@@ -27,6 +27,9 @@ SECTIONS {
         KEEP (*(.start))
         *(.text*)
         *(.rodata*)
+
+        /* C++ exception unwinding information */
+        *(.ARM.extab* .gnu.linkonce.armextab.*)
     } > FLASH =0xFF
 
 /* ARM Exception support
@@ -95,6 +98,13 @@ SECTIONS {
         _stack = .;
         . += 1024;
         _estack = .;
+    } > SRAM
+
+    .app_heap :
+    {
+        _app_heap = .;
+        . += 1024;
+        _eapp_heap = .;
     } > SRAM
 
     .kernel_heap :

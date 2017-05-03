@@ -16,13 +16,7 @@
     "disable-redzone": true,
     "pre-link-args": {
       "ld": [
-        "-relocatable",
         "-Tlayout.ld"
       ]
-    },
-    "post-link-args": {
-      "ld": [
-        "-no-gc-sections"
-      ] 
     }
 }
