@@ -11,4 +11,4 @@ lto = true
 
 [profile.release]
 panic = "abort"
-lto = false
+lto = true
