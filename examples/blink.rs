@@ -1,12 +1,10 @@
 #![no_std]
-#![no_main]
 
-#[macro_use]
 extern crate tock;
 
 use tock::{led, timer};
 
-tock_main!({
+fn main() {
     let led_count = led::count();
     loop {
         for i in 0..led_count {
@@ -14,5 +12,4 @@ tock_main!({
             timer::delay_ms(500);
         }
     }
-});
-
+}

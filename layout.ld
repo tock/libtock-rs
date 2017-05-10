@@ -24,7 +24,7 @@ SECTIONS {
     .text :
     {
         _text = .;
-        KEEP (*(.start))
+        KEEP (*(.text._start))
         *(.text*)
         *(.rodata*)
 
