@@ -1,2 +1,8 @@
-[dependencies.core]
+[dependencies]
+core = {}
+alloc = {}
 
+[dependencies.compiler_builtins]
+features = ["mem"]
+git = "https://github.com/rust-lang-nursery/compiler-builtins"
+stage = 1
