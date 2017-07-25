@@ -2,20 +2,26 @@ use core::mem;
 use core::cell::Cell;
 use syscalls::{self, command, yieldk_for};
 
-pub fn subscribe(cb: extern fn(usize, usize, usize, usize), ud: usize) {
+pub unsafe fn subscribe(cb: extern fn(usize, usize, usize, usize), ud: usize) {
     syscalls::subscribe(3, 0, cb, ud);
 }
 
 pub fn start_oneshot(ms: u32) {
-    command(3, 1, ms as isize);
+    unsafe {
+        command(3, 1, ms as isize);
+    }
 }
 
 pub fn start_repeating(ms: u32) {
-    command(3, 2, ms as isize);
+    unsafe {
+        command(3, 2, ms as isize);
+    }
 }
 
 pub fn stop(ms: u32) {
-    command(3, 3, ms as isize);
+    unsafe {
+        command(3, 3, ms as isize);
+    }
 }
 
 pub fn delay_ms(ms: u32) {
@@ -27,8 +33,10 @@ pub fn delay_ms(ms: u32) {
     }
 
     let expired = Cell::new(false);
-    subscribe(cb, &expired as *const _ as usize);
-    start_oneshot(ms);
-    yieldk_for(|| expired.get() );
+    unsafe {
+        subscribe(cb, &expired as *const _ as usize);
+        start_oneshot(ms);
+        yieldk_for(|| expired.get() );
+    }
 }
 

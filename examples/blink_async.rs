@@ -9,6 +9,8 @@ extern fn timer_event(_: usize, _: usize, _: usize, _: usize) {
 }
 
 fn main() {
-    timer::subscribe(timer_event, 0);
+    unsafe {
+        timer::subscribe(timer_event, 0);
+    }
     timer::start_repeating(500);
 }

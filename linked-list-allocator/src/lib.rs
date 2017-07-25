@@ -34,10 +34,7 @@ impl BaseHeap {
     /// This function must be called at most once and must only be used on an
     /// empty heap.
     pub unsafe fn init(&mut self, heap_bottom: usize, heap_size: usize) {
-        let heap = self.heap();
-        heap.bottom = heap_bottom;
-        heap.size = heap_size;
-        heap.holes = HoleList::new(heap_bottom, heap_size);
+        self.heap().init(heap_bottom, heap_size);
     }
 
 }

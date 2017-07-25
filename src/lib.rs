@@ -1,17 +1,20 @@
-#![feature(asm,const_fn,global_allocator,lang_items,naked_functions)]
+#![feature(asm,alloc,compiler_builtins_lib,const_fn,global_allocator,lang_items,naked_functions)]
 #![no_std]
 
 pub mod syscalls;
+pub mod console;
 pub mod timer;
 pub mod led;
 
+extern crate alloc;
+extern crate compiler_builtins;
 extern crate linked_list_allocator;
 
 mod lang_items;
 
 use core::ptr;
 use core::mem::size_of;
-use linked_list_allocator::{Heap,BaseHeap};
+use linked_list_allocator::BaseHeap;
 
 #[global_allocator]
 static ALLOCATOR : BaseHeap = BaseHeap;
@@ -29,13 +32,15 @@ pub extern "C" fn _start(mem_start: usize, app_heap_break: usize,
     }
 
     unsafe {
+        asm!("mov r9, $0" : : "r"(app_heap_break) : : "volatile");
+        syscalls::memop(0, mem_start + 2048);
+
         // Setup stack
-        let new_stack = mem_start + size_of::<Heap>();
+        let new_stack = mem_start + 1024;
         asm!("mov sp, $0" : : "r"(new_stack) : : "volatile");
 
-
         let heap_start = new_stack + size_of::<usize>();
-        let heap_size = app_heap_break - heap_start;
+        let heap_size = 1024;
         BaseHeap.init(heap_start, heap_size);
 
         // arguments are not used in Tock applications
