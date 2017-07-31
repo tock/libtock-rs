@@ -1,9 +1,10 @@
 use core::{fmt,mem};
-use core::cell::Cell;
 use core::result::Result;
-use syscalls::{self, allow, yieldk_for};
+use syscalls::{self, allow};
 
 use alloc::{String, VecDeque};
+
+const DRIVER_NUM: u32 = 0;
 
 pub struct Console {
     queue: VecDeque<String>,
@@ -51,11 +52,11 @@ impl fmt::Write for Console {
 }
 
 unsafe fn putstr_async(string: String, cb: extern fn (usize, usize, usize, usize), ud: usize) -> isize {
-  let ret = allow(0, 1, string.as_bytes());
+  let ret = allow(DRIVER_NUM, 1, string.as_bytes());
   if ret < 0 {
       return ret;
   }
 
-  return syscalls::subscribe(0, 1, cb, ud);
+  return syscalls::subscribe(DRIVER_NUM, 1, cb, ud);
 }
 
