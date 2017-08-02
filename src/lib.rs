@@ -32,12 +32,16 @@ pub extern "C" fn _start(mem_start: usize, app_heap_break: usize,
     }
 
     unsafe {
-        asm!("mov r9, $0" : : "r"(app_heap_break) : : "volatile");
+        // Setup stack
         syscalls::memop(0, mem_start + 2048);
 
-        // Setup stack
         let new_stack = mem_start + 1024;
         asm!("mov sp, $0" : : "r"(new_stack) : : "volatile");
+        syscalls::memop(10, new_stack);
+
+        asm!("mov r9, $0" : : "r"(new_stack) : : "volatile");
+        syscalls::memop(11, new_stack);
+
 
         let heap_start = new_stack + size_of::<usize>();
         let heap_size = 1024;
