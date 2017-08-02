@@ -39,8 +39,9 @@ pub extern "C" fn _start(mem_start: usize, app_heap_break: usize,
         asm!("mov sp, $0" : : "r"(new_stack) : : "volatile");
         syscalls::memop(10, new_stack);
 
-        asm!("mov r9, $0" : : "r"(new_stack) : : "volatile");
-        syscalls::memop(11, new_stack);
+        let new_heap = new_stack + 128;
+        asm!("mov r9, $0" : : "r"(new_heap) : : "volatile");
+        syscalls::memop(11, new_heap);
 
 
         let heap_start = new_stack + size_of::<usize>();
