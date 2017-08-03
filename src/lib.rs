@@ -1,7 +1,8 @@
-#![feature(asm,alloc,compiler_builtins_lib,const_fn,global_allocator,lang_items,naked_functions)]
+#![feature(asm,alloc,allocator_api,compiler_builtins_lib,const_fn,global_allocator,lang_items,naked_functions)]
 #![no_std]
 
 pub mod syscalls;
+pub mod ipc;
 pub mod sensors;
 pub mod console;
 pub mod timer;
