@@ -2,6 +2,7 @@
 #![no_std]
 
 pub mod syscalls;
+pub mod sensors;
 pub mod console;
 pub mod timer;
 pub mod led;
@@ -23,7 +24,7 @@ static ALLOCATOR : BaseHeap = BaseHeap;
 #[doc(hidden)]
 #[no_mangle]
 #[naked]
-pub extern "C" fn _start(mem_start: usize, app_heap_break: usize,
+pub extern "C" fn _start(mem_start: usize, _app_heap_break: usize,
                          _kernel_memory_break: usize) -> ! {
 
     extern "C" {
