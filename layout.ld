@@ -15,7 +15,7 @@ ENTRY(_start)
  * actual location in flash where the app is placed.
  */
 MEMORY {
-    FLASH (rx) : ORIGIN = 0x00030030, LENGTH = PROG_LENGTH
+    FLASH (rx) : ORIGIN = 0x00040030, LENGTH = PROG_LENGTH
     SRAM (RWX) : ORIGIN = 0x00000000, LENGTH = RAM_LENGTH
 }
 
