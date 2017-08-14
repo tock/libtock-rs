@@ -1,4 +1,5 @@
 use core::cell::Cell;
+use core::fmt;
 use core::mem;
 use syscalls::{self, yieldk_for};
 
@@ -6,11 +7,17 @@ const DRIVER_NUM: u32 = 11;
 
 pub struct Ninedof;
 
-#[derive(Copy, Clone, Default)]
+#[derive(Copy, Clone, Default, Debug)]
 pub struct NinedofReading {
     pub x: i32,
     pub y: i32,
     pub z: i32
+}
+
+impl fmt::Display for NinedofReading {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "({}, {}, {})", self.x, self.y, self.z)
+    }
 }
 
 #[derive(Default)]

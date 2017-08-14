@@ -36,7 +36,8 @@ fn main() {
     };
 
     loop {
-        //let accel = ninedof.read_acceleration();
+        let accel = ninedof.read_acceleration();
+        writeln!(&mut console, "{}", accel).unwrap();
         updates[4] = 0xad;
         if let Err(_) = ipc_client.notify() {
             write!(&mut console, "Nope...\n").unwrap_or(());
