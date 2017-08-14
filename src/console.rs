@@ -1,6 +1,6 @@
 use core::{fmt,mem};
 use core::result::Result;
-use syscalls::{self, allow, yieldk};
+use syscalls::{self, allow};
 
 use alloc::{String, VecDeque};
 
@@ -22,12 +22,12 @@ impl Console {
     pub fn write(&mut self, string: String) {
         if self.outstanding.is_none() {
             unsafe {
-                putstr_async(&string, Self::cb, self as *const _ as usize);
+                if putstr_async(&string, Self::cb, self as *const _ as usize) >= 0 {
+                    self.outstanding = Some(string);
+                }
             }
-            self.outstanding = Some(string);
         } else {
             self.queue.push_back(string);
-            yieldk();
         }
     }
 
@@ -53,11 +53,20 @@ impl fmt::Write for Console {
 }
 
 unsafe fn putstr_async(string: &String, cb: extern fn (usize, usize, usize, usize), ud: usize) -> isize {
-  let ret = allow(DRIVER_NUM, 1, string.as_bytes());
+  let mut ret = allow(DRIVER_NUM, 1, string.as_bytes());
   if ret < 0 {
       return ret;
   }
 
-  return syscalls::subscribe(DRIVER_NUM, 1, cb, ud);
+  ret = syscalls::subscribe(DRIVER_NUM, 1, cb, ud);
+  if ret < 0 {
+      return ret;
+  }
+
+  ret = syscalls::command(DRIVER_NUM, 1, string.len() as isize);
+  if ret < 0 {
+      return ret;
+  }
+  ret
 }
 
