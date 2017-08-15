@@ -1,3 +1,5 @@
+use core::cell::Cell;
+use core::mem;
 use syscalls;
 use alloc::heap::Heap;
 use alloc::String;
@@ -42,35 +44,23 @@ impl Client {
     }
 
     pub fn notify(&mut self) -> Result<(), ()> {
+        let done = Cell::new(false);
+        let ptr = &done as *const _ as usize;
         unsafe {
+            if syscalls::subscribe(DRIVER_NUM, self.pid, Self::cb, ptr) < 0 {
+                return Err(())
+            }
             if syscalls::command(DRIVER_NUM, self.pid, 0) < 0 {
-                Err(())
-            } else {
-                Ok(())
+                return Err(())
             }
         }
-    }
-
-    pub fn subscribe(&mut self, func: Box<FnMut()>) -> Result<(), ()> {
-        let func = Box::into_raw(Box::new(func));
-        unsafe {
-            let res = syscalls::subscribe(DRIVER_NUM, self.pid, Self::cb,
-                        func as usize);
-            if res < 0 {
-                Box::from_raw(func);
-                Err(())
-            } else {
-                Ok(())
-            }
-        }
+        syscalls::yieldk_for(|| done.get());
+        Ok(())
     }
 
     extern fn cb(_: usize, _: usize, _: usize, ptr: usize) {
-        unsafe {
-            let mut func: Box<Box<FnMut()>> = Box::from_raw(ptr as *mut _);
-            func();
-            Box::into_raw(func);
-        }
+        let done: &Cell<bool> = unsafe { mem::transmute(ptr) };
+        done.set(true);
 
     }
 }
@@ -94,17 +84,3 @@ unsafe fn share(pid: u32, base: *mut u8, len: usize) -> Result<(), ()> {
     }
 }
 
-
-/*
-int ipc_register_client_cb(int svc_id, subscribe_cb callback, void *ud) {
-  if (svc_id <= 0) {
-    return -1;
-  }
-  return subscribe(IPC_DRIVER_NUM, svc_id, callback, ud);
-}
-
-int ipc_notify_svc(int pid) {
-  return command(IPC_DRIVER_NUM, pid, 0);
-}
-
-*/
