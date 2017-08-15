@@ -1,47 +1,38 @@
+use core::cell::Cell;
 use core::{fmt,mem};
 use core::result::Result;
-use syscalls::{self, allow};
+use syscalls::{self, allow, yieldk_for};
 
-use alloc::{String, VecDeque};
+use alloc::String;
 
 const DRIVER_NUM: u32 = 0;
 
-pub struct Console {
-    queue: VecDeque<String>,
-    outstanding: Option<String>
-}
+pub struct Console;
 
 impl Console {
     pub fn new() -> Console {
-        Console {
-            queue: VecDeque::new(),
-            outstanding: None
-        }
+        Console
     }
 
     pub fn write(&mut self, string: String) {
-        if self.outstanding.is_none() {
-            unsafe {
-                if putstr_async(&string, Self::cb, self as *const _ as usize) >= 0 {
-                    self.outstanding = Some(string);
-                }
+        if string.len() <= 0 {
+            return;
+        }
+        let done: Cell<bool> = Cell::new(false);
+        unsafe {
+            if putstr_async(&string, Self::cb, &done as *const _ as usize) >= 0 {
+                yieldk_for(|| done.get())
+            } else {
+                return
             }
-        } else {
-            self.queue.push_back(string);
         }
     }
 
     extern fn cb(_: usize, _: usize, _: usize, ptr: usize) {
-        let console: &mut Console = unsafe {
+        let done: &Cell<bool> = unsafe {
             mem::transmute(ptr)
         };
-        console.outstanding.take();
-        if let Some(next) = console.queue.pop_front() {
-            unsafe {
-                putstr_async(&next, Self::cb, ptr);
-            }
-            console.outstanding = Some(next);
-        }
+        done.set(true);
     }
 }
 
