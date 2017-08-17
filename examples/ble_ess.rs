@@ -32,6 +32,7 @@ fn set_ipc_slice<I: Into<i32>>(slice: &mut [u8], sensor_type: u32, sensor_data: 
 
 fn main() {
     let mut console = Console::new();
+    write!(&mut console, "Starting BLE ESS\n").unwrap();
 
     let (mut ipc_client, mut updates) = match setup_ipc() {
         Ok((c, s)) => (c, s),
@@ -40,34 +41,35 @@ fn main() {
             return;
         }
     };
+    write!(&mut console, "Found BLE IPC Service\n").unwrap();
 
     let mut humidity = HumiditySensor;
     let mut temperature = TemperatureSensor;
     let mut light = AmbientLightSensor;
     loop {
-        let humid = humidity.read();
-        let temp = temperature.read();
-        let lx = light.read();
-        write!(&mut console, "Humidity:    {}\n", humid).unwrap();
-        write!(&mut console, "Temperature: {}\n", temp).unwrap();
-        write!(&mut console, "Light:       {}\n", lx).unwrap();
 
         // Temperature
+        let temp = temperature.read();
+        write!(&mut console, "Temperature: {}\n", temp).unwrap();
         set_ipc_slice(&mut *updates, 0, temp);
         if let Err(_) = ipc_client.notify() {
             write!(&mut console, "Failed to send temperature\n").unwrap_or(());
         }
         
-        // Humidity
+        // Light
+        let lx = light.read();
+        write!(&mut console, "Light:       {}\n", lx).unwrap();
         set_ipc_slice(&mut *updates, 1, lx);
         if let Err(_) = ipc_client.notify() {
             write!(&mut console, "Failed to send light\n").unwrap_or(());
         }
 
         // Humidity
+        let humid = humidity.read();
+        write!(&mut console, "Humidity:    {}\n", humid).unwrap();
         set_ipc_slice(&mut *updates, 2, humid);
         if let Err(_) = ipc_client.notify() {
-            write!(&mut console, "Failed to send Humidity\n").unwrap_or(());
+            write!(&mut console, "Failed to send humidity\n").unwrap_or(());
         }
 
         tock::timer::delay_ms(5000);
