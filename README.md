@@ -5,15 +5,25 @@ Rust userland library for Tock (WIP)
 
 This project is nascent and still under heavy development, but first steps:
 
-1. Get a copy of the latest nightly, in this repo's root:
+1. First, update rustup to ensure you have the latest toolchain available:
+
+    `rustup upgrade`
+
+2. Get a copy of the latest nightly, in this repo's root:
 
     `rustup override set nightly`
 
-2. Need to grab a copy of the rust sources:
+    Your rustc should be at least this new:
+    ```
+    $ rustc --version
+    rustc 1.21.0-nightly (7ac979d8c 2017-08-16)
+    ```
+
+3. Need to grab a copy of the rust sources:
 
     `rustup component add rust-src`
 
-3. Now you should be able to build with:
+4. Now you should be able to build with:
 
     `xargo build --target thumbv7em-tock-eabi`
 
