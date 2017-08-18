@@ -7,7 +7,7 @@ This project is nascent and still under heavy development, but first steps:
 
 1. First, update rustup to ensure you have the latest toolchain available:
 
-    `rustup upgrade`
+    `rustup install nightly`
 
 2. Get a copy of the latest nightly, in this repo's root:
 
