@@ -43,16 +43,28 @@ impl Client {
         }
     }
 
+    pub unsafe fn notify_async(&mut self) -> Result<(), ()> {
+        if syscalls::command(DRIVER_NUM, self.pid, 0) < 0 {
+            return Err(())
+        }
+        Ok(())
+    }
+
+    pub unsafe fn subscribe(&mut self,
+            cb: extern fn(_: usize, _: usize, _: usize, ptr: usize), ud: usize)
+                -> Result<(), ()> {
+        if syscalls::subscribe(DRIVER_NUM, self.pid, cb, ud) < 0 {
+            return Err(())
+        }
+        Ok(())
+    }
+
     pub fn notify(&mut self) -> Result<(), ()> {
         let done = Cell::new(false);
         let ptr = &done as *const _ as usize;
         unsafe {
-            if syscalls::subscribe(DRIVER_NUM, self.pid, Self::cb, ptr) < 0 {
-                return Err(())
-            }
-            if syscalls::command(DRIVER_NUM, self.pid, 0) < 0 {
-                return Err(())
-            }
+            self.subscribe(Self::cb, ptr)?;
+            self.notify_async()?;
         }
         syscalls::yieldk_for(|| done.get());
         Ok(())
