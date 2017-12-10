@@ -7,19 +7,17 @@ use alloc::boxed::Box;
 use alloc::raw_vec::RawVec;
 use alloc::allocator::{Alloc, Layout};
 
-const DRIVER_NUM: u32 = 0xff;
+const DRIVER_NUM: u32 = 0x10000;
 
 pub struct Client {
-    pid: u32
+    pid: u32,
 }
 
 impl Client {
     pub fn new(pkg_name: String) -> Result<Client, ()> {
         unsafe {
             let res = discover(pkg_name)?;
-            Ok(Client {
-                pid: res as u32
-            })
+            Ok(Client { pid: res as u32 })
         }
     }
 
@@ -28,33 +26,33 @@ impl Client {
             len = 3;
         }
         unsafe {
-            let shared_val = Heap.alloc_zeroed(
-                    Layout::from_size_align(1 << len, 1 << len).unwrap());
+            let shared_val =
+                Heap.alloc_zeroed(Layout::from_size_align(1 << len, 1 << len).unwrap());
 
             match shared_val {
                 Ok(v) => {
                     share(self.pid, v, 1 << len)?;
                     Ok(RawVec::from_raw_parts(v, 1 << len).into_box())
-                },
-                _ => {
-                    Err(())
                 }
+                _ => Err(()),
             }
         }
     }
 
     pub unsafe fn notify_async(&mut self) -> Result<(), ()> {
         if syscalls::command(DRIVER_NUM, self.pid, 0) < 0 {
-            return Err(())
+            return Err(());
         }
         Ok(())
     }
 
-    pub unsafe fn subscribe(&mut self,
-            cb: extern fn(_: usize, _: usize, _: usize, ptr: usize), ud: usize)
-                -> Result<(), ()> {
+    pub unsafe fn subscribe(
+        &mut self,
+        cb: extern "C" fn(_: usize, _: usize, _: usize, ptr: usize),
+        ud: usize,
+    ) -> Result<(), ()> {
         if syscalls::subscribe(DRIVER_NUM, self.pid, cb, ud) < 0 {
-            return Err(())
+            return Err(());
         }
         Ok(())
     }
@@ -70,10 +68,9 @@ impl Client {
         Ok(())
     }
 
-    extern fn cb(_: usize, _: usize, _: usize, ptr: usize) {
+    extern "C" fn cb(_: usize, _: usize, _: usize, ptr: usize) {
         let done: &Cell<bool> = unsafe { mem::transmute(ptr) };
         done.set(true);
-
     }
 }
 
@@ -95,4 +92,3 @@ unsafe fn share(pid: u32, base: *mut u8, len: usize) -> Result<(), ()> {
         Ok(())
     }
 }
-

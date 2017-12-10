@@ -1,22 +1,23 @@
 {
-    "data-layout": "e-m:e-p:32:32-i64:64-v128:64:128-a:0:32-n32-S64",
-    "llvm-target": "thumbv7em-none-eabi",
-    "target-endian": "little",
-    "target-pointer-width": "32",
-    "arch": "arm",
-    "panic": "abort",
-    "os": "tock",
-    "morestack": false,
-    "executables": true,
-    "no-compiler-rt": false,
-    "relocation-model": "ropi-rwpi",
-    "linker": "arm-none-eabi-ld",
-    "linker-flavor": "ld",
-    "linker-is-gnu": true,
-    "disable-redzone": true,
-    "pre-link-args": {
-      "ld": [
-        "-Tlayout.ld"
-      ]
-    }
+  "data-layout": "e-m:e-p:32:32-i64:64-v128:64:128-a:0:32-n32-S64",
+  "llvm-target": "thumbv7em-none-eabi",
+  "target-endian": "little",
+  "target-pointer-width": "32",
+  "target-c-int-width": "32",
+  "arch": "arm",
+  "panic": "abort",
+  "os": "tock",
+  "morestack": false,
+  "executables": true,
+  "no-compiler-rt": false,
+  "relocation-model": "ropi-rwpi",
+  "linker": "arm-none-eabi-ld",
+  "linker-flavor": "ld",
+  "linker-is-gnu": true,
+  "disable-redzone": true,
+  "pre-link-args": {
+    "ld": [
+      "-Tlayout.ld"
+    ]
+  }
 }
