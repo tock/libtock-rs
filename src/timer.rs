@@ -2,7 +2,7 @@ use core::mem;
 use core::cell::Cell;
 use syscalls::{self, command, yieldk_for};
 
-const TIMER: u32 = 0;
+const DRIVER_NUMBER: u32 = 0;
 const GET_CLOCK_FREQUENCY: u32 = 1;
 const SET_ALARM_NOTIFICATION: u32 = 4;
 const GET_CLOCK_VALUE: u32 = 2;
@@ -13,19 +13,19 @@ pub unsafe fn subscribe(cb: extern fn(usize, usize, usize, usize), ud: usize) {
 
 pub fn start_oneshot(ms: u32) {
     unsafe {
-        command(TIMER, SET_ALARM_NOTIFICATION, ms as isize);
+        command(DRIVER_NUMBER, SET_ALARM_NOTIFICATION, ms as isize);
     }
 }
 
 pub fn start_repeating(ms: u32) {
     unsafe {
-        command(TIMER, 2, ms as isize);
+        command(DRIVER_NUMBER, 2, ms as isize);
     }
 }
 
 pub fn stop(ms: u32) {
     unsafe {
-        command(TIMER, 3, ms as isize);
+        command(DRIVER_NUMBER, 3, ms as isize);
     }
 }
 
@@ -37,8 +37,8 @@ pub fn delay_ms(ms: u32) {
         expired.set(true);
     }
 
-    let f: u32 = unsafe { command(TIMER, GET_CLOCK_FREQUENCY, 0) as u32 };
-    let point: u32 = unsafe { command(TIMER, GET_CLOCK_VALUE, 0) as u32 } + ms * f / 1000;
+    let f: u32 = unsafe { command(DRIVER_NUMBER, GET_CLOCK_FREQUENCY, 0) as u32 };
+    let point: u32 = unsafe { command(DRIVER_NUMBER, GET_CLOCK_VALUE, 0) as u32 } + ms * f / 1000;
 
     let expired = Cell::new(false);
     unsafe {
