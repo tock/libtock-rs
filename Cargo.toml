@@ -5,7 +5,7 @@ authors = ["Tock Project Developers <tock-dev@googlegroups.com>"]
 license = "MIT/Apache-2.0"
 
 [dependencies]
-linked_list_allocator = {git = "https://github.com/phil-opp/linked-list-allocator"}
+linked_list_allocator = { git = "https://github.com/phil-opp/linked-list-allocator" }
 
 [profile.dev]
 panic = "abort"
