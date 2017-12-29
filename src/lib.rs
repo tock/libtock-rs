@@ -14,9 +14,9 @@ extern crate linked_list_allocator;
 
 mod lang_items;
 
-use alloc::allocator::{Alloc, Layout, AllocErr};
-use core::ptr;
+use alloc::allocator::{Alloc, AllocErr, Layout};
 use core::mem::{align_of, size_of};
+use core::ptr;
 use linked_list_allocator::{align_up, Heap};
 
 // None-threaded heap wrapper based on `r9` register instead of global variable
@@ -39,12 +39,13 @@ impl BaseHeap {
     /// empty heap.
     #[inline(never)]
     pub unsafe fn init(&mut self, heap_size: usize) -> usize {
-        let heap_bottom = align_up(self as *mut _ as usize + size_of::<Heap>(),
-                                      align_of::<Heap>());
+        let heap_bottom = align_up(
+            self as *mut _ as usize + size_of::<Heap>(),
+            align_of::<Heap>(),
+        );
         self.heap().init(heap_bottom, heap_size);
         heap_bottom + heap_size
     }
-
 }
 
 unsafe impl<'a> Alloc for &'a BaseHeap {
@@ -59,15 +60,17 @@ unsafe impl<'a> Alloc for &'a BaseHeap {
 
 
 #[global_allocator]
-static ALLOCATOR : BaseHeap = BaseHeap;
+static ALLOCATOR: BaseHeap = BaseHeap;
 
 /// Tock programs' entry point
 #[doc(hidden)]
 #[no_mangle]
 #[naked]
-pub extern "C" fn _start(mem_start: usize, _app_heap_break: usize,
-                         _kernel_memory_break: usize) -> ! {
-
+pub extern "C" fn _start(
+    mem_start: usize,
+    _app_heap_break: usize,
+    _kernel_memory_break: usize,
+) -> ! {
     extern "C" {
         // NOTE `rustc` forces this signature on us. See `src/lang_items.rs`
         fn main(argc: isize, argv: *const *const u8) -> isize;
@@ -75,6 +78,7 @@ pub extern "C" fn _start(mem_start: usize, _app_heap_break: usize,
 
     unsafe {
         // Setup stack
+        /*
         syscalls::memop(0, mem_start + 1024);
 
         let new_stack = mem_start + 1024;
@@ -90,6 +94,7 @@ pub extern "C" fn _start(mem_start: usize, _app_heap_break: usize,
         syscalls::memop(0, end_of_mem);
 
         // arguments are not used in Tock applications
+        */
         main(0, ptr::null());
     }
 
