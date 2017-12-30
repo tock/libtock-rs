@@ -1,4 +1,5 @@
-#![feature(asm,alloc,allocator_api,compiler_builtins_lib,const_fn,global_allocator,lang_items,naked_functions)]
+#![feature(asm, alloc, allocator_api, compiler_builtins_lib, const_fn, global_allocator,
+           lang_items, naked_functions)]
 #![no_std]
 
 pub mod syscalls;
@@ -24,9 +25,9 @@ struct BaseHeap;
 
 impl BaseHeap {
     pub unsafe fn heap(&self) -> &mut Heap {
-        let heap: &mut Heap;
+        let heap: *mut Heap;
         asm!("mov $0, r9" : "=r"(heap) : : : "volatile");
-        heap
+        &mut *heap
     }
 
     /// Initializes an empty heap
@@ -66,35 +67,18 @@ static ALLOCATOR: BaseHeap = BaseHeap;
 #[doc(hidden)]
 #[no_mangle]
 #[naked]
-pub extern "C" fn _start(
-    mem_start: usize,
-    _app_heap_break: usize,
-    _kernel_memory_break: usize,
-) -> ! {
+pub extern "C" fn _start(mem_start: usize, app_heap_break: usize, kernel_memory_break: usize) -> ! {
     extern "C" {
         // NOTE `rustc` forces this signature on us. See `src/lang_items.rs`
         fn main(argc: isize, argv: *const *const u8) -> isize;
     }
 
     unsafe {
-        // Setup stack
-        /*
-        syscalls::memop(0, mem_start + 1024);
-
-        let new_stack = mem_start + 1024;
-        asm!("mov sp, $0" : : "r"(new_stack) : : "volatile");
-        syscalls::memop(10, new_stack);
-
         // Setup heap
-        let new_heap = align_up(new_stack, align_of::<Heap>());
-        asm!("mov r9, $0" : : "r"(new_heap) : : "volatile");
-        syscalls::memop(11, new_heap);
+        asm!("mov r9, $0" : : "r"(app_heap_break) : : "volatile"); // Removing this line will result in a crash that requires reflashing the ROM...
 
-        let end_of_mem = BaseHeap.init(1024);
-        syscalls::memop(0, end_of_mem);
+        BaseHeap.init(1024);
 
-        // arguments are not used in Tock applications
-        */
         main(0, ptr::null());
     }
 

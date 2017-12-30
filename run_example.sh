@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# Examples only run on a NRF52DK board
+
 set -eux
 
 tab_file_name=metadata.toml
