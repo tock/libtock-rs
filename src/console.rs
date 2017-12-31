@@ -1,9 +1,8 @@
-use core::cell::Cell;
+use alloc::String;
 use core::{fmt, mem};
+use core::cell::Cell;
 use core::result::Result;
 use syscalls::{self, allow, yieldk_for};
-
-use alloc::String;
 
 const DRIVER_NUM: u32 = 1;
 
@@ -14,6 +13,8 @@ impl Console {
         Console
     }
 
+    // TODO: Accept borrowed strings (e.g. &str).
+    // For this, the borrowed referencne must be accessible by the capsule. This is not the case for string literals.
     pub fn write(&mut self, string: String) {
         if string.len() <= 0 {
             return;
@@ -41,6 +42,7 @@ impl fmt::Write for Console {
     }
 }
 
+// TODO: Should this function be unsafe on its own?
 unsafe fn putstr_async(
     string: &String,
     cb: extern "C" fn(usize, usize, usize, usize),

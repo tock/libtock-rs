@@ -2,12 +2,12 @@
            lang_items, naked_functions)]
 #![no_std]
 
-pub mod syscalls;
-pub mod ipc;
-pub mod sensors;
 pub mod console;
-pub mod timer;
+pub mod ipc;
 pub mod led;
+pub mod sensors;
+pub mod syscalls;
+pub mod timer;
 
 extern crate alloc;
 extern crate compiler_builtins;
