@@ -16,7 +16,11 @@ extern crate linked_list_allocator;
 
 mod lang_items;
 
-use alloc::allocator::{Alloc, AllocErr, Layout};
+use alloc::allocator::Alloc;
+use alloc::allocator::AllocErr;
+use alloc::allocator::Layout;
+use alloc::string::String;
+use console::Console;
 use core::mem::{align_of, size_of};
 use core::ptr;
 use linked_list_allocator::{align_up, Heap};
@@ -79,6 +83,15 @@ pub extern "C" fn _start(mem_start: usize, app_heap_break: usize, kernel_memory_
         asm!("mov r9, $0" : : "r"(app_heap_break) : : "volatile"); // Removing this line will result in a crash that requires reflashing the ROM...
 
         BaseHeap.init(1024);
+
+        let mut console = Console::new();
+        console.write(String::from("\nProcess started\n===============\nmem_start           = "));
+        console.write(fmt::u32_as_hex(mem_start as u32));
+        console.write(String::from("\napp_heap_beak       = "));
+        console.write(fmt::u32_as_hex(app_heap_break as u32));
+        console.write(String::from("\nkernel_memory_break = "));
+        console.write(fmt::u32_as_hex(kernel_memory_break as u32));
+        console.write(String::from("\n\n"));
 
         main(0, ptr::null());
     }
