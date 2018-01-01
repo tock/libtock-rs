@@ -3,6 +3,7 @@
 #![no_std]
 
 pub mod console;
+pub mod electronics;
 pub mod fmt;
 pub mod ipc;
 pub mod led;

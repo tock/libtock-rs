@@ -2,38 +2,9 @@
 
 extern crate tock;
 
-const DATA_PIN: u32 = 0;
-const CLOCK_PIN: u32 = 1;
-const LATCH_PIN: u32 = 2;
-const SPEED: u32 = 2;
-
-use tock::{led, timer};
-
-fn push_one_bit(value: bool) {
-    if value {
-        led::on(DATA_PIN)
-    } else {
-        led::off(DATA_PIN)
-    }
-    led::on(CLOCK_PIN);
-    timer::delay_ms(SPEED);
-    led::off(CLOCK_PIN);
-    timer::delay_ms(SPEED);
-}
-
-fn push_bits(values: &[bool]) {
-    for i in values {
-        push_one_bit(*i);
-    }
-    display();
-    timer::delay_ms(200);
-}
-
-fn display() {
-    led::on(LATCH_PIN);
-    timer::delay_ms(SPEED);
-    led::off(LATCH_PIN);
-}
+use tock::electronics::ShiftRegister;
+use tock::led;
+use tock::timer;
 
 fn number_to_bits(n: u8) -> [bool; 8] {
     match n {
@@ -52,9 +23,12 @@ fn number_to_bits(n: u8) -> [bool; 8] {
 }
 
 fn main() {
+    let shift_register = ShiftRegister::new(0, 1, 2);
+
     let mut i = 0;
     loop {
         i = (i + 1) % 11;
-        push_bits(&number_to_bits(i));
+        shift_register.write_bits(&number_to_bits(i));
+        timer::delay_ms(200);
     }
 }
