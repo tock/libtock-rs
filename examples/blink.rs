@@ -2,13 +2,15 @@
 
 extern crate tock;
 
-use tock::{led, timer};
+use tock::led;
+use tock::timer;
 
 fn main() {
-    loop{
-        led::on(0);
+    let led = led::get(0).unwrap();
+    loop {
+        led.on();
         timer::delay_ms(500);
-        led::off(0);
+        led.off();;
         timer::delay_ms(500);
     }
 }

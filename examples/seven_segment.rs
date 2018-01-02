@@ -23,7 +23,11 @@ fn number_to_bits(n: u8) -> [bool; 8] {
 }
 
 fn main() {
-    let shift_register = ShiftRegister::new(0, 1, 2);
+    let shift_register = ShiftRegister::new(
+        led::get(0).unwrap(),
+        led::get(1).unwrap(),
+        led::get(2).unwrap(),
+    );
 
     let mut i = 0;
     loop {

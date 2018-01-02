@@ -1,13 +1,14 @@
-use led;
+use led::Led;
 
+// TODO: Create Gpio abstraction
 pub struct ShiftRegister {
-    data_pin: u32,
-    clock_pin: u32,
-    latch_pin: u32,
+    data_pin: Led,
+    clock_pin: Led,
+    latch_pin: Led,
 }
 
 impl ShiftRegister {
-    pub fn new(data_pin: u32, clock_pin: u32, latch_pin: u32) -> ShiftRegister {
+    pub fn new(data_pin: Led, clock_pin: Led, latch_pin: Led) -> ShiftRegister {
         ShiftRegister {
             data_pin,
             clock_pin,
@@ -23,17 +24,13 @@ impl ShiftRegister {
     }
 
     fn push_bit(&self, value: bool) {
-        if value {
-            led::on(self.data_pin)
-        } else {
-            led::off(self.data_pin)
-        }
-        led::on(self.clock_pin);
-        led::off(self.clock_pin);
+        self.data_pin.set_state(value);
+        self.clock_pin.on();
+        self.clock_pin.off();
     }
 
     fn display(&self) {
-        led::on(self.latch_pin);
-        led::off(self.latch_pin);
+        self.latch_pin.on();
+        self.latch_pin.off();
     }
 }

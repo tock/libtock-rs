@@ -18,6 +18,7 @@
 // crate.
 use led;
 use timer;
+
 #[lang = "start"]
 extern "C" fn start(main: fn(), _argc: isize, _argv: *const *const u8) -> isize {
     main();
@@ -27,43 +28,32 @@ extern "C" fn start(main: fn(), _argc: isize, _argv: *const *const u8) -> isize 
 
 #[lang = "eh_personality"]
 extern "C" fn eh_personality() {
-    circle_leds(); // TODO: Make NRF52dK specific
+    cycle_leds();
 }
 
 
 #[lang = "panic_fmt"]
 unsafe extern "C" fn rust_begin_unwind() {
-    flash_all_leds(); // TODO: Make NRF52DK specific
+    flash_all_leds();
 }
 
-fn circle_leds() {
-    loop {
-        led::on(0);
+fn cycle_leds() {
+    for led in led::all().cycle() {
+        led.on();
         timer::delay_ms(100);
-        led::off(0);
-        led::on(1);
-        timer::delay_ms(100);
-        led::off(1);
-        led::on(3);
-        timer::delay_ms(100);
-        led::off(3);
-        led::on(2);
-        timer::delay_ms(100);
-        led::off(2);
+        led.off();
     }
 }
 
 fn flash_all_leds() {
     loop {
-        led::on(0);
-        led::on(1);
-        led::on(2);
-        led::on(3);
+        for led in led::all() {
+            led.on();
+        }
         timer::delay_ms(100);
-        led::off(0);
-        led::off(1);
-        led::off(2);
-        led::off(3);
+        for led in led::all() {
+            led.off();
+        }
         timer::delay_ms(100);
     }
 }

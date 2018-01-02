@@ -2,10 +2,11 @@
 
 extern crate tock;
 
-use tock::{led, timer};
+use tock::led;
+use tock::timer;
 
-extern fn timer_event(_: usize, _: usize, _: usize, _: usize) {
-    led::toggle(0);
+extern "C" fn timer_event(_: usize, _: usize, _: usize, _: usize) {
+    led::get(0).unwrap().toggle();
 }
 
 fn main() {
