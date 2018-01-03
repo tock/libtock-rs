@@ -65,7 +65,6 @@ unsafe impl<'a> Alloc for &'a BaseHeap {
     }
 }
 
-
 #[global_allocator]
 static ALLOCATOR: BaseHeap = BaseHeap;
 
@@ -75,7 +74,7 @@ static ALLOCATOR: BaseHeap = BaseHeap;
 #[naked]
 pub extern "C" fn _start(mem_start: usize, app_heap_break: usize, kernel_memory_break: usize) -> ! {
     extern "C" {
-        // NOTE `rustc` forces this signature on us. See `src/lang_items.rs`
+        // This function is created internally by`rustc`. See `src/lang_items.rs` for more details.
         fn main(argc: isize, argv: *const *const u8) -> isize;
     }
 
@@ -98,6 +97,6 @@ pub extern "C" fn _start(mem_start: usize, app_heap_break: usize, kernel_memory_
     }
 
     loop {
-        ::syscalls::yieldk();
+        syscalls::yieldk();
     }
 }

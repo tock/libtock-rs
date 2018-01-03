@@ -20,20 +20,19 @@ use led;
 use timer;
 
 #[lang = "start"]
-extern "C" fn start(main: fn(), _argc: isize, _argv: *const *const u8) -> isize {
+fn start(main: fn(), _argc: isize, _argv: *const *const u8) -> isize {
     main();
 
     0
 }
 
 #[lang = "eh_personality"]
-extern "C" fn eh_personality() {
+fn eh_personality() {
     cycle_leds();
 }
 
-
 #[lang = "panic_fmt"]
-unsafe extern "C" fn rust_begin_unwind() {
+fn panic_fmt() {
     flash_all_leds();
 }
 
