@@ -3,30 +3,31 @@
 extern crate tock;
 
 use tock::electronics::ShiftRegister;
-use tock::led;
+use tock::gpio::GpioPinUnitialized;
 use tock::timer;
 
 fn number_to_bits(n: u8) -> [bool; 8] {
     match n {
-        1 => [true, true, true, false, true, false, true, true],
-        2 => [false, true, false, false, true, true, false, false],
-        3 => [false, true, false, false, true, false, false, true],
-        4 => [false, false, true, false, true, false, true, true],
-        5 => [false, false, false, true, true, false, false, true],
-        6 => [false, false, false, true, true, false, false, false],
-        7 => [true, true, false, false, true, false, true, true],
-        8 => [false, false, false, false, true, false, false, false],
-        9 => [false, false, false, false, true, false, false, true],
-        0 => [true, false, false, false, true, false, false, false],
-        _ => [true, true, true, true, false, true, true, true],
+        1 => [false, false, false, true, false, true, false, false],
+        2 => [true, false, true, true, false, false, true, true],
+        3 => [true, false, true, true, false, true, true, false],
+        4 => [true, true, false, true, false, true, false, false],
+        5 => [true, true, true, false, false, true, true, false],
+        6 => [true, true, true, false, false, true, true, true],
+        7 => [false, false, true, true, false, true, false, false],
+        8 => [true, true, true, true, false, true, true, true],
+        9 => [true, true, true, true, false, true, true, false],
+        0 => [false, true, true, true, false, true, true, true],
+        _ => [false, false, false, false, true, false, false, false],
     }
 }
 
+// Example works on a shift register on P0.03, P0.04, P0.28
 fn main() {
     let shift_register = ShiftRegister::new(
-        led::get(0).unwrap(),
-        led::get(1).unwrap(),
-        led::get(2).unwrap(),
+        GpioPinUnitialized::new(0).open_for_write().unwrap(),
+        GpioPinUnitialized::new(1).open_for_write().unwrap(),
+        GpioPinUnitialized::new(2).open_for_write().unwrap(),
     );
 
     let mut i = 0;
