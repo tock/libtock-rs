@@ -2,6 +2,7 @@
            lang_items, naked_functions)]
 #![no_std]
 
+pub mod button;
 pub mod console;
 pub mod electronics;
 pub mod fmt;
