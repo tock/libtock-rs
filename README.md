@@ -5,23 +5,13 @@ Rust userland library for Tock (WIP)
 
 This project is nascent and still under heavy development, but first steps:
 
-1. First, update rustup to ensure you have the latest toolchain available:
+1. Ensure you have a working toolchain available:
 
-    `rustup update`
-    
-    or
-    
-    `rustup install nightly`
+    `rustup install nightly-2017-12-16`
 
-2. Get a copy of the latest nightly, in this repo's root:
+2. Get a copy of this toolchain, in this repo's root:
 
-    `rustup override set nightly`
-
-    Your rustc should be at least this new:
-    ```
-    $ rustc --version
-    rustc 1.21.0-nightly (7ac979d8c 2017-08-16)
-    ```
+    `rustup override set nightly-2017-12-16`
 
 3. Need to grab a copy of the rust sources:
 
