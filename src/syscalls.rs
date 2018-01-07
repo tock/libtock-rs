@@ -56,10 +56,10 @@ pub unsafe fn subscribe(major: u32, minor: u32, cb: extern fn(usize, usize, usiz
     res
 }
 
-pub unsafe fn command(major: u32, minor: u32, arg1: isize) -> isize {
+pub unsafe fn command(major: u32, minor: u32, arg1: isize, arg2: isize) -> isize {
     let res;
     asm!("svc 2" : "={r0}"(res)
-                 : "{r0}"(major) "{r1}"(minor) "{r2}"(arg1)
+                 : "{r0}"(major) "{r1}"(minor) "{r2}"(arg1) "{r3}"(arg2)
                  : "memory"
                  : "volatile");
     res

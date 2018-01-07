@@ -40,7 +40,7 @@ impl Client {
     }
 
     pub unsafe fn notify_async(&mut self) -> Result<(), ()> {
-        if syscalls::command(DRIVER_NUM, self.pid, 0) < 0 {
+        if syscalls::command(DRIVER_NUM, self.pid, 0,0) < 0 {
             return Err(());
         }
         Ok(())

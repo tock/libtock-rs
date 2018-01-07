@@ -20,7 +20,7 @@ impl GpioPinUnitialized {
     }
 
     pub fn open_for_write(self) -> Result<GpioPinWrite, &'static str> {
-        match unsafe { command(DRIVER_NUMBER, ENABLE_OUTPUT, self.number) } {
+        match unsafe { command(DRIVER_NUMBER, ENABLE_OUTPUT, self.number,0) } {
             0 => Ok(GpioPinWrite { number: self.number }),
             _ => Err("Could not open pin for writing."),
         }
@@ -29,18 +29,18 @@ impl GpioPinUnitialized {
 
 impl GpioPinWrite {
     pub fn set_low(&self) {
-        unsafe { command(DRIVER_NUMBER, SET_LOW, self.number); }
+        unsafe { command(DRIVER_NUMBER, SET_LOW, self.number,0); }
     }
     pub fn set_high(&self) {
-        unsafe { command(DRIVER_NUMBER, SET_HIGH, self.number); }
+        unsafe { command(DRIVER_NUMBER, SET_HIGH, self.number,0); }
     }
     pub fn toggle(&self) {
-        unsafe { command(DRIVER_NUMBER, TOGGLE, self.number); }
+        unsafe { command(DRIVER_NUMBER, TOGGLE, self.number,0); }
     }
 }
 
 impl Drop for GpioPinWrite {
     fn drop(&mut self) {
-        unsafe { command(DRIVER_NUMBER, DISABLE, self.number); }
+        unsafe { command(DRIVER_NUMBER, DISABLE, self.number,0); }
     }
 }

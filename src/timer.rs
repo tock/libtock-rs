@@ -13,20 +13,20 @@ pub unsafe fn subscribe(cb: extern "C" fn(usize, usize, usize, usize), ud: usize
 
 pub fn set_alarm(ms: u32) {
     unsafe {
-        command(DRIVER_NUMBER, SET_ALARM_NOTIFICATION, ms as isize);
+        command(DRIVER_NUMBER, SET_ALARM_NOTIFICATION, ms as isize,0);
     }
 }
 
 // FIXME: Broken!
 pub fn start_repeating(ms: u32) {
     unsafe {
-        command(DRIVER_NUMBER, 2, ms as isize);
+        command(DRIVER_NUMBER, 2, ms as isize,0);
     }
 }
 
 pub fn stop(ms: u32) {
     unsafe {
-        command(DRIVER_NUMBER, 3, ms as isize);
+        command(DRIVER_NUMBER, 3, ms as isize,0);
     }
 }
 
@@ -37,8 +37,8 @@ pub fn delay_ms(ms: u32) {
     }
 
     let expired = Cell::new(false);
-    let f: u32 = unsafe { command(DRIVER_NUMBER, GET_CLOCK_FREQUENCY, 0) as u32 };
-    let point: u32 = unsafe { command(DRIVER_NUMBER, GET_CLOCK_VALUE, 0) as u32 } + ms * f / 1000;
+    let f: u32 = unsafe { command(DRIVER_NUMBER, GET_CLOCK_FREQUENCY, 0,0) as u32 };
+    let point: u32 = unsafe { command(DRIVER_NUMBER, GET_CLOCK_VALUE, 0,0) as u32 } + ms * f / 1000;
 
     unsafe {
         subscribe(cb, &expired as *const _ as usize);

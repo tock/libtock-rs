@@ -25,7 +25,7 @@ pub trait Sensor<Reading: Copy + From<(usize, usize, usize)>> {
         unsafe {
             syscalls::subscribe(driver_num, 0, cb::<Reading>,
                                 mem::transmute(&res));
-            syscalls::command(driver_num, 1, 0);
+            syscalls::command(driver_num, 1, 0,0);
             yieldk_for(|| res.get().is_some() );
             res.get().unwrap()
         }

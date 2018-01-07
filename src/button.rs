@@ -5,7 +5,7 @@ const DRIVER_NUMBER: u32 = 0x00003;
 mod command_nr {
     pub const COUNT: u32 = 0;
     pub const ENABLE_INTERRUPT: u32 = 1;
-    pub const DISALE_INTERRUPT: u32 = 2;
+    pub const DISABLE_INTERRUPT: u32 = 2;
     pub const READ: u32 = 3;
     pub const SUBSCRIBE_CALLBACK: u32 = 0;
 }
@@ -19,7 +19,7 @@ pub struct ButtonRead {
 }
 
 pub fn count() -> isize {
-    unsafe { syscalls::command(DRIVER_NUMBER, command_nr::COUNT, 0) }
+    unsafe { syscalls::command(DRIVER_NUMBER, command_nr::COUNT, 0,0) }
 }
 
 pub fn get(button_num: isize) -> Option<ButtonUninitialized> {
@@ -73,7 +73,7 @@ impl ButtonUninitialized {
 
     fn enable_callback(self) -> Result<ButtonRead, &'static str> {
         if unsafe {
-            syscalls::command(DRIVER_NUMBER, command_nr::ENABLE_INTERRUPT, self.button_num)
+            syscalls::command(DRIVER_NUMBER, command_nr::ENABLE_INTERRUPT, self.button_num,0)
         } == 0
         {
             Ok(ButtonRead { button_num: self.button_num })
@@ -85,7 +85,7 @@ impl ButtonUninitialized {
 }
 impl ButtonRead {
     pub fn read(&self) -> bool {
-        unsafe { syscalls::command(DRIVER_NUMBER, command_nr::READ, self.button_num) == 1 }
+        unsafe { syscalls::command(DRIVER_NUMBER, command_nr::READ, self.button_num,0 ) == 1 }
     }
 }
 

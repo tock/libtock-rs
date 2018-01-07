@@ -58,7 +58,7 @@ unsafe fn putstr_async(
         return ret;
     }
 
-    ret = syscalls::command(DRIVER_NUM, 1, string.len() as isize);
+    ret = syscalls::command(DRIVER_NUM, 1, string.len() as isize, 0);
     if ret < 0 {
         return ret;
     }
