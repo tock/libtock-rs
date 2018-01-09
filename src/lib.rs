@@ -12,6 +12,7 @@ pub mod sensors;
 pub mod syscalls;
 pub mod timer;
 pub mod gpio;
+pub mod simple_ble;
 
 extern crate alloc;
 extern crate compiler_builtins;

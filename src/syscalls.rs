@@ -1,4 +1,3 @@
-
 pub fn yieldk() {
     // Note: A process stops yielding when there is a callback ready to run,
     // which the kernel executes by modifying the stack frame pushed by the
@@ -47,7 +46,21 @@ pub unsafe fn allow(major: u32, minor: u32, slice: &[u8]) -> isize {
     res
 }
 
-pub unsafe fn subscribe(major: u32, minor: u32, cb: extern fn(usize, usize, usize, usize), ud: usize) -> isize {
+pub unsafe fn allow16(major: u32, minor: u32, slice: &[u16]) -> isize {
+    let res;
+    asm!("svc 3" : "={r0}"(res)
+                 : "{r0}"(major) "{r1}"(minor) "{r2}"(slice.as_ptr()) "{r3}"(slice.len()*2)
+                 : "memory"
+                 : "volatile");
+    res
+}
+
+pub unsafe fn subscribe(
+    major: u32,
+    minor: u32,
+    cb: extern "C" fn(usize, usize, usize, usize),
+    ud: usize,
+) -> isize {
     let res;
     asm!("svc 1" : "={r0}"(res)
                  : "{r0}"(major) "{r1}"(minor) "{r2}"(cb) "{r3}"(ud)
@@ -73,4 +86,3 @@ pub unsafe fn memop(major: u32, arg1: usize) -> isize {
                  : "volatile");
     res
 }
-
