@@ -5,6 +5,7 @@
 pub mod button;
 pub mod console;
 pub mod electronics;
+pub mod error;
 pub mod fmt;
 pub mod ipc;
 pub mod led;
@@ -13,6 +14,7 @@ pub mod syscalls;
 pub mod timer;
 pub mod gpio;
 pub mod simple_ble;
+pub mod util;
 
 extern crate alloc;
 extern crate compiler_builtins;

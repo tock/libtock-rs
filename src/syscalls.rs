@@ -58,7 +58,7 @@ pub unsafe fn allow16(major: u32, minor: u32, slice: &[u16]) -> isize {
 pub unsafe fn subscribe(
     major: u32,
     minor: u32,
-    cb: extern "C" fn(usize, usize, usize, usize),
+    cb: unsafe extern "C" fn(usize, usize, usize, usize),
     ud: usize,
 ) -> isize {
     let res;
