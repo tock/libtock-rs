@@ -18,22 +18,33 @@ pub mod util;
 
 extern crate alloc;
 extern crate compiler_builtins;
+#[cfg(target_os = "tock")]
 extern crate linked_list_allocator;
+#[cfg(not(target_os = "tock"))]
+extern crate std;
 
+#[cfg(target_os = "tock")]
 mod lang_items;
 
+#[cfg(target_os = "tock")]
 use alloc::allocator::Alloc;
+#[cfg(target_os = "tock")]
 use alloc::allocator::AllocErr;
+#[cfg(target_os = "tock")]
 use alloc::allocator::Layout;
 use alloc::string::String;
 use console::Console;
+#[cfg(target_os = "tock")]
 use core::mem::{align_of, size_of};
 use core::ptr;
+#[cfg(target_os = "tock")]
 use linked_list_allocator::{align_up, Heap};
 
 // None-threaded heap wrapper based on `r9` register instead of global variable
+#[cfg(target_os = "tock")]
 struct BaseHeap;
 
+#[cfg(target_os = "tock")]
 impl BaseHeap {
     pub unsafe fn heap(&self) -> &mut Heap {
         let heap: *mut Heap;
@@ -60,6 +71,7 @@ impl BaseHeap {
     }
 }
 
+#[cfg(target_os = "tock")]
 unsafe impl<'a> Alloc for &'a BaseHeap {
     unsafe fn alloc(&mut self, layout: Layout) -> Result<*mut u8, AllocErr> {
         self.heap().allocate_first_fit(layout)
@@ -70,10 +82,12 @@ unsafe impl<'a> Alloc for &'a BaseHeap {
     }
 }
 
+#[cfg(target_os = "tock")]
 #[global_allocator]
 static ALLOCATOR: BaseHeap = BaseHeap;
 
 /// Tock programs' entry point
+#[cfg(target_os = "tock")]
 #[doc(hidden)]
 #[no_mangle]
 #[naked]
@@ -90,7 +104,9 @@ pub extern "C" fn _start(mem_start: usize, app_heap_break: usize, kernel_memory_
         BaseHeap.init(1024);
 
         let mut console = Console::new();
-        console.write(String::from("\nProcess started\n===============\nmem_start           = "));
+        console.write(String::from(
+            "\nProcess started\n===============\nmem_start           = ",
+        ));
         console.write(fmt::u32_as_hex(mem_start as u32));
         console.write(String::from("\napp_heap_beak       = "));
         console.write(fmt::u32_as_hex(app_heap_break as u32));

@@ -34,3 +34,21 @@ fn render_digit(digit: u8) -> char {
         ('a' as u8 + digit - 10) as char
     }
 }
+
+#[cfg(test)]
+mod test {
+    use fmt::*;
+
+    #[test]
+    pub fn digits_are_correctly_rendered_in_decimal() {
+        assert_eq!(u32_as_decimal(123), String::from("0000000123"));
+        assert_eq!(u32_as_decimal(2000000123), String::from("2000000123"));
+    }
+
+    #[test]
+    pub fn digits_are_correctly_rendered_in_hex() {
+        assert_eq!(u32_as_hex(0x1000_0000), String::from("0x10000000"));
+        assert_eq!(u32_as_hex(0x1000_3000), String::from("0x10003000"));
+        assert_eq!(u32_as_hex(0x0000_0000), String::from("0x00000000"));
+    }
+}
