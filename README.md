@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/torfmaster/libtock-rs.svg?branch=master)](https://travis-ci.org/torfmaster/libtock-rs)
 # libtock-rs
 Rust userland library for Tock (WIP)
 
