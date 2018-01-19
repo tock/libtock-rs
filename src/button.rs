@@ -17,7 +17,7 @@ mod subscribe_nr {
     pub const SUBSCRIBE_CALLBACK: u32 = 0;
 }
 
-pub struct Buttons<CB> {
+pub struct Buttons<CB: ButtonCallback> {
     count: usize,
     callback: CB,
 }
@@ -72,6 +72,14 @@ impl<CB: ButtonCallback> Buttons<CB> {
             unexpected => Err(TockValue::Unexpected(unexpected)),
         }
     }
+
+    pub fn iter_mut(&mut self) -> ButtonIter {
+        ButtonIter {
+            curr_button: 0,
+            button_count: self.count,
+            lifetime: Default::default(),
+        }
+    }
 }
 
 pub trait ButtonCallback {
@@ -104,7 +112,7 @@ impl From<usize> for ButtonState {
     }
 }
 
-impl<CB> Drop for Buttons<CB> {
+impl<CB: ButtonCallback> Drop for Buttons<CB> {
     fn drop(&mut self) {
         extern "C" fn noop_callback(_: usize, _: usize, _: usize, _: usize) {}
 
@@ -123,16 +131,12 @@ impl<CB> Drop for Buttons<CB> {
     }
 }
 
-impl<'a, CB> IntoIterator for &'a mut Buttons<CB> {
+impl<'a, CB: ButtonCallback> IntoIterator for &'a mut Buttons<CB> {
     type Item = ButtonHandle<'a>;
     type IntoIter = ButtonIter<'a>;
 
     fn into_iter(self) -> Self::IntoIter {
-        ButtonIter {
-            curr_button: 0,
-            button_count: self.count,
-            lifetime: Default::default(),
-        }
+        self.iter_mut()
     }
 }
 
