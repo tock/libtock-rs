@@ -5,10 +5,10 @@
 pub mod button;
 pub mod console;
 pub mod electronics;
-pub mod error;
 pub mod fmt;
 pub mod ipc;
 pub mod led;
+pub mod result;
 pub mod sensors;
 pub mod syscalls;
 pub mod timer;

@@ -1,6 +1,6 @@
-use error;
-use error::TockError;
-use error::TockResult;
+use result;
+use result::TockResult;
+use result::TockValue;
 use syscalls;
 use util::PhantomLifetime;
 
@@ -49,7 +49,7 @@ impl<CB: ButtonCallback> Buttons<CB> {
         let count = unsafe { syscalls::command(DRIVER_NUMBER, command_nr::COUNT, 0, 0) };
 
         if count <= 1 {
-            return Err(TockError::Expected(ButtonsError::NotSupported));
+            return Err(TockValue::Expected(ButtonsError::NotSupported));
         }
 
         let mut buttons = Buttons {
@@ -67,9 +67,9 @@ impl<CB: ButtonCallback> Buttons<CB> {
         };
 
         match return_code {
-            error::SUCCESS => Ok(buttons),
-            error::ENOMEM => Err(TockError::Expected(ButtonsError::SubscriptionFailed)),
-            unexpected => Err(TockError::Unexpected(unexpected)),
+            result::SUCCESS => Ok(buttons),
+            result::ENOMEM => Err(TockValue::Expected(ButtonsError::SubscriptionFailed)),
+            unexpected => Err(TockValue::Unexpected(unexpected)),
         }
     }
 }
@@ -176,9 +176,9 @@ impl<'a> ButtonHandle<'a> {
         };
 
         match return_code {
-            error::SUCCESS => Ok(Button { handle: self }),
-            error::ENOMEM => Err(TockError::Expected(ButtonError::ActivationFailed)),
-            unexpected => Err(TockError::Unexpected(unexpected)),
+            result::SUCCESS => Ok(Button { handle: self }),
+            result::ENOMEM => Err(TockValue::Expected(ButtonError::ActivationFailed)),
+            unexpected => Err(TockValue::Unexpected(unexpected)),
         }
     }
 
@@ -193,9 +193,9 @@ impl<'a> ButtonHandle<'a> {
         };
 
         match return_code {
-            error::SUCCESS => Ok(()),
-            error::ENOMEM => Err(TockError::Expected(ButtonError::ActivationFailed)),
-            unexpected => Err(TockError::Unexpected(unexpected)),
+            result::SUCCESS => Ok(()),
+            result::ENOMEM => Err(TockValue::Expected(ButtonError::ActivationFailed)),
+            unexpected => Err(TockValue::Unexpected(unexpected)),
         }
     }
 }
