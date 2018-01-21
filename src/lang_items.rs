@@ -6,7 +6,7 @@
 // ```
 // #[export_name = "main"]
 // pub extern "C" fn rustc_main(argc: isize, argv: *const *const u8) -> isize {
-//     start(main)
+//     start(main, argc, argv)
 // }
 // ```
 //
