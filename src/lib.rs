@@ -89,6 +89,7 @@ const STACK_SIZE: usize = 0x200;
 #[doc(hidden)]
 #[no_mangle]
 #[naked]
+#[link_section = ".start"]
 pub extern "C" fn _start(
     text_start: usize,
     mem_start: usize,
