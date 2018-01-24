@@ -91,7 +91,12 @@ static ALLOCATOR: BaseHeap = BaseHeap;
 #[doc(hidden)]
 #[no_mangle]
 #[naked]
-pub extern "C" fn _start(mem_start: usize, app_heap_break: usize, kernel_memory_break: usize) -> ! {
+pub extern "C" fn _start(
+    text_start: usize,
+    mem_start: usize,
+    memory_len: usize,
+    kernel_memory_break: usize,
+) -> ! {
     extern "C" {
         // This function is created internally by`rustc`. See `src/lang_items.rs` for more details.
         fn main(argc: isize, argv: *const *const u8) -> isize;
@@ -99,17 +104,18 @@ pub extern "C" fn _start(mem_start: usize, app_heap_break: usize, kernel_memory_
 
     unsafe {
         // Setup heap
-        asm!("mov r9, $0" : : "r"(app_heap_break) : : "volatile"); // Removing this line will result in a crash that requires reflashing the ROM...
+        asm!("mov r9, $0" : : "r"(mem_start) : : "volatile"); // Removing this line will result in a crash that requires reflashing the ROM...
 
         BaseHeap.init(1024);
 
         let mut console = Console::new();
-        console.write(String::from(
-            "\nProcess started\n===============\nmem_start           = ",
-        ));
+        console.write(String::from("\nProcess started\n==============="));
+        console.write(String::from("\ntext_start          = "));
+        console.write(fmt::u32_as_hex(text_start as u32));
+        console.write(String::from("\nmem_start           = "));
         console.write(fmt::u32_as_hex(mem_start as u32));
-        console.write(String::from("\napp_heap_beak       = "));
-        console.write(fmt::u32_as_hex(app_heap_break as u32));
+        console.write(String::from("\nmemory_len          = "));
+        console.write(fmt::u32_as_hex(memory_len as u32));
         console.write(String::from("\nkernel_memory_break = "));
         console.write(fmt::u32_as_hex(kernel_memory_break as u32));
         console.write(String::from("\n\n"));
