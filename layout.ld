@@ -151,4 +151,5 @@ SECTIONS {
     } > FLASH
     PROVIDE_HIDDEN (__exidx_end = .);
 
+
 }
