@@ -1,0 +1,3 @@
+[submodule "tock"]
+	path = tock
+	url = https://github.com/helena-project/tock

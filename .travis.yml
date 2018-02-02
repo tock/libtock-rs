@@ -2,22 +2,25 @@ language: rust
 rust:
   - nightly-2017-12-16
 
-
 os:
 - linux
 
 cache:
+  cargo: true
   directories:
-    - $HOME/gcc-arm-none-eabi-6_2-2016q4
+    - $HOME/downloads
 
-script:
+
+script: 
   - pushd $HOME
-  - wget -c https://developer.arm.com/-/media/Files/downloads/gnu-rm/6-2016q4/gcc-arm-none-eabi-6_2-2016q4-20161216-linux.tar.bz2?product=GNU%20ARM%20Embedded%20Toolchain,64-bit,,Linux,6-2016-q4-major -O gcc.tar.bz2
+  - wget -c https://developer.arm.com/-/media/Files/downloads/gnu-rm/6-2016q4/gcc-arm-none-eabi-6_2-2016q4-20161216-linux.tar.bz2?product=GNU%20ARM%20Embedded%20Toolchain,64-bit,,Linux,6-2016-q4-major -O downloads/gcc.tar.bz2
+  - pushd downloads
   - tar -xjf gcc.tar.bz2
-  - export PATH="$PATH:$HOME/gcc-arm-none-eabi-6_2-2016q4/bin"
   - popd
-  - cargo build --verbose --all
+  - export PATH="$PATH:$HOME/downloads/gcc-arm-none-eabi-6_2-2016q4/bin"
+  - popd
   - cargo test --verbose --all
-  - tools/install_dependencies.sh
+  - rm -rf target
+  - tools/install_xargo.sh
   - rustup component add rust-src
   - ./build_examples.sh
