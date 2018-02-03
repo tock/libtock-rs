@@ -11,13 +11,12 @@ use tock::timer;
 
 fn main() {
     let led = led::get(0).unwrap();
-    let name = String::from("Hello from Tock");
-    let uuid: [u16; 1] = [0x180D];
 
-    let ble = BleDeviceUninitialized::new(100, name, uuid.to_vec(), true)
-        .initialize()
-        .unwrap();
-    ble.start_advertising().unwrap();
+    let name = String::from("Hello from Tock");
+    let uuid: [u16; 1] = [0x1800];
+    let mut bleuninit = BleDeviceUninitialized::new(100, name, uuid.to_vec(), true, 1234);
+    let mut bleinit = bleuninit.initialize().unwrap();
+    bleinit.start_advertising().unwrap();
 
     loop {
         led.on();

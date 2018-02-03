@@ -1,8 +1,11 @@
+#[allow(unused_extern_crates)]
 extern crate alloc;
 use alloc::{String, Vec};
+use fmt;
 use syscalls::{allow, command, allow16};
 
 const DRIVER_NUMBER: u32 = 0x30000;
+const MAX_PAYLOAD_SIZE: usize = 2;
 
 mod ble_commands {
     pub const START_ADVERTISING: u32 = 0;
@@ -21,38 +24,50 @@ mod gap_data {
     pub const COMPLETE_LIST_16BIT_SERVICE_IDS: u32 = 0x03;
     pub const COMPLETE_LOCAL_NAME: u32 = 0x09;
     pub const SET_FLAGS: u32 = 1;
+    pub const SERVICE_DATA: u32 = 0x16;
 }
 
+#[allow(dead_code)]
 pub struct BleDeviceUninitialized {
     interval: u16,
     name: String,
     uuid: Vec<u16>,
     flags: Vec<u8>,
     buffer: [u8; 39],
+    service_payload: [u8; MAX_PAYLOAD_SIZE + 2],
+    temperature: u16,
 }
 
-pub struct BleDeviceAdvertising {
-    interval: u16,
-    name: String,
-    uuid: Vec<u16>,
-    flags: Vec<u8>,
-    buffer: [u8; 39],
+#[allow(dead_code)]
+pub struct BleDeviceInitialized<'a> {
+    interval: &'a mut u16,
+    name: &'a mut String,
+    uuid: &'a mut Vec<u16>,
+    flags: &'a mut Vec<u8>,
+    buffer: &'a mut [u8; 39],
+    service_payload: &'a mut [u8; MAX_PAYLOAD_SIZE + 2],
+    temperature: u16,
 }
 
-pub struct BleDeviceInitialized {
-    interval: u16,
-    name: String,
-    uuid: Vec<u16>,
-    flags: Vec<u8>,
-    buffer: [u8; 39],
+#[allow(dead_code)]
+pub struct BleDeviceAdvertising<'a> {
+    interval: &'a mut u16,
+    name: &'a mut String,
+    uuid: &'a mut Vec<u16>,
+    flags: &'a mut Vec<u8>,
+    buffer: &'a mut [u8; 39],
+    service_payload: &'a mut [u8; MAX_PAYLOAD_SIZE + 2],
+    temperature: u16,
 }
 
-impl BleDeviceUninitialized {
+#[allow(dead_code)]
+impl<'a> BleDeviceUninitialized {
     pub fn new(
         interval: u16,
         name: String,
         uuid: Vec<u16>,
         stay_visible: bool,
+        temperature: u16,
     ) -> BleDeviceUninitialized {
         let flags: [u8; 1] = [
             gap_flags::ONLY_LE | (if stay_visible {
@@ -68,28 +83,33 @@ impl BleDeviceUninitialized {
             uuid: uuid,
             flags: flags.to_vec(),
             buffer: [0; 39],
+            service_payload: [0; MAX_PAYLOAD_SIZE + 2],
+            temperature: temperature,
         }
     }
-    pub fn initialize(self) -> Result<BleDeviceInitialized, &'static str> {
+    pub fn initialize(&'a mut self) -> Result<BleDeviceInitialized<'a>, &'static str> {
         Ok(self)
             .and_then(|ble| ble.set_advertising_buffer())
+            .and_then(|ble| ble.request_address())
             .and_then(|ble| ble.set_advertising_interval())
             .and_then(|ble| ble.set_advertising_flags())
-            .and_then(|ble| ble.request_address())
-            .and_then(|ble| ble.set_advertsing_uuid())
             .and_then(|ble| ble.set_advertising_name())
+            .and_then(|ble| ble.set_advertsing_uuid())
+            .and_then(|ble| ble.set_service_payload())
             .and_then(|ble| {
                 Ok(BleDeviceInitialized {
-                    interval: ble.interval,
-                    name: ble.name,
-                    uuid: ble.uuid,
-                    flags: ble.flags,
-                    buffer: ble.buffer,
+                    interval: &mut ble.interval,
+                    name: &mut ble.name,
+                    uuid: &mut ble.uuid,
+                    flags: &mut ble.flags,
+                    buffer: &mut ble.buffer,
+                    service_payload: &mut ble.service_payload,
+                    temperature: ble.temperature,
                 })
             })
     }
 
-    fn set_advertising_interval(self) -> Result<Self, &'static str> {
+    fn set_advertising_interval(&mut self) -> Result<&mut Self, &'static str> {
         match unsafe {
             command(
                 DRIVER_NUMBER,
@@ -103,14 +123,14 @@ impl BleDeviceUninitialized {
         }
     }
 
-    fn request_address(self) -> Result<Self, &'static str> {
+    fn request_address(&mut self) -> Result<&mut Self, &'static str> {
         match unsafe { command(DRIVER_NUMBER, ble_commands::REQ_ADV_ADDRESS, 0, 0) } {
             0 => Ok(self),
             _ => Err(""),
         }
     }
 
-    fn set_advertising_name(self) -> Result<Self, &'static str> {
+    fn set_advertising_name(&mut self) -> Result<&mut Self, &'static str> {
         match unsafe {
             allow(
                 DRIVER_NUMBER,
@@ -123,7 +143,7 @@ impl BleDeviceUninitialized {
         }
     }
 
-    fn set_advertsing_uuid(self) -> Result<Self, &'static str> {
+    fn set_advertsing_uuid(&mut self) -> Result<&mut Self, &'static str> {
         match unsafe {
             allow16(
                 DRIVER_NUMBER,
@@ -136,14 +156,14 @@ impl BleDeviceUninitialized {
         }
     }
 
-    fn set_advertising_flags(self) -> Result<Self, &'static str> {
+    fn set_advertising_flags(&mut self) -> Result<&mut Self, &'static str> {
         match unsafe { allow(DRIVER_NUMBER, gap_data::SET_FLAGS, &self.flags) } {
             0 => Ok(self),
             _ => Err(""),
         }
     }
 
-    fn set_advertising_buffer(self) -> Result<Self, &'static str> {
+    fn set_advertising_buffer(&mut self) -> Result<&mut Self, &'static str> {
         match unsafe {
             allow(
                 DRIVER_NUMBER,
@@ -155,17 +175,36 @@ impl BleDeviceUninitialized {
             _ => Err(""),
         }
     }
+
+    fn set_service_payload(&mut self) -> Result<&mut Self, &'static str> {
+        {
+            let payload = &mut self.service_payload[2..MAX_PAYLOAD_SIZE + 2];
+            payload.clone_from_slice(&[0; MAX_PAYLOAD_SIZE]);
+        }
+        self.service_payload[1] = 0x18;
+        self.service_payload[0] = 0x09;
+        {
+            let payload = &mut self.service_payload[2..4];
+            payload.clone_from_slice(&fmt::convert_le(self.temperature));
+        }
+        match unsafe { allow(DRIVER_NUMBER, gap_data::SERVICE_DATA, &self.service_payload) } {
+            0 => Ok(self),
+            _ => Err(""),
+        }
+    }
 }
 
-impl BleDeviceInitialized {
-    pub fn start_advertising(self) -> Result<BleDeviceAdvertising, &'static str> {
+impl<'a> BleDeviceInitialized<'a> {
+    pub fn start_advertising(&mut self) -> Result<BleDeviceAdvertising, &'static str> {
         match unsafe { command(DRIVER_NUMBER, ble_commands::START_ADVERTISING, 0, 0) } {
             0 => Ok(BleDeviceAdvertising {
-                interval: self.interval,
-                name: self.name,
-                uuid: self.uuid,
-                flags: self.flags,
-                buffer: self.buffer,
+                interval: &mut self.interval,
+                name: &mut self.name,
+                uuid: &mut self.uuid,
+                flags: &mut self.flags,
+                buffer: &mut self.buffer,
+                service_payload: &mut self.service_payload,
+                temperature: self.temperature,
             }),
             _ => Err(""),
         }

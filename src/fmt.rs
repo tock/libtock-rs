@@ -35,6 +35,13 @@ fn render_digit(digit: u8) -> char {
     }
 }
 
+pub fn convert_le(number: u16) -> [u8; 2] {
+    let mut array: [u8; 2] = [0; 2];
+    array[0] = number as u8;
+    array[1] = (number >> 8) as u8;
+    array
+}
+
 #[cfg(test)]
 mod test {
     use fmt::*;
@@ -50,5 +57,12 @@ mod test {
         assert_eq!(u32_as_hex(0x1000_0000), String::from("0x10000000"));
         assert_eq!(u32_as_hex(0x1000_3000), String::from("0x10003000"));
         assert_eq!(u32_as_hex(0x0000_0000), String::from("0x00000000"));
+    }
+
+    #[test]
+    pub fn number_are_rendered_correctly() {
+        assert_eq!(convert_le(0x00FF), [255, 0]);
+        assert_eq!(convert_le(0x0100), [0, 1]);
+        assert_eq!(convert_le(0x01FF), [255, 1]);
     }
 }
