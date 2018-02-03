@@ -8,25 +8,24 @@ mod ninedof;
 
 pub use self::ninedof::*;
 
-extern fn cb<Reading>(x: usize, y: usize, z: usize, ptr: usize)
-        where Reading: Copy + From<(usize, usize, usize)> {
-    let res: &Cell<Option<Reading>> = unsafe {
-        mem::transmute(ptr)
-    };
+extern "C" fn cb<Reading>(x: usize, y: usize, z: usize, ptr: usize)
+where
+    Reading: Copy + From<(usize, usize, usize)>,
+{
+    let res: &Cell<Option<Reading>> = unsafe { mem::transmute(ptr) };
     res.set(Some(From::from((x, y, z))));
 }
 
 pub trait Sensor<Reading: Copy + From<(usize, usize, usize)>> {
-    fn driver_num(&self) -> u32;
+    fn driver_num(&self) -> usize;
 
     fn read(&mut self) -> Reading {
         let res: Cell<Option<Reading>> = Cell::new(None);
         let driver_num = self.driver_num();
         unsafe {
-            syscalls::subscribe(driver_num, 0, cb::<Reading>,
-                                mem::transmute(&res));
-            syscalls::command(driver_num, 1, 0,0);
-            yieldk_for(|| res.get().is_some() );
+            syscalls::subscribe(driver_num, 0, cb::<Reading>, mem::transmute(&res));
+            syscalls::command(driver_num, 1, 0, 0);
+            yieldk_for(|| res.get().is_some());
             res.get().unwrap()
         }
     }
@@ -52,7 +51,7 @@ macro_rules! single_value_sensor {
         pub struct $sensor_name;
 
         impl Sensor<$type_name> for $sensor_name {
-            fn driver_num(&self) -> u32 {
+            fn driver_num(&self) -> usize {
                 $driver_num
             }
         }
@@ -80,4 +79,3 @@ impl fmt::Display for Temperature {
         write!(f, "{}.{}\u{00B0}C", self.0 / 100, self.0 % 100)
     }
 }
-

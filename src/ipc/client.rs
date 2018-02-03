@@ -1,23 +1,23 @@
+use alloc::String;
+use alloc::allocator::{Alloc, Layout};
+use alloc::boxed::Box;
+use alloc::heap::Heap;
+use alloc::raw_vec::RawVec;
 use core::cell::Cell;
 use core::mem;
 use syscalls;
-use alloc::heap::Heap;
-use alloc::String;
-use alloc::boxed::Box;
-use alloc::raw_vec::RawVec;
-use alloc::allocator::{Alloc, Layout};
 
-const DRIVER_NUM: u32 = 0x10000;
+const DRIVER_NUM: usize = 0x10000;
 
 pub struct Client {
-    pid: u32,
+    pid: usize,
 }
 
 impl Client {
     pub fn new(pkg_name: String) -> Result<Client, ()> {
         unsafe {
             let res = discover(pkg_name)?;
-            Ok(Client { pid: res as u32 })
+            Ok(Client { pid: res })
         }
     }
 
@@ -40,7 +40,7 @@ impl Client {
     }
 
     pub unsafe fn notify_async(&mut self) -> Result<(), ()> {
-        if syscalls::command(DRIVER_NUM, self.pid, 0,0) < 0 {
+        if syscalls::command(DRIVER_NUM, self.pid, 0, 0) < 0 {
             return Err(());
         }
         Ok(())
@@ -74,16 +74,16 @@ impl Client {
     }
 }
 
-unsafe fn discover(pkg_name: String) -> Result<isize, ()> {
+unsafe fn discover(pkg_name: String) -> Result<usize, ()> {
     let res = syscalls::allow(DRIVER_NUM, 0, pkg_name.as_bytes());
     if res < 0 {
         Err(())
     } else {
-        Ok(res)
+        Ok(res as usize)
     }
 }
 
-unsafe fn share(pid: u32, base: *mut u8, len: usize) -> Result<(), ()> {
+unsafe fn share(pid: usize, base: *mut u8, len: usize) -> Result<(), ()> {
     use core::slice::from_raw_parts;
     let res = syscalls::allow(DRIVER_NUM, pid, from_raw_parts(base, len));
     if res < 0 {

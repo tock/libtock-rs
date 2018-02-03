@@ -6,9 +6,10 @@ extern crate tock;
 
 use alloc::string::String;
 use tock::console::Console;
+use tock::timer;
+use tock::timer::Duration;
 
-// TODO: Make alloc::string::ToString work
-// TODO: Make write!/format! work
+// TODO: Make format!/alloc::string::ToString work
 fn main() {
     let mut console = Console::new();
 
@@ -16,6 +17,6 @@ fn main() {
         console.write(String::from("Hello world! "));
         console.write(tock::fmt::u32_as_decimal(i));
         console.write(String::from("\n"));
-        tock::timer::delay_ms(500);
+        timer::sleep(Duration::from_ms(500))
     }
 }

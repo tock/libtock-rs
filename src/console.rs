@@ -4,7 +4,7 @@ use core::cell::Cell;
 use core::result::Result;
 use syscalls::{self, allow, yieldk_for};
 
-const DRIVER_NUM: u32 = 1;
+const DRIVER_NUM: usize = 1;
 
 pub struct Console;
 
@@ -58,7 +58,7 @@ unsafe fn putstr_async(
         return ret;
     }
 
-    ret = syscalls::command(DRIVER_NUM, 1, string.len() as isize, 0);
+    ret = syscalls::command(DRIVER_NUM, 1, string.len(), 0);
     if ret < 0 {
         return ret;
     }

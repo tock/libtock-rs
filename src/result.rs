@@ -21,4 +21,5 @@ impl<T, E> TockResultExt<T, E> for TockResult<T, E> {
 }
 
 pub const SUCCESS: isize = 0;
+pub const EALREADY: isize = -3;
 pub const ENOMEM: isize = -9;

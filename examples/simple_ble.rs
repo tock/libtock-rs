@@ -8,6 +8,7 @@ use alloc::String;
 use tock::led;
 use tock::simple_ble::BleDeviceUninitialized;
 use tock::timer;
+use tock::timer::Duration;
 
 fn main() {
     let led = led::get(0).unwrap();
@@ -20,8 +21,8 @@ fn main() {
 
     loop {
         led.on();
-        timer::delay_ms(500);
+        timer::sleep(Duration::from_ms(500));
         led.off();;
-        timer::delay_ms(500);
+        timer::sleep(Duration::from_ms(500));
     }
 }

@@ -4,14 +4,14 @@ use alloc::{String, Vec};
 use fmt;
 use syscalls::{allow, command, allow16};
 
-const DRIVER_NUMBER: u32 = 0x30000;
+const DRIVER_NUMBER: usize = 0x30000;
 const MAX_PAYLOAD_SIZE: usize = 2;
 
 mod ble_commands {
-    pub const START_ADVERTISING: u32 = 0;
-    pub const SET_ADVERTISING_INTERVAL: u16 = 3;
-    pub const ALLOW_ADVERTISMENT_BUFFER: u32 = 0x32;
-    pub const REQ_ADV_ADDRESS: u32 = 6;
+    pub const START_ADVERTISING: usize = 0;
+    pub const SET_ADVERTISING_INTERVAL: usize = 3;
+    pub const ALLOW_ADVERTISMENT_BUFFER: usize = 0x32;
+    pub const REQ_ADV_ADDRESS: usize = 6;
 }
 
 mod gap_flags {
@@ -21,10 +21,10 @@ mod gap_flags {
 }
 
 mod gap_data {
-    pub const COMPLETE_LIST_16BIT_SERVICE_IDS: u32 = 0x03;
-    pub const COMPLETE_LOCAL_NAME: u32 = 0x09;
-    pub const SET_FLAGS: u32 = 1;
-    pub const SERVICE_DATA: u32 = 0x16;
+    pub const COMPLETE_LIST_16BIT_SERVICE_IDS: usize = 0x03;
+    pub const COMPLETE_LOCAL_NAME: usize = 0x09;
+    pub const SET_FLAGS: usize = 1;
+    pub const SERVICE_DATA: usize = 0x16;
 }
 
 #[allow(dead_code)]
@@ -113,8 +113,8 @@ impl<'a> BleDeviceUninitialized {
         match unsafe {
             command(
                 DRIVER_NUMBER,
-                ble_commands::SET_ADVERTISING_INTERVAL as u32,
-                self.interval as isize,
+                ble_commands::SET_ADVERTISING_INTERVAL,
+                self.interval as usize,
                 0,
             )
         } {

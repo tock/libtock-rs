@@ -8,6 +8,7 @@ use alloc::string::String;
 use tock::console::Console;
 use tock::gpio::{GpioPinUnitialized, InputMode};
 use tock::timer;
+use tock::timer::Duration;
 
 // example works on p0.03
 fn main() {
@@ -21,6 +22,6 @@ fn main() {
         } else {
             console.write(String::from("false\n"));
         }
-        timer::delay_ms(500);
+        timer::sleep(Duration::from_ms(500));
     }
 }

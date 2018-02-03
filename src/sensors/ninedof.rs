@@ -3,7 +3,7 @@ use core::fmt;
 use core::mem;
 use syscalls::{self, yieldk_for};
 
-const DRIVER_NUM: u32 = 0x60004;
+const DRIVER_NUM: usize = 0x60004;
 
 pub struct Ninedof;
 
@@ -67,9 +67,9 @@ pub unsafe fn subscribe(cb: extern "C" fn(usize, usize, usize, usize), ud: usize
 }
 
 pub unsafe fn start_accel_reading() {
-    syscalls::command(DRIVER_NUM, 1, 0,0);
+    syscalls::command(DRIVER_NUM, 1, 0, 0);
 }
 
 pub unsafe fn start_magnetometer_reading() {
-    syscalls::command(DRIVER_NUM, 1, 0,0);
+    syscalls::command(DRIVER_NUM, 1, 0, 0);
 }

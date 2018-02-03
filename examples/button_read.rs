@@ -5,14 +5,15 @@ extern crate alloc;
 extern crate tock;
 
 use alloc::string::String;
-use tock::button::ButtonState;
-use tock::button::Buttons;
+use tock::buttons;
+use tock::buttons::ButtonState;
 use tock::console::Console;
 use tock::timer;
+use tock::timer::Duration;
 
 fn main() {
     let mut console = Console::new();
-    let mut buttons = Buttons::without_callback().unwrap();
+    let mut buttons = buttons::without_callback().unwrap();
     let mut button = buttons.iter_mut().next().unwrap();
     let button = button.enable().unwrap();
 
@@ -21,6 +22,6 @@ fn main() {
             ButtonState::Pressed => console.write(String::from("pressed\n")),
             ButtonState::Released => console.write(String::from("released\n")),
         }
-        timer::delay_ms(500);
+        timer::sleep(Duration::from_ms(500));
     }
 }

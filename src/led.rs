@@ -1,25 +1,27 @@
 use syscalls::command;
 
-const DRIVER_NUMBER: u32 = 0x00002;
+const DRIVER_NUMBER: usize = 0x00002;
 
 mod command_nr {
-    pub const COUNT: u32 = 0;
-    pub const ON: u32 = 1;
-    pub const OFF: u32 = 2;
-    pub const TOGGLE: u32 = 3;
+    pub const COUNT: usize = 0;
+    pub const ON: usize = 1;
+    pub const OFF: usize = 2;
+    pub const TOGGLE: usize = 3;
 }
 
 pub struct Led {
-    led_num: isize,
+    led_num: usize,
 }
 
 pub fn count() -> isize {
-    unsafe { command(DRIVER_NUMBER, command_nr::COUNT, 0,0) }
+    unsafe { command(DRIVER_NUMBER, command_nr::COUNT, 0, 0) }
 }
 
 pub fn get(led_num: isize) -> Option<Led> {
     if led_num >= 0 && led_num < count() {
-        Some(Led { led_num })
+        Some(Led {
+            led_num: led_num as usize,
+        })
     } else {
         None
     }
@@ -28,7 +30,7 @@ pub fn get(led_num: isize) -> Option<Led> {
 pub fn all() -> LedIter {
     LedIter {
         curr_led: 0,
-        led_count: count(),
+        led_count: count() as usize,
     }
 }
 
@@ -43,27 +45,27 @@ impl Led {
 
     pub fn on(&self) {
         unsafe {
-            command(DRIVER_NUMBER, command_nr::ON, self.led_num,0);
+            command(DRIVER_NUMBER, command_nr::ON, self.led_num, 0);
         }
     }
 
     pub fn off(&self) {
         unsafe {
-            command(DRIVER_NUMBER, command_nr::OFF, self.led_num,0);
+            command(DRIVER_NUMBER, command_nr::OFF, self.led_num, 0);
         }
     }
 
     pub fn toggle(&self) {
         unsafe {
-            command(DRIVER_NUMBER, command_nr::TOGGLE, self.led_num,0);
+            command(DRIVER_NUMBER, command_nr::TOGGLE, self.led_num, 0);
         }
     }
 }
 
 #[derive(Copy, Clone)]
 pub struct LedIter {
-    curr_led: isize,
-    led_count: isize,
+    curr_led: usize,
+    led_count: usize,
 }
 
 impl Iterator for LedIter {

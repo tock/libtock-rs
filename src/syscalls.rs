@@ -42,7 +42,7 @@ pub fn yieldk_for<F: Fn() -> bool>(cond: F) {
     }
 }
 
-pub unsafe fn allow(major: u32, minor: u32, slice: &[u8]) -> isize {
+pub unsafe fn allow(major: usize, minor: usize, slice: &[u8]) -> isize {
     #[cfg(target_os = "tock")]
     {
         let res;
@@ -58,7 +58,7 @@ pub unsafe fn allow(major: u32, minor: u32, slice: &[u8]) -> isize {
     }
 }
 
-pub unsafe fn allow16(major: u32, minor: u32, slice: &[u16]) -> isize {
+pub unsafe fn allow16(major: usize, minor: usize, slice: &[u16]) -> isize {
     #[cfg(target_os = "tock")]
     {
         let res;
@@ -75,8 +75,8 @@ pub unsafe fn allow16(major: u32, minor: u32, slice: &[u16]) -> isize {
 }
 
 pub unsafe fn subscribe(
-    major: u32,
-    minor: u32,
+    major: usize,
+    minor: usize,
     cb: unsafe extern "C" fn(usize, usize, usize, usize),
     ud: usize,
 ) -> isize {
@@ -95,7 +95,13 @@ pub unsafe fn subscribe(
     }
 }
 
-pub unsafe fn command(major: u32, minor: u32, arg1: isize, arg2: isize) -> isize {
+pub fn unsubscribe(major: usize, minor: usize) -> isize {
+    extern "C" fn noop_callback(_: usize, _: usize, _: usize, _: usize) {}
+
+    unsafe { subscribe(major, minor, noop_callback, 0) }
+}
+
+pub unsafe fn command(major: usize, minor: usize, arg1: usize, arg2: usize) -> isize {
     #[cfg(target_os = "tock")]
     {
         let res;

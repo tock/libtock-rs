@@ -1,17 +1,17 @@
 use syscalls::{command, subscribe};
 
-const DRIVER_NUMBER: u32 = 0x00004;
+const DRIVER_NUMBER: usize = 0x00004;
 mod gpio_commands {
-    pub const SUBSCRIBE_CALLBACK: u32 = 0;
-    pub const ENABLE_OUTPUT: u32 = 1;
-    pub const SET_HIGH: u32 = 2;
-    pub const SET_LOW: u32 = 3;
-    pub const TOGGLE: u32 = 4;
-    pub const ENABLE_INPUT: u32 = 5;
-    pub const READ: u32 = 6;
-    pub const ENABLE_INTERRUPT: u32 = 7;
-    pub const DISABLE_INTERRUPT: u32 = 8;
-    pub const DISABLE: u32 = 9;
+    pub const SUBSCRIBE_CALLBACK: usize = 0;
+    pub const ENABLE_OUTPUT: usize = 1;
+    pub const SET_HIGH: usize = 2;
+    pub const SET_LOW: usize = 3;
+    pub const TOGGLE: usize = 4;
+    pub const ENABLE_INPUT: usize = 5;
+    pub const READ: usize = 6;
+    pub const ENABLE_INTERRUPT: usize = 7;
+    pub const DISABLE_INTERRUPT: usize = 8;
+    pub const DISABLE: usize = 9;
 }
 
 pub enum InputMode {
@@ -27,7 +27,7 @@ pub enum IrqMode {
 }
 
 impl InputMode {
-    fn to_num(self) -> isize {
+    fn to_num(self) -> usize {
         match self {
             InputMode::PullNone => 0,
             InputMode::PullUp => 1,
@@ -37,7 +37,7 @@ impl InputMode {
 }
 
 impl IrqMode {
-    fn to_num(self) -> isize {
+    fn to_num(self) -> usize {
         match self {
             IrqMode::EitherEdge => 0,
             IrqMode::RisingEdge => 1,
@@ -47,19 +47,19 @@ impl IrqMode {
 }
 
 pub struct GpioPinUnitialized {
-    number: isize,
+    number: usize,
 }
 
 pub struct GpioPinWrite {
-    number: isize,
+    number: usize,
 }
 
 pub struct GpioPinRead {
-    number: isize,
+    number: usize,
 }
 
 impl GpioPinUnitialized {
-    pub fn new(number: isize) -> GpioPinUnitialized {
+    pub fn new(number: usize) -> GpioPinUnitialized {
         GpioPinUnitialized { number }
     }
 
@@ -183,4 +183,4 @@ impl Drop for GpioPinRead {
     }
 }
 
-extern "C" fn noop_callback(_: usize, _: usize, _: usize, ptr: usize) {}
+extern "C" fn noop_callback(_: usize, _: usize, _: usize, _: usize) {}

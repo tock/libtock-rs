@@ -4,6 +4,7 @@ extern crate tock;
 
 use tock::gpio::GpioPinUnitialized;
 use tock::timer;
+use tock::timer::Duration;
 
 // Example works on P0.03
 fn main() {
@@ -12,8 +13,8 @@ fn main() {
 
     loop {
         pin.set_high();
-        timer::delay_ms(500);
+        timer::sleep(Duration::from_ms(500));
         pin.set_low();;
-        timer::delay_ms(500);
+        timer::sleep(Duration::from_ms(500));
     }
 }

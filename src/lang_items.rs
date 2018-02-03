@@ -18,6 +18,7 @@
 // crate.
 use led;
 use timer;
+use timer::Duration;
 
 #[lang = "start"]
 fn start(main: fn(), _argc: isize, _argv: *const *const u8) -> isize {
@@ -39,7 +40,7 @@ fn panic_fmt() {
 fn cycle_leds() {
     for led in led::all().cycle() {
         led.on();
-        timer::delay_ms(100);
+        timer::sleep(Duration::from_ms(100));
         led.off();
     }
 }
@@ -49,10 +50,10 @@ fn flash_all_leds() {
         for led in led::all() {
             led.on();
         }
-        timer::delay_ms(100);
+        timer::sleep(Duration::from_ms(100));
         for led in led::all() {
             led.off();
         }
-        timer::delay_ms(100);
+        timer::sleep(Duration::from_ms(100));
     }
 }

@@ -4,17 +4,59 @@ use result::TockValue;
 use syscalls;
 use util::PhantomLifetime;
 
-const DRIVER_NUMBER: u32 = 0x00003;
+const DRIVER_NUMBER: usize = 0x00003;
 
 mod command_nr {
-    pub const COUNT: u32 = 0;
-    pub const ENABLE_INTERRUPT: u32 = 1;
-    pub const DISABLE_INTERRUPT: u32 = 2;
-    pub const READ: u32 = 3;
+    pub const COUNT: usize = 0;
+    pub const ENABLE_INTERRUPT: usize = 1;
+    pub const DISABLE_INTERRUPT: usize = 2;
+    pub const READ: usize = 3;
 }
 
 mod subscribe_nr {
-    pub const SUBSCRIBE_CALLBACK: u32 = 0;
+    pub const SUBSCRIBE_CALLBACK: usize = 0;
+}
+
+pub fn without_callback() -> TockResult<Buttons<()>, ButtonsError> {
+    with_callback(())
+}
+
+pub fn with_callback<CB: ButtonCallback>(callback: CB) -> TockResult<Buttons<CB>, ButtonsError> {
+    unsafe extern "C" fn button_callback<CB: ButtonCallback>(
+        button_num: usize,
+        state: usize,
+        _: usize,
+        userdata: usize,
+    ) {
+        let callback = &mut *(userdata as *mut CB);
+        callback.callback(button_num, state.into());
+    }
+
+    let count = unsafe { syscalls::command(DRIVER_NUMBER, command_nr::COUNT, 0, 0) };
+
+    if count < 1 {
+        return Err(TockValue::Expected(ButtonsError::NotSupported));
+    }
+
+    let mut buttons = Buttons {
+        count: count as usize,
+        callback,
+    };
+
+    let return_code = unsafe {
+        syscalls::subscribe(
+            DRIVER_NUMBER,
+            subscribe_nr::SUBSCRIBE_CALLBACK,
+            button_callback::<CB>,
+            &mut buttons.callback as *mut _ as usize,
+        )
+    };
+
+    match return_code {
+        result::SUCCESS => Ok(buttons),
+        result::ENOMEM => Err(TockValue::Expected(ButtonsError::SubscriptionFailed)),
+        unexpected => Err(TockValue::Unexpected(unexpected)),
+    }
 }
 
 pub struct Buttons<CB: ButtonCallback> {
@@ -28,51 +70,7 @@ pub enum ButtonsError {
     SubscriptionFailed,
 }
 
-impl Buttons<()> {
-    pub fn without_callback() -> TockResult<Self, ButtonsError> {
-        Buttons::with_callback(())
-    }
-}
-
 impl<CB: ButtonCallback> Buttons<CB> {
-    pub fn with_callback(callback: CB) -> TockResult<Self, ButtonsError> {
-        unsafe extern "C" fn button_callback<CB: ButtonCallback>(
-            button_num: usize,
-            state: usize,
-            _: usize,
-            userdata: usize,
-        ) {
-            let callback = &mut *(userdata as *mut CB);
-            callback.callback(button_num, state.into());
-        }
-
-        let count = unsafe { syscalls::command(DRIVER_NUMBER, command_nr::COUNT, 0, 0) };
-
-        if count <= 1 {
-            return Err(TockValue::Expected(ButtonsError::NotSupported));
-        }
-
-        let mut buttons = Buttons {
-            count: count as usize,
-            callback,
-        };
-
-        let return_code = unsafe {
-            syscalls::subscribe(
-                DRIVER_NUMBER,
-                subscribe_nr::SUBSCRIBE_CALLBACK,
-                button_callback::<CB>,
-                &mut buttons.callback as *mut _ as usize,
-            )
-        };
-
-        match return_code {
-            result::SUCCESS => Ok(buttons),
-            result::ENOMEM => Err(TockValue::Expected(ButtonsError::SubscriptionFailed)),
-            unexpected => Err(TockValue::Unexpected(unexpected)),
-        }
-    }
-
     pub fn iter_mut(&mut self) -> ButtonIter {
         ButtonIter {
             curr_button: 0,
@@ -114,20 +112,7 @@ impl From<usize> for ButtonState {
 
 impl<CB: ButtonCallback> Drop for Buttons<CB> {
     fn drop(&mut self) {
-        extern "C" fn noop_callback(_: usize, _: usize, _: usize, _: usize) {}
-
-        unsafe {
-            syscalls::subscribe(
-                DRIVER_NUMBER,
-                subscribe_nr::SUBSCRIBE_CALLBACK,
-                noop_callback,
-                0,
-            );
-        }
-
-        for mut button in self {
-            let _ignore_result = button.disable();
-        }
+        syscalls::unsubscribe(DRIVER_NUMBER, subscribe_nr::SUBSCRIBE_CALLBACK);
     }
 }
 
@@ -174,7 +159,7 @@ impl<'a> ButtonHandle<'a> {
             syscalls::command(
                 DRIVER_NUMBER,
                 command_nr::ENABLE_INTERRUPT,
-                self.button_num as isize,
+                self.button_num,
                 0,
             )
         };
@@ -191,7 +176,7 @@ impl<'a> ButtonHandle<'a> {
             syscalls::command(
                 DRIVER_NUMBER,
                 command_nr::DISABLE_INTERRUPT,
-                self.button_num as isize,
+                self.button_num,
                 0,
             )
         };
@@ -219,7 +204,7 @@ impl<'a> Button<'a> {
             ButtonState::from(syscalls::command(
                 DRIVER_NUMBER,
                 command_nr::READ,
-                self.handle.button_num as isize,
+                self.handle.button_num,
                 0,
             ) as usize)
         }

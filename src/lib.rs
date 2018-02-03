@@ -2,20 +2,20 @@
            lang_items, naked_functions)]
 #![no_std]
 
-pub mod button;
+pub mod buttons;
 pub mod console;
+pub mod debug;
 pub mod electronics;
 pub mod fmt;
+pub mod gpio;
 pub mod ipc;
 pub mod led;
 pub mod result;
 pub mod sensors;
+pub mod simple_ble;
 pub mod syscalls;
 pub mod timer;
-pub mod gpio;
-pub mod simple_ble;
 pub mod util;
-pub mod debug;
 
 extern crate alloc;
 extern crate compiler_builtins;
@@ -33,14 +33,12 @@ use alloc::allocator::Alloc;
 use alloc::allocator::AllocErr;
 #[cfg(target_os = "tock")]
 use alloc::allocator::Layout;
-use alloc::slice;
 use alloc::string::String;
 use console::Console;
 use core::mem;
 use core::ptr;
 #[cfg(target_os = "tock")]
 use linked_list_allocator::Heap;
-use syscalls::yieldk_for;
 
 // None-threaded heap wrapper based on `r9` register instead of global variable
 #[cfg(target_os = "tock")]
@@ -61,7 +59,7 @@ impl StackOwnedHeap {
     ///
     /// This function must be called at most once. The heap_buffer must remain valid until the end of the process.
     #[inline(never)]
-    unsafe fn init(&mut self, heap_buffer: &[u8]) {
+    unsafe fn init(&mut self, heap_buffer: &mut [u8]) {
         let heap_location = heap_buffer.as_ptr() as usize;
 
         let heap_bottom = heap_location + mem::size_of::<Heap>();
@@ -85,7 +83,7 @@ unsafe impl<'a> Alloc for &'a StackOwnedHeap {
 #[global_allocator]
 static ALLOCATOR: StackOwnedHeap = StackOwnedHeap;
 
-const HEAP_SIZE: usize = 0x400;
+const HEAP_SIZE: usize = 0x200;
 const HEAP_OFFSET: usize = 0x1c;
 const STACK_SIZE: usize = 0x400;
 
@@ -96,32 +94,28 @@ const STACK_SIZE: usize = 0x400;
 #[naked]
 #[link_section = ".start"]
 pub extern "C" fn _start(
-    text_start: usize,
+    _text_start: usize,
     mem_start: usize,
-    memory_len: usize,
-    app_heap_break: usize,
+    _memory_len: usize,
+    _app_heap_break: usize,
 ) -> ! {
     unsafe {
         asm!("mov sp, $0" : : "r"(mem_start+HEAP_SIZE+STACK_SIZE) : "memory" :  "volatile" );
         asm!("mov r9, $0" : : "r"(mem_start+HEAP_SIZE+STACK_SIZE) : : "volatile");
-        run_with_new_stack();
-    }
-
-    loop {
-        syscalls::yieldk();
+        run_with_new_stack()
     }
 }
 
 #[cfg(target_os = "tock")]
 #[inline(never)]
-unsafe fn run_with_new_stack() {
+unsafe fn run_with_new_stack() -> ! {
     extern "C" {
         // This function is created internally by`rustc`. See `src/lang_items.rs` for more details.
         fn main(argc: isize, argv: *const *const u8) -> isize;
     }
     let mut heap: [u8; HEAP_SIZE as usize] = [0; HEAP_SIZE as usize];
 
-    StackOwnedHeap.init(&heap);
+    StackOwnedHeap.init(&mut heap);
 
     let mut console = Console::new();
     console.write(String::from(
@@ -131,5 +125,8 @@ unsafe fn run_with_new_stack() {
     console.write(String::from("\n"));
 
     main(0, ptr::null());
-    loop {}
+
+    loop {
+        syscalls::yieldk();
+    }
 }
