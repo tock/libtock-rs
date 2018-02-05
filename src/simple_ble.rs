@@ -2,16 +2,21 @@
 extern crate alloc;
 use alloc::{String, Vec};
 use fmt;
-use syscalls::{allow, command, allow16};
+use syscalls::{allow, command, subscribe, allow16};
 
 const DRIVER_NUMBER: usize = 0x30000;
 const MAX_PAYLOAD_SIZE: usize = 2;
+pub const BUFFER_SIZE: usize = 39;
+pub const BUFFER_SIZE_SCAN: usize = 39;
 
 mod ble_commands {
     pub const START_ADVERTISING: usize = 0;
     pub const SET_ADVERTISING_INTERVAL: usize = 3;
     pub const ALLOW_ADVERTISMENT_BUFFER: usize = 0x32;
     pub const REQ_ADV_ADDRESS: usize = 6;
+    pub const BLE_PASSIVE_SCAN_SUB: usize = 0;
+    pub const ALLOW_SCAN_BUFFER: usize = 0x31;
+    pub const PASSIVE_SCAN: usize = 5;
 }
 
 mod gap_flags {
@@ -33,7 +38,7 @@ pub struct BleDeviceUninitialized {
     name: String,
     uuid: Vec<u16>,
     flags: Vec<u8>,
-    buffer: [u8; 39],
+    buffer: [u8; BUFFER_SIZE],
     service_payload: [u8; MAX_PAYLOAD_SIZE + 2],
     temperature: u16,
 }
@@ -208,5 +213,48 @@ impl<'a> BleDeviceInitialized<'a> {
             }),
             _ => Err(""),
         }
+    }
+}
+
+#[allow(dead_code)]
+pub struct BleScanning<'a, CB: Callback> {
+    buffer: &'a [u8; BUFFER_SIZE_SCAN],
+    callback: CB,
+}
+
+pub trait Callback {
+    fn callback(&mut self, usize, usize);
+}
+impl<F: FnMut(usize, usize)> Callback for F {
+    fn callback(&mut self, result: usize, len: usize) {
+        self(result, len);
+    }
+}
+
+impl<'a, CB: Callback> BleScanning<'a, CB> {
+    pub fn start(
+        buffer: &[u8; BUFFER_SIZE_SCAN],
+        callback: CB,
+    ) -> Result<BleScanning<CB>, &'static str> {
+        extern "C" fn cb<CB: Callback>(result: usize, len: usize, _: usize, ud: usize) {
+            let mut callback = unsafe { &mut *(ud as *mut CB) };
+            callback.callback(result, len);
+        }
+        let mut ble = BleScanning {
+            buffer: buffer,
+            callback: callback,
+        };
+
+        unsafe {
+            subscribe(
+                DRIVER_NUMBER,
+                ble_commands::BLE_PASSIVE_SCAN_SUB,
+                cb::<CB>,
+                &mut ble.callback as *mut _ as usize,
+            );
+            allow(DRIVER_NUMBER, ble_commands::ALLOW_SCAN_BUFFER, buffer);
+            command(DRIVER_NUMBER, ble_commands::PASSIVE_SCAN, 1, 0);
+        }
+        Ok(ble)
     }
 }

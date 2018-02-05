@@ -16,6 +16,7 @@ pub mod simple_ble;
 pub mod syscalls;
 pub mod timer;
 pub mod util;
+pub mod ble_parser;
 
 extern crate alloc;
 extern crate compiler_builtins;
