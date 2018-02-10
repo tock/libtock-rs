@@ -9,13 +9,14 @@ extern crate tock;
 use alloc::*;
 use tock::ble_parser;
 use tock::led;
-use tock::syscalls::yieldk;
+use tock::simple_ble::BleDriver;
+use tock::syscalls;
 
 fn main() {
     let led = led::get(0).unwrap();
 
     let buffer = [0; tock::simple_ble::BUFFER_SIZE_SCAN];
-    tock::simple_ble::BleScanning::start(&buffer, |_: usize, _: usize| {
+    BleDriver::start(&buffer, |_: usize, _: usize| {
         if ble_parser::find(&buffer, 0xFF) == Some(vec![&0xFF, &0xFF, &0xFF, &0xFF]) {
             led.on();
         }
@@ -25,6 +26,6 @@ fn main() {
     }).unwrap();
 
     loop {
-        yieldk();
+        syscalls::yieldk();
     }
 }

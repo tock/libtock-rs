@@ -2,7 +2,10 @@
 extern crate alloc;
 use alloc::{String, Vec};
 use fmt;
-use syscalls::{allow, command, subscribe, allow16};
+use syscalls;
+use syscalls::ArgumentConverter;
+use syscalls::Callback;
+use syscalls::Subscription;
 
 const DRIVER_NUMBER: usize = 0x30000;
 const MAX_PAYLOAD_SIZE: usize = 2;
@@ -116,7 +119,7 @@ impl<'a> BleDeviceUninitialized {
 
     fn set_advertising_interval(&mut self) -> Result<&mut Self, &'static str> {
         match unsafe {
-            command(
+            syscalls::command(
                 DRIVER_NUMBER,
                 ble_commands::SET_ADVERTISING_INTERVAL,
                 self.interval as usize,
@@ -129,7 +132,9 @@ impl<'a> BleDeviceUninitialized {
     }
 
     fn request_address(&mut self) -> Result<&mut Self, &'static str> {
-        match unsafe { command(DRIVER_NUMBER, ble_commands::REQ_ADV_ADDRESS, 0, 0) } {
+        match unsafe {
+            syscalls::command(DRIVER_NUMBER, ble_commands::REQ_ADV_ADDRESS, 0, 0)
+        } {
             0 => Ok(self),
             _ => Err(""),
         }
@@ -137,7 +142,7 @@ impl<'a> BleDeviceUninitialized {
 
     fn set_advertising_name(&mut self) -> Result<&mut Self, &'static str> {
         match unsafe {
-            allow(
+            syscalls::allow(
                 DRIVER_NUMBER,
                 gap_data::COMPLETE_LOCAL_NAME,
                 self.name.as_bytes(),
@@ -150,7 +155,7 @@ impl<'a> BleDeviceUninitialized {
 
     fn set_advertsing_uuid(&mut self) -> Result<&mut Self, &'static str> {
         match unsafe {
-            allow16(
+            syscalls::allow16(
                 DRIVER_NUMBER,
                 gap_data::COMPLETE_LIST_16BIT_SERVICE_IDS,
                 &self.uuid,
@@ -162,7 +167,7 @@ impl<'a> BleDeviceUninitialized {
     }
 
     fn set_advertising_flags(&mut self) -> Result<&mut Self, &'static str> {
-        match unsafe { allow(DRIVER_NUMBER, gap_data::SET_FLAGS, &self.flags) } {
+        match unsafe { syscalls::allow(DRIVER_NUMBER, gap_data::SET_FLAGS, &self.flags) } {
             0 => Ok(self),
             _ => Err(""),
         }
@@ -170,7 +175,7 @@ impl<'a> BleDeviceUninitialized {
 
     fn set_advertising_buffer(&mut self) -> Result<&mut Self, &'static str> {
         match unsafe {
-            allow(
+            syscalls::allow(
                 DRIVER_NUMBER,
                 ble_commands::ALLOW_ADVERTISMENT_BUFFER,
                 &self.buffer,
@@ -192,7 +197,9 @@ impl<'a> BleDeviceUninitialized {
             let payload = &mut self.service_payload[2..4];
             payload.clone_from_slice(&fmt::convert_le(self.temperature));
         }
-        match unsafe { allow(DRIVER_NUMBER, gap_data::SERVICE_DATA, &self.service_payload) } {
+        match unsafe {
+            syscalls::allow(DRIVER_NUMBER, gap_data::SERVICE_DATA, &self.service_payload)
+        } {
             0 => Ok(self),
             _ => Err(""),
         }
@@ -201,7 +208,9 @@ impl<'a> BleDeviceUninitialized {
 
 impl<'a> BleDeviceInitialized<'a> {
     pub fn start_advertising(&mut self) -> Result<BleDeviceAdvertising, &'static str> {
-        match unsafe { command(DRIVER_NUMBER, ble_commands::START_ADVERTISING, 0, 0) } {
+        match unsafe {
+            syscalls::command(DRIVER_NUMBER, ble_commands::START_ADVERTISING, 0, 0)
+        } {
             0 => Ok(BleDeviceAdvertising {
                 interval: &mut self.interval,
                 name: &mut self.name,
@@ -216,45 +225,36 @@ impl<'a> BleDeviceInitialized<'a> {
     }
 }
 
-#[allow(dead_code)]
-pub struct BleScanning<'a, CB: Callback> {
-    buffer: &'a [u8; BUFFER_SIZE_SCAN],
-    callback: CB,
-}
+pub struct BleConverter;
 
-pub trait Callback {
-    fn callback(&mut self, usize, usize);
-}
-impl<F: FnMut(usize, usize)> Callback for F {
-    fn callback(&mut self, result: usize, len: usize) {
-        self(result, len);
+impl<F: FnMut(usize, usize)> ArgumentConverter<F> for BleConverter {
+    fn convert(arg0: usize, arg1: usize, _: usize, callback: &mut F) {
+        callback(arg0, arg1);
     }
 }
 
-impl<'a, CB: Callback> BleScanning<'a, CB> {
-    pub fn start(
+pub struct BleDriver;
+
+impl<F: FnMut(usize, usize)> Callback<BleConverter> for F {
+    fn driver_number() -> usize {
+        DRIVER_NUMBER
+    }
+
+    fn subscribe_number() -> usize {
+        ble_commands::BLE_PASSIVE_SCAN_SUB
+    }
+}
+
+impl BleDriver {
+    pub fn start<'a, A: ArgumentConverter<CB>, CB: Callback<A>>(
         buffer: &[u8; BUFFER_SIZE_SCAN],
         callback: CB,
-    ) -> Result<BleScanning<CB>, &'static str> {
-        extern "C" fn cb<CB: Callback>(result: usize, len: usize, _: usize, ud: usize) {
-            let callback = unsafe { &mut *(ud as *mut CB) };
-            callback.callback(result, len);
-        }
-        let mut ble = BleScanning {
-            buffer: buffer,
-            callback: callback,
-        };
-
+    ) -> Result<Subscription<A, CB>, ()> {
+        let sub = syscalls::subscribe_new(callback);
         unsafe {
-            subscribe(
-                DRIVER_NUMBER,
-                ble_commands::BLE_PASSIVE_SCAN_SUB,
-                cb::<CB>,
-                &mut ble.callback as *mut _ as usize,
-            );
-            allow(DRIVER_NUMBER, ble_commands::ALLOW_SCAN_BUFFER, buffer);
-            command(DRIVER_NUMBER, ble_commands::PASSIVE_SCAN, 1, 0);
+            syscalls::allow(DRIVER_NUMBER, ble_commands::ALLOW_SCAN_BUFFER, buffer);
+            syscalls::command(DRIVER_NUMBER, ble_commands::PASSIVE_SCAN, 1, 0);
         }
-        Ok(ble)
+        Ok(sub)
     }
 }

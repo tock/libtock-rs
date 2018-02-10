@@ -4,8 +4,6 @@
 
 extern crate alloc;
 extern crate compiler_builtins;
-#[cfg(not(target_os = "tock"))]
-extern crate std;
 
 pub mod ble_parser;
 pub mod buttons;

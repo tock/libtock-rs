@@ -5,14 +5,13 @@ extern crate tock;
 
 use alloc::string::String;
 use tock::console::Console;
-use tock::temperature::TemperatureSensor;
+use tock::temperature::TemperatureDriver;
 
-// TODO: Make format!/alloc::string::ToString work
 #[allow(unreachable_code)]
 fn main() {
     let mut console = Console::new();
     #[allow(unused_variables)]
-    let temperature = TemperatureSensor::start_measurement(|result: isize| {
+    let temperature = TemperatureDriver::start_measurement(|result: isize| {
         console.write(String::from("Temperature:"));
         console.write(tock::fmt::i32_as_decimal(result as i32));
         console.write(String::from("\n"));
