@@ -95,6 +95,27 @@ pub unsafe fn subscribe(
     }
 }
 
+pub unsafe fn subscribe_signed(
+    major: usize,
+    minor: usize,
+    cb: unsafe extern "C" fn(isize, usize, usize, usize),
+    ud: usize,
+) -> isize {
+    #[cfg(target_os = "tock")]
+    {
+        let res;
+        asm!("svc 1" : "={r0}"(res)
+                 : "{r0}"(major) "{r1}"(minor) "{r2}"(cb) "{r3}"(ud)
+                 : "memory"
+                 : "volatile");
+        res
+    }
+    #[cfg(not(target_os = "tock"))]
+    {
+        0
+    }
+}
+
 pub fn unsubscribe(major: usize, minor: usize) -> isize {
     extern "C" fn noop_callback(_: usize, _: usize, _: usize, _: usize) {}
 

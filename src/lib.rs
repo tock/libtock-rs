@@ -17,6 +17,7 @@ pub mod syscalls;
 pub mod timer;
 pub mod util;
 pub mod ble_parser;
+pub mod temperature;
 
 extern crate alloc;
 extern crate compiler_builtins;

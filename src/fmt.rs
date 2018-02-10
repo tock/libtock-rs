@@ -8,6 +8,17 @@ pub fn u32_as_decimal(value: u32) -> String {
     result
 }
 
+pub fn i32_as_decimal(value: i32) -> String {
+    let mut result = String::new();
+    let mut value = value;
+    if value < 0 {
+        result.push_str("-");
+        value = -value;
+    }
+    write_u32_as_any_base(&mut result, value as u32, 1_000_000_000, 10);
+    result
+}
+
 pub fn u32_as_hex(value: u32) -> String {
     let mut result = String::new();
     result.push_str("0x");
@@ -50,6 +61,11 @@ mod test {
     pub fn digits_are_correctly_rendered_in_decimal() {
         assert_eq!(u32_as_decimal(123), String::from("0000000123"));
         assert_eq!(u32_as_decimal(2000000123), String::from("2000000123"));
+    }
+
+    #[test]
+    pub fn negative_numbers_are_rendered() {
+        assert_eq!(i32_as_decimal(-123), String::from("-0000000123"));
     }
 
     #[test]
