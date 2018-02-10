@@ -237,7 +237,7 @@ impl<'a, CB: Callback> BleScanning<'a, CB> {
         callback: CB,
     ) -> Result<BleScanning<CB>, &'static str> {
         extern "C" fn cb<CB: Callback>(result: usize, len: usize, _: usize, ud: usize) {
-            let mut callback = unsafe { &mut *(ud as *mut CB) };
+            let callback = unsafe { &mut *(ud as *mut CB) };
             callback.callback(result, len);
         }
         let mut ble = BleScanning {

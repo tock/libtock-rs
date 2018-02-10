@@ -21,7 +21,6 @@ pub fn yieldk() {
     // registers r4-r8, r10, r11 and SP (and r9 in PCS variants that designate
     // r9 as v6) As our compilation flags mark r9 as the PIC base register, it
     // does not need to be saved. Thus we must clobber r0-3, r12, and LR
-    #[cfg(target_os = "tock")]
     unsafe {
         asm!(
             "svc 0"
@@ -29,10 +28,6 @@ pub fn yieldk() {
             :
             : "memory", "r0", "r1", "r2", "r3", "r12", "lr"
             : "volatile");
-    }
-    #[cfg(not(target_os = "tock"))]
-    {
-        ()
     }
 }
 
@@ -43,35 +38,21 @@ pub fn yieldk_for<F: Fn() -> bool>(cond: F) {
 }
 
 pub unsafe fn allow(major: usize, minor: usize, slice: &[u8]) -> isize {
-    #[cfg(target_os = "tock")]
-    {
-        let res;
-        asm!("svc 3" : "={r0}"(res)
+    let res;
+    asm!("svc 3" : "={r0}"(res)
                  : "{r0}"(major) "{r1}"(minor) "{r2}"(slice.as_ptr()) "{r3}"(slice.len())
                  : "memory"
                  : "volatile");
-        res
-    }
-    #[cfg(not(target_os = "tock"))]
-    {
-        0
-    }
+    res
 }
 
 pub unsafe fn allow16(major: usize, minor: usize, slice: &[u16]) -> isize {
-    #[cfg(target_os = "tock")]
-    {
-        let res;
-        asm!("svc 3" : "={r0}"(res)
+    let res;
+    asm!("svc 3" : "={r0}"(res)
                  : "{r0}"(major) "{r1}"(minor) "{r2}"(slice.as_ptr()) "{r3}"(slice.len()*2)
                  : "memory"
                  : "volatile");
-        res
-    }
-    #[cfg(not(target_os = "tock"))]
-    {
-        0
-    }
+    res
 }
 
 pub unsafe fn subscribe(
@@ -80,19 +61,12 @@ pub unsafe fn subscribe(
     cb: unsafe extern "C" fn(usize, usize, usize, usize),
     ud: usize,
 ) -> isize {
-    #[cfg(target_os = "tock")]
-    {
-        let res;
-        asm!("svc 1" : "={r0}"(res)
+    let res;
+    asm!("svc 1" : "={r0}"(res)
                  : "{r0}"(major) "{r1}"(minor) "{r2}"(cb) "{r3}"(ud)
                  : "memory"
                  : "volatile");
-        res
-    }
-    #[cfg(not(target_os = "tock"))]
-    {
-        0
-    }
+    res
 }
 
 pub unsafe fn subscribe_signed(
@@ -101,19 +75,12 @@ pub unsafe fn subscribe_signed(
     cb: unsafe extern "C" fn(isize, usize, usize, usize),
     ud: usize,
 ) -> isize {
-    #[cfg(target_os = "tock")]
-    {
-        let res;
-        asm!("svc 1" : "={r0}"(res)
+    let res;
+    asm!("svc 1" : "={r0}"(res)
                  : "{r0}"(major) "{r1}"(minor) "{r2}"(cb) "{r3}"(ud)
                  : "memory"
                  : "volatile");
-        res
-    }
-    #[cfg(not(target_os = "tock"))]
-    {
-        0
-    }
+    res
 }
 
 pub fn unsubscribe(major: usize, minor: usize) -> isize {
@@ -123,33 +90,19 @@ pub fn unsubscribe(major: usize, minor: usize) -> isize {
 }
 
 pub unsafe fn command(major: usize, minor: usize, arg1: usize, arg2: usize) -> isize {
-    #[cfg(target_os = "tock")]
-    {
-        let res;
-        asm!("svc 2" : "={r0}"(res)
+    let res;
+    asm!("svc 2" : "={r0}"(res)
                  : "{r0}"(major) "{r1}"(minor) "{r2}"(arg1) "{r3}"(arg2)
                  : "memory"
                  : "volatile");
-        res
-    }
-    #[cfg(not(target_os = "tock"))]
-    {
-        0
-    }
+    res
 }
 
 pub unsafe fn memop(major: u32, arg1: usize) -> isize {
-    #[cfg(target_os = "tock")]
-    {
-        let res;
-        asm!("svc 4" : "={r0}"(res)
+    let res;
+    asm!("svc 4" : "={r0}"(res)
                  : "{r0}"(major) "{r1}"(arg1)
                  : "memory"
                  : "volatile");
-        res
-    }
-    #[cfg(not(target_os = "tock"))]
-    {
-        0
-    }
+    res
 }

@@ -19,8 +19,9 @@ script:
   - popd
   - export PATH="$PATH:$HOME/downloads/gcc-arm-none-eabi-6_2-2016q4/bin"
   - popd
-  - cargo test --verbose --all
   - rm -rf target
   - tools/install_xargo.sh
   - rustup component add rust-src
+  - export RUSTFLAGS="$RUSTFLAGS -D warnings"
+  - cargo test --lib
   - ./build_examples.sh

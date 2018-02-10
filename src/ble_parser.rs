@@ -12,7 +12,7 @@ pub fn find(buffer: &[u8; BUFFER_SIZE_SCAN], kind: u8) -> Option<Vec<&u8>> {
                     return Some(iter.take(len as usize - 1).collect::<Vec<&u8>>());
                 } else {
                     if len > 0 {
-                        for i in 0..len - 1 {
+                        for _ in 0..len - 1 {
                             iter.next();
                         }
                     } else {
@@ -32,7 +32,7 @@ mod test {
     pub fn extracts_data_for_ids_correctly() {
         let mut buf = [0; BUFFER_SIZE_SCAN];
         {
-            let mut slice = &mut buf[8..23];
+            let slice = &mut buf[8..23];
             let data = &[
                 0x02, 0x02, 0x01, 0x02, 0x01, 0x03, 0x03, 0x16, 0x01, 0x02, 0x04, 0xFF, 0x01, 0x02,
                 0x03,
@@ -49,7 +49,7 @@ mod test {
     pub fn doesnt_panic_for_defect_packets() {
         let mut buf = [0; BUFFER_SIZE_SCAN];
         {
-            let mut slice = &mut buf[8..18];
+            let slice = &mut buf[8..18];
             let data = &[0x02, 0x02, 0x00, 0x00, 0x00, 0x00, 0x0, 0x16, 0x01, 0x02];
             slice.clone_from_slice(data);
         }
