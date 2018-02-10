@@ -1,3 +1,6 @@
 [submodule "tock"]
 	path = tock
 	url = https://github.com/helena-project/tock
+[submodule "xargo"]
+	path = xargo
+	url = https://github.com/japaric/xargo

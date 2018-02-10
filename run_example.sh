@@ -8,7 +8,7 @@ tab_file_name=metadata.toml
 elf_file_name=cortex-m4.elf
 bin_file_name=cortex-m4.bin
 
-xargo build --release --example "$1" --target=thumbv7em-tock-eabi
+cargo run --manifest-path xargo/Cargo.toml -- build --release --example "$1" --target=thumbv7em-tock-eabi
 cp target/thumbv7em-tock-eabi/release/examples/"$1" "target/$elf_file_name"
 cargo run --manifest-path tock/userland/tools/elf2tbf/Cargo.toml -- -n "$1" -o "target/$bin_file_name" "target/$elf_file_name"
 
