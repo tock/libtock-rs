@@ -19,5 +19,16 @@ echo "build-date = $(date "+%Y-%m-%dT%H:%M:%SZ")" >> "target/$tab_file_name"
 
 out_file_name="$1".tab
 tar -C target -cf "target/$out_file_name" "$bin_file_name" "$tab_file_name"
-tockloader uninstall --jtag --arch cortex-m4 --board nrf52-dk --jtag-device nrf52 --app-address 0x20000 || true
+
+if [ "$#" -ge "2" ]
+then
+    if [ "$2" = "--dont-clear-apps" ]
+    then
+        echo "do not delete apps from board."
+    else
+        tockloader uninstall --jtag --arch cortex-m4 --board nrf52-dk --jtag-device nrf52 --app-address 0x20000 || true
+    fi        
+else
+    tockloader uninstall --jtag --arch cortex-m4 --board nrf52-dk --jtag-device nrf52 --app-address 0x20000 || true
+fi
 tockloader install --jtag --arch cortex-m4 --board nrf52-dk --jtag-device nrf52 --app-address 0x20000 "target/$out_file_name"
