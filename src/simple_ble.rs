@@ -27,7 +27,7 @@ mod gap_flags {
     pub const ONLY_LE: u8 = 0x04;
 }
 
-mod gap_data {
+pub mod gap_data {
     pub const COMPLETE_LIST_16BIT_SERVICE_IDS: usize = 0x03;
     pub const COMPLETE_LOCAL_NAME: usize = 0x09;
     pub const SET_FLAGS: usize = 1;

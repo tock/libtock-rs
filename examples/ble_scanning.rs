@@ -2,6 +2,10 @@
 #![feature(alloc)]
 
 extern crate alloc;
+extern crate corepack;
+extern crate serde;
+#[macro_use]
+extern crate serde_derive;
 extern crate tock;
 
 // Macro usages are not detected
@@ -12,22 +16,27 @@ use tock::led;
 use tock::simple_ble::BleDriver;
 use tock::syscalls;
 
-fn main() {
-    let led = led::get(0).unwrap();
-    let led2 = led::get(1).unwrap();
+#[derive(Deserialize)]
+struct LedCommand {
+    pub nr: u8,
+    pub st: bool,
+}
 
+fn main() {
     let buffer = [0; tock::simple_ble::BUFFER_SIZE_SCAN];
     BleDriver::start(&buffer, |_: usize, _: usize| {
-        if ble_parser::find(&buffer, 0xFF) == Some(vec![&0xFF, &0xFF, &0xFF, &0xFF]) {
-            led.on();
-        }
-        if ble_parser::find(&buffer, 0xFF) == Some(vec![&0xFF, &0xFF, &0x00, &0x00]) {
-            led.off();
-        }
-        match ble_parser::find(&buffer, 0x16) {
+        match ble_parser::find(&buffer, tock::simple_ble::gap_data::SERVICE_DATA as u8) {
             Some(payload) => {
-                if payload[0] == &0x01 {
-                    led2.toggle();
+                let payload: Vec<u8> = payload.iter().map(|&x| *x).collect::<Vec<u8>>();
+                let msg: LedCommand = corepack::from_bytes(payload.as_slice()).unwrap();
+                let msg_led = led::get(msg.nr as isize);
+                match msg_led {
+                    Some(msg_led) => if msg.st {
+                        msg_led.on();
+                    } else {
+                        msg_led.off();
+                    },
+                    _ => (),
                 }
             }
             None => (),
