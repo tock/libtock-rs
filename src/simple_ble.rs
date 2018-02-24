@@ -1,14 +1,13 @@
 #[allow(unused_extern_crates)]
 extern crate alloc;
 use alloc::{String, Vec};
-use fmt;
 use syscalls;
 use syscalls::ArgumentConverter;
 use syscalls::Callback;
 use syscalls::Subscription;
 
 const DRIVER_NUMBER: usize = 0x30000;
-const MAX_PAYLOAD_SIZE: usize = 2;
+pub const MAX_PAYLOAD_SIZE: usize = 9;
 pub const BUFFER_SIZE: usize = 39;
 pub const BUFFER_SIZE_SCAN: usize = 39;
 
@@ -36,14 +35,13 @@ mod gap_data {
 }
 
 #[allow(dead_code)]
-pub struct BleDeviceUninitialized {
+pub struct BleDeviceUninitialized<'a> {
     interval: u16,
     name: String,
     uuid: Vec<u16>,
     flags: Vec<u8>,
     buffer: [u8; BUFFER_SIZE],
-    service_payload: [u8; MAX_PAYLOAD_SIZE + 2],
-    temperature: u16,
+    service_payload: &'a mut Vec<u8>,
 }
 
 #[allow(dead_code)]
@@ -53,8 +51,7 @@ pub struct BleDeviceInitialized<'a> {
     uuid: &'a mut Vec<u16>,
     flags: &'a mut Vec<u8>,
     buffer: &'a mut [u8; 39],
-    service_payload: &'a mut [u8; MAX_PAYLOAD_SIZE + 2],
-    temperature: u16,
+    service_payload: &'a mut Vec<u8>,
 }
 
 #[allow(dead_code)]
@@ -64,18 +61,17 @@ pub struct BleDeviceAdvertising<'a> {
     uuid: &'a mut Vec<u16>,
     flags: &'a mut Vec<u8>,
     buffer: &'a mut [u8; 39],
-    service_payload: &'a mut [u8; MAX_PAYLOAD_SIZE + 2],
-    temperature: u16,
+    service_payload: &'a mut Vec<u8>,
 }
 
 #[allow(dead_code)]
-impl<'a> BleDeviceUninitialized {
+impl<'a> BleDeviceUninitialized<'a> {
     pub fn new(
         interval: u16,
         name: String,
         uuid: Vec<u16>,
         stay_visible: bool,
-        temperature: u16,
+        service_payload: &'a mut Vec<u8>,
     ) -> BleDeviceUninitialized {
         let flags: [u8; 1] = [
             gap_flags::ONLY_LE | (if stay_visible {
@@ -91,8 +87,7 @@ impl<'a> BleDeviceUninitialized {
             uuid: uuid,
             flags: flags.to_vec(),
             buffer: [0; 39],
-            service_payload: [0; MAX_PAYLOAD_SIZE + 2],
-            temperature: temperature,
+            service_payload: service_payload,
         }
     }
     pub fn initialize(&'a mut self) -> Result<BleDeviceInitialized<'a>, &'static str> {
@@ -112,7 +107,6 @@ impl<'a> BleDeviceUninitialized {
                     flags: &mut ble.flags,
                     buffer: &mut ble.buffer,
                     service_payload: &mut ble.service_payload,
-                    temperature: ble.temperature,
                 })
             })
     }
@@ -187,18 +181,8 @@ impl<'a> BleDeviceUninitialized {
     }
 
     fn set_service_payload(&mut self) -> Result<&mut Self, &'static str> {
-        {
-            let payload = &mut self.service_payload[2..MAX_PAYLOAD_SIZE + 2];
-            payload.clone_from_slice(&[0; MAX_PAYLOAD_SIZE]);
-        }
-        self.service_payload[1] = 0x18;
-        self.service_payload[0] = 0x09;
-        {
-            let payload = &mut self.service_payload[2..4];
-            payload.clone_from_slice(&fmt::convert_le(self.temperature));
-        }
         match unsafe {
-            syscalls::allow(DRIVER_NUMBER, gap_data::SERVICE_DATA, &self.service_payload)
+            syscalls::allow(DRIVER_NUMBER, gap_data::SERVICE_DATA, self.service_payload)
         } {
             0 => Ok(self),
             _ => Err(""),
@@ -218,7 +202,6 @@ impl<'a> BleDeviceInitialized<'a> {
                 flags: &mut self.flags,
                 buffer: &mut self.buffer,
                 service_payload: &mut self.service_payload,
-                temperature: self.temperature,
             }),
             _ => Err(""),
         }
