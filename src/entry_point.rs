@@ -11,14 +11,16 @@ use core::ptr;
 use fmt;
 use syscalls;
 
+const HEAP_SIZE: usize = 0x200;
+const STACK_SIZE: usize = 0x400;
+
 // None-threaded heap wrapper based on `r9` register instead of global variable
 pub(crate) struct StackOwnedHeap;
 
 impl StackOwnedHeap {
     unsafe fn heap(&self) -> &mut Heap {
-        let mut heap: *mut Heap;
+        let heap: *mut Heap;
         asm!("mov $0, r9" : "=r"(heap) : : : "volatile");
-        heap = ((heap as u32) - HEAP_SIZE as u32 + HEAP_OFFSET as u32) as *mut Heap;
         &mut *heap
     }
 
@@ -30,10 +32,12 @@ impl StackOwnedHeap {
     #[inline(never)]
     unsafe fn init(&mut self, heap_buffer: &mut [u8]) {
         let heap_location = heap_buffer.as_ptr() as usize;
+        asm!("mov r9, $0" : : "r"(heap_location) : : "volatile");
+        let heap = heap_location as *mut Heap;
 
         let heap_bottom = heap_location + mem::size_of::<Heap>();
         let heap_top = heap_location + heap_buffer.len();
-        *self.heap() = Heap::new(heap_bottom, heap_top - heap_bottom);
+        *heap = Heap::new(heap_bottom, heap_top - heap_bottom);
     }
 }
 
@@ -47,10 +51,6 @@ unsafe impl<'a> Alloc for &'a StackOwnedHeap {
     }
 }
 
-const HEAP_SIZE: usize = 0x200;
-const HEAP_OFFSET: usize = 0x1c;
-const STACK_SIZE: usize = 0x400;
-
 /// Tock programs' entry point
 #[doc(hidden)]
 #[no_mangle]
@@ -63,12 +63,12 @@ pub extern "C" fn _start(
     _app_heap_break: usize,
 ) -> ! {
     unsafe {
-        asm!("mov sp, $0" : : "r"(mem_start+HEAP_SIZE+STACK_SIZE) : "memory" :  "volatile" );
-        asm!("mov r9, $0" : : "r"(mem_start+HEAP_SIZE+STACK_SIZE) : : "volatile");
+        asm!("mov sp, $0" : : "r"(mem_start + HEAP_SIZE + STACK_SIZE) : "memory" :  "volatile" );
         run_with_new_stack()
     }
 }
 
+#[naked]
 #[inline(never)]
 unsafe fn run_with_new_stack() -> ! {
     extern "C" {
@@ -81,10 +81,10 @@ unsafe fn run_with_new_stack() -> ! {
 
     let mut console = Console::new();
     console.write(String::from(
-        "\nProcess started\n===============\nHeap position: \n",
+        "\nProcess started\n===============\nHeap position: ",
     ));
     console.write(fmt::u32_as_hex(heap.as_ptr() as u32));
-    console.write(String::from("\n"));
+    console.write(String::from("\n\n"));
 
     main(0, ptr::null());
 
