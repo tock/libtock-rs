@@ -1,3 +1,3 @@
 use core::marker::PhantomData;
 
-pub type PhantomLifetime<'a> = PhantomData<&'a ()>;
+pub(crate) type PhantomLifetime<'a> = PhantomData<&'a ()>;

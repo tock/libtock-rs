@@ -1,4 +1,6 @@
-use core::marker::PhantomData;
+use callback::CallbackSubscription;
+use callback::SubscribableCallback;
+
 pub fn yieldk() {
     // Note: A process stops yielding when there is a callback ready to run,
     // which the kernel executes by modifying the stack frame pushed by the
@@ -70,12 +72,6 @@ pub unsafe fn subscribe(
     res
 }
 
-pub fn unsubscribe(major: usize, minor: usize) -> isize {
-    extern "C" fn noop_callback(_: usize, _: usize, _: usize, _: usize) {}
-
-    unsafe { subscribe(major, minor, noop_callback, 0) }
-}
-
 pub unsafe fn command(major: usize, minor: usize, arg1: usize, arg2: usize) -> isize {
     let res;
     asm!("svc 2" : "={r0}"(res)
@@ -94,48 +90,40 @@ pub unsafe fn memop(major: u32, arg1: usize) -> isize {
     res
 }
 
-pub trait Callback<A> {
-    fn driver_number() -> usize;
-    fn subscribe_number() -> usize;
-}
-
-pub trait ArgumentConverter<CB: ?Sized> {
-    fn convert(usize, usize, usize, callback: &mut CB);
-}
-
-pub struct Subscription<A, CB: Callback<A>> {
-    pub callback: CB,
-    pub phantom_data: PhantomData<A>,
-}
-
-pub fn subscribe_new<A: ArgumentConverter<CB>, CB: Callback<A>>(
+pub fn subscribe_new<CB: SubscribableCallback>(
     mut callback: CB,
-) -> Subscription<A, CB> {
-    extern "C" fn c_callback<A: ArgumentConverter<CB>, CB: Callback<A>>(
+) -> (isize, CallbackSubscription<CB>) {
+    extern "C" fn c_callback<CB: SubscribableCallback>(
         arg0: usize,
         arg1: usize,
         arg2: usize,
         userdata: usize,
     ) {
         let callback = unsafe { &mut *(userdata as *mut CB) };
-        A::convert(arg0, arg1, arg2, callback);
+        callback.call_rust(arg0, arg1, arg2);
     }
-    unsafe {
-        subscribe(
-            CB::driver_number(),
-            CB::subscribe_number(),
-            c_callback::<A, CB>,
-            &mut callback as *mut CB as usize,
-        );
-    }
-    Subscription {
-        callback,
-        phantom_data: Default::default(),
-    }
-}
 
-impl<A, CB: Callback<A>> Drop for Subscription<A, CB> {
+    let return_code = unsafe {
+        subscribe(
+            callback.driver_number(),
+            callback.subscribe_number(),
+            c_callback::<CB>,
+            &mut callback as *mut CB as usize,
+        )
+    };
+    (return_code, CallbackSubscription { callback })
+}
+impl<CB: SubscribableCallback> Drop for CallbackSubscription<CB> {
     fn drop(&mut self) {
-        unsubscribe(CB::driver_number(), CB::subscribe_number());
+        extern "C" fn noop_callback(_: usize, _: usize, _: usize, _: usize) {}
+
+        unsafe {
+            subscribe(
+                self.callback.driver_number(),
+                self.callback.subscribe_number(),
+                noop_callback,
+                0,
+            );
+        }
     }
 }

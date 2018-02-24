@@ -1,3 +1,5 @@
+use callback::CallbackSubscription;
+use callback::SubscribableCallback;
 use result;
 use result::TockResult;
 use result::TockValue;
@@ -17,51 +19,31 @@ mod subscribe_nr {
     pub const SUBSCRIBE_CALLBACK: usize = 0;
 }
 
-pub fn without_callback() -> TockResult<Buttons<()>, ButtonsError> {
-    with_callback(())
-}
-
-pub fn with_callback<CB: ButtonCallback>(callback: CB) -> TockResult<Buttons<CB>, ButtonsError> {
-    unsafe extern "C" fn button_callback<CB: ButtonCallback>(
-        button_num: usize,
-        state: usize,
-        _: usize,
-        userdata: usize,
-    ) {
-        let callback = &mut *(userdata as *mut CB);
-        callback.callback(button_num, state.into());
-    }
-
+pub fn with_callback<CB: FnMut(usize, ButtonState)>(
+    callback: CB,
+) -> TockResult<Buttons<CB>, ButtonsError> {
     let count = unsafe { syscalls::command(DRIVER_NUMBER, command_nr::COUNT, 0, 0) };
 
     if count < 1 {
         return Err(TockValue::Expected(ButtonsError::NotSupported));
     }
 
-    let mut buttons = Buttons {
-        count: count as usize,
-        callback,
-    };
-
-    let return_code = unsafe {
-        syscalls::subscribe(
-            DRIVER_NUMBER,
-            subscribe_nr::SUBSCRIBE_CALLBACK,
-            button_callback::<CB>,
-            &mut buttons.callback as *mut _ as usize,
-        )
-    };
+    let (return_code, subscription) = syscalls::subscribe_new(ButtonsCallback { callback });
 
     match return_code {
-        result::SUCCESS => Ok(buttons),
+        result::SUCCESS => Ok(Buttons {
+            count: count as usize,
+            subscription,
+        }),
         result::ENOMEM => Err(TockValue::Expected(ButtonsError::SubscriptionFailed)),
         unexpected => Err(TockValue::Unexpected(unexpected)),
     }
 }
 
-pub struct Buttons<CB: ButtonCallback> {
+pub struct Buttons<CB: FnMut(usize, ButtonState)> {
     count: usize,
-    callback: CB,
+    #[allow(dead_code)] // Used in drop
+    subscription: CallbackSubscription<ButtonsCallback<CB>>,
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -70,7 +52,7 @@ pub enum ButtonsError {
     SubscriptionFailed,
 }
 
-impl<CB: ButtonCallback> Buttons<CB> {
+impl<CB: FnMut(usize, ButtonState)> Buttons<CB> {
     pub fn iter_mut(&mut self) -> ButtonIter {
         ButtonIter {
             curr_button: 0,
@@ -80,17 +62,21 @@ impl<CB: ButtonCallback> Buttons<CB> {
     }
 }
 
-pub trait ButtonCallback {
-    fn callback(&mut self, button_num: usize, state: ButtonState);
+struct ButtonsCallback<CB> {
+    callback: CB,
 }
 
-impl ButtonCallback for () {
-    fn callback(&mut self, _: usize, _: ButtonState) {}
-}
+impl<CB: FnMut(usize, ButtonState)> SubscribableCallback for ButtonsCallback<CB> {
+    fn driver_number(&self) -> usize {
+        DRIVER_NUMBER
+    }
 
-impl<F: FnMut(usize, ButtonState)> ButtonCallback for F {
-    fn callback(&mut self, button_num: usize, state: ButtonState) {
-        self(button_num, state);
+    fn subscribe_number(&self) -> usize {
+        subscribe_nr::SUBSCRIBE_CALLBACK
+    }
+
+    fn call_rust(&mut self, button_num: usize, state: usize, _: usize) {
+        (self.callback)(button_num, state.into());
     }
 }
 
@@ -110,13 +96,7 @@ impl From<usize> for ButtonState {
     }
 }
 
-impl<CB: ButtonCallback> Drop for Buttons<CB> {
-    fn drop(&mut self) {
-        syscalls::unsubscribe(DRIVER_NUMBER, subscribe_nr::SUBSCRIBE_CALLBACK);
-    }
-}
-
-impl<'a, CB: ButtonCallback> IntoIterator for &'a mut Buttons<CB> {
+impl<'a, CB: FnMut(usize, ButtonState)> IntoIterator for &'a mut Buttons<CB> {
     type Item = ButtonHandle<'a>;
     type IntoIter = ButtonIter<'a>;
 

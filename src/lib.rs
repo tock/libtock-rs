@@ -5,6 +5,8 @@
 extern crate alloc;
 extern crate compiler_builtins;
 
+mod callback;
+
 pub mod ble_parser;
 pub mod buttons;
 pub mod console;
@@ -13,6 +15,7 @@ pub mod electronics;
 pub mod fmt;
 pub mod gpio;
 pub mod ipc;
+pub mod ipc_cs;
 pub mod led;
 pub mod result;
 pub mod sensors;
@@ -20,7 +23,6 @@ pub mod simple_ble;
 pub mod temperature;
 pub mod timer;
 pub mod util;
-pub mod ipc_cs;
 
 #[cfg(target_os = "tock")]
 pub mod entry_point;

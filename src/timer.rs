@@ -1,3 +1,5 @@
+use callback::CallbackSubscription;
+use callback::SubscribableCallback;
 use core::cell::Cell;
 use core::isize;
 use result;
@@ -28,23 +30,9 @@ pub fn sleep(duration: Duration) {
     syscalls::yieldk_for(|| expired.get());
 }
 
-pub fn with_callback<CB: TimerCallback>(callback: CB) -> TockResult<Timer<CB>, TimerError> {
-    unsafe extern "C" fn c_callback<CB: TimerCallback>(
-        clock_value: usize,
-        alarm_id: usize,
-        _: usize,
-        userdata: usize,
-    ) {
-        let timer = &mut *(userdata as *mut Timer<CB>);
-        timer.callback.call(
-            ClockValue {
-                num_ticks: clock_value as isize,
-                clock_frequency: timer.clock_frequency,
-            },
-            Alarm { alarm_id },
-        );
-    }
-
+pub fn with_callback<CB: FnMut(ClockValue, Alarm)>(
+    callback: CB,
+) -> TockResult<Timer<CB>, TimerError> {
     let num_notifications =
         unsafe { syscalls::command(DRIVER_NUMBER, command_nr::IS_DRIVER_AVAILABLE, 0, 0) };
 
@@ -61,21 +49,19 @@ pub fn with_callback<CB: TimerCallback>(callback: CB) -> TockResult<Timer<CB>, T
         )));
     }
 
+    let (return_code, subscription) = syscalls::subscribe_new(TimerCallback {
+        callback,
+        clock_frequency: ClockFrequency {
+            hz: clock_frequency as usize,
+        },
+    });
+
     let timer = Timer {
         num_notifications: num_notifications as usize,
         clock_frequency: ClockFrequency {
             hz: clock_frequency as usize,
         },
-        callback,
-    };
-
-    let return_code = unsafe {
-        syscalls::subscribe(
-            DRIVER_NUMBER,
-            subscribe_nr::SUBSCRIBE_CALLBACK,
-            c_callback::<CB>,
-            &timer as *const _ as usize,
-        )
+        subscription,
     };
 
     match return_code {
@@ -85,10 +71,11 @@ pub fn with_callback<CB: TimerCallback>(callback: CB) -> TockResult<Timer<CB>, T
     }
 }
 
-pub struct Timer<CB: TimerCallback> {
+pub struct Timer<CB: FnMut(ClockValue, Alarm)> {
     num_notifications: usize,
     clock_frequency: ClockFrequency,
-    callback: CB,
+    #[allow(dead_code)] // Used in drop
+    subscription: CallbackSubscription<TimerCallback<CB>>,
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -98,7 +85,7 @@ pub enum TimerError {
     SubscriptionFailed,
 }
 
-impl<CB: TimerCallback> Timer<CB> {
+impl<CB: FnMut(ClockValue, Alarm)> Timer<CB> {
     pub fn num_notifications(&self) -> usize {
         self.num_notifications
     }
@@ -118,9 +105,8 @@ impl<CB: TimerCallback> Timer<CB> {
     }
 
     pub fn stop_alarm(&self, alarm: Alarm) -> TockResult<(), StopAlarmError> {
-        let return_code = unsafe {
-            syscalls::command(DRIVER_NUMBER, command_nr::STOP_ALARM, alarm.alarm_id, 0)
-        };
+        let return_code =
+            unsafe { syscalls::command(DRIVER_NUMBER, command_nr::STOP_ALARM, alarm.alarm_id, 0) };
 
         match return_code {
             result::SUCCESS => Ok(()),
@@ -134,9 +120,8 @@ impl<CB: TimerCallback> Timer<CB> {
         let alarm_instant =
             now.num_ticks() as usize + (duration.ms() as usize * self.clock_frequency.hz()) / 1000;
 
-        let alarm_id = unsafe {
-            syscalls::command(DRIVER_NUMBER, command_nr::SET_ALARM, alarm_instant, 0)
-        };
+        let alarm_id =
+            unsafe { syscalls::command(DRIVER_NUMBER, command_nr::SET_ALARM, alarm_instant, 0) };
 
         match alarm_id {
             _ if alarm_id >= 0 => Ok(Alarm {
@@ -148,19 +133,28 @@ impl<CB: TimerCallback> Timer<CB> {
     }
 }
 
-impl<CB: TimerCallback> Drop for Timer<CB> {
-    fn drop(&mut self) {
-        syscalls::unsubscribe(DRIVER_NUMBER, subscribe_nr::SUBSCRIBE_CALLBACK);
+struct TimerCallback<CB> {
+    callback: CB,
+    clock_frequency: ClockFrequency,
+}
+
+impl<CB: FnMut(ClockValue, Alarm)> SubscribableCallback for TimerCallback<CB> {
+    fn driver_number(&self) -> usize {
+        DRIVER_NUMBER
     }
-}
 
-pub trait TimerCallback {
-    fn call(&mut self, clock_value: ClockValue, alarm: Alarm);
-}
+    fn subscribe_number(&self) -> usize {
+        subscribe_nr::SUBSCRIBE_CALLBACK
+    }
 
-impl<F: FnMut(ClockValue, Alarm)> TimerCallback for F {
-    fn call(&mut self, clock_value: ClockValue, alarm: Alarm) {
-        self(clock_value, alarm);
+    fn call_rust(&mut self, clock_value: usize, alarm_id: usize, _: usize) {
+        (self.callback)(
+            ClockValue {
+                num_ticks: clock_value as isize,
+                clock_frequency: self.clock_frequency,
+            },
+            Alarm { alarm_id },
+        );
     }
 }
 
