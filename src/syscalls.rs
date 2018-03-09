@@ -1,5 +1,7 @@
 use callback::CallbackSubscription;
 use callback::SubscribableCallback;
+use shared_memory::ShareableMemory;
+use shared_memory::SharedMemory;
 
 pub fn yieldk() {
     // Note: A process stops yielding when there is a callback ready to run,
@@ -123,6 +125,29 @@ impl<CB: SubscribableCallback> Drop for CallbackSubscription<CB> {
                 self.callback.subscribe_number(),
                 noop_callback,
                 0,
+            );
+        }
+    }
+}
+
+pub fn allow_new<SM: ShareableMemory>(mut shareable_memory: SM) -> (isize, SharedMemory<SM>) {
+    let return_code = unsafe {
+        allow(
+            shareable_memory.driver_number(),
+            shareable_memory.allow_number(),
+            shareable_memory.to_bytes(),
+        )
+    };
+    (return_code, SharedMemory { shareable_memory })
+}
+
+impl<SM: ShareableMemory> Drop for SharedMemory<SM> {
+    fn drop(&mut self) {
+        unsafe {
+            allow(
+                self.shareable_memory.driver_number(),
+                self.shareable_memory.allow_number(),
+                &[],
             );
         }
     }

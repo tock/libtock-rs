@@ -10,7 +10,7 @@ extern crate tock;
 
 use alloc::String;
 use tock::led;
-use tock::simple_ble::BleDeviceUninitialized;
+use tock::simple_ble::BleAdvertisingDriver;
 use tock::timer;
 use tock::timer::Duration;
 
@@ -27,11 +27,9 @@ fn main() {
     let name = String::from("Tock!");
     let uuid: [u16; 1] = [0x0018];
 
-    let mut payload = corepack::to_bytes(LedCommand { nr: 2, st: true }).unwrap();
+    let payload = corepack::to_bytes(LedCommand { nr: 2, st: true }).unwrap();
 
-    let mut bleuninit = BleDeviceUninitialized::new(100, name, uuid.to_vec(), true, &mut payload);
-    let mut bleinit = bleuninit.initialize().unwrap();
-    let ble = bleinit.start_advertising().unwrap();
+    let handle = BleAdvertisingDriver::initialize(100, name, uuid.to_vec(), true, payload).unwrap();
 
     loop {
         led.on();

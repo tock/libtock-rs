@@ -1,5 +1,7 @@
 use callback::CallbackSubscription;
 use callback::SubscribableCallback;
+use shared_memory::ShareableMemory;
+use shared_memory::SharedMemory;
 
 pub fn yieldk_for<F: Fn() -> bool>(_: F) {
     unimplemented()
@@ -27,6 +29,10 @@ pub unsafe fn command(_: usize, _: usize, _: usize, _: usize) -> isize {
 }
 
 pub fn subscribe_new<CB: SubscribableCallback>(_: CB) -> (isize, CallbackSubscription<CB>) {
+    unimplemented()
+}
+
+pub fn allow_new<SM: ShareableMemory>(_: SM) -> (isize, SharedMemory<SM>) {
     unimplemented()
 }
 
