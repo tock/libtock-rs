@@ -1,3 +1,5 @@
+use callback::CallbackSubscription;
+use callback::SubscribableCallback;
 
 pub fn yieldk() {
     // Note: A process stops yielding when there is a callback ready to run,
@@ -38,7 +40,7 @@ pub fn yieldk_for<F: Fn() -> bool>(cond: F) {
     }
 }
 
-pub unsafe fn allow(major: u32, minor: u32, slice: &[u8]) -> isize {
+pub unsafe fn allow(major: usize, minor: usize, slice: &[u8]) -> isize {
     let res;
     asm!("svc 3" : "={r0}"(res)
                  : "{r0}"(major) "{r1}"(minor) "{r2}"(slice.as_ptr()) "{r3}"(slice.len())
@@ -47,7 +49,21 @@ pub unsafe fn allow(major: u32, minor: u32, slice: &[u8]) -> isize {
     res
 }
 
-pub unsafe fn subscribe(major: u32, minor: u32, cb: extern fn(usize, usize, usize, usize), ud: usize) -> isize {
+pub unsafe fn allow16(major: usize, minor: usize, slice: &[u16]) -> isize {
+    let res;
+    asm!("svc 3" : "={r0}"(res)
+                 : "{r0}"(major) "{r1}"(minor) "{r2}"(slice.as_ptr()) "{r3}"(slice.len()*2)
+                 : "memory"
+                 : "volatile");
+    res
+}
+
+pub unsafe fn subscribe(
+    major: usize,
+    minor: usize,
+    cb: unsafe extern "C" fn(usize, usize, usize, usize),
+    ud: usize,
+) -> isize {
     let res;
     asm!("svc 1" : "={r0}"(res)
                  : "{r0}"(major) "{r1}"(minor) "{r2}"(cb) "{r3}"(ud)
@@ -56,10 +72,10 @@ pub unsafe fn subscribe(major: u32, minor: u32, cb: extern fn(usize, usize, usiz
     res
 }
 
-pub unsafe fn command(major: u32, minor: u32, arg1: isize) -> isize {
+pub unsafe fn command(major: usize, minor: usize, arg1: usize, arg2: usize) -> isize {
     let res;
     asm!("svc 2" : "={r0}"(res)
-                 : "{r0}"(major) "{r1}"(minor) "{r2}"(arg1)
+                 : "{r0}"(major) "{r1}"(minor) "{r2}"(arg1) "{r3}"(arg2)
                  : "memory"
                  : "volatile");
     res
@@ -74,3 +90,40 @@ pub unsafe fn memop(major: u32, arg1: usize) -> isize {
     res
 }
 
+pub fn subscribe_new<CB: SubscribableCallback>(
+    mut callback: CB,
+) -> (isize, CallbackSubscription<CB>) {
+    extern "C" fn c_callback<CB: SubscribableCallback>(
+        arg0: usize,
+        arg1: usize,
+        arg2: usize,
+        userdata: usize,
+    ) {
+        let callback = unsafe { &mut *(userdata as *mut CB) };
+        callback.call_rust(arg0, arg1, arg2);
+    }
+
+    let return_code = unsafe {
+        subscribe(
+            callback.driver_number(),
+            callback.subscribe_number(),
+            c_callback::<CB>,
+            &mut callback as *mut CB as usize,
+        )
+    };
+    (return_code, CallbackSubscription { callback })
+}
+impl<CB: SubscribableCallback> Drop for CallbackSubscription<CB> {
+    fn drop(&mut self) {
+        extern "C" fn noop_callback(_: usize, _: usize, _: usize, _: usize) {}
+
+        unsafe {
+            subscribe(
+                self.callback.driver_number(),
+                self.callback.subscribe_number(),
+                noop_callback,
+                0,
+            );
+        }
+    }
+}

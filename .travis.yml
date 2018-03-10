@@ -1,0 +1,23 @@
+language: rust
+rust:
+  - nightly-2018-02-23
+
+os:
+  - linux
+
+cache:
+  directories:
+    - $HOME/.cargo
+    - xargo/target
+    - tock/userland/tools/elf2tbf/target
+
+install:
+  - wget -c https://developer.arm.com/-/media/Files/downloads/gnu-rm/6-2016q4/gcc-arm-none-eabi-6_2-2016q4-20161216-linux.tar.bz2
+  - tar -xjf gcc-arm-none-eabi-6_2-2016q4-20161216-linux.tar.bz2
+  - rustup component add rust-src
+
+script:
+  - export PATH="$PATH:gcc-arm-none-eabi-6_2-2016q4/bin"
+  - export RUSTFLAGS="$RUSTFLAGS -D warnings"
+  - cargo test --lib
+  - ./build_examples.sh

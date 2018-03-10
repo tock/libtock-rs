@@ -2,14 +2,15 @@
 
 extern crate tock;
 
-use tock::{led, timer};
+use tock::led;
+use tock::timer;
+use tock::timer::Duration;
 
 fn main() {
-    let led_count = led::count();
+    let led = led::get(0).unwrap();
+
     loop {
-        for i in 0..led_count {
-            led::toggle(i as u32);
-            timer::delay_ms(500);
-        }
+        led.toggle();
+        timer::sleep(Duration::from_ms(500));
     }
 }
