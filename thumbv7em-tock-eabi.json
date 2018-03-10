@@ -11,13 +11,7 @@
   "executables": true,
   "no-compiler-rt": false,
   "relocation-model": "ropi-rwpi",
-  "linker": "arm-none-eabi-ld",
-  "linker-flavor": "ld",
+  "linker-flavor": "ld.lld",
   "linker-is-gnu": true,
-  "disable-redzone": true,
-  "pre-link-args": {
-    "ld": [
-      "-Tlayout.ld"
-    ]
-  }
+  "disable-redzone": true
 }

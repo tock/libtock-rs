@@ -8,11 +8,11 @@ This project is nascent and still under heavy development, but first steps:
 
 1. Ensure you have a working toolchain available:
 
-    `rustup install nightly-2017-12-16`
+    `rustup install nightly-2018-03-06`
 
 2. Get a copy of this toolchain, in this repo's root:
 
-    `rustup override set nightly-2017-12-16`
+    `rustup override set nightly-2018-03-06`
 
 3. Need to grab a copy of the rust sources:
 
