@@ -1,6 +1,7 @@
 use callback::CallbackSubscription;
 use callback::SubscribableCallback;
 use core::marker::PhantomData;
+use core::slice;
 use syscalls;
 
 const DRIVER_NUMBER: usize = 0x10000;
@@ -10,12 +11,12 @@ mod ipc_commands {
     pub const NOTIFY_CLIENT: usize = 1;
 }
 
-pub struct IpcServerCallback<S, CB> {
+pub struct IpcServerCallback<S: ?Sized, CB> {
     callback: CB,
     phantom_data: PhantomData<S>,
 }
 
-impl<S, CB: FnMut(usize, usize, &mut S)> SubscribableCallback for IpcServerCallback<S, CB> {
+impl<CB: FnMut(usize, usize, &mut [u8])> SubscribableCallback for IpcServerCallback<[u8], CB> {
     fn driver_number(&self) -> usize {
         DRIVER_NUMBER
     }
@@ -25,8 +26,8 @@ impl<S, CB: FnMut(usize, usize, &mut S)> SubscribableCallback for IpcServerCallb
     }
 
     fn call_rust(&mut self, arg0: usize, arg1: usize, arg2: usize) {
-        let data = unsafe { &mut *(arg2 as *mut S) };
-        (self.callback)(arg0, arg1, data);
+        let mut v = unsafe { slice::from_raw_parts_mut(arg2 as *mut u8, arg1) };
+        (self.callback)(arg0, arg1, &mut v);
     }
 }
 
@@ -37,9 +38,9 @@ pub fn notify_client(pid: usize) {
 pub struct IpcServerDriver;
 
 impl IpcServerDriver {
-    pub fn start<S, CB: FnMut(usize, usize, &mut S)>(
+    pub fn start<CB: FnMut(usize, usize, &mut [u8])>(
         callback: CB,
-    ) -> Result<CallbackSubscription<IpcServerCallback<S, CB>>, ()> {
+    ) -> Result<CallbackSubscription<IpcServerCallback<[u8], CB>>, ()> {
         let (_, subscription) = syscalls::subscribe_new(IpcServerCallback {
             callback,
             phantom_data: Default::default(),
