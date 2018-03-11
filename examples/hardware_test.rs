@@ -35,7 +35,7 @@ fn main() {
 
     server.share(&mut buf, &mut payload);
 
-    server.subscribe_callback(|_: usize, _: usize| {
+    let handle = server.subscribe_callback(|_: usize, _: usize| {
         let filtered = buf.to_vec()
             .into_iter()
             .filter(|x| *x != 0)
@@ -49,4 +49,5 @@ fn main() {
     for _ in 0.. {
         timer::sleep(Duration::from_ms(500))
     }
+    handle.unwrap();
 }
