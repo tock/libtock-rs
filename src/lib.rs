@@ -22,7 +22,6 @@ pub mod sensors;
 pub mod simple_ble;
 pub mod temperature;
 pub mod timer;
-pub mod util;
 pub mod shared_memory;
 
 #[cfg(target_os = "tock")]

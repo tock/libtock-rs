@@ -4,7 +4,6 @@ use result;
 use result::TockResult;
 use result::TockValue;
 use syscalls;
-use util::PhantomLifetime;
 
 const DRIVER_NUMBER: usize = 0x00003;
 
@@ -57,7 +56,7 @@ impl<CB: FnMut(usize, ButtonState)> Buttons<CB> {
         ButtonIter {
             curr_button: 0,
             button_count: self.count,
-            lifetime: Default::default(),
+            _lifetime: &(),
         }
     }
 }
@@ -108,7 +107,7 @@ impl<'a, CB: FnMut(usize, ButtonState)> IntoIterator for &'a mut Buttons<CB> {
 pub struct ButtonIter<'a> {
     curr_button: usize,
     button_count: usize,
-    lifetime: PhantomLifetime<'a>,
+    _lifetime: &'a (),
 }
 
 impl<'a> Iterator for ButtonIter<'a> {
@@ -118,7 +117,7 @@ impl<'a> Iterator for ButtonIter<'a> {
         if self.curr_button < self.button_count {
             let item = ButtonHandle {
                 button_num: self.curr_button,
-                lifetime: Default::default(),
+                _lifetime: &(),
             };
             self.curr_button += 1;
             Some(item)
@@ -130,7 +129,7 @@ impl<'a> Iterator for ButtonIter<'a> {
 
 pub struct ButtonHandle<'a> {
     button_num: usize,
-    lifetime: PhantomLifetime<'a>,
+    _lifetime: &'a (),
 }
 
 impl<'a> ButtonHandle<'a> {

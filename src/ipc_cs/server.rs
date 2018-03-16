@@ -1,6 +1,5 @@
 use callback::CallbackSubscription;
 use callback::SubscribableCallback;
-use core::marker::PhantomData;
 use core::slice;
 use syscalls;
 
@@ -11,12 +10,11 @@ mod ipc_commands {
     pub const NOTIFY_CLIENT: usize = 1;
 }
 
-pub struct IpcServerCallback<S: ?Sized, CB> {
+pub struct IpcServerCallback<CB> {
     callback: CB,
-    phantom_data: PhantomData<S>,
 }
 
-impl<CB: FnMut(usize, usize, &mut [u8])> SubscribableCallback for IpcServerCallback<[u8], CB> {
+impl<CB: FnMut(usize, usize, &mut [u8])> SubscribableCallback for IpcServerCallback<CB> {
     fn driver_number(&self) -> usize {
         DRIVER_NUMBER
     }
@@ -40,11 +38,8 @@ pub struct IpcServerDriver;
 impl IpcServerDriver {
     pub fn start<CB: FnMut(usize, usize, &mut [u8])>(
         callback: CB,
-    ) -> Result<CallbackSubscription<IpcServerCallback<[u8], CB>>, ()> {
-        let (_, subscription) = syscalls::subscribe_new(IpcServerCallback {
-            callback,
-            phantom_data: Default::default(),
-        });
+    ) -> Result<CallbackSubscription<IpcServerCallback<CB>>, ()> {
+        let (_, subscription) = syscalls::subscribe_new(IpcServerCallback { callback });
         Ok(subscription)
     }
 }
