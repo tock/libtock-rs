@@ -1,8 +1,7 @@
 use alloc::*;
-use simple_ble::BUFFER_SIZE_SCAN;
 
-pub fn find(buffer: &[u8; BUFFER_SIZE_SCAN], kind: u8) -> Option<Vec<&u8>> {
-    let mut iter = buffer[8..BUFFER_SIZE_SCAN].iter();
+pub fn find(buffer: &[u8], kind: u8) -> Option<Vec<&u8>> {
+    let mut iter = buffer[8..].iter();
 
     loop {
         match iter.next() {
@@ -27,6 +26,7 @@ pub fn find(buffer: &[u8; BUFFER_SIZE_SCAN], kind: u8) -> Option<Vec<&u8>> {
 #[cfg(test)]
 mod test {
     use ble_parser::*;
+    use simple_ble::BUFFER_SIZE_SCAN;
 
     #[test]
     pub fn extracts_data_for_ids_correctly() {

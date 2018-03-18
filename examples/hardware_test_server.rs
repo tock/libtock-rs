@@ -14,9 +14,8 @@ fn main() {
     let cb = &mut |pid: usize, _: usize, message: &mut [u8]| {
         let filtered = message
             .to_vec()
-            .iter()
-            .filter(|&x| *x != 0)
-            .map(|x| *x)
+            .into_iter()
+            .filter(|x| *x != 0)
             .collect::<Vec<u8>>();
         let s = String::from_utf8_lossy(&filtered);
         if s == String::from("client") {

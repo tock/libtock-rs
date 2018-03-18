@@ -22,12 +22,17 @@ struct LedCommand {
     pub st: bool,
 }
 
+// Prevents the compiler from dropping the subscription too early.
+#[allow(unreachable_code)]
 fn main() {
-    let buffer = [0; tock::simple_ble::BUFFER_SIZE_SCAN];
-    BleDriver::start(&buffer, |_: usize, _: usize| {
-        match ble_parser::find(&buffer, tock::simple_ble::gap_data::SERVICE_DATA as u8) {
+    let mut shared_memory = BleDriver::share_memory().unwrap();
+    let _subscription = BleDriver::start(|_: usize, _: usize| {
+        match ble_parser::find(
+            shared_memory.to_bytes(),
+            tock::simple_ble::gap_data::SERVICE_DATA as u8,
+        ) {
             Some(payload) => {
-                let payload: Vec<u8> = payload.iter().map(|&x| *x).collect::<Vec<u8>>();
+                let payload: Vec<u8> = payload.into_iter().map(|x| *x).collect::<Vec<u8>>();
                 let msg: LedCommand = corepack::from_bytes(payload.as_slice()).unwrap();
                 let msg_led = led::get(msg.nr as isize);
                 match msg_led {
@@ -41,9 +46,10 @@ fn main() {
             }
             None => (),
         }
-    }).unwrap();
+    });
 
     loop {
         syscalls::yieldk();
     }
+    _subscription.unwrap();
 }

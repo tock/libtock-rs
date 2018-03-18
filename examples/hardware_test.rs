@@ -16,6 +16,9 @@ use tock::timer::Duration;
 fn main() {
     let mut buf: Box<[u8]> = ipc_cs::reserve_shared_buffer();
     let mut console = Console::new();
+
+    // This sleep is neccessary to assure, that during installation of
+    // the client/server pair the tests are only run once.
     timer::sleep(Duration::from_ms(3000));
 
     console.write(String::from("[test-results]\n"));
@@ -32,11 +35,10 @@ fn main() {
 
     server.share(&mut buf, &mut payload);
 
-    server.subscribe_callback(|_: usize, _: usize| {
+    let handle = server.subscribe_callback(|_: usize, _: usize| {
         let filtered = buf.to_vec()
-            .iter()
-            .filter(|&x| *x != 0)
-            .map(|x| *x)
+            .into_iter()
+            .filter(|x| *x != 0)
             .collect::<Vec<u8>>();
         let s = String::from_utf8_lossy(&filtered);
         console.write(String::from(s).clone());
@@ -47,4 +49,5 @@ fn main() {
     for _ in 0.. {
         timer::sleep(Duration::from_ms(500))
     }
+    handle.unwrap();
 }

@@ -1,5 +1,8 @@
 use callback::CallbackSubscription;
 use callback::SubscribableCallback;
+use core::ptr;
+use shared_memory::ShareableMemory;
+use shared_memory::SharedMemory;
 
 pub fn yieldk() {
     // Note: A process stops yielding when there is a callback ready to run,
@@ -49,6 +52,15 @@ pub unsafe fn allow(major: usize, minor: usize, slice: &[u8]) -> isize {
     res
 }
 
+unsafe fn unallow(major: usize, minor: usize) -> isize {
+    let res;
+    asm!("svc 3" : "={r0}"(res)
+                 : "{r0}"(major) "{r1}"(minor) "{r2}"(ptr::null::<u8>()) "{r3}" (0)
+                 : "memory"
+                 : "volatile");
+    res
+}
+
 pub unsafe fn allow16(major: usize, minor: usize, slice: &[u16]) -> isize {
     let res;
     asm!("svc 3" : "={r0}"(res)
@@ -67,6 +79,15 @@ pub unsafe fn subscribe(
     let res;
     asm!("svc 1" : "={r0}"(res)
                  : "{r0}"(major) "{r1}"(minor) "{r2}"(cb) "{r3}"(ud)
+                 : "memory"
+                 : "volatile");
+    res
+}
+
+pub unsafe fn unsubscribe(major: usize, minor: usize) -> isize {
+    let res;
+    asm!("svc 1" : "={r0}"(res)
+                 : "{r0}"(major) "{r1}"(minor) "{r2}"(ptr::null::<unsafe extern "C" fn(usize, usize, usize, usize)>()) "{r3}"(0)
                  : "memory"
                  : "volatile");
     res
@@ -115,14 +136,32 @@ pub fn subscribe_new<CB: SubscribableCallback>(
 }
 impl<CB: SubscribableCallback> Drop for CallbackSubscription<CB> {
     fn drop(&mut self) {
-        extern "C" fn noop_callback(_: usize, _: usize, _: usize, _: usize) {}
-
         unsafe {
-            subscribe(
+            unsubscribe(
                 self.callback.driver_number(),
                 self.callback.subscribe_number(),
-                noop_callback,
-                0,
+            );
+        }
+    }
+}
+
+pub fn allow_new<SM: ShareableMemory>(mut shareable_memory: SM) -> (isize, SharedMemory<SM>) {
+    let return_code = unsafe {
+        allow(
+            shareable_memory.driver_number(),
+            shareable_memory.allow_number(),
+            shareable_memory.to_bytes(),
+        )
+    };
+    (return_code, SharedMemory { shareable_memory })
+}
+
+impl<SM: ShareableMemory> Drop for SharedMemory<SM> {
+    fn drop(&mut self) {
+        unsafe {
+            unallow(
+                self.shareable_memory.driver_number(),
+                self.shareable_memory.allow_number(),
             );
         }
     }
