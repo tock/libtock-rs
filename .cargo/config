@@ -1,0 +1,4 @@
+[target.thumbv7em-tock-eabi]
+rustflags = [
+  "-C link-args=-Tlayout.ld",
+]

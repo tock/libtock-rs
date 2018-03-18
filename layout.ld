@@ -8,10 +8,6 @@ STACK_SIZE = 2048;
 APP_HEAP_SIZE = 1024;
 KERNEL_HEAP_SIZE = 1024;
 
-/* Memory Spaces Definitions, 448K flash, 64K ram */
-PROG_LENGTH = 0x00040000;
-RAM_LENGTH  = 0x00010000;
-
 ENTRY(_start)
 
 /* Note: Because apps are relocated, the FLASH address here acts as a sentinel
@@ -19,8 +15,8 @@ ENTRY(_start)
  * actual location in flash where the app is placed.
  */
 MEMORY {
-    FLASH (rx) : ORIGIN = 0x80000000, LENGTH = PROG_LENGTH
-    SRAM (RWX) : ORIGIN = 0x00000000, LENGTH = RAM_LENGTH
+    FLASH (rx) : ORIGIN = 0x80000000, LENGTH = 0x0040000
+    SRAM (RWX) : ORIGIN = 0x00000000, LENGTH = 0x0010000
 }
 
 SECTIONS {
