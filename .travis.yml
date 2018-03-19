@@ -13,8 +13,11 @@ cache:
 
 install:
   - rustup component add rust-src
+  - rustup component add rustfmt-preview
 
 script:
+  - rustfmt --write-mode diff src/lib.rs
+  - rustfmt --write-mode diff examples/*.rs
   - export RUSTFLAGS="$RUSTFLAGS -D warnings"
   - cargo test --lib
   - ./build_examples.sh
