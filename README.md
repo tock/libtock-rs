@@ -6,22 +6,18 @@ Rust userland library for Tock (WIP)
 
 This project is nascent and still under heavy development, but first steps:
 
-1. Ensure you have a working toolchain available:
+1. Ensure you have [rustup](https://www.rustup.rs/) installed.
 
-    `rustup install nightly-2018-03-06`
+2. Use the `run_example` script to compile and run the example app you want
+to use:
 
-2. Get a copy of this toolchain, in this repo's root:
+    ```bash
+    ./run_example.sh blink
+    ```
 
-    `rustup override set nightly-2018-03-06`
-
-3. Need to grab a copy of the rust sources:
-
-    `rustup component add rust-src`
-
-4. Now you should be able to build with:
-
-    `xargo build --target thumbv7em-tock-eabi`
-
+    This should work if you are using the nRF52DK platform. For other platforms,
+    you will end up with a TAB file in `target/` that you can program onto your
+    Tock board.
 
 ## License
 
