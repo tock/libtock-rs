@@ -17,10 +17,7 @@ pub struct BleEss {
 pub fn connect() -> Result<BleEss, ()> {
     let mut client = Client::new(String::from("org.tockos.services.ble-ess"))?;
     let buffer = client.share(5)?;
-    Ok(BleEss {
-        client: client,
-        buffer: buffer,
-    })
+    Ok(BleEss { client, buffer })
 }
 
 impl BleEss {
