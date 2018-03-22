@@ -39,7 +39,7 @@ impl IpcServerDriver {
     pub fn start<CB: FnMut(usize, usize, &mut [u8])>(
         callback: CB,
     ) -> Result<CallbackSubscription<IpcServerCallback<CB>>, ()> {
-        let (_, subscription) = syscalls::subscribe_new(IpcServerCallback { callback });
+        let (_, subscription) = syscalls::subscribe(IpcServerCallback { callback });
         Ok(subscription)
     }
 }

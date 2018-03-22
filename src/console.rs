@@ -53,7 +53,7 @@ unsafe fn putstr_async(
         return ret;
     }
 
-    ret = syscalls::subscribe(DRIVER_NUM, 1, cb, ud);
+    ret = syscalls::subscribe_ptr(DRIVER_NUM, 1, cb as *const _, ud);
     if ret < 0 {
         return ret;
     }

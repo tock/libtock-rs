@@ -63,7 +63,7 @@ impl Ninedof {
 }
 
 pub unsafe fn subscribe(cb: extern "C" fn(usize, usize, usize, usize), ud: usize) {
-    syscalls::subscribe(DRIVER_NUM, 0, cb, ud);
+    syscalls::subscribe_ptr(DRIVER_NUM, 0, cb as *const _, ud);
 }
 
 pub unsafe fn start_accel_reading() {

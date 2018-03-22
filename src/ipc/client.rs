@@ -51,7 +51,7 @@ impl Client {
         cb: extern "C" fn(_: usize, _: usize, _: usize, ptr: usize),
         ud: usize,
     ) -> Result<(), ()> {
-        if syscalls::subscribe(DRIVER_NUM, self.pid, cb, ud) < 0 {
+        if syscalls::subscribe_ptr(DRIVER_NUM, self.pid, cb as *const _, ud) < 0 {
             return Err(());
         }
         Ok(())

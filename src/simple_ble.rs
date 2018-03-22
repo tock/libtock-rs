@@ -192,7 +192,7 @@ impl BleDriver {
     pub fn start<CB: FnMut(usize, usize)>(
         callback: CB,
     ) -> TockResult<CallbackSubscription<BleCallback<CB>>, isize> {
-        let (result, subscription) = syscalls::subscribe_new(BleCallback { callback });
+        let (result, subscription) = syscalls::subscribe(BleCallback { callback });
         convert_result(result)?;
 
         let result = unsafe { syscalls::command(DRIVER_NUMBER, ble_commands::PASSIVE_SCAN, 1, 0) };

@@ -27,7 +27,7 @@ pub fn with_callback<CB: FnMut(usize, ButtonState)>(
         return Err(TockValue::Expected(ButtonsError::NotSupported));
     }
 
-    let (return_code, subscription) = syscalls::subscribe_new(ButtonsCallback { callback });
+    let (return_code, subscription) = syscalls::subscribe(ButtonsCallback { callback });
 
     match return_code {
         result::SUCCESS => Ok(Buttons {

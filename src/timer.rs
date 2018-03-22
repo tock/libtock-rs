@@ -49,7 +49,7 @@ pub fn with_callback<CB: FnMut(ClockValue, Alarm)>(
         )));
     }
 
-    let (return_code, subscription) = syscalls::subscribe_new(TimerCallback {
+    let (return_code, subscription) = syscalls::subscribe(TimerCallback {
         callback,
         clock_frequency: ClockFrequency {
             hz: clock_frequency as usize,

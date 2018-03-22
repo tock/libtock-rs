@@ -80,7 +80,7 @@ impl ServerHandle {
         &self,
         callback: CB,
     ) -> TockResult<CallbackSubscription<IpcClientCallback<CB>>, isize> {
-        let (_, handle) = syscalls::subscribe_new(IpcClientCallback {
+        let (_, handle) = syscalls::subscribe(IpcClientCallback {
             callback: callback,
             pid: self.pid,
         });
