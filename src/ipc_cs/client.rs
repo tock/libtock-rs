@@ -70,7 +70,7 @@ impl ServerHandle {
             )
         };
         if pid >= 0 {
-            Some(ServerHandle { pid: pid })
+            Some(ServerHandle { pid })
         } else {
             None
         }
@@ -80,8 +80,8 @@ impl ServerHandle {
         &self,
         callback: CB,
     ) -> TockResult<CallbackSubscription<IpcClientCallback<CB>>, isize> {
-        let (_, handle) = syscalls::subscribe_new(IpcClientCallback {
-            callback: callback,
+        let (_, handle) = syscalls::subscribe(IpcClientCallback {
+            callback,
             pid: self.pid,
         });
         Ok(handle)

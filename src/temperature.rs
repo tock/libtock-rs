@@ -30,7 +30,7 @@ impl TemperatureDriver {
     pub fn start_measurement<CB: FnMut(isize)>(
         callback: CB,
     ) -> Result<CallbackSubscription<TemperatureCallback<CB>>, ()> {
-        let (_, subscription) = syscalls::subscribe_new(TemperatureCallback { callback });
+        let (_, subscription) = syscalls::subscribe(TemperatureCallback { callback });
         unsafe {
             syscalls::command(DRIVER_NUMBER, START_MEASUREMENT, 0, 0);
         }

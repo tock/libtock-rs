@@ -19,11 +19,10 @@ pub mod ipc_cs;
 pub mod led;
 pub mod result;
 pub mod sensors;
+pub mod shared_memory;
 pub mod simple_ble;
 pub mod temperature;
 pub mod timer;
-pub mod util;
-pub mod shared_memory;
 
 #[cfg(target_os = "tock")]
 pub mod entry_point;

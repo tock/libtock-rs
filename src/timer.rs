@@ -49,7 +49,7 @@ pub fn with_callback<CB: FnMut(ClockValue, Alarm)>(
         )));
     }
 
-    let (return_code, subscription) = syscalls::subscribe_new(TimerCallback {
+    let (return_code, subscription) = syscalls::subscribe(TimerCallback {
         callback,
         clock_frequency: ClockFrequency {
             hz: clock_frequency as usize,
@@ -99,7 +99,7 @@ impl<CB: FnMut(ClockValue, Alarm)> Timer<CB> {
             unsafe { syscalls::command(DRIVER_NUMBER, command_nr::GET_CLOCK_VALUE, 0, 0) };
 
         ClockValue {
-            num_ticks: num_ticks,
+            num_ticks,
             clock_frequency: self.clock_frequency,
         }
     }

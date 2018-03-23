@@ -1,4 +1,4 @@
-use syscalls::{command, subscribe};
+use syscalls;
 
 const DRIVER_NUMBER: usize = 0x00004;
 mod gpio_commands {
@@ -64,7 +64,9 @@ impl GpioPinUnitialized {
     }
 
     pub fn open_for_write(self) -> Result<GpioPinWrite, &'static str> {
-        match unsafe { command(DRIVER_NUMBER, gpio_commands::ENABLE_OUTPUT, self.number, 0) } {
+        match unsafe {
+            syscalls::command(DRIVER_NUMBER, gpio_commands::ENABLE_OUTPUT, self.number, 0)
+        } {
             0 => Ok(GpioPinWrite {
                 number: self.number,
             }),
@@ -88,10 +90,10 @@ impl GpioPinUnitialized {
         callback: extern "C" fn(usize, usize, usize, usize),
     ) -> Result<GpioPinUnitialized, &'static str> {
         if unsafe {
-            subscribe(
+            syscalls::subscribe_ptr(
                 DRIVER_NUMBER,
                 gpio_commands::SUBSCRIBE_CALLBACK,
-                callback,
+                callback as *const _,
                 self.number as usize,
             )
         } == 0
@@ -104,7 +106,7 @@ impl GpioPinUnitialized {
 
     fn enable_input(self, mode: InputMode) -> Result<GpioPinUnitialized, &'static str> {
         if unsafe {
-            command(
+            syscalls::command(
                 DRIVER_NUMBER,
                 gpio_commands::ENABLE_INPUT,
                 self.number,
@@ -120,7 +122,7 @@ impl GpioPinUnitialized {
 
     fn enable_callback(self, irq_mode: IrqMode) -> Result<GpioPinRead, &'static str> {
         if unsafe {
-            command(
+            syscalls::command(
                 DRIVER_NUMBER,
                 gpio_commands::ENABLE_INTERRUPT,
                 self.number,
@@ -140,31 +142,31 @@ impl GpioPinUnitialized {
 impl GpioPinWrite {
     pub fn set_low(&self) {
         unsafe {
-            command(DRIVER_NUMBER, gpio_commands::SET_LOW, self.number, 0);
+            syscalls::command(DRIVER_NUMBER, gpio_commands::SET_LOW, self.number, 0);
         }
     }
     pub fn set_high(&self) {
         unsafe {
-            command(DRIVER_NUMBER, gpio_commands::SET_HIGH, self.number, 0);
+            syscalls::command(DRIVER_NUMBER, gpio_commands::SET_HIGH, self.number, 0);
         }
     }
     pub fn toggle(&self) {
         unsafe {
-            command(DRIVER_NUMBER, gpio_commands::TOGGLE, self.number, 0);
+            syscalls::command(DRIVER_NUMBER, gpio_commands::TOGGLE, self.number, 0);
         }
     }
 }
 
 impl GpioPinRead {
     pub fn read(&self) -> bool {
-        unsafe { command(DRIVER_NUMBER, gpio_commands::READ, self.number, 0) == 1 }
+        unsafe { syscalls::command(DRIVER_NUMBER, gpio_commands::READ, self.number, 0) == 1 }
     }
 }
 
 impl Drop for GpioPinWrite {
     fn drop(&mut self) {
         unsafe {
-            command(DRIVER_NUMBER, gpio_commands::DISABLE, self.number, 0);
+            syscalls::command(DRIVER_NUMBER, gpio_commands::DISABLE, self.number, 0);
         }
     }
 }
@@ -172,13 +174,13 @@ impl Drop for GpioPinWrite {
 impl Drop for GpioPinRead {
     fn drop(&mut self) {
         unsafe {
-            command(
+            syscalls::command(
                 DRIVER_NUMBER,
                 gpio_commands::DISABLE_INTERRUPT,
                 self.number,
                 0,
             );
-            command(DRIVER_NUMBER, gpio_commands::DISABLE, self.number, 0);
+            syscalls::command(DRIVER_NUMBER, gpio_commands::DISABLE, self.number, 0);
         }
     }
 }

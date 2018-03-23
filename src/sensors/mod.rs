@@ -23,7 +23,12 @@ pub trait Sensor<Reading: Copy + From<(usize, usize, usize)>> {
         let res: Cell<Option<Reading>> = Cell::new(None);
         let driver_num = self.driver_num();
         unsafe {
-            syscalls::subscribe(driver_num, 0, cb::<Reading>, mem::transmute(&res));
+            syscalls::subscribe_ptr(
+                driver_num,
+                0,
+                cb::<Reading> as *const _,
+                mem::transmute(&res),
+            );
             syscalls::command(driver_num, 1, 0, 0);
             yieldk_for(|| res.get().is_some());
             res.get().unwrap()
