@@ -1,6 +1,7 @@
 use alloc::String;
-use core::{fmt, mem};
 use core::cell::Cell;
+use core::fmt;
+use core::mem;
 use core::result::Result;
 use syscalls::{self, allow, yieldk_for};
 
