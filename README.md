@@ -19,6 +19,35 @@ to use:
     you will end up with a TAB file in `target/` that you can program onto your
     Tock board.
 
+## Using libtock-rs
+
+The easiest way to start using libtock-rs is adding an example to the examples folder.
+The boiler plate code you would write is
+```rust
+#![no_std]
+
+extern crate tock;
+
+fn main() { 
+  // Your code
+}
+```
+If you want to use heap based allocation you will have to add
+```rust
+#![feature(alloc)]
+extern crate alloc;
+```
+to the preamble.
+
+To run on the code on your board you can use
+```bash
+./run_example.sh <your app>
+```
+This script does the following steps for you:
+ - cross-compile your program using xargo
+ - create a TAB (tock application bundle)
+ - if you have a nrf52-dk board connected: flash this TAB to your board (using tockloader)
+
 ## License
 
 Licensed under either of
