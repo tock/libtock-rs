@@ -8,7 +8,20 @@ This project is nascent and still under heavy development, but first steps:
 
 1. Ensure you have [rustup](https://www.rustup.rs/) installed.
 
-2. Use the `run_example` script to compile and run the example app you want
+1. Clone the repository and install its submodules.
+
+    ```bash
+    git clone https://github.com/tock/libtock-rs
+    git submodule update --init
+    ```
+
+1. Add dependencies for `xargo`.
+
+    ```bash
+    rustup component add rust-src
+    ```
+
+1. Use the `run_example` script to compile and run the example app you want
 to use:
 
     ```bash
@@ -17,7 +30,7 @@ to use:
 
     This should work if you are using the nRF52DK platform. For other platforms,
     you will end up with a TAB file in `target/` that you can program onto your
-    Tock board.
+    Tock board (e.g. with `tockloader install target/blink.tab`).
 
 ## Using libtock-rs
 
