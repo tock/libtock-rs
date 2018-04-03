@@ -5,7 +5,7 @@ use alloc::heap::Heap;
 use alloc::raw_vec::RawVec;
 use callback::CallbackSubscription;
 use callback::SubscribableCallback;
-use result::TockResult;
+use callback::SubscribeInfo;
 use syscalls;
 
 const DRIVER_NUMBER: usize = 0x10000;
@@ -18,12 +18,11 @@ pub struct ServerHandle {
     pid: isize,
 }
 
-pub struct IpcClientCallback<CB> {
-    callback: CB,
+pub struct IpcClientSubscribeInfo {
     pid: isize,
 }
 
-impl<CB: FnMut(usize, usize)> SubscribableCallback for IpcClientCallback<CB> {
+impl SubscribeInfo for IpcClientSubscribeInfo {
     fn driver_number(&self) -> usize {
         DRIVER_NUMBER
     }
@@ -31,7 +30,19 @@ impl<CB: FnMut(usize, usize)> SubscribableCallback for IpcClientCallback<CB> {
     fn subscribe_number(&self) -> usize {
         self.pid as usize
     }
+}
 
+pub struct IpcClientCallback<CB> {
+    callback: CB,
+}
+
+impl<CB> IpcClientCallback<CB> {
+    pub fn new(callback: CB) -> Self {
+        IpcClientCallback { callback }
+    }
+}
+
+impl<CB: FnMut(usize, usize)> SubscribableCallback for IpcClientCallback<CB> {
     fn call_rust(&mut self, pid: usize, len: usize, _: usize) {
         (self.callback)(pid, len);
     }
@@ -42,8 +53,7 @@ pub fn reserve_shared_buffer() -> Box<[u8]> {
         Heap.alloc_zeroed(Layout::from_size_align(32, 32).unwrap())
             .unwrap()
     };
-    let v = unsafe { RawVec::from_raw_parts(shared_val, 32).into_box() };
-    v
+    unsafe { RawVec::from_raw_parts(shared_val, 32).into_box() }
 }
 
 impl ServerHandle {
@@ -76,14 +86,10 @@ impl ServerHandle {
         }
     }
 
-    pub fn subscribe_callback<CB: FnMut(usize, usize)>(
+    pub fn subscribe_callback<'a, CB: FnMut(usize, usize)>(
         &self,
-        callback: CB,
-    ) -> TockResult<CallbackSubscription<IpcClientCallback<CB>>, isize> {
-        let (_, handle) = syscalls::subscribe(IpcClientCallback {
-            callback,
-            pid: self.pid,
-        });
-        Ok(handle)
+        callback: &'a mut IpcClientCallback<CB>,
+    ) -> Result<CallbackSubscription<'a, IpcClientSubscribeInfo>, isize> {
+        syscalls::subscribe(IpcClientSubscribeInfo { pid: self.pid }, callback)
     }
 }

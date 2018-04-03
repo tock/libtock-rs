@@ -1,5 +1,6 @@
 use callback::CallbackSubscription;
 use callback::SubscribableCallback;
+use callback::SubscribeInfo;
 use core::ptr;
 use shared_memory::ShareableMemory;
 use shared_memory::SharedMemory;
@@ -43,7 +44,10 @@ pub fn yieldk_for<F: Fn() -> bool>(cond: F) {
     }
 }
 
-pub fn subscribe<CB: SubscribableCallback>(mut callback: CB) -> (isize, CallbackSubscription<CB>) {
+pub fn subscribe<I: SubscribeInfo, CB: SubscribableCallback>(
+    subscribe_info: I,
+    callback: &mut CB,
+) -> Result<CallbackSubscription<I>, isize> {
     extern "C" fn c_callback<CB: SubscribableCallback>(
         arg0: usize,
         arg1: usize,
@@ -56,24 +60,17 @@ pub fn subscribe<CB: SubscribableCallback>(mut callback: CB) -> (isize, Callback
 
     let return_code = unsafe {
         subscribe_ptr(
-            callback.driver_number(),
-            callback.subscribe_number(),
+            subscribe_info.driver_number(),
+            subscribe_info.subscribe_number(),
             c_callback::<CB> as *const _,
-            &mut callback as *mut CB as usize,
+            callback as *mut CB as usize,
         )
     };
-    (return_code, CallbackSubscription { callback })
-}
-impl<CB: SubscribableCallback> Drop for CallbackSubscription<CB> {
-    fn drop(&mut self) {
-        unsafe {
-            subscribe_ptr(
-                self.callback.driver_number(),
-                self.callback.subscribe_number(),
-                ptr::null(),
-                0,
-            );
-        }
+
+    if return_code == 0 {
+        Ok(CallbackSubscription::new(subscribe_info))
+    } else {
+        Err(return_code)
     }
 }
 

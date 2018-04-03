@@ -7,13 +7,15 @@ extern crate tock;
 use alloc::string::String;
 use tock::buttons;
 use tock::buttons::ButtonState;
+use tock::buttons::ButtonsCallback;
 use tock::console::Console;
 use tock::timer;
 use tock::timer::Duration;
 
 fn main() {
     let mut console = Console::new();
-    let mut buttons = buttons::with_callback(|_, _| {}).unwrap();
+    let mut callback = ButtonsCallback::new(|_, _| {});
+    let mut buttons = buttons::with_callback(&mut callback).unwrap();
     let mut button = buttons.iter_mut().next().unwrap();
     let button = button.enable().unwrap();
 

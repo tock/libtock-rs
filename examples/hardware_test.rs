@@ -9,6 +9,7 @@ use alloc::string::String;
 use alloc::vec::Vec;
 use tock::console::Console;
 use tock::ipc_cs;
+use tock::ipc_cs::IpcClientCallback;
 use tock::ipc_cs::ServerHandle;
 use tock::timer;
 use tock::timer::Duration;
@@ -35,15 +36,14 @@ fn main() {
 
     server.share(&mut buf, &mut payload);
 
-    let handle = server.subscribe_callback(|_: usize, _: usize| {
-        let filtered = buf.to_vec()
-            .into_iter()
-            .filter(|x| *x != 0)
-            .collect::<Vec<u8>>();
+    let mut callback = IpcClientCallback::new(|_: usize, _: usize| {
+        let filtered = buf.iter().cloned().filter(|&x| x != 0).collect::<Vec<_>>();
         let s = String::from_utf8_lossy(&filtered);
         console.write(String::from(s).clone());
         console.write(String::from("test=\"done\"\n"));
     });
+
+    let handle = server.subscribe_callback(&mut callback);
     server.notify();
 
     for _ in 0.. {
