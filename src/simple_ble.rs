@@ -2,7 +2,6 @@ use alloc::String;
 use alloc::Vec;
 use callback::CallbackSubscription;
 use callback::SubscribableCallback;
-use callback::SubscribeInfo;
 use result;
 use shared_memory::ShareableMemory;
 use shared_memory::SharedMemory;
@@ -143,18 +142,6 @@ impl BleAdvertisingDriver {
     }
 }
 
-pub struct BleSubscribeInfo;
-
-impl SubscribeInfo for BleSubscribeInfo {
-    fn driver_number(&self) -> usize {
-        DRIVER_NUMBER
-    }
-
-    fn subscribe_number(&self) -> usize {
-        ble_commands::BLE_PASSIVE_SCAN_SUB
-    }
-}
-
 pub struct BleCallback<CB> {
     callback: CB,
 }
@@ -200,8 +187,9 @@ impl BleDriver {
 
     pub fn start<CB: FnMut(usize, usize)>(
         callback: &mut BleCallback<CB>,
-    ) -> Result<CallbackSubscription<BleSubscribeInfo>, isize> {
-        let subscription = syscalls::subscribe(BleSubscribeInfo, callback)?;
+    ) -> Result<CallbackSubscription, isize> {
+        let subscription =
+            syscalls::subscribe(DRIVER_NUMBER, ble_commands::BLE_PASSIVE_SCAN_SUB, callback)?;
 
         let result = unsafe { syscalls::command(DRIVER_NUMBER, ble_commands::PASSIVE_SCAN, 1, 0) };
         convert_result(result)?;

@@ -1,6 +1,5 @@
 use callback::CallbackSubscription;
 use callback::SubscribableCallback;
-use callback::SubscribeInfo;
 use result;
 use result::TockResult;
 use result::TockValue;
@@ -27,7 +26,8 @@ pub fn with_callback<CB: FnMut(usize, ButtonState)>(
         return Err(TockValue::Expected(ButtonsError::NotSupported));
     }
 
-    let subscription = syscalls::subscribe(ButtonsSubscribeInfo, callback);
+    let subscription =
+        syscalls::subscribe(DRIVER_NUMBER, subscribe_nr::SUBSCRIBE_CALLBACK, callback);
 
     match subscription {
         Ok(subscription) => Ok(Buttons {
@@ -42,7 +42,7 @@ pub fn with_callback<CB: FnMut(usize, ButtonState)>(
 pub struct Buttons<'a> {
     count: usize,
     #[allow(dead_code)] // Used in drop
-    subscription: CallbackSubscription<'a, ButtonsSubscribeInfo>,
+    subscription: CallbackSubscription<'a>,
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -58,18 +58,6 @@ impl<'a> Buttons<'a> {
             button_count: self.count,
             _lifetime: &(),
         }
-    }
-}
-
-struct ButtonsSubscribeInfo;
-
-impl SubscribeInfo for ButtonsSubscribeInfo {
-    fn driver_number(&self) -> usize {
-        DRIVER_NUMBER
-    }
-
-    fn subscribe_number(&self) -> usize {
-        subscribe_nr::SUBSCRIBE_CALLBACK
     }
 }
 

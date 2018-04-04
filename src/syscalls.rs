@@ -1,6 +1,5 @@
 use callback::CallbackSubscription;
 use callback::SubscribableCallback;
-use callback::SubscribeInfo;
 use core::ptr;
 use shared_memory::ShareableMemory;
 use shared_memory::SharedMemory;
@@ -44,10 +43,11 @@ pub fn yieldk_for<F: Fn() -> bool>(cond: F) {
     }
 }
 
-pub fn subscribe<I: SubscribeInfo, CB: SubscribableCallback>(
-    subscribe_info: I,
+pub fn subscribe<CB: SubscribableCallback>(
+    driver_number: usize,
+    subscribe_number: usize,
     callback: &mut CB,
-) -> Result<CallbackSubscription<I>, isize> {
+) -> Result<CallbackSubscription, isize> {
     extern "C" fn c_callback<CB: SubscribableCallback>(
         arg0: usize,
         arg1: usize,
@@ -60,15 +60,15 @@ pub fn subscribe<I: SubscribeInfo, CB: SubscribableCallback>(
 
     let return_code = unsafe {
         subscribe_ptr(
-            subscribe_info.driver_number(),
-            subscribe_info.subscribe_number(),
+            driver_number,
+            subscribe_number,
             c_callback::<CB> as *const _,
             callback as *mut CB as usize,
         )
     };
 
     if return_code == 0 {
-        Ok(CallbackSubscription::new(subscribe_info))
+        Ok(CallbackSubscription::new(driver_number, subscribe_number))
     } else {
         Err(return_code)
     }

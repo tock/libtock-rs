@@ -1,6 +1,5 @@
 use callback::CallbackSubscription;
 use callback::SubscribableCallback;
-use callback::SubscribeInfo;
 use shared_memory::ShareableMemory;
 use shared_memory::SharedMemory;
 
@@ -8,10 +7,11 @@ pub fn yieldk_for<F: Fn() -> bool>(_: F) {
     unimplemented()
 }
 
-pub fn subscribe<I: SubscribeInfo, CB: SubscribableCallback>(
-    _: I,
+pub fn subscribe<CB: SubscribableCallback>(
+    _: usize,
+    _: usize,
     _: &mut CB,
-) -> Result<CallbackSubscription<I>, isize> {
+) -> Result<CallbackSubscription, isize> {
     unimplemented()
 }
 

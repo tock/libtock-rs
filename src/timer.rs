@@ -1,6 +1,5 @@
 use callback::CallbackSubscription;
 use callback::SubscribableCallback;
-use callback::SubscribeInfo;
 use core::cell::Cell;
 use core::isize;
 use result;
@@ -56,7 +55,8 @@ pub fn with_callback<CB: FnMut(ClockValue, Alarm)>(
     };
     callback.clock_frequency = clock_frequency;
 
-    let subscription = syscalls::subscribe(TimerSubscribeInfo, callback);
+    let subscription =
+        syscalls::subscribe(DRIVER_NUMBER, subscribe_nr::SUBSCRIBE_CALLBACK, callback);
 
     match subscription {
         Ok(subscription) => Ok(Timer {
@@ -73,7 +73,7 @@ pub struct Timer<'a> {
     num_notifications: usize,
     clock_frequency: ClockFrequency,
     #[allow(dead_code)] // Used in drop
-    subscription: CallbackSubscription<'a, TimerSubscribeInfo>,
+    subscription: CallbackSubscription<'a>,
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -128,18 +128,6 @@ impl<'a> Timer<'a> {
             result::ENOMEM => Err(TockValue::Expected(SetAlarmError::NoMemoryAvailable)),
             unexpected => Err(TockValue::Unexpected(unexpected)),
         }
-    }
-}
-
-struct TimerSubscribeInfo;
-
-impl SubscribeInfo for TimerSubscribeInfo {
-    fn driver_number(&self) -> usize {
-        DRIVER_NUMBER
-    }
-
-    fn subscribe_number(&self) -> usize {
-        subscribe_nr::SUBSCRIBE_CALLBACK
     }
 }
 

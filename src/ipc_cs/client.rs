@@ -5,7 +5,6 @@ use alloc::heap::Heap;
 use alloc::raw_vec::RawVec;
 use callback::CallbackSubscription;
 use callback::SubscribableCallback;
-use callback::SubscribeInfo;
 use syscalls;
 
 const DRIVER_NUMBER: usize = 0x10000;
@@ -15,21 +14,7 @@ mod ipc_commands {
 }
 
 pub struct ServerHandle {
-    pid: isize,
-}
-
-pub struct IpcClientSubscribeInfo {
-    pid: isize,
-}
-
-impl SubscribeInfo for IpcClientSubscribeInfo {
-    fn driver_number(&self) -> usize {
-        DRIVER_NUMBER
-    }
-
-    fn subscribe_number(&self) -> usize {
-        self.pid as usize
-    }
+    pid: usize,
 }
 
 pub struct IpcClientCallback<CB> {
@@ -80,7 +65,7 @@ impl ServerHandle {
             )
         };
         if pid >= 0 {
-            Some(ServerHandle { pid })
+            Some(ServerHandle { pid: pid as usize })
         } else {
             None
         }
@@ -89,7 +74,7 @@ impl ServerHandle {
     pub fn subscribe_callback<'a, CB: FnMut(usize, usize)>(
         &self,
         callback: &'a mut IpcClientCallback<CB>,
-    ) -> Result<CallbackSubscription<'a, IpcClientSubscribeInfo>, isize> {
-        syscalls::subscribe(IpcClientSubscribeInfo { pid: self.pid }, callback)
+    ) -> Result<CallbackSubscription<'a>, isize> {
+        syscalls::subscribe(DRIVER_NUMBER, self.pid, callback)
     }
 }
