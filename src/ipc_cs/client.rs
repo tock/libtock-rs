@@ -71,10 +71,13 @@ impl ServerHandle {
         }
     }
 
-    pub fn subscribe_callback<'a, CB: FnMut(usize, usize)>(
+    pub fn subscribe_callback<'a, CB>(
         &self,
         callback: &'a mut IpcClientCallback<CB>,
-    ) -> Result<CallbackSubscription<'a>, isize> {
+    ) -> Result<CallbackSubscription<'a>, isize>
+    where
+        IpcClientCallback<CB>: SubscribableCallback,
+    {
         syscalls::subscribe(DRIVER_NUMBER, self.pid, callback)
     }
 }

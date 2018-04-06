@@ -48,16 +48,6 @@ pub fn subscribe<CB: SubscribableCallback>(
     subscribe_number: usize,
     callback: &mut CB,
 ) -> Result<CallbackSubscription, isize> {
-    extern "C" fn c_callback<CB: SubscribableCallback>(
-        arg0: usize,
-        arg1: usize,
-        arg2: usize,
-        userdata: usize,
-    ) {
-        let callback = unsafe { &mut *(userdata as *mut CB) };
-        callback.call_rust(arg0, arg1, arg2);
-    }
-
     let return_code = unsafe {
         subscribe_ptr(
             driver_number,
@@ -72,6 +62,16 @@ pub fn subscribe<CB: SubscribableCallback>(
     } else {
         Err(return_code)
     }
+}
+
+extern "C" fn c_callback<CB: SubscribableCallback>(
+    arg0: usize,
+    arg1: usize,
+    arg2: usize,
+    userdata: usize,
+) {
+    let callback = unsafe { &mut *(userdata as *mut CB) };
+    callback.call_rust(arg0, arg1, arg2);
 }
 
 pub unsafe fn subscribe_ptr(

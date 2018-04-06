@@ -185,9 +185,10 @@ impl BleDriver {
         Ok(shared_memory)
     }
 
-    pub fn start<CB: FnMut(usize, usize)>(
-        callback: &mut BleCallback<CB>,
-    ) -> Result<CallbackSubscription, isize> {
+    pub fn start<CB>(callback: &mut BleCallback<CB>) -> Result<CallbackSubscription, isize>
+    where
+        BleCallback<CB>: SubscribableCallback,
+    {
         let subscription =
             syscalls::subscribe(DRIVER_NUMBER, ble_commands::BLE_PASSIVE_SCAN_SUB, callback)?;
 

@@ -34,9 +34,10 @@ pub fn notify_client(pid: usize) {
 pub struct IpcServerDriver;
 
 impl IpcServerDriver {
-    pub fn start<CB: FnMut(usize, usize, &mut [u8])>(
-        callback: &mut IpcServerCallback<CB>,
-    ) -> Result<CallbackSubscription, isize> {
+    pub fn start<CB>(callback: &mut IpcServerCallback<CB>) -> Result<CallbackSubscription, isize>
+    where
+        IpcServerCallback<CB>: SubscribableCallback,
+    {
         syscalls::subscribe(DRIVER_NUMBER, ipc_commands::REGISTER_SERVICE, callback)
     }
 }
