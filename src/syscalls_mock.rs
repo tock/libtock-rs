@@ -7,7 +7,11 @@ pub fn yieldk_for<F: Fn() -> bool>(_: F) {
     unimplemented()
 }
 
-pub fn subscribe<CB: SubscribableCallback>(_: CB) -> (isize, CallbackSubscription<CB>) {
+pub fn subscribe<CB: SubscribableCallback>(
+    _: usize,
+    _: usize,
+    _: &mut CB,
+) -> Result<CallbackSubscription, isize> {
     unimplemented()
 }
 

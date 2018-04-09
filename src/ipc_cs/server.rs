@@ -14,15 +14,13 @@ pub struct IpcServerCallback<CB> {
     callback: CB,
 }
 
+impl<CB> IpcServerCallback<CB> {
+    pub fn new(callback: CB) -> Self {
+        IpcServerCallback { callback }
+    }
+}
+
 impl<CB: FnMut(usize, usize, &mut [u8])> SubscribableCallback for IpcServerCallback<CB> {
-    fn driver_number(&self) -> usize {
-        DRIVER_NUMBER
-    }
-
-    fn subscribe_number(&self) -> usize {
-        ipc_commands::REGISTER_SERVICE
-    }
-
     fn call_rust(&mut self, arg0: usize, arg1: usize, arg2: usize) {
         let mut v = unsafe { slice::from_raw_parts_mut(arg2 as *mut u8, arg1) };
         (self.callback)(arg0, arg1, &mut v);
@@ -36,10 +34,10 @@ pub fn notify_client(pid: usize) {
 pub struct IpcServerDriver;
 
 impl IpcServerDriver {
-    pub fn start<CB: FnMut(usize, usize, &mut [u8])>(
-        callback: CB,
-    ) -> Result<CallbackSubscription<IpcServerCallback<CB>>, ()> {
-        let (_, subscription) = syscalls::subscribe(IpcServerCallback { callback });
-        Ok(subscription)
+    pub fn start<CB>(callback: &mut IpcServerCallback<CB>) -> Result<CallbackSubscription, isize>
+    where
+        IpcServerCallback<CB>: SubscribableCallback,
+    {
+        syscalls::subscribe(DRIVER_NUMBER, ipc_commands::REGISTER_SERVICE, callback)
     }
 }

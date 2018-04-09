@@ -5,7 +5,6 @@ use alloc::heap::Heap;
 use alloc::raw_vec::RawVec;
 use callback::CallbackSubscription;
 use callback::SubscribableCallback;
-use result::TockResult;
 use syscalls;
 
 const DRIVER_NUMBER: usize = 0x10000;
@@ -15,23 +14,20 @@ mod ipc_commands {
 }
 
 pub struct ServerHandle {
-    pid: isize,
+    pid: usize,
 }
 
 pub struct IpcClientCallback<CB> {
     callback: CB,
-    pid: isize,
+}
+
+impl<CB> IpcClientCallback<CB> {
+    pub fn new(callback: CB) -> Self {
+        IpcClientCallback { callback }
+    }
 }
 
 impl<CB: FnMut(usize, usize)> SubscribableCallback for IpcClientCallback<CB> {
-    fn driver_number(&self) -> usize {
-        DRIVER_NUMBER
-    }
-
-    fn subscribe_number(&self) -> usize {
-        self.pid as usize
-    }
-
     fn call_rust(&mut self, pid: usize, len: usize, _: usize) {
         (self.callback)(pid, len);
     }
@@ -42,8 +38,7 @@ pub fn reserve_shared_buffer() -> Box<[u8]> {
         Heap.alloc_zeroed(Layout::from_size_align(32, 32).unwrap())
             .unwrap()
     };
-    let v = unsafe { RawVec::from_raw_parts(shared_val, 32).into_box() };
-    v
+    unsafe { RawVec::from_raw_parts(shared_val, 32).into_box() }
 }
 
 impl ServerHandle {
@@ -70,20 +65,19 @@ impl ServerHandle {
             )
         };
         if pid >= 0 {
-            Some(ServerHandle { pid })
+            Some(ServerHandle { pid: pid as usize })
         } else {
             None
         }
     }
 
-    pub fn subscribe_callback<CB: FnMut(usize, usize)>(
+    pub fn subscribe_callback<'a, CB>(
         &self,
-        callback: CB,
-    ) -> TockResult<CallbackSubscription<IpcClientCallback<CB>>, isize> {
-        let (_, handle) = syscalls::subscribe(IpcClientCallback {
-            callback,
-            pid: self.pid,
-        });
-        Ok(handle)
+        callback: &'a mut IpcClientCallback<CB>,
+    ) -> Result<CallbackSubscription<'a>, isize>
+    where
+        IpcClientCallback<CB>: SubscribableCallback,
+    {
+        syscalls::subscribe(DRIVER_NUMBER, self.pid, callback)
     }
 }

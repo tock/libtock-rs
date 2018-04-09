@@ -13,6 +13,7 @@ extern crate tock;
 use alloc::*;
 use tock::ble_parser;
 use tock::led;
+use tock::simple_ble::BleCallback;
 use tock::simple_ble::BleDriver;
 use tock::syscalls;
 
@@ -26,7 +27,8 @@ struct LedCommand {
 #[allow(unreachable_code)]
 fn main() {
     let mut shared_memory = BleDriver::share_memory().unwrap();
-    let _subscription = BleDriver::start(|_: usize, _: usize| {
+
+    let mut callback = BleCallback::new(|_: usize, _: usize| {
         match ble_parser::find(
             shared_memory.to_bytes(),
             tock::simple_ble::gap_data::SERVICE_DATA as u8,
@@ -48,8 +50,11 @@ fn main() {
         }
     });
 
+    let _subscription = BleDriver::start(&mut callback);
+
     loop {
         syscalls::yieldk();
     }
+
     _subscription.unwrap();
 }

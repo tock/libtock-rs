@@ -43,38 +43,35 @@ pub fn yieldk_for<F: Fn() -> bool>(cond: F) {
     }
 }
 
-pub fn subscribe<CB: SubscribableCallback>(mut callback: CB) -> (isize, CallbackSubscription<CB>) {
-    extern "C" fn c_callback<CB: SubscribableCallback>(
-        arg0: usize,
-        arg1: usize,
-        arg2: usize,
-        userdata: usize,
-    ) {
-        let callback = unsafe { &mut *(userdata as *mut CB) };
-        callback.call_rust(arg0, arg1, arg2);
-    }
-
+pub fn subscribe<CB: SubscribableCallback>(
+    driver_number: usize,
+    subscribe_number: usize,
+    callback: &mut CB,
+) -> Result<CallbackSubscription, isize> {
     let return_code = unsafe {
         subscribe_ptr(
-            callback.driver_number(),
-            callback.subscribe_number(),
+            driver_number,
+            subscribe_number,
             c_callback::<CB> as *const _,
-            &mut callback as *mut CB as usize,
+            callback as *mut CB as usize,
         )
     };
-    (return_code, CallbackSubscription { callback })
-}
-impl<CB: SubscribableCallback> Drop for CallbackSubscription<CB> {
-    fn drop(&mut self) {
-        unsafe {
-            subscribe_ptr(
-                self.callback.driver_number(),
-                self.callback.subscribe_number(),
-                ptr::null(),
-                0,
-            );
-        }
+
+    if return_code == 0 {
+        Ok(CallbackSubscription::new(driver_number, subscribe_number))
+    } else {
+        Err(return_code)
     }
+}
+
+extern "C" fn c_callback<CB: SubscribableCallback>(
+    arg0: usize,
+    arg1: usize,
+    arg2: usize,
+    userdata: usize,
+) {
+    let callback = unsafe { &mut *(userdata as *mut CB) };
+    callback.call_rust(arg0, arg1, arg2);
 }
 
 pub unsafe fn subscribe_ptr(

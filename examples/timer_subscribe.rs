@@ -12,11 +12,14 @@ use tock::timer::Duration;
 
 fn main() {
     let mut console = Console::new();
-    let timer = timer::with_callback(|_, _| {
+
+    let mut with_callback = timer::with_callback(|_, _| {
         console.write(String::from(
             "This line is printed 2 seconds after the start of the program.",
         ))
-    }).unwrap();
+    });
+
+    let mut timer = with_callback.init().unwrap();
 
     timer.set_alarm(Duration::from_ms(2000)).unwrap();
     loop {

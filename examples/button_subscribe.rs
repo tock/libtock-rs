@@ -16,7 +16,7 @@ use tock::timer::Duration;
 fn main() {
     let mut console = Console::new();
 
-    let mut buttons = buttons::with_callback(|button_num: usize, state| {
+    let mut with_callback = buttons::with_callback(|button_num: usize, state| {
         console.write(String::from("\nButton: "));
         console.write(fmt::u32_as_hex(button_num as u32));
         console.write(String::from(" - State: "));
@@ -24,7 +24,9 @@ fn main() {
             ButtonState::Pressed => "pressed",
             ButtonState::Released => "released",
         }));
-    }).unwrap();
+    });
+
+    let mut buttons = with_callback.init().unwrap();
 
     for mut button in &mut buttons {
         button.enable().unwrap();

@@ -3,8 +3,6 @@ use alloc::Vec;
 use callback::CallbackSubscription;
 use callback::SubscribableCallback;
 use result;
-use result::TockResult;
-use result::TockValue;
 use shared_memory::ShareableMemory;
 use shared_memory::SharedMemory;
 use syscalls;
@@ -41,7 +39,7 @@ pub struct AdvertisingBuffer {
     shared_memory: [u8; BUFFER_SIZE],
 }
 
-impl<'a> ShareableMemory for AdvertisingBuffer {
+impl ShareableMemory for AdvertisingBuffer {
     fn driver_number(&self) -> usize {
         DRIVER_NUMBER
     }
@@ -62,7 +60,7 @@ impl BleAdvertisingDriver {
         uuid: Vec<u16>,
         stay_visible: bool,
         service_payload: Vec<u8>,
-    ) -> TockResult<SharedMemory<AdvertisingBuffer>, isize> {
+    ) -> Result<SharedMemory<AdvertisingBuffer>, isize> {
         let flags: [u8; 1] = [
             gap_flags::ONLY_LE | (if stay_visible {
                 gap_flags::BLE_DISCOVERABLE
@@ -86,7 +84,7 @@ impl BleAdvertisingDriver {
 
     // TODO: Write generic error converter
 
-    fn set_advertising_interval(interval: u16) -> TockResult<(), isize> {
+    fn set_advertising_interval(interval: u16) -> Result<(), isize> {
         let result = unsafe {
             syscalls::command(
                 DRIVER_NUMBER,
@@ -98,13 +96,13 @@ impl BleAdvertisingDriver {
         convert_result(result)
     }
 
-    fn request_adv_address() -> TockResult<(), isize> {
+    fn request_adv_address() -> Result<(), isize> {
         let result =
             unsafe { syscalls::command(DRIVER_NUMBER, ble_commands::REQ_ADV_ADDRESS, 0, 0) };
         convert_result(result)
     }
 
-    fn set_local_name(name: String) -> TockResult<(), isize> {
+    fn set_local_name(name: String) -> Result<(), isize> {
         let result = unsafe {
             syscalls::allow(
                 DRIVER_NUMBER,
@@ -115,7 +113,7 @@ impl BleAdvertisingDriver {
         convert_result(result)
     }
 
-    fn set_uuid(uuid: Vec<u16>) -> TockResult<(), isize> {
+    fn set_uuid(uuid: Vec<u16>) -> Result<(), isize> {
         let result = unsafe {
             syscalls::allow16(
                 DRIVER_NUMBER,
@@ -126,18 +124,18 @@ impl BleAdvertisingDriver {
         convert_result(result)
     }
 
-    fn set_flags(flags: [u8; 1]) -> TockResult<(), isize> {
+    fn set_flags(flags: [u8; 1]) -> Result<(), isize> {
         let result = unsafe { syscalls::allow(DRIVER_NUMBER, gap_data::SET_FLAGS, &flags) };
         convert_result(result)
     }
 
-    fn set_service_payload(service_payload: Vec<u8>) -> TockResult<(), isize> {
+    fn set_service_payload(service_payload: Vec<u8>) -> Result<(), isize> {
         let result =
             unsafe { syscalls::allow(DRIVER_NUMBER, gap_data::SERVICE_DATA, &service_payload) };
         convert_result(result)
     }
 
-    fn start_advertising() -> TockResult<(), isize> {
+    fn start_advertising() -> Result<(), isize> {
         let result =
             unsafe { syscalls::command(DRIVER_NUMBER, ble_commands::START_ADVERTISING, 0, 0) };
         convert_result(result)
@@ -148,15 +146,13 @@ pub struct BleCallback<CB> {
     callback: CB,
 }
 
+impl<CB> BleCallback<CB> {
+    pub fn new(callback: CB) -> Self {
+        BleCallback { callback }
+    }
+}
+
 impl<CB: FnMut(usize, usize)> SubscribableCallback for BleCallback<CB> {
-    fn driver_number(&self) -> usize {
-        DRIVER_NUMBER
-    }
-
-    fn subscribe_number(&self) -> usize {
-        ble_commands::BLE_PASSIVE_SCAN_SUB
-    }
-
     fn call_rust(&mut self, arg0: usize, arg1: usize, _: usize) {
         (self.callback)(arg0, arg1);
     }
@@ -181,7 +177,7 @@ impl<'a> ShareableMemory for ScanBuffer {
 pub struct BleDriver;
 
 impl BleDriver {
-    pub fn share_memory() -> TockResult<SharedMemory<ScanBuffer>, isize> {
+    pub fn share_memory() -> Result<SharedMemory<ScanBuffer>, isize> {
         let (result, shared_memory) = syscalls::allow_new(ScanBuffer {
             shared_memory: [0; BUFFER_SIZE_SCAN],
         });
@@ -189,11 +185,12 @@ impl BleDriver {
         Ok(shared_memory)
     }
 
-    pub fn start<CB: FnMut(usize, usize)>(
-        callback: CB,
-    ) -> TockResult<CallbackSubscription<BleCallback<CB>>, isize> {
-        let (result, subscription) = syscalls::subscribe(BleCallback { callback });
-        convert_result(result)?;
+    pub fn start<CB>(callback: &mut BleCallback<CB>) -> Result<CallbackSubscription, isize>
+    where
+        BleCallback<CB>: SubscribableCallback,
+    {
+        let subscription =
+            syscalls::subscribe(DRIVER_NUMBER, ble_commands::BLE_PASSIVE_SCAN_SUB, callback)?;
 
         let result = unsafe { syscalls::command(DRIVER_NUMBER, ble_commands::PASSIVE_SCAN, 1, 0) };
         convert_result(result)?;
@@ -201,11 +198,9 @@ impl BleDriver {
     }
 }
 
-fn convert_result(code: isize) -> TockResult<(), isize> {
+fn convert_result(code: isize) -> Result<(), isize> {
     match code {
         result::SUCCESS => Ok(()),
-        result::ESIZE => Err(TockValue::Expected(result::ESIZE)),
-        result::EINVAL => Err(TockValue::Expected(result::EINVAL)),
-        _ => Err(TockValue::Unexpected(code)),
+        code => Err(code),
     }
 }

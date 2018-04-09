@@ -13,7 +13,8 @@ use tock::timer::Duration;
 
 fn main() {
     let mut console = Console::new();
-    let mut buttons = buttons::with_callback(|_, _| {}).unwrap();
+    let mut with_callback = buttons::with_callback(|_, _| {});
+    let mut buttons = with_callback.init().unwrap();
     let mut button = buttons.iter_mut().next().unwrap();
     let button = button.enable().unwrap();
 
