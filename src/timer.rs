@@ -25,7 +25,8 @@ pub fn sleep(duration: Duration) {
     let expired = Cell::new(false);
     let mut with_callback = with_callback(|_, _| expired.set(true));
 
-    with_callback.init().unwrap().set_alarm(duration).unwrap();
+    let mut timer = with_callback.init().unwrap();
+    timer.set_alarm(duration).unwrap();
 
     syscalls::yieldk_for(|| expired.get());
 }
