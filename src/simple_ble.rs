@@ -3,7 +3,6 @@ use alloc::Vec;
 use callback::CallbackSubscription;
 use callback::SubscribableCallback;
 use result;
-use shared_memory::ShareableMemory;
 use shared_memory::SharedMemory;
 use syscalls;
 
@@ -35,41 +34,30 @@ pub mod gap_data {
     pub const SERVICE_DATA: usize = 0x16;
 }
 
-pub struct AdvertisingBuffer {
-    shared_memory: [u8; BUFFER_SIZE],
-}
-
-impl ShareableMemory for AdvertisingBuffer {
-    fn driver_number(&self) -> usize {
-        DRIVER_NUMBER
-    }
-    fn allow_number(&self) -> usize {
-        ble_commands::ALLOW_ADVERTISMENT_BUFFER
-    }
-    fn to_bytes(&mut self) -> &mut [u8] {
-        &mut self.shared_memory
-    }
-}
-
 pub struct BleAdvertisingDriver;
 
 impl BleAdvertisingDriver {
+    pub fn create_advertising_buffer() -> [u8; BUFFER_SIZE] {
+        [0; BUFFER_SIZE]
+    }
     pub fn initialize(
         interval: u16,
         name: String,
         uuid: Vec<u16>,
         stay_visible: bool,
         service_payload: Vec<u8>,
-    ) -> Result<SharedMemory<AdvertisingBuffer>, isize> {
+        advertising_buffer: &mut [u8],
+    ) -> Result<SharedMemory, isize> {
         let flags: [u8; 1] = [gap_flags::ONLY_LE | (if stay_visible {
             gap_flags::BLE_DISCOVERABLE
         } else {
             gap_flags::BLE_NOT_DISCOVERABLE
         })];
-        let buffer = AdvertisingBuffer {
-            shared_memory: [0; BUFFER_SIZE],
-        };
-        let (_, shared_memory) = syscalls::allow_new(buffer);
+        let shared_memory = syscalls::allow(
+            DRIVER_NUMBER,
+            ble_commands::ALLOW_ADVERTISMENT_BUFFER,
+            advertising_buffer,
+        )?;
         Self::set_advertising_interval(interval)?;
         Self::request_adv_address()?;
         Self::set_local_name(name)?;
@@ -102,7 +90,7 @@ impl BleAdvertisingDriver {
 
     fn set_local_name(name: String) -> Result<(), isize> {
         let result = unsafe {
-            syscalls::allow(
+            syscalls::allow_ptr(
                 DRIVER_NUMBER,
                 gap_data::COMPLETE_LOCAL_NAME,
                 name.as_bytes(),
@@ -123,13 +111,13 @@ impl BleAdvertisingDriver {
     }
 
     fn set_flags(flags: [u8; 1]) -> Result<(), isize> {
-        let result = unsafe { syscalls::allow(DRIVER_NUMBER, gap_data::SET_FLAGS, &flags) };
+        let result = unsafe { syscalls::allow_ptr(DRIVER_NUMBER, gap_data::SET_FLAGS, &flags) };
         convert_result(result)
     }
 
     fn set_service_payload(service_payload: Vec<u8>) -> Result<(), isize> {
         let result =
-            unsafe { syscalls::allow(DRIVER_NUMBER, gap_data::SERVICE_DATA, &service_payload) };
+            unsafe { syscalls::allow_ptr(DRIVER_NUMBER, gap_data::SERVICE_DATA, &service_payload) };
         convert_result(result)
     }
 
@@ -156,31 +144,15 @@ impl<CB: FnMut(usize, usize)> SubscribableCallback for BleCallback<CB> {
     }
 }
 
-pub struct ScanBuffer {
-    shared_memory: [u8; BUFFER_SIZE_SCAN],
-}
-
-impl<'a> ShareableMemory for ScanBuffer {
-    fn driver_number(&self) -> usize {
-        DRIVER_NUMBER
-    }
-    fn allow_number(&self) -> usize {
-        ble_commands::ALLOW_SCAN_BUFFER
-    }
-    fn to_bytes(&mut self) -> &mut [u8] {
-        &mut self.shared_memory
-    }
-}
-
 pub struct BleDriver;
 
 impl BleDriver {
-    pub fn share_memory() -> Result<SharedMemory<ScanBuffer>, isize> {
-        let (result, shared_memory) = syscalls::allow_new(ScanBuffer {
-            shared_memory: [0; BUFFER_SIZE_SCAN],
-        });
-        convert_result(result)?;
-        Ok(shared_memory)
+    pub fn create_scan_buffer() -> [u8; BUFFER_SIZE_SCAN] {
+        [0; BUFFER_SIZE_SCAN]
+    }
+
+    pub fn share_memory(scan_buffer: &mut [u8]) -> Result<SharedMemory, isize> {
+        syscalls::allow(DRIVER_NUMBER, ble_commands::ALLOW_SCAN_BUFFER, scan_buffer)
     }
 
     pub fn start<CB>(callback: &mut BleCallback<CB>) -> Result<CallbackSubscription, isize>

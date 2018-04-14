@@ -1,6 +1,5 @@
 use callback::CallbackSubscription;
 use callback::SubscribableCallback;
-use shared_memory::ShareableMemory;
 use shared_memory::SharedMemory;
 
 pub fn yieldk_for<F: Fn() -> bool>(_: F) {
@@ -28,15 +27,15 @@ pub unsafe fn command(_: usize, _: usize, _: usize, _: usize) -> isize {
     unimplemented()
 }
 
-pub unsafe fn allow(_: usize, _: usize, _: &[u8]) -> isize {
+pub fn allow(_: usize, _: usize, _: &mut [u8]) -> Result<SharedMemory, isize> {
+    unimplemented()
+}
+
+pub unsafe fn allow_ptr(_: usize, _: usize, _: &[u8]) -> isize {
     unimplemented()
 }
 
 pub unsafe fn allow16(_: usize, _: usize, _: &[u16]) -> isize {
-    unimplemented()
-}
-
-pub fn allow_new<SM: ShareableMemory>(_: SM) -> (isize, SharedMemory<SM>) {
     unimplemented()
 }
 

@@ -46,7 +46,7 @@ impl ServerHandle {
         shared_buffer.clone_from_slice(message);
 
         unsafe {
-            if syscalls::allow(DRIVER_NUMBER, self.pid as usize, &*shared_buffer) < 0 {
+            if syscalls::allow_ptr(DRIVER_NUMBER, self.pid as usize, &*shared_buffer) < 0 {
                 panic!()
             };
         }
@@ -58,7 +58,7 @@ impl ServerHandle {
 
     pub fn discover_service(name: String) -> Option<ServerHandle> {
         let pid = unsafe {
-            syscalls::allow(
+            syscalls::allow_ptr(
                 DRIVER_NUMBER,
                 ipc_commands::DISCOVER_SERVICE,
                 &name.as_bytes(),

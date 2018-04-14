@@ -2,7 +2,6 @@ use alloc::String;
 use core::cell::Cell;
 use core::fmt;
 use core::result::Result;
-use shared_memory::ShareableMemory;
 use syscalls;
 
 const DRIVER_NUMBER: usize = 1;
@@ -19,24 +18,6 @@ mod allow_nr {
     pub const SHARE_BUFFER: usize = 1;
 }
 
-struct ShareableString {
-    string: String,
-}
-
-impl ShareableMemory for ShareableString {
-    fn driver_number(&self) -> usize {
-        DRIVER_NUMBER
-    }
-
-    fn allow_number(&self) -> usize {
-        allow_nr::SHARE_BUFFER
-    }
-
-    fn to_bytes(&mut self) -> &mut [u8] {
-        unsafe { self.string.as_bytes_mut() }
-    }
-}
-
 pub struct Console;
 
 impl Console {
@@ -45,13 +26,13 @@ impl Console {
     }
 
     // TODO: Use &str after relocation is fixed
-    pub fn write(&mut self, text: String) {
+    pub fn write(&mut self, mut text: String) {
         let num_bytes = text.as_bytes().len();
 
-        let text = ShareableString { string: text };
-
-        let (result_code, _shared_string) = syscalls::allow_new(text);
-        if result_code < 0 {
+        let result = syscalls::allow(DRIVER_NUMBER, allow_nr::SHARE_BUFFER, unsafe {
+            text.as_bytes_mut()
+        });
+        if result.is_err() {
             return;
         }
 

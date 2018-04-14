@@ -29,7 +29,10 @@ fn main() {
 
     let payload = corepack::to_bytes(LedCommand { nr: 2, st: true }).unwrap();
 
-    let handle = BleAdvertisingDriver::initialize(100, name, uuid.to_vec(), true, payload).unwrap();
+    let mut buffer = BleAdvertisingDriver::create_advertising_buffer();
+    let handle =
+        BleAdvertisingDriver::initialize(100, name, uuid.to_vec(), true, payload, &mut buffer)
+            .unwrap();
 
     loop {
         led.on();

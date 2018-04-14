@@ -1,12 +1,14 @@
 //! Tempoary formatting functions until format! is fixed
-use syscalls::{allow, command};
+
+use syscalls;
+use syscalls::command;
 
 pub fn output_number(value: u32) {
     let mut out: [u8; 11] = [32; 11];
     write_u32_into_array(&mut out, value as u32, 0x10_00_00_00, 0x10);
 
     unsafe {
-        allow(1, 1, &out);
+        syscalls::allow_ptr(1, 1, &out);
         command(1, 1, 10, 0);
     }
 }

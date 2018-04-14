@@ -75,7 +75,7 @@ impl Client {
 }
 
 unsafe fn discover(pkg_name: String) -> Result<usize, ()> {
-    let res = syscalls::allow(DRIVER_NUM, 0, pkg_name.as_bytes());
+    let res = syscalls::allow_ptr(DRIVER_NUM, 0, pkg_name.as_bytes());
     if res < 0 {
         Err(())
     } else {
@@ -85,7 +85,7 @@ unsafe fn discover(pkg_name: String) -> Result<usize, ()> {
 
 unsafe fn share(pid: usize, base: *mut u8, len: usize) -> Result<(), ()> {
     use core::slice::from_raw_parts;
-    let res = syscalls::allow(DRIVER_NUM, pid, from_raw_parts(base, len));
+    let res = syscalls::allow_ptr(DRIVER_NUM, pid, from_raw_parts(base, len));
     if res < 0 {
         Err(())
     } else {
