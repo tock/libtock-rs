@@ -8,8 +8,8 @@ tab_file_name=metadata.toml
 elf_file_name=cortex-m4.elf
 bin_file_name=cortex-m4.bin
 
-RUST_TARGET_PATH=$(pwd) cargo run --manifest-path xargo/Cargo.toml -- build --release --target=thumbv7em-tock-eabi --example "$1"
-cp target/thumbv7em-tock-eabi/release/examples/"$1" "target/$elf_file_name"
+cargo build --release --target=thumbv7em-none-eabi --example "$1"
+cp target/thumbv7em-none-eabi/release/examples/"$1" "target/$elf_file_name"
 cargo run --manifest-path tock/userland/tools/elf2tbf/Cargo.toml -- -n "$1" -o "target/$bin_file_name" "target/$elf_file_name"
 
 echo "tab-version = 1" > "target/$tab_file_name"

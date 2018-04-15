@@ -1,4 +1,8 @@
-[target.thumbv7em-tock-eabi]
+[target.thumbv7em-none-eabi]
 rustflags = [
-  "-C link-args=-Tlayout.ld",
+  "-C", "link-arg=-Tlayout.ld",
+  "-C", "linker=lld",
+  "-Z", "linker-flavor=ld.lld",
+  "-C", "relocation-model=ropi-rwpi",
+  "-D", "warnings",
 ]
