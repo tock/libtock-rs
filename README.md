@@ -15,10 +15,10 @@ This project is nascent and still under heavy development, but first steps:
     git submodule update --init
     ```
 
-1. Add dependencies for `xargo`.
+1. Add dependencies for cross-compilation.
 
     ```bash
-    rustup component add rust-src
+    rustup target add thumbv7m-none-eabi
     ```
 
 1. Use the `run_example` script to compile and run the example app you want
@@ -57,7 +57,7 @@ To run on the code on your board you can use
 ./run_example.sh <your app>
 ```
 This script does the following steps for you:
- - cross-compile your program using xargo
+ - cross-compile your program
  - create a TAB (tock application bundle)
  - if you have a nrf52-dk board connected: flash this TAB to your board (using tockloader)
 
