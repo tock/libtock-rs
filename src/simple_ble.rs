@@ -61,13 +61,11 @@ impl BleAdvertisingDriver {
         stay_visible: bool,
         service_payload: Vec<u8>,
     ) -> Result<SharedMemory<AdvertisingBuffer>, isize> {
-        let flags: [u8; 1] = [
-            gap_flags::ONLY_LE | (if stay_visible {
-                gap_flags::BLE_DISCOVERABLE
-            } else {
-                gap_flags::BLE_NOT_DISCOVERABLE
-            }),
-        ];
+        let flags: [u8; 1] = [gap_flags::ONLY_LE | (if stay_visible {
+            gap_flags::BLE_DISCOVERABLE
+        } else {
+            gap_flags::BLE_NOT_DISCOVERABLE
+        })];
         let buffer = AdvertisingBuffer {
             shared_memory: [0; BUFFER_SIZE],
         };

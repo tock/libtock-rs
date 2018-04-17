@@ -1,8 +1,8 @@
-use alloc::String;
 use alloc::allocator::{Alloc, Layout};
 use alloc::boxed::Box;
 use alloc::heap::Heap;
 use alloc::raw_vec::RawVec;
+use alloc::String;
 use callback::CallbackSubscription;
 use callback::SubscribableCallback;
 use syscalls;

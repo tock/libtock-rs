@@ -1,9 +1,7 @@
-#![feature(asm, alloc, allocator_api, compiler_builtins_lib, global_allocator, lang_items,
-           naked_functions)]
+#![feature(asm, alloc, allocator_api, global_allocator, lang_items, naked_functions)]
 #![no_std]
 
 extern crate alloc;
-extern crate compiler_builtins;
 
 mod callback;
 
@@ -24,16 +22,16 @@ pub mod simple_ble;
 pub mod temperature;
 pub mod timer;
 
-#[cfg(target_os = "tock")]
+#[cfg(target_arch = "arm")]
 pub mod entry_point;
-#[cfg(target_os = "tock")]
+#[cfg(target_arch = "arm")]
 mod lang_items;
-#[cfg(target_os = "tock")]
+#[cfg(target_arch = "arm")]
 pub mod syscalls;
-#[cfg(not(target_os = "tock"))]
+#[cfg(not(target_arch = "arm"))]
 #[path = "syscalls_mock.rs"]
 mod syscalls;
 
-#[cfg(target_os = "tock")]
+#[cfg(target_arch = "arm")]
 #[global_allocator]
 static ALLOCATOR: entry_point::StackOwnedHeap = entry_point::StackOwnedHeap;

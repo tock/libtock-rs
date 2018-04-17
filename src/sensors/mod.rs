@@ -37,7 +37,7 @@ pub trait Sensor<Reading: Copy + From<(usize, usize, usize)>> {
 }
 
 macro_rules! single_value_sensor {
-    ($sensor_name: ident, $type_name: ident, $driver_num: expr) => {
+    ($sensor_name:ident, $type_name:ident, $driver_num:expr) => {
         #[derive(Copy, Clone, Eq, PartialEq, Debug)]
         pub struct $type_name(i32);
 

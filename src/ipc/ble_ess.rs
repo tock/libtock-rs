@@ -1,5 +1,5 @@
-use alloc::String;
 use alloc::boxed::Box;
+use alloc::String;
 use ipc::Client;
 
 #[repr(u32)]
