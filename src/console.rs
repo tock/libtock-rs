@@ -1,11 +1,41 @@
 use alloc::String;
 use core::cell::Cell;
 use core::fmt;
-use core::mem;
 use core::result::Result;
-use syscalls::{self, allow, yieldk_for};
+use shared_memory::ShareableMemory;
+use syscalls;
 
-const DRIVER_NUM: usize = 1;
+const DRIVER_NUMBER: usize = 1;
+
+mod command_nr {
+    pub const WRITE: usize = 1;
+}
+
+mod subscribe_nr {
+    pub const SET_ALARM: usize = 1;
+}
+
+mod allow_nr {
+    pub const SHARE_BUFFER: usize = 1;
+}
+
+struct ShareableString {
+    string: String,
+}
+
+impl ShareableMemory for ShareableString {
+    fn driver_number(&self) -> usize {
+        DRIVER_NUMBER
+    }
+
+    fn allow_number(&self) -> usize {
+        allow_nr::SHARE_BUFFER
+    }
+
+    fn to_bytes(&mut self) -> &mut [u8] {
+        unsafe { self.string.as_bytes_mut() }
+    }
+}
 
 pub struct Console;
 
@@ -14,25 +44,35 @@ impl Console {
         Console
     }
 
-    // TODO: Accept borrowed strings (e.g. &str).
-    // For this, the borrowed referencne must be accessible by the capsule. This is not the case for string literals.
-    pub fn write(&mut self, string: String) {
-        if string.len() <= 0 {
+    // TODO: Use &str after relocation is fixed
+    pub fn write(&mut self, text: String) {
+        let num_bytes = text.as_bytes().len();
+
+        let text = ShareableString { string: text };
+
+        let (result_code, _shared_string) = syscalls::allow_new(text);
+        if result_code < 0 {
             return;
         }
-        let done: Cell<bool> = Cell::new(false);
-        unsafe {
-            if putstr_async(&string, Self::cb, &done as *const _ as usize) >= 0 {
-                yieldk_for(|| done.get())
-            } else {
-                return;
-            }
-        }
-    }
 
-    extern "C" fn cb(_: usize, _: usize, _: usize, ptr: usize) {
-        let done: &Cell<bool> = unsafe { mem::transmute(ptr) };
-        done.set(true);
+        let is_written = Cell::new(false);
+        let mut is_written_alarm = |_, _, _| is_written.set(true);
+        let subscription = syscalls::subscribe(
+            DRIVER_NUMBER,
+            subscribe_nr::SET_ALARM,
+            &mut is_written_alarm,
+        );
+        if subscription.is_err() {
+            return;
+        }
+
+        let result_code =
+            unsafe { syscalls::command(DRIVER_NUMBER, command_nr::WRITE, num_bytes, 0) };
+        if result_code < 0 {
+            return;
+        }
+
+        syscalls::yieldk_for(|| is_written.get());
     }
 }
 
@@ -41,27 +81,4 @@ impl fmt::Write for Console {
         self.write(String::from(string));
         Ok(())
     }
-}
-
-// TODO: Should this function be unsafe on its own?
-unsafe fn putstr_async(
-    string: &String,
-    cb: extern "C" fn(usize, usize, usize, usize),
-    ud: usize,
-) -> isize {
-    let mut ret = allow(DRIVER_NUM, 1, string.as_bytes());
-    if ret < 0 {
-        return ret;
-    }
-
-    ret = syscalls::subscribe_ptr(DRIVER_NUM, 1, cb as *const _, ud);
-    if ret < 0 {
-        return ret;
-    }
-
-    ret = syscalls::command(DRIVER_NUM, 1, string.len(), 0);
-    if ret < 0 {
-        return ret;
-    }
-    ret
 }
