@@ -18,7 +18,7 @@ This project is nascent and still under heavy development, but first steps:
 1. Add dependencies for cross-compilation.
 
     ```bash
-    rustup target add thumbv7m-none-eabi
+    rustup target add thumbv7em-none-eabi
     ```
 
 1. Use the `run_example` script to compile and run the example app you want
