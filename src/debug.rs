@@ -1,7 +1,6 @@
 //! Tempoary formatting functions until format! is fixed
 
 use syscalls;
-use syscalls::command;
 
 pub fn output_number(value: u32) {
     let mut out: [u8; 11] = [32; 11];
@@ -9,7 +8,7 @@ pub fn output_number(value: u32) {
 
     unsafe {
         syscalls::allow_ptr(1, 1, &out);
-        command(1, 1, 10, 0);
+        syscalls::command(1, 1, 10, 0);
     }
 }
 pub fn write_u32_into_array(result: &mut [u8; 11], value: u32, start: u32, base: u32) {

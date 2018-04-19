@@ -46,7 +46,7 @@ impl BleAdvertisingDriver {
         uuid: Vec<u16>,
         stay_visible: bool,
         service_payload: Vec<u8>,
-        advertising_buffer: &mut [u8],
+        advertising_buffer: &mut [u8; BUFFER_SIZE],
     ) -> Result<SharedMemory, isize> {
         let flags: [u8; 1] = [gap_flags::ONLY_LE | (if stay_visible {
             gap_flags::BLE_DISCOVERABLE
@@ -151,7 +151,7 @@ impl BleDriver {
         [0; BUFFER_SIZE_SCAN]
     }
 
-    pub fn share_memory(scan_buffer: &mut [u8]) -> Result<SharedMemory, isize> {
+    pub fn share_memory(scan_buffer: &mut [u8; BUFFER_SIZE_SCAN]) -> Result<SharedMemory, isize> {
         syscalls::allow(DRIVER_NUMBER, ble_commands::ALLOW_SCAN_BUFFER, scan_buffer)
     }
 

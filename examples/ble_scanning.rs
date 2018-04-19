@@ -36,13 +36,10 @@ fn main() {
                 let msg: LedCommand = corepack::from_bytes(payload.as_slice()).unwrap();
                 let msg_led = led::get(msg.nr as isize);
                 match msg_led {
-                    Some(msg_led) => {
-                        if msg.st {
-                            msg_led.on();
-                        } else {
-                            msg_led.off();
-                        }
-                    }
+                    Some(msg_led) => match msg.st {
+                        true => msg_led.on(),
+                        false => msg_led.off(),
+                    },
                     _ => (),
                 }
             }

@@ -10,11 +10,11 @@ pub struct SharedMemory<'a> {
 
 impl<'a> SharedMemory<'a> {
     pub fn read_bytes(&self, destination: &mut [u8]) {
-        destination.clone_from_slice(self.buffer_to_share);
+        safe_copy(self.buffer_to_share, destination);
     }
 
     pub fn write_bytes(&mut self, source: &[u8]) {
-        self.buffer_to_share.clone_from_slice(source);
+        safe_copy(source, self.buffer_to_share);
     }
 }
 
@@ -27,5 +27,20 @@ impl<'a> Drop for SharedMemory<'a> {
                 slice::from_raw_parts_mut(ptr::null_mut(), 0),
             );
         }
+    }
+}
+
+fn safe_copy(origin: &[u8], destination: &mut [u8]) {
+    let amount = min(origin.len(), destination.len());
+    let origin = &origin[0..amount];
+    let destination = &mut destination[0..amount];
+    destination.clone_from_slice(origin);
+}
+
+fn min(a: usize, b: usize) -> usize {
+    if a < b {
+        a
+    } else {
+        b
     }
 }
