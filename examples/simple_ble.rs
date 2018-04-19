@@ -25,13 +25,13 @@ fn main() {
     let led = led::get(0).unwrap();
 
     let name = String::from("Tock!");
-    let uuid: [u16; 1] = [0x0018];
+    let mut uuid: [u8; 2] = [0x18, 0x00];
 
-    let payload = corepack::to_bytes(LedCommand { nr: 2, st: true }).unwrap();
+    let mut payload = corepack::to_bytes(LedCommand { nr: 2, st: true }).unwrap();
 
     let mut buffer = BleAdvertisingDriver::create_advertising_buffer();
     let handle =
-        BleAdvertisingDriver::initialize(100, name, uuid.to_vec(), true, payload, &mut buffer)
+        BleAdvertisingDriver::initialize(100, name, &mut uuid, true, &mut payload, &mut buffer)
             .unwrap();
 
     loop {

@@ -100,7 +100,15 @@ pub fn allow(
     allow_number: usize,
     buffer_to_share: &mut [u8],
 ) -> Result<SharedMemory, isize> {
-    let return_code = unsafe { allow_ptr(driver_number, allow_number, buffer_to_share) };
+    let len = buffer_to_share.len();
+    let return_code = unsafe {
+        allow_ptr(
+            driver_number,
+            allow_number,
+            buffer_to_share.as_mut_ptr(),
+            len,
+        )
+    };
     if return_code == 0 {
         Ok(SharedMemory {
             driver_number,
@@ -112,19 +120,10 @@ pub fn allow(
     }
 }
 
-pub unsafe fn allow_ptr(major: usize, minor: usize, slice: &[u8]) -> isize {
+pub unsafe fn allow_ptr(major: usize, minor: usize, slice: *mut u8, len: usize) -> isize {
     let res;
     asm!("svc 3" : "={r0}"(res)
-                 : "{r0}"(major) "{r1}"(minor) "{r2}"(slice.as_ptr()) "{r3}"(slice.len())
-                 : "memory"
-                 : "volatile");
-    res
-}
-
-pub unsafe fn allow16(major: usize, minor: usize, slice: &[u16]) -> isize {
-    let res;
-    asm!("svc 3" : "={r0}"(res)
-                 : "{r0}"(major) "{r1}"(minor) "{r2}"(slice.as_ptr()) "{r3}"(slice.len()*2)
+                 : "{r0}"(major) "{r1}"(minor) "{r2}"(slice as *mut u8) "{r3}"(len)
                  : "memory"
                  : "volatile");
     res

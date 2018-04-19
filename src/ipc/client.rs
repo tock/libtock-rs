@@ -31,8 +31,9 @@ impl Client {
 
             match shared_val {
                 Ok(v) => {
-                    share(self.pid, v, 1 << len)?;
-                    Ok(RawVec::from_raw_parts(v, 1 << len).into_box())
+                    let mut b = RawVec::from_raw_parts(v, 1 << len).into_box();
+                    share(self.pid, b.as_mut_ptr(), 1 << len)?;
+                    Ok(b)
                 }
                 _ => Err(()),
             }
@@ -74,8 +75,9 @@ impl Client {
     }
 }
 
-unsafe fn discover(pkg_name: String) -> Result<usize, ()> {
-    let res = syscalls::allow_ptr(DRIVER_NUM, 0, pkg_name.as_bytes());
+unsafe fn discover(mut pkg_name: String) -> Result<usize, ()> {
+    let len = pkg_name.as_bytes().len();
+    let res = syscalls::allow_ptr(DRIVER_NUM, 0, pkg_name.as_bytes_mut().as_mut_ptr(), len);
     if res < 0 {
         Err(())
     } else {
@@ -84,8 +86,7 @@ unsafe fn discover(pkg_name: String) -> Result<usize, ()> {
 }
 
 unsafe fn share(pid: usize, base: *mut u8, len: usize) -> Result<(), ()> {
-    use core::slice::from_raw_parts;
-    let res = syscalls::allow_ptr(DRIVER_NUM, pid, from_raw_parts(base, len));
+    let res = syscalls::allow_ptr(DRIVER_NUM, pid, base, len);
     if res < 0 {
         Err(())
     } else {

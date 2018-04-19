@@ -7,8 +7,9 @@ pub fn output_number(value: u32) {
     write_u32_into_array(&mut out, value as u32, 0x10_00_00_00, 0x10);
 
     unsafe {
-        syscalls::allow_ptr(1, 1, &out);
+        let handle = syscalls::allow(1, 1, &mut out);
         syscalls::command(1, 1, 10, 0);
+        handle.unwrap();
     }
 }
 pub fn write_u32_into_array(result: &mut [u8; 11], value: u32, start: u32, base: u32) {

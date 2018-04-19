@@ -1,5 +1,4 @@
 use core::ptr;
-use core::slice;
 use syscalls;
 
 pub struct SharedMemory<'a> {
@@ -21,26 +20,14 @@ impl<'a> SharedMemory<'a> {
 impl<'a> Drop for SharedMemory<'a> {
     fn drop(&mut self) {
         unsafe {
-            syscalls::allow_ptr(
-                self.driver_number,
-                self.allow_number,
-                slice::from_raw_parts_mut(ptr::null_mut(), 0),
-            );
+            syscalls::allow_ptr(self.driver_number, self.allow_number, ptr::null_mut(), 0);
         }
     }
 }
 
 fn safe_copy(origin: &[u8], destination: &mut [u8]) {
-    let amount = min(origin.len(), destination.len());
+    let amount = origin.len().min(destination.len());
     let origin = &origin[0..amount];
     let destination = &mut destination[0..amount];
     destination.clone_from_slice(origin);
-}
-
-fn min(a: usize, b: usize) -> usize {
-    if a < b {
-        a
-    } else {
-        b
-    }
 }

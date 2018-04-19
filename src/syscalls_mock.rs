@@ -31,11 +31,7 @@ pub fn allow(_: usize, _: usize, _: &mut [u8]) -> Result<SharedMemory, isize> {
     unimplemented()
 }
 
-pub unsafe fn allow_ptr(_: usize, _: usize, _: &[u8]) -> isize {
-    unimplemented()
-}
-
-pub unsafe fn allow16(_: usize, _: usize, _: &[u16]) -> isize {
+pub unsafe fn allow_ptr(_: usize, _: usize, _: *mut u8, _: usize) -> isize {
     unimplemented()
 }
 
