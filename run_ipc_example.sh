@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Examples only run on a NRF52DK board
+# Example only runs on a nRF52-DK board
 
 set -eux
 
