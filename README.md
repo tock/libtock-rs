@@ -28,7 +28,7 @@ to use:
     ./run_example.sh blink
     ```
 
-    This should work if you are using the nRF52DK platform. For other platforms,
+    This should work if you are using the nRF52-DK platform. For other platforms,
     you will end up with a TAB file in `target/` that you can program onto your
     Tock board (e.g. with `tockloader install target/blink.tab`).
 
@@ -59,7 +59,7 @@ To run on the code on your board you can use
 This script does the following steps for you:
  - cross-compile your program
  - create a TAB (tock application bundle)
- - if you have a nrf52-dk board connected: flash this TAB to your board (using tockloader)
+ - if you have a nRF52-DK board connected: flash this TAB to your board (using tockloader)
 
 ## License
 

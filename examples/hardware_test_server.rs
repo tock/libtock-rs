@@ -5,9 +5,9 @@ extern crate tock;
 
 use alloc::string::String;
 use alloc::vec::Vec;
-use tock::ipc_cs;
-use tock::ipc_cs::IpcServerCallback;
-use tock::ipc_cs::IpcServerDriver;
+use tock::ipc;
+use tock::ipc::IpcServerCallback;
+use tock::ipc::IpcServerDriver;
 
 #[allow(unreachable_code)]
 // Prints the payload and adds one to the first byte.
@@ -24,7 +24,7 @@ fn main() {
             let b = m.as_bytes();
             let l = b.len();
             message[..l].clone_from_slice(b);
-            ipc_cs::notify_client(pid);
+            ipc::notify_client(pid);
         }
     });
 

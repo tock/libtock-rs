@@ -1,6 +1,7 @@
-use alloc::boxed::Box;
 use alloc::String;
-use ipc::Client;
+use ipc::IPCBuffer;
+use ipc::ServerHandle;
+use shared_memory::SharedMemory;
 
 #[repr(u32)]
 pub enum ReadingType {
@@ -9,36 +10,40 @@ pub enum ReadingType {
     Light = 2,
 }
 
-pub struct BleEss {
-    client: Client,
-    buffer: Box<[u8]>,
+pub struct BleEss<'a> {
+    server: ServerHandle,
+    pub memory: SharedMemory<'a>,
 }
 
-pub fn connect() -> Result<BleEss, ()> {
-    let mut client = Client::new(String::from("org.tockos.services.ble-ess"))?;
-    let buffer = client.share(5)?;
-    Ok(BleEss { client, buffer })
+pub fn connect(buffer: &mut IPCBuffer) -> Result<BleEss, ()> {
+    let server =
+        ServerHandle::discover_service(String::from("org.tockos.services.ble-ess")).unwrap();
+    let memory = server.share(buffer).unwrap();
+    Ok(BleEss { server, memory })
 }
 
-impl BleEss {
-    pub fn set_reading<I>(&mut self, sensor: ReadingType, data: I) -> Result<(), ()>
+impl<'a> BleEss<'a> {
+    pub fn set_reading<I>(&mut self, sensor: ReadingType, data: I) -> Result<(), isize>
     where
         I: Into<i32>,
     {
         let sensor_type = sensor as u32;
         let data = Into::<i32>::into(data) as u32;
-        self.buffer[0..4].copy_from_slice(&[
+        let mut buf = [0; 8];
+
+        buf[0..4].copy_from_slice(&[
             (sensor_type & 0xff) as u8,
             ((sensor_type >> 8) & 0xff) as u8,
             ((sensor_type >> 16) & 0xff) as u8,
             ((sensor_type >> 24) & 0xff) as u8,
         ]);
-        self.buffer[4..8].copy_from_slice(&[
+        buf[4..8].copy_from_slice(&[
             (data & 0xff) as u8,
             ((data >> 8) & 0xff) as u8,
             ((data >> 16) & 0xff) as u8,
             ((data >> 24) & 0xff) as u8,
         ]);
-        self.client.notify()
+        self.memory.write_bytes(&buf);
+        self.server.notify()
     }
 }
