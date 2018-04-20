@@ -1,4 +1,4 @@
-#![feature(asm, alloc, allocator_api, global_allocator, lang_items, naked_functions)]
+#![feature(asm, alloc, allocator_api, global_allocator, lang_items, naked_functions, attr_literals)]
 #![no_std]
 
 extern crate alloc;
@@ -13,7 +13,6 @@ pub mod electronics;
 pub mod fmt;
 pub mod gpio;
 pub mod ipc;
-pub mod ipc_cs;
 pub mod led;
 pub mod result;
 pub mod sensors;
