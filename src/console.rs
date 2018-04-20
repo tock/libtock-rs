@@ -2,6 +2,7 @@ use alloc::String;
 use core::cell::Cell;
 use core::fmt;
 use core::result::Result;
+use core::slice;
 use syscalls;
 
 const DRIVER_NUMBER: usize = 1;
@@ -25,12 +26,16 @@ impl Console {
         Console
     }
 
-    // TODO: Use &str after relocation is fixed
-    pub fn write(&mut self, mut text: String) {
-        let num_bytes = text.as_bytes().len();
+    pub fn write(&mut self, text: String) {
+        self.write_bytes(text.as_bytes());
+    }
+
+    // TODO: Use this method after relocation is fixed
+    pub(crate) fn write_bytes(&mut self, text: &[u8]) {
+        let num_bytes = text.len();
 
         let result = syscalls::allow(DRIVER_NUMBER, allow_nr::SHARE_BUFFER, unsafe {
-            text.as_bytes_mut()
+            slice::from_raw_parts_mut(text.as_ptr() as *mut _, num_bytes)
         });
         if result.is_err() {
             return;

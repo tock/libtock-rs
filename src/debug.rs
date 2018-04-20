@@ -1,32 +1,49 @@
-//! Tempoary formatting functions until format! is fixed
+//! Heapless debugging functions for Tock troubleshooting
 
-use syscalls;
+use console::Console;
 
-pub fn output_number(value: u32) {
-    let mut out: [u8; 11] = [32; 11];
-    write_u32_into_array(&mut out, value as u32, 0x10_00_00_00, 0x10);
-
-    unsafe {
-        let handle = syscalls::allow(1, 1, &mut out);
-        syscalls::command(1, 1, 10, 0);
-        handle.unwrap();
-    }
+pub fn print_as_hex(value: usize) {
+    let mut buffer = ['\n' as u8; 11];
+    write_as_hex(&mut buffer, value);
+    Console::new().write_bytes(&buffer);
 }
-pub fn write_u32_into_array(result: &mut [u8; 11], value: u32, start: u32, base: u32) {
+
+pub fn print_stack_pointer() {
+    let stack_pointer;
+    unsafe { asm!("mov $0, sp" : "=r"(stack_pointer) : : : "volatile") };
+
+    let mut buffer = ['\n' as u8; 15];
+    buffer[0..4].clone_from_slice(b"SP: ");
+    write_as_hex(&mut buffer[4..15], stack_pointer);
+    Console::new().write_bytes(&buffer);
+}
+
+#[inline(always)] // Initial stack size is too small (64 bytes currently)
+pub fn dump_address(address: *const usize) {
+    let mut buffer = ['\n' as u8; 23];
+    write_as_hex(&mut buffer[0..10], address as usize);
+    buffer[10..12].clone_from_slice(b": ");
+    write_as_hex(&mut buffer[12..22], unsafe { *address });
+    Console::new().write_bytes(&buffer);
+}
+
+fn write_as_hex(buffer: &mut [u8], value: usize) {
+    write_formatted(buffer, value, 0x10_00_00_00, 0x10);
+}
+
+fn write_formatted(buffer: &mut [u8], value: usize, start: usize, base: usize) {
     let mut scanning = start;
     let mut remainder = value;
-    let mut counter = 0;
-    result[0] = '0' as u8;
-    result[1] = 'x' as u8;
-    result[10] = '\n' as u8;
+    let mut position = 2;
+    buffer[0..2].clone_from_slice(b"0x");
 
     while scanning > 0 {
         let digit = remainder / scanning;
-        result[counter + 2] = render_digit(digit as u8) as u8;
+        buffer[position] = render_digit(digit as u8) as u8;
 
         remainder = remainder % scanning;
         scanning = scanning / base;
-        counter += 1;
+        position += 1;
     }
 }
 
