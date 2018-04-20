@@ -46,7 +46,13 @@ impl ServerHandle {
         shared_buffer.clone_from_slice(message);
 
         unsafe {
-            if syscalls::allow(DRIVER_NUMBER, self.pid as usize, &*shared_buffer) < 0 {
+            if syscalls::allow_ptr(
+                DRIVER_NUMBER,
+                self.pid as usize,
+                shared_buffer.as_mut().as_mut_ptr(),
+                32,
+            ) < 0
+            {
                 panic!()
             };
         }
@@ -56,12 +62,14 @@ impl ServerHandle {
         unsafe { syscalls::command(DRIVER_NUMBER, self.pid as usize, 0, 0) };
     }
 
-    pub fn discover_service(name: String) -> Option<ServerHandle> {
+    pub fn discover_service(mut name: String) -> Option<ServerHandle> {
+        let len = name.len();
         let pid = unsafe {
-            syscalls::allow(
+            syscalls::allow_ptr(
                 DRIVER_NUMBER,
                 ipc_commands::DISCOVER_SERVICE,
-                &name.as_bytes(),
+                name.as_bytes_mut().as_mut_ptr(),
+                len,
             )
         };
         if pid >= 0 {

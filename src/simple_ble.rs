@@ -3,13 +3,12 @@ use alloc::Vec;
 use callback::CallbackSubscription;
 use callback::SubscribableCallback;
 use result;
-use shared_memory::ShareableMemory;
 use shared_memory::SharedMemory;
 use syscalls;
 
 const DRIVER_NUMBER: usize = 0x30000;
 pub const MAX_PAYLOAD_SIZE: usize = 9;
-pub const BUFFER_SIZE: usize = 39;
+pub const BUFFER_SIZE_ADVERTISE: usize = 39;
 pub const BUFFER_SIZE_SCAN: usize = 39;
 
 mod ble_commands {
@@ -35,47 +34,37 @@ pub mod gap_data {
     pub const SERVICE_DATA: usize = 0x16;
 }
 
-pub struct AdvertisingBuffer {
-    shared_memory: [u8; BUFFER_SIZE],
-}
-
-impl ShareableMemory for AdvertisingBuffer {
-    fn driver_number(&self) -> usize {
-        DRIVER_NUMBER
-    }
-    fn allow_number(&self) -> usize {
-        ble_commands::ALLOW_ADVERTISMENT_BUFFER
-    }
-    fn to_bytes(&mut self) -> &mut [u8] {
-        &mut self.shared_memory
-    }
-}
-
 pub struct BleAdvertisingDriver;
 
 impl BleAdvertisingDriver {
-    pub fn initialize(
+    pub fn create_advertising_buffer() -> [u8; BUFFER_SIZE_ADVERTISE] {
+        [0; BUFFER_SIZE_ADVERTISE]
+    }
+    pub fn initialize<'a>(
         interval: u16,
-        name: String,
-        uuid: Vec<u16>,
+        mut name: String,
+        uuid: &'a mut [u8; 2],
         stay_visible: bool,
-        service_payload: Vec<u8>,
-    ) -> Result<SharedMemory<AdvertisingBuffer>, isize> {
-        let flags: [u8; 1] = [gap_flags::ONLY_LE | (if stay_visible {
+        service_payload: &'a mut Vec<u8>,
+        advertising_buffer: &'a mut [u8; BUFFER_SIZE_ADVERTISE],
+    ) -> Result<SharedMemory<'a>, isize> {
+        let mut flags: [u8; 1] = [gap_flags::ONLY_LE | (if stay_visible {
             gap_flags::BLE_DISCOVERABLE
         } else {
             gap_flags::BLE_NOT_DISCOVERABLE
         })];
-        let buffer = AdvertisingBuffer {
-            shared_memory: [0; BUFFER_SIZE],
-        };
-        let (_, shared_memory) = syscalls::allow_new(buffer);
+        let shared_memory = syscalls::allow(
+            DRIVER_NUMBER,
+            ble_commands::ALLOW_ADVERTISMENT_BUFFER,
+            advertising_buffer,
+        )?;
+
         Self::set_advertising_interval(interval)?;
         Self::request_adv_address()?;
-        Self::set_local_name(name)?;
-        Self::set_uuid(uuid)?;
-        Self::set_flags(flags)?;
-        Self::set_service_payload(service_payload)?;
+        let _name_handle = Self::set_local_name(&mut name)?;
+        let _uuid_handle = Self::set_uuid(uuid)?;
+        let _flags_handle = Self::set_flags(&mut flags)?;
+        let _payload_handle = Self::set_service_payload(service_payload)?;
         Self::start_advertising()?;
         Ok(shared_memory)
     }
@@ -100,37 +89,30 @@ impl BleAdvertisingDriver {
         convert_result(result)
     }
 
-    fn set_local_name(name: String) -> Result<(), isize> {
-        let result = unsafe {
+    fn set_local_name(name: &mut String) -> Result<SharedMemory, isize> {
+        unsafe {
             syscalls::allow(
                 DRIVER_NUMBER,
                 gap_data::COMPLETE_LOCAL_NAME,
-                name.as_bytes(),
+                name.as_bytes_mut(),
             )
-        };
-        convert_result(result)
+        }
     }
 
-    fn set_uuid(uuid: Vec<u16>) -> Result<(), isize> {
-        let result = unsafe {
-            syscalls::allow16(
-                DRIVER_NUMBER,
-                gap_data::COMPLETE_LIST_16BIT_SERVICE_IDS,
-                &uuid.to_vec(),
-            )
-        };
-        convert_result(result)
+    fn set_uuid(uuid: &mut [u8]) -> Result<SharedMemory, isize> {
+        syscalls::allow(
+            DRIVER_NUMBER,
+            gap_data::COMPLETE_LIST_16BIT_SERVICE_IDS,
+            uuid,
+        )
     }
 
-    fn set_flags(flags: [u8; 1]) -> Result<(), isize> {
-        let result = unsafe { syscalls::allow(DRIVER_NUMBER, gap_data::SET_FLAGS, &flags) };
-        convert_result(result)
+    fn set_flags(flags: &mut [u8; 1]) -> Result<SharedMemory, isize> {
+        syscalls::allow(DRIVER_NUMBER, gap_data::SET_FLAGS, flags)
     }
 
-    fn set_service_payload(service_payload: Vec<u8>) -> Result<(), isize> {
-        let result =
-            unsafe { syscalls::allow(DRIVER_NUMBER, gap_data::SERVICE_DATA, &service_payload) };
-        convert_result(result)
+    fn set_service_payload(service_payload: &mut [u8]) -> Result<SharedMemory, isize> {
+        syscalls::allow(DRIVER_NUMBER, gap_data::SERVICE_DATA, service_payload)
     }
 
     fn start_advertising() -> Result<(), isize> {
@@ -156,31 +138,15 @@ impl<CB: FnMut(usize, usize)> SubscribableCallback for BleCallback<CB> {
     }
 }
 
-pub struct ScanBuffer {
-    shared_memory: [u8; BUFFER_SIZE_SCAN],
-}
-
-impl<'a> ShareableMemory for ScanBuffer {
-    fn driver_number(&self) -> usize {
-        DRIVER_NUMBER
-    }
-    fn allow_number(&self) -> usize {
-        ble_commands::ALLOW_SCAN_BUFFER
-    }
-    fn to_bytes(&mut self) -> &mut [u8] {
-        &mut self.shared_memory
-    }
-}
-
 pub struct BleDriver;
 
 impl BleDriver {
-    pub fn share_memory() -> Result<SharedMemory<ScanBuffer>, isize> {
-        let (result, shared_memory) = syscalls::allow_new(ScanBuffer {
-            shared_memory: [0; BUFFER_SIZE_SCAN],
-        });
-        convert_result(result)?;
-        Ok(shared_memory)
+    pub fn create_scan_buffer() -> [u8; BUFFER_SIZE_SCAN] {
+        [0; BUFFER_SIZE_SCAN]
+    }
+
+    pub fn share_memory(scan_buffer: &mut [u8; BUFFER_SIZE_SCAN]) -> Result<SharedMemory, isize> {
+        syscalls::allow(DRIVER_NUMBER, ble_commands::ALLOW_SCAN_BUFFER, scan_buffer)
     }
 
     pub fn start<CB>(callback: &mut BleCallback<CB>) -> Result<CallbackSubscription, isize>

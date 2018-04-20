@@ -1,18 +1,33 @@
-pub trait ShareableMemory {
-    fn driver_number(&self) -> usize;
+use core::ptr;
+use syscalls;
 
-    fn allow_number(&self) -> usize;
-
-    fn to_bytes(&mut self) -> &mut [u8];
+pub struct SharedMemory<'a> {
+    pub driver_number: usize,
+    pub allow_number: usize,
+    pub buffer_to_share: &'a mut [u8],
 }
 
-pub struct SharedMemory<SM: ShareableMemory> {
-    #[allow(dead_code)] // Used in drop
-    pub(crate) shareable_memory: SM,
-}
-
-impl<SM: ShareableMemory> SharedMemory<SM> {
-    pub fn to_bytes(&mut self) -> &mut [u8] {
-        self.shareable_memory.to_bytes()
+impl<'a> SharedMemory<'a> {
+    pub fn read_bytes(&self, destination: &mut [u8]) {
+        safe_copy(self.buffer_to_share, destination);
     }
+
+    pub fn write_bytes(&mut self, source: &[u8]) {
+        safe_copy(source, self.buffer_to_share);
+    }
+}
+
+impl<'a> Drop for SharedMemory<'a> {
+    fn drop(&mut self) {
+        unsafe {
+            syscalls::allow_ptr(self.driver_number, self.allow_number, ptr::null_mut(), 0);
+        }
+    }
+}
+
+fn safe_copy(origin: &[u8], destination: &mut [u8]) {
+    let amount = origin.len().min(destination.len());
+    let origin = &origin[0..amount];
+    let destination = &mut destination[0..amount];
+    destination.clone_from_slice(origin);
 }

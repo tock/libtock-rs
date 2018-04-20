@@ -1,7 +1,5 @@
 use callback::CallbackSubscription;
 use callback::SubscribableCallback;
-use core::ptr;
-use shared_memory::ShareableMemory;
 use shared_memory::SharedMemory;
 
 pub fn yieldk() {
@@ -97,28 +95,35 @@ pub unsafe fn command(major: usize, minor: usize, arg1: usize, arg2: usize) -> i
     res
 }
 
-pub unsafe fn allow(major: usize, minor: usize, slice: &[u8]) -> isize {
-    let res;
-    asm!("svc 3" : "={r0}"(res)
-                 : "{r0}"(major) "{r1}"(minor) "{r2}"(slice.as_ptr()) "{r3}"(slice.len())
-                 : "memory"
-                 : "volatile");
-    res
+pub fn allow(
+    driver_number: usize,
+    allow_number: usize,
+    buffer_to_share: &mut [u8],
+) -> Result<SharedMemory, isize> {
+    let len = buffer_to_share.len();
+    let return_code = unsafe {
+        allow_ptr(
+            driver_number,
+            allow_number,
+            buffer_to_share.as_mut_ptr(),
+            len,
+        )
+    };
+    if return_code == 0 {
+        Ok(SharedMemory {
+            driver_number,
+            allow_number,
+            buffer_to_share,
+        })
+    } else {
+        Err(return_code)
+    }
 }
 
-unsafe fn unallow(major: usize, minor: usize) -> isize {
+pub unsafe fn allow_ptr(major: usize, minor: usize, slice: *mut u8, len: usize) -> isize {
     let res;
     asm!("svc 3" : "={r0}"(res)
-                 : "{r0}"(major) "{r1}"(minor) "{r2}"(ptr::null::<u8>()) "{r3}" (0)
-                 : "memory"
-                 : "volatile");
-    res
-}
-
-pub unsafe fn allow16(major: usize, minor: usize, slice: &[u16]) -> isize {
-    let res;
-    asm!("svc 3" : "={r0}"(res)
-                 : "{r0}"(major) "{r1}"(minor) "{r2}"(slice.as_ptr()) "{r3}"(slice.len()*2)
+                 : "{r0}"(major) "{r1}"(minor) "{r2}"(slice as *mut u8) "{r3}"(len)
                  : "memory"
                  : "volatile");
     res
@@ -131,26 +136,4 @@ pub unsafe fn memop(major: u32, arg1: usize) -> isize {
                  : "memory"
                  : "volatile");
     res
-}
-
-pub fn allow_new<SM: ShareableMemory>(mut shareable_memory: SM) -> (isize, SharedMemory<SM>) {
-    let return_code = unsafe {
-        allow(
-            shareable_memory.driver_number(),
-            shareable_memory.allow_number(),
-            shareable_memory.to_bytes(),
-        )
-    };
-    (return_code, SharedMemory { shareable_memory })
-}
-
-impl<SM: ShareableMemory> Drop for SharedMemory<SM> {
-    fn drop(&mut self) {
-        unsafe {
-            unallow(
-                self.shareable_memory.driver_number(),
-                self.shareable_memory.allow_number(),
-            );
-        }
-    }
 }
