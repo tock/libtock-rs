@@ -2,12 +2,24 @@ use core::ptr;
 use syscalls;
 
 pub struct SharedMemory<'a> {
-    pub driver_number: usize,
-    pub allow_number: usize,
-    pub buffer_to_share: &'a mut [u8],
+    driver_number: usize,
+    allow_number: usize,
+    buffer_to_share: &'a mut [u8],
 }
 
 impl<'a> SharedMemory<'a> {
+    pub fn new(
+        driver_number: usize,
+        allow_number: usize,
+        buffer_to_share: &'a mut [u8],
+    ) -> SharedMemory<'a> {
+        SharedMemory {
+            driver_number,
+            allow_number,
+            buffer_to_share,
+        }
+    }
+
     pub fn read_bytes(&self, destination: &mut [u8]) {
         safe_copy(self.buffer_to_share, destination);
     }
