@@ -14,9 +14,9 @@ fn main() {
     let mut console = Console::new();
 
     for i in 0.. {
-        console.write(String::from("Hello world! "));
-        console.write(tock::fmt::u32_as_decimal(i));
-        console.write(String::from("\n"));
+        console.write(String::from("Hello world! ")).unwrap();
+        console.write(tock::fmt::u32_as_decimal(i)).unwrap();
+        console.write(String::from("\n")).unwrap();
         timer::sleep(Duration::from_ms(500))
     }
 }

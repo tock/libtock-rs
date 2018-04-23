@@ -13,15 +13,13 @@ pub struct Led {
     led_num: usize,
 }
 
-pub fn count() -> isize {
-    unsafe { command(DRIVER_NUMBER, command_nr::COUNT, 0, 0) }
+pub fn count() -> usize {
+    unsafe { command(DRIVER_NUMBER, command_nr::COUNT, 0, 0) }.unwrap_or(0)
 }
 
-pub fn get(led_num: isize) -> Option<Led> {
-    if led_num >= 0 && led_num < count() {
-        Some(Led {
-            led_num: led_num as usize,
-        })
+pub fn get(led_num: usize) -> Option<Led> {
+    if led_num < count() {
+        Some(Led { led_num })
     } else {
         None
     }
@@ -30,7 +28,7 @@ pub fn get(led_num: isize) -> Option<Led> {
 pub fn all() -> LedIter {
     LedIter {
         curr_led: 0,
-        led_count: count() as usize,
+        led_count: count(),
     }
 }
 
@@ -45,19 +43,19 @@ impl Led {
 
     pub fn on(&self) {
         unsafe {
-            command(DRIVER_NUMBER, command_nr::ON, self.led_num, 0);
+            command(DRIVER_NUMBER, command_nr::ON, self.led_num, 0).unwrap();
         }
     }
 
     pub fn off(&self) {
         unsafe {
-            command(DRIVER_NUMBER, command_nr::OFF, self.led_num, 0);
+            command(DRIVER_NUMBER, command_nr::OFF, self.led_num, 0).unwrap();
         }
     }
 
     pub fn toggle(&self) {
         unsafe {
-            command(DRIVER_NUMBER, command_nr::TOGGLE, self.led_num, 0);
+            command(DRIVER_NUMBER, command_nr::TOGGLE, self.led_num, 0).unwrap();
         }
     }
 }

@@ -1,5 +1,7 @@
 use callback::CallbackSubscription;
 use callback::SubscribableCallback;
+use result::TockError;
+use result::TockResult;
 use shared_memory::SharedMemory;
 
 pub fn yieldk() {
@@ -45,7 +47,7 @@ pub fn subscribe<CB: SubscribableCallback>(
     driver_number: usize,
     subscribe_number: usize,
     callback: &mut CB,
-) -> Result<CallbackSubscription, isize> {
+) -> TockResult<CallbackSubscription> {
     let return_code = unsafe {
         subscribe_ptr(
             driver_number,
@@ -55,11 +57,8 @@ pub fn subscribe<CB: SubscribableCallback>(
         )
     };
 
-    if return_code == 0 {
-        Ok(CallbackSubscription::new(driver_number, subscribe_number))
-    } else {
-        Err(return_code)
-    }
+    TockError::from_return_code(return_code)
+        .map(|_| CallbackSubscription::new(driver_number, subscribe_number))
 }
 
 extern "C" fn c_callback<CB: SubscribableCallback>(
@@ -78,28 +77,28 @@ pub unsafe fn subscribe_ptr(
     cb: *const unsafe extern "C" fn(usize, usize, usize, usize),
     ud: usize,
 ) -> isize {
-    let res;
-    asm!("svc 1" : "={r0}"(res)
+    let return_code;
+    asm!("svc 1" : "={r0}"(return_code)
                  : "{r0}"(major) "{r1}"(minor) "{r2}"(cb) "{r3}"(ud)
                  : "memory"
                  : "volatile");
-    res
+    return_code
 }
 
-pub unsafe fn command(major: usize, minor: usize, arg1: usize, arg2: usize) -> isize {
-    let res;
-    asm!("svc 2" : "={r0}"(res)
+pub unsafe fn command(major: usize, minor: usize, arg1: usize, arg2: usize) -> TockResult<usize> {
+    let return_code;
+    asm!("svc 2" : "={r0}"(return_code)
                  : "{r0}"(major) "{r1}"(minor) "{r2}"(arg1) "{r3}"(arg2)
                  : "memory"
                  : "volatile");
-    res
+    TockError::from_return_code(return_code)
 }
 
 pub fn allow(
     driver_number: usize,
     allow_number: usize,
     buffer_to_share: &mut [u8],
-) -> Result<SharedMemory, isize> {
+) -> TockResult<SharedMemory> {
     let len = buffer_to_share.len();
     let return_code = unsafe {
         allow_ptr(
@@ -109,24 +108,21 @@ pub fn allow(
             len,
         )
     };
-    if return_code == 0 {
-        Ok(SharedMemory {
-            driver_number,
-            allow_number,
-            buffer_to_share,
-        })
-    } else {
-        Err(return_code)
-    }
+
+    TockError::from_return_code(return_code).map(move |_| SharedMemory {
+        driver_number,
+        allow_number,
+        buffer_to_share,
+    })
 }
 
 pub unsafe fn allow_ptr(major: usize, minor: usize, slice: *mut u8, len: usize) -> isize {
-    let res;
-    asm!("svc 3" : "={r0}"(res)
+    let return_code;
+    asm!("svc 3" : "={r0}"(return_code)
                  : "{r0}"(major) "{r1}"(minor) "{r2}"(slice as *mut u8) "{r3}"(len)
                  : "memory"
                  : "volatile");
-    res
+    return_code
 }
 
 pub unsafe fn memop(major: u32, arg1: usize) -> isize {

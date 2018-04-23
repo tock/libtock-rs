@@ -1,5 +1,6 @@
 use callback::CallbackSubscription;
 use callback::SubscribableCallback;
+use result::TockResult;
 use shared_memory::SharedMemory;
 
 pub fn yieldk_for<F: Fn() -> bool>(_: F) {
@@ -10,7 +11,7 @@ pub fn subscribe<CB: SubscribableCallback>(
     _: usize,
     _: usize,
     _: &mut CB,
-) -> Result<CallbackSubscription, isize> {
+) -> TockResult<CallbackSubscription> {
     unimplemented()
 }
 
@@ -23,11 +24,11 @@ pub unsafe fn subscribe_ptr(
     unimplemented()
 }
 
-pub unsafe fn command(_: usize, _: usize, _: usize, _: usize) -> isize {
+pub unsafe fn command(_: usize, _: usize, _: usize, _: usize) -> TockResult<usize> {
     unimplemented()
 }
 
-pub fn allow(_: usize, _: usize, _: &mut [u8]) -> Result<SharedMemory, isize> {
+pub fn allow(_: usize, _: usize, _: &mut [u8]) -> TockResult<SharedMemory> {
     unimplemented()
 }
 

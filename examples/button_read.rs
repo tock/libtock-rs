@@ -19,9 +19,9 @@ fn main() {
     let button = button.enable().unwrap();
 
     loop {
-        match button.read() {
-            ButtonState::Pressed => console.write(String::from("pressed\n")),
-            ButtonState::Released => console.write(String::from("released\n")),
+        match button.read().unwrap() {
+            ButtonState::Pressed => console.write(String::from("pressed\n")).unwrap(),
+            ButtonState::Released => console.write(String::from("released\n")).unwrap(),
         }
         timer::sleep(Duration::from_ms(500));
     }

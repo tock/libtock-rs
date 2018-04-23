@@ -1,8 +1,7 @@
 use callback::CallbackSubscription;
 use callback::SubscribableCallback;
-use result;
+use result::TockError;
 use result::TockResult;
-use result::TockValue;
 use syscalls;
 
 const DRIVER_NUMBER: usize = 0x00003;
@@ -36,23 +35,22 @@ impl<CB> WithCallback<CB>
 where
     Self: SubscribableCallback,
 {
-    pub fn init(&mut self) -> TockResult<Buttons, ButtonsError> {
-        let count = unsafe { syscalls::command(DRIVER_NUMBER, command_nr::COUNT, 0, 0) };
-        if count < 1 {
-            return Err(TockValue::Expected(ButtonsError::NotSupported));
+    pub fn init(&mut self) -> Result<Buttons, ButtonsError> {
+        let count = unsafe { syscalls::command(DRIVER_NUMBER, command_nr::COUNT, 0, 0) }
+            .map_err(ButtonsError::GetDriverFailed)?;
+
+        if count == 0 {
+            return Err(ButtonsError::NotSupported);
         }
 
         let subscription =
-            syscalls::subscribe(DRIVER_NUMBER, subscribe_nr::SUBSCRIBE_CALLBACK, self);
+            syscalls::subscribe(DRIVER_NUMBER, subscribe_nr::SUBSCRIBE_CALLBACK, self)
+                .map_err(ButtonsError::SubscriptionFailed)?;
 
-        match subscription {
-            Ok(subscription) => Ok(Buttons {
-                count: count as usize,
-                subscription,
-            }),
-            Err(result::ENOMEM) => Err(TockValue::Expected(ButtonsError::SubscriptionFailed)),
-            Err(unexpected) => Err(TockValue::Unexpected(unexpected)),
-        }
+        Ok(Buttons {
+            count,
+            subscription,
+        })
     }
 }
 
@@ -64,8 +62,9 @@ pub struct Buttons<'a> {
 
 #[derive(Copy, Clone, Debug)]
 pub enum ButtonsError {
+    GetDriverFailed(TockError),
     NotSupported,
-    SubscriptionFailed,
+    SubscriptionFailed(TockError),
 }
 
 impl<'a> Buttons<'a> {
@@ -132,38 +131,30 @@ pub struct ButtonHandle<'a> {
 }
 
 impl<'a> ButtonHandle<'a> {
-    pub fn enable(&mut self) -> TockResult<Button, ButtonError> {
-        let return_code = unsafe {
+    pub fn enable(&mut self) -> TockResult<Button> {
+        unsafe {
             syscalls::command(
                 DRIVER_NUMBER,
                 command_nr::ENABLE_INTERRUPT,
                 self.button_num,
                 0,
             )
-        };
+        }?;
 
-        match return_code {
-            result::SUCCESS => Ok(Button { handle: self }),
-            result::ENOMEM => Err(TockValue::Expected(ButtonError::ActivationFailed)),
-            unexpected => Err(TockValue::Unexpected(unexpected)),
-        }
+        Ok(Button { handle: self })
     }
 
-    pub fn disable(&mut self) -> TockResult<(), ButtonError> {
-        let return_code = unsafe {
+    pub fn disable(&mut self) -> TockResult<()> {
+        unsafe {
             syscalls::command(
                 DRIVER_NUMBER,
                 command_nr::DISABLE_INTERRUPT,
                 self.button_num,
                 0,
             )
-        };
+        }?;
 
-        match return_code {
-            result::SUCCESS => Ok(()),
-            result::ENOMEM => Err(TockValue::Expected(ButtonError::ActivationFailed)),
-            unexpected => Err(TockValue::Unexpected(unexpected)),
-        }
+        Ok(())
     }
 }
 
@@ -177,14 +168,11 @@ pub enum ButtonError {
 }
 
 impl<'a> Button<'a> {
-    pub fn read(&self) -> ButtonState {
-        unsafe {
-            ButtonState::from(syscalls::command(
-                DRIVER_NUMBER,
-                command_nr::READ,
-                self.handle.button_num,
-                0,
-            ) as usize)
-        }
+    pub fn read(&self) -> TockResult<ButtonState> {
+        let button_state = unsafe {
+            syscalls::command(DRIVER_NUMBER, command_nr::READ, self.handle.button_num, 0)
+        }?;
+
+        Ok(ButtonState::from(button_state))
     }
 }

@@ -18,9 +18,9 @@ fn main() {
 
     loop {
         if pin.read() {
-            console.write(String::from("true\n"));
+            console.write(String::from("true\n")).unwrap();
         } else {
-            console.write(String::from("false\n"));
+            console.write(String::from("false\n")).unwrap();
         }
         timer::sleep(Duration::from_ms(500));
     }
