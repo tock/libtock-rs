@@ -1,11 +1,13 @@
 extern crate linked_list_allocator;
 
 use self::linked_list_allocator::Heap;
-use alloc::allocator::Alloc;
-use alloc::allocator::AllocErr;
-use alloc::allocator::Layout;
+use core::alloc::Alloc;
+use core::alloc::GlobalAlloc;
+use core::alloc::Layout;
+use core::alloc::Opaque;
 use core::mem;
 use core::ptr;
+use core::ptr::NonNull;
 use syscalls;
 
 const HEAP_SIZE: usize = 0x400;
@@ -36,13 +38,13 @@ impl TockAllocator {
     }
 }
 
-unsafe impl<'a> Alloc for &'a TockAllocator {
-    unsafe fn alloc(&mut self, layout: Layout) -> Result<*mut u8, AllocErr> {
-        self.heap().alloc(layout)
+unsafe impl GlobalAlloc for TockAllocator {
+    unsafe fn alloc(&self, layout: Layout) -> *mut Opaque {
+        self.heap().alloc(layout).unwrap().as_ptr()
     }
 
-    unsafe fn dealloc(&mut self, ptr: *mut u8, layout: Layout) {
-        self.heap().dealloc(ptr, layout)
+    unsafe fn dealloc(&self, ptr: *mut Opaque, layout: Layout) {
+        self.heap().dealloc(NonNull::new_unchecked(ptr), layout)
     }
 }
 
