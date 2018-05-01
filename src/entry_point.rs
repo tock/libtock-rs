@@ -80,11 +80,15 @@ unsafe fn run_with_new_stack() -> ! {
     StackOwnedHeap.init(&mut heap);
 
     let mut console = Console::new();
-    console.write(String::from(
-        "\nProcess started\n===============\nHeap position: ",
-    ));
-    console.write(fmt::u32_as_hex(heap.as_ptr() as u32));
-    console.write(String::from("\n\n"));
+    console
+        .write(String::from(
+            "\nProcess started\n===============\nHeap position: ",
+        ))
+        .unwrap();
+    console
+        .write(fmt::u32_as_hex(heap.as_ptr() as u32))
+        .unwrap();
+    console.write(String::from("\n\n")).unwrap();
 
     main(0, ptr::null());
 

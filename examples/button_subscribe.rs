@@ -17,13 +17,15 @@ fn main() {
     let mut console = Console::new();
 
     let mut with_callback = buttons::with_callback(|button_num: usize, state| {
-        console.write(String::from("\nButton: "));
-        console.write(fmt::u32_as_hex(button_num as u32));
-        console.write(String::from(" - State: "));
-        console.write(String::from(match state {
-            ButtonState::Pressed => "pressed",
-            ButtonState::Released => "released",
-        }));
+        console.write(String::from("\nButton: ")).unwrap();
+        console.write(fmt::u32_as_hex(button_num as u32)).unwrap();
+        console.write(String::from(" - State: ")).unwrap();
+        console
+            .write(String::from(match state {
+                ButtonState::Pressed => "pressed",
+                ButtonState::Released => "released",
+            }))
+            .unwrap();
     });
 
     let mut buttons = with_callback.init().unwrap();

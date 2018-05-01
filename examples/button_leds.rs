@@ -9,8 +9,8 @@ use tock::timer;
 use tock::timer::Duration;
 
 fn main() {
-    let mut with_callback = buttons::with_callback(|button_num: usize, state| {
-        let i = button_num as isize;
+    let mut with_callback = buttons::with_callback(|button_num, state| {
+        let i = button_num;
         match state {
             ButtonState::Pressed => led::get(i).unwrap().toggle(),
             ButtonState::Released => (),

@@ -1,10 +1,9 @@
 use callback::CallbackSubscription;
 use callback::SubscribableCallback;
 use core::cell::Cell;
-use core::isize;
-use result;
+use core::usize;
+use result::TockError;
 use result::TockResult;
-use result::TockValue;
 use syscalls;
 
 const DRIVER_NUMBER: usize = 0x00000;
@@ -44,10 +43,10 @@ pub struct WithCallback<CB> {
 }
 
 impl<CB: FnMut(ClockValue, Alarm)> SubscribableCallback for WithCallback<CB> {
-    fn call_rust(&mut self, clock_value: usize, alarm_id: usize, _: usize) {
+    fn call_rust(&mut self, num_ticks: usize, alarm_id: usize, _: usize) {
         (self.callback)(
             ClockValue {
-                num_ticks: clock_value as isize,
+                num_ticks,
                 clock_frequency: self.clock_frequency,
             },
             Alarm { alarm_id },
@@ -59,40 +58,37 @@ impl<CB> WithCallback<CB>
 where
     Self: SubscribableCallback,
 {
-    pub fn init(&mut self) -> TockResult<Timer, TimerError> {
-        let num_notifications =
-            unsafe { syscalls::command(DRIVER_NUMBER, command_nr::IS_DRIVER_AVAILABLE, 0, 0) };
+    pub fn init(&mut self) -> Result<Timer, TimerError> {
+        let num_notifications = unsafe {
+            syscalls::command(DRIVER_NUMBER, command_nr::IS_DRIVER_AVAILABLE, 0, 0)
+        }.map_err(TimerError::GetDriverFailed)?;
 
-        if num_notifications < 1 {
-            return Err(TockValue::Expected(TimerError::NotSupported));
+        if num_notifications == 0 {
+            return Err(TimerError::DriverNotSupported);
         }
 
-        let clock_frequency =
-            unsafe { syscalls::command(DRIVER_NUMBER, command_nr::GET_CLOCK_FREQUENCY, 0, 0) };
+        let clock_frequency = unsafe {
+            syscalls::command(DRIVER_NUMBER, command_nr::GET_CLOCK_FREQUENCY, 0, 0)
+        }.map_err(TimerError::GetClockFrequencyFailed)?;
 
-        if clock_frequency < 1 {
-            return Err(TockValue::Expected(TimerError::ErroneousClockFrequency(
-                clock_frequency,
-            )));
+        if clock_frequency == 0 {
+            return Err(TimerError::ClockFrequencyIsZero);
         }
 
         let clock_frequency = ClockFrequency {
-            hz: clock_frequency as usize,
+            hz: clock_frequency,
         };
         self.clock_frequency = clock_frequency;
 
         let subscription =
-            syscalls::subscribe(DRIVER_NUMBER, subscribe_nr::SUBSCRIBE_CALLBACK, self);
+            syscalls::subscribe(DRIVER_NUMBER, subscribe_nr::SUBSCRIBE_CALLBACK, self)
+                .map_err(TimerError::SubscriptionFailed)?;
 
-        match subscription {
-            Ok(subscription) => Ok(Timer {
-                num_notifications: num_notifications as usize,
-                clock_frequency,
-                subscription,
-            }),
-            Err(result::ENOMEM) => Err(TockValue::Expected(TimerError::SubscriptionFailed)),
-            Err(unexpected) => Err(TockValue::Unexpected(unexpected)),
-        }
+        Ok(Timer {
+            num_notifications,
+            clock_frequency,
+            subscription,
+        })
     }
 }
 
@@ -105,9 +101,11 @@ pub struct Timer<'a> {
 
 #[derive(Copy, Clone, Debug)]
 pub enum TimerError {
-    NotSupported,
-    ErroneousClockFrequency(isize),
-    SubscriptionFailed,
+    GetDriverFailed(TockError),
+    DriverNotSupported,
+    GetClockFrequencyFailed(TockError),
+    ClockFrequencyIsZero,
+    SubscriptionFailed(TockError),
 }
 
 impl<'a> Timer<'a> {
@@ -119,42 +117,32 @@ impl<'a> Timer<'a> {
         self.clock_frequency
     }
 
-    pub fn get_current_clock(&self) -> ClockValue {
+    pub fn get_current_clock(&self) -> TockResult<ClockValue> {
         let num_ticks =
-            unsafe { syscalls::command(DRIVER_NUMBER, command_nr::GET_CLOCK_VALUE, 0, 0) };
+            unsafe { syscalls::command(DRIVER_NUMBER, command_nr::GET_CLOCK_VALUE, 0, 0) }?;
 
-        ClockValue {
+        Ok(ClockValue {
             num_ticks,
             clock_frequency: self.clock_frequency,
-        }
+        })
     }
 
-    pub fn stop_alarm(&mut self, alarm: Alarm) -> TockResult<(), StopAlarmError> {
-        let return_code =
-            unsafe { syscalls::command(DRIVER_NUMBER, command_nr::STOP_ALARM, alarm.alarm_id, 0) };
-
-        match return_code {
-            result::SUCCESS => Ok(()),
-            result::EALREADY => Err(TockValue::Expected(StopAlarmError::AlreadyDisabled)),
-            unexpected => Err(TockValue::Unexpected(unexpected)),
-        }
+    pub fn stop_alarm(&mut self, alarm: Alarm) -> TockResult<()> {
+        unsafe { syscalls::command(DRIVER_NUMBER, command_nr::STOP_ALARM, alarm.alarm_id, 0) }?;
+        Ok(())
     }
 
-    pub fn set_alarm(&mut self, duration: Duration) -> TockResult<Alarm, SetAlarmError> {
-        let now = self.get_current_clock();
+    pub fn set_alarm(&mut self, duration: Duration) -> Result<Alarm, SetAlarmError> {
+        let now = self.get_current_clock()
+            .map_err(SetAlarmError::GetClockFrequencyFailed)?;
         let alarm_instant =
-            now.num_ticks() as usize + (duration.ms() as usize * self.clock_frequency.hz()) / 1000;
+            now.num_ticks() + (duration.ms() as usize * self.clock_frequency.hz()) / 1000;
 
-        let alarm_id =
-            unsafe { syscalls::command(DRIVER_NUMBER, command_nr::SET_ALARM, alarm_instant, 0) };
+        let alarm_id = unsafe {
+            syscalls::command(DRIVER_NUMBER, command_nr::SET_ALARM, alarm_instant, 0)
+        }.map_err(SetAlarmError::SetAlarmFailed)?;
 
-        match alarm_id {
-            _ if alarm_id >= 0 => Ok(Alarm {
-                alarm_id: alarm_id as usize,
-            }),
-            result::ENOMEM => Err(TockValue::Expected(SetAlarmError::NoMemoryAvailable)),
-            unexpected => Err(TockValue::Unexpected(unexpected)),
-        }
+        Ok(Alarm { alarm_id })
     }
 }
 
@@ -171,20 +159,20 @@ impl ClockFrequency {
 
 #[derive(Copy, Clone, Debug)]
 pub struct ClockValue {
-    num_ticks: isize,
+    num_ticks: usize,
     clock_frequency: ClockFrequency,
 }
 
 impl ClockValue {
-    pub fn num_ticks(&self) -> isize {
+    pub fn num_ticks(&self) -> usize {
         self.num_ticks
     }
 
-    pub fn ms(&self) -> isize {
-        if self.num_ticks.abs() < isize::MAX / 1000 {
-            (1000 * self.num_ticks) / self.clock_frequency.hz() as isize
+    pub fn ms(&self) -> usize {
+        if self.num_ticks < usize::MAX / 1000 {
+            (1000 * self.num_ticks) / self.clock_frequency.hz()
         } else {
-            1000 * (self.num_ticks / self.clock_frequency.hz() as isize)
+            1000 * (self.num_ticks / self.clock_frequency.hz())
         }
     }
 }
@@ -200,13 +188,9 @@ impl Alarm {
 }
 
 #[derive(Clone, Copy, Debug)]
-pub enum StopAlarmError {
-    AlreadyDisabled,
-}
-
-#[derive(Clone, Copy, Debug)]
 pub enum SetAlarmError {
-    NoMemoryAvailable,
+    GetClockFrequencyFailed(TockError),
+    SetAlarmFailed(TockError),
 }
 
 #[derive(Copy, Clone, Debug)]

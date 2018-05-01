@@ -14,9 +14,11 @@ fn main() {
     let mut console = Console::new();
 
     let mut with_callback = timer::with_callback(|_, _| {
-        console.write(String::from(
-            "This line is printed 2 seconds after the start of the program.",
-        ))
+        console
+            .write(String::from(
+                "This line is printed 2 seconds after the start of the program.",
+            ))
+            .unwrap();
     });
 
     let mut timer = with_callback.init().unwrap();

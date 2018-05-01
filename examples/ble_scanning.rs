@@ -34,7 +34,7 @@ fn main() {
             Some(payload) => {
                 let payload: Vec<u8> = payload.into_iter().map(|x| *x).collect::<Vec<u8>>();
                 let msg: LedCommand = corepack::from_bytes(payload.as_slice()).unwrap();
-                let msg_led = led::get(msg.nr as isize);
+                let msg_led = led::get(msg.nr as usize);
                 match msg_led {
                     Some(msg_led) => match msg.st {
                         true => msg_led.on(),

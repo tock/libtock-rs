@@ -1,5 +1,6 @@
 use callback::CallbackSubscription;
 use callback::SubscribableCallback;
+use result::TockResult;
 use syscalls;
 
 const DRIVER_NUMBER: usize = 0x60000;
@@ -24,9 +25,9 @@ impl<CB> WithCallback<CB>
 where
     Self: SubscribableCallback,
 {
-    pub fn start_measurement(&mut self) -> Result<CallbackSubscription, isize> {
+    pub fn start_measurement(&mut self) -> TockResult<CallbackSubscription> {
         let subscription = syscalls::subscribe(DRIVER_NUMBER, SUBSCRIBE_CALLBACK, self)?;
-        unsafe { syscalls::command(DRIVER_NUMBER, START_MEASUREMENT, 0, 0) };
+        unsafe { syscalls::command(DRIVER_NUMBER, START_MEASUREMENT, 0, 0) }?;
         Ok(subscription)
     }
 }

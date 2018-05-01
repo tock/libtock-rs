@@ -1,6 +1,7 @@
 use alloc::String;
 use callback::CallbackSubscription;
 use callback::SubscribableCallback;
+use result::TockResult;
 use shared_memory::SharedMemory;
 use syscalls;
 
@@ -40,17 +41,12 @@ pub struct IPCBuffer {
 }
 
 impl ServerHandle {
-    pub fn share<'a>(&self, shared_buffer: &'a mut IPCBuffer) -> Result<SharedMemory<'a>, isize> {
-        syscalls::allow(DRIVER_NUMBER, self.pid as usize, &mut shared_buffer.buffer)
+    pub fn share<'a>(&self, shared_buffer: &'a mut IPCBuffer) -> TockResult<SharedMemory<'a>> {
+        syscalls::allow(DRIVER_NUMBER, self.pid, &mut shared_buffer.buffer)
     }
 
-    pub fn notify(&mut self) -> Result<(), isize> {
-        let res = unsafe { syscalls::command(DRIVER_NUMBER, self.pid as usize, 0, 0) };
-        if res == 0 {
-            Ok(())
-        } else {
-            Err(res)
-        }
+    pub fn notify(&mut self) -> TockResult<usize> {
+        unsafe { syscalls::command(DRIVER_NUMBER, self.pid, 0, 0) }
     }
 
     pub fn discover_service(mut name: String) -> Option<ServerHandle> {
@@ -73,7 +69,7 @@ impl ServerHandle {
     pub fn subscribe_callback<'a, CB>(
         &self,
         callback: &'a mut IpcClientCallback<CB>,
-    ) -> Result<CallbackSubscription<'a>, isize>
+    ) -> TockResult<CallbackSubscription<'a>>
     where
         IpcClientCallback<CB>: SubscribableCallback,
     {

@@ -8,7 +8,7 @@ pub fn output_number(value: u32) {
 
     unsafe {
         let handle = syscalls::allow(1, 1, &mut out);
-        syscalls::command(1, 1, 10, 0);
+        syscalls::command(1, 1, 10, 0).unwrap();
         handle.unwrap();
     }
 }

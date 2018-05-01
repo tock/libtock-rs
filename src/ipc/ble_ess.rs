@@ -1,6 +1,7 @@
 use alloc::String;
 use ipc::IPCBuffer;
 use ipc::ServerHandle;
+use result::TockResult;
 use shared_memory::SharedMemory;
 
 #[repr(u32)]
@@ -23,7 +24,7 @@ pub fn connect(buffer: &mut IPCBuffer) -> Result<BleEss, ()> {
 }
 
 impl<'a> BleEss<'a> {
-    pub fn set_reading<I>(&mut self, sensor: ReadingType, data: I) -> Result<(), isize>
+    pub fn set_reading<I>(&mut self, sensor: ReadingType, data: I) -> TockResult<usize>
     where
         I: Into<i32>,
     {

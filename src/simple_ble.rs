@@ -2,7 +2,7 @@ use alloc::String;
 use alloc::Vec;
 use callback::CallbackSubscription;
 use callback::SubscribableCallback;
-use result;
+use result::TockResult;
 use shared_memory::SharedMemory;
 use syscalls;
 
@@ -47,7 +47,7 @@ impl BleAdvertisingDriver {
         stay_visible: bool,
         service_payload: &'a mut Vec<u8>,
         advertising_buffer: &'a mut [u8; BUFFER_SIZE_ADVERTISE],
-    ) -> Result<SharedMemory<'a>, isize> {
+    ) -> TockResult<SharedMemory<'a>> {
         let mut flags: [u8; 1] = [gap_flags::ONLY_LE | (if stay_visible {
             gap_flags::BLE_DISCOVERABLE
         } else {
@@ -71,25 +71,24 @@ impl BleAdvertisingDriver {
 
     // TODO: Write generic error converter
 
-    fn set_advertising_interval(interval: u16) -> Result<(), isize> {
-        let result = unsafe {
+    fn set_advertising_interval(interval: u16) -> TockResult<()> {
+        unsafe {
             syscalls::command(
                 DRIVER_NUMBER,
                 ble_commands::SET_ADVERTISING_INTERVAL,
                 interval as usize,
                 0,
             )
-        };
-        convert_result(result)
+        }?;
+        Ok(())
     }
 
-    fn request_adv_address() -> Result<(), isize> {
-        let result =
-            unsafe { syscalls::command(DRIVER_NUMBER, ble_commands::REQ_ADV_ADDRESS, 0, 0) };
-        convert_result(result)
+    fn request_adv_address() -> TockResult<()> {
+        unsafe { syscalls::command(DRIVER_NUMBER, ble_commands::REQ_ADV_ADDRESS, 0, 0) }?;
+        Ok(())
     }
 
-    fn set_local_name(name: &mut String) -> Result<SharedMemory, isize> {
+    fn set_local_name(name: &mut String) -> TockResult<SharedMemory> {
         unsafe {
             syscalls::allow(
                 DRIVER_NUMBER,
@@ -99,7 +98,7 @@ impl BleAdvertisingDriver {
         }
     }
 
-    fn set_uuid(uuid: &mut [u8]) -> Result<SharedMemory, isize> {
+    fn set_uuid(uuid: &mut [u8]) -> TockResult<SharedMemory> {
         syscalls::allow(
             DRIVER_NUMBER,
             gap_data::COMPLETE_LIST_16BIT_SERVICE_IDS,
@@ -107,18 +106,17 @@ impl BleAdvertisingDriver {
         )
     }
 
-    fn set_flags(flags: &mut [u8; 1]) -> Result<SharedMemory, isize> {
+    fn set_flags(flags: &mut [u8; 1]) -> TockResult<SharedMemory> {
         syscalls::allow(DRIVER_NUMBER, gap_data::SET_FLAGS, flags)
     }
 
-    fn set_service_payload(service_payload: &mut [u8]) -> Result<SharedMemory, isize> {
+    fn set_service_payload(service_payload: &mut [u8]) -> TockResult<SharedMemory> {
         syscalls::allow(DRIVER_NUMBER, gap_data::SERVICE_DATA, service_payload)
     }
 
-    fn start_advertising() -> Result<(), isize> {
-        let result =
-            unsafe { syscalls::command(DRIVER_NUMBER, ble_commands::START_ADVERTISING, 0, 0) };
-        convert_result(result)
+    fn start_advertising() -> TockResult<()> {
+        unsafe { syscalls::command(DRIVER_NUMBER, ble_commands::START_ADVERTISING, 0, 0) }?;
+        Ok(())
     }
 }
 
@@ -145,26 +143,18 @@ impl BleDriver {
         [0; BUFFER_SIZE_SCAN]
     }
 
-    pub fn share_memory(scan_buffer: &mut [u8; BUFFER_SIZE_SCAN]) -> Result<SharedMemory, isize> {
+    pub fn share_memory(scan_buffer: &mut [u8; BUFFER_SIZE_SCAN]) -> TockResult<SharedMemory> {
         syscalls::allow(DRIVER_NUMBER, ble_commands::ALLOW_SCAN_BUFFER, scan_buffer)
     }
 
-    pub fn start<CB>(callback: &mut BleCallback<CB>) -> Result<CallbackSubscription, isize>
+    pub fn start<CB>(callback: &mut BleCallback<CB>) -> TockResult<CallbackSubscription>
     where
         BleCallback<CB>: SubscribableCallback,
     {
         let subscription =
             syscalls::subscribe(DRIVER_NUMBER, ble_commands::BLE_PASSIVE_SCAN_SUB, callback)?;
+        unsafe { syscalls::command(DRIVER_NUMBER, ble_commands::PASSIVE_SCAN, 1, 0) }?;
 
-        let result = unsafe { syscalls::command(DRIVER_NUMBER, ble_commands::PASSIVE_SCAN, 1, 0) };
-        convert_result(result)?;
         Ok(subscription)
-    }
-}
-
-fn convert_result(code: isize) -> Result<(), isize> {
-    match code {
-        result::SUCCESS => Ok(()),
-        code => Err(code),
     }
 }

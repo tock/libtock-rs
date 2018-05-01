@@ -1,6 +1,7 @@
 use callback::CallbackSubscription;
 use callback::SubscribableCallback;
 use core::slice;
+use result::TockResult;
 use syscalls;
 
 const DRIVER_NUMBER: usize = 0x10000;
@@ -28,13 +29,13 @@ impl<CB: FnMut(usize, usize, &mut [u8])> SubscribableCallback for IpcServerCallb
 }
 
 pub fn notify_client(pid: usize) {
-    unsafe { syscalls::command(DRIVER_NUMBER, pid, ipc_commands::NOTIFY_CLIENT, 0) };
+    unsafe { syscalls::command(DRIVER_NUMBER, pid, ipc_commands::NOTIFY_CLIENT, 0) }.unwrap();
 }
 
 pub struct IpcServerDriver;
 
 impl IpcServerDriver {
-    pub fn start<CB>(callback: &mut IpcServerCallback<CB>) -> Result<CallbackSubscription, isize>
+    pub fn start<CB>(callback: &mut IpcServerCallback<CB>) -> TockResult<CallbackSubscription>
     where
         IpcServerCallback<CB>: SubscribableCallback,
     {

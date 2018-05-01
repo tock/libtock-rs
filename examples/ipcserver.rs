@@ -14,13 +14,13 @@ use tock::ipc::IpcServerDriver;
 // Prints the payload and adds one to the first byte.
 fn main() {
     let mut console = Console::new();
-    console.write(String::from("Start service:\n"));
+    console.write(String::from("Start service:\n")).unwrap();
 
     let mut callback = IpcServerCallback::new(|pid: usize, _: usize, message: &mut [u8]| {
-        console.write(String::from("Server: \"Payload: "));
+        console.write(String::from("Server: \"Payload: ")).unwrap();
 
-        console.write(u32_as_hex(message[0] as u32));
-        console.write(String::from("\"\n"));
+        console.write(u32_as_hex(message[0] as u32)).unwrap();
+        console.write(String::from("\"\n")).unwrap();
         message[0] += 1;
         ipc::notify_client(pid);
     });

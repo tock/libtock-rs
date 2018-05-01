@@ -27,9 +27,11 @@ fn main() {
         let mut callback = IpcClientCallback::new(|_: usize, _: usize| {
             let mut console = Console::new();
             handle.read_bytes(&mut my_buf.buffer);
-            console.write(String::from("Client: \"Payload: "));
-            console.write(fmt::u32_as_decimal(my_buf.buffer[0] as u32));
-            console.write(String::from("\"\n"));
+            console.write(String::from("Client: \"Payload: ")).unwrap();
+            console
+                .write(fmt::u32_as_decimal(my_buf.buffer[0] as u32))
+                .unwrap();
+            console.write(String::from("\"\n")).unwrap();
         });
 
         let handle = server.subscribe_callback(&mut callback);
