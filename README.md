@@ -29,8 +29,8 @@ to use:
     ```
 
     This should work if you are using the nRF52-DK platform. For other platforms,
-    you will end up with a TAB file in `target/` that you can program onto your
-    Tock board (e.g. with `tockloader install target/blink.tab`).
+    you will end up with a TAB file in `target/tab` that you can program onto your
+    Tock board (e.g. with `tockloader install target/tab/blink.tab`).
 
 ## Using libtock-rs
 
