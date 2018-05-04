@@ -110,11 +110,11 @@ pub fn allow(
         )
     };
     if return_code == 0 {
-        Ok(SharedMemory {
+        Ok(SharedMemory::new(
             driver_number,
             allow_number,
             buffer_to_share,
-        })
+        ))
     } else {
         Err(return_code)
     }
@@ -123,7 +123,7 @@ pub fn allow(
 pub unsafe fn allow_ptr(major: usize, minor: usize, slice: *mut u8, len: usize) -> isize {
     let res;
     asm!("svc 3" : "={r0}"(res)
-                 : "{r0}"(major) "{r1}"(minor) "{r2}"(slice as *mut u8) "{r3}"(len)
+                 : "{r0}"(major) "{r1}"(minor) "{r2}"(slice) "{r3}"(len)
                  : "memory"
                  : "volatile");
     res

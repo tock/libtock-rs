@@ -22,6 +22,7 @@ impl<CB> IpcServerCallback<CB> {
 
 impl<CB: FnMut(usize, usize, &mut [u8])> SubscribableCallback for IpcServerCallback<CB> {
     fn call_rust(&mut self, arg0: usize, arg1: usize, arg2: usize) {
+        // FIXME: This is unsafe because IpcServerCallback can be subscribed on any driver
         let mut v = unsafe { slice::from_raw_parts_mut(arg2 as *mut u8, arg1) };
         (self.callback)(arg0, arg1, &mut v);
     }
