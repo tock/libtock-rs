@@ -167,20 +167,32 @@ impl<CB: SubscribableCallback> Drop for CallbackSubscription<CB> {
 
 Userspace processes can use 'allow' to allow drivers accessing
 memory. Processes can only share byte arrays of fixed lengths with the drivers.
-Therefore, shareable memory implements a 'to_bytes' method.
 
 ```rust
-trait ShareableMemory {
-    fn to_bytes(&mut self) -> &mut [u8];
+pub struct SharedMemory<'a> {
+    driver_number: usize,
+    allow_number: usize,
+    buffer_to_share: &'a mut [u8],
+}
+
+impl<'a> SharedMemory<'a> {
+    pub fn read_bytes(&self, destination: &mut [u8]) {
+        safe_copy(self.buffer_to_share, destination);
+    }
+
+    pub fn write_bytes(&mut self, source: &[u8]) {
+        safe_copy(source, self.buffer_to_share);
+    }
 }
 ```
 
+
 This grants the driver write access to the byte array. This implies that
 the write access has to be forbidden, once the shareable memory goes out of scope.
-Anologously as in the callback case this is by returning a 'SharedMemory' object
+Analogously as in the callback case this is achieved by returning a 'SharedMemory' object
 and implementing 'Drop' for it.
 ```rust
-impl<SM: ShareableMemory> Drop for SharedMemory<SM> {
+impl<'a> Drop for SharedMemory<'a> {
 
 }
 ```
@@ -188,13 +200,7 @@ impl<SM: ShareableMemory> Drop for SharedMemory<SM> {
 ### Using shared memory
 
 The common sceneario for using shared memory is as follows:
- - share memory with the driver
+ - share a buffer with the driver
  - register a callback reading communicating with the driver via the shared memory
 
-The struct 'SharedMemory' exposes 'to_bytes':
-```rust
-fn to_bytes(&mut self) -> &mut [u8];
-```
-When this function is used in a callback due the rules of ownership it gains
-exclusive access to the SharedMemory object, and thus has a secure channel for communcation
-with the driver.
+The buffers can only be written/read using the provided methods `write_bytes`/`read_bytes`.
