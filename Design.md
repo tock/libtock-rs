@@ -204,3 +204,40 @@ The common sceneario for using shared memory is as follows:
  - register a callback reading communicating with the driver via the shared memory
 
 The buffers can only be written/read using the provided methods `write_bytes`/`read_bytes`.
+
+# Error Handling
+Libtock has two kinds of errors: Internal errors and Syscall errors:
+```rust
+enum TockError {
+    InternalError,
+    SyscallError,
+}
+```
+Internal errors can be of the following kind:
+```rust
+enum InternalError {
+    OutOfMemory,
+    BleParseError,
+}
+```
+Syscall errors are caused by syscalls having a result `<0`:
+```rust
+struct SyscallError {
+    syscall: Syscall,
+    driver: usize,
+    arg1: isize,
+    arg2: isize,
+    return_value: isize,
+}
+```
+where syscall is one of the following:
+```rust
+enum Syscall {
+    Allow,
+    Subscribe,
+    Memop,
+    Command,
+}
+```
+Errors propaged by libtock can be evaluated in the business logic of an application for example
+by implementing a custom error type and implementing the `From` trait for it.
