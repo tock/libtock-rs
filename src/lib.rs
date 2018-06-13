@@ -1,4 +1,4 @@
-#![feature(asm, alloc, allocator_api, global_allocator, lang_items, naked_functions)]
+#![feature(asm, alloc, allocator_api, lang_items, naked_functions, panic_implementation)]
 #![no_std]
 
 extern crate alloc;

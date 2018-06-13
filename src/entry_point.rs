@@ -4,7 +4,6 @@ use self::linked_list_allocator::Heap;
 use core::alloc::Alloc;
 use core::alloc::GlobalAlloc;
 use core::alloc::Layout;
-use core::alloc::Opaque;
 use core::mem;
 use core::ptr;
 use core::ptr::NonNull;
@@ -39,11 +38,11 @@ impl TockAllocator {
 }
 
 unsafe impl GlobalAlloc for TockAllocator {
-    unsafe fn alloc(&self, layout: Layout) -> *mut Opaque {
+    unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
         self.heap().alloc(layout).unwrap().as_ptr()
     }
 
-    unsafe fn dealloc(&self, ptr: *mut Opaque, layout: Layout) {
+    unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
         self.heap().dealloc(NonNull::new_unchecked(ptr), layout)
     }
 }

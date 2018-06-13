@@ -16,7 +16,7 @@ install:
   - rustup component add rustfmt-preview
 
 script:
-  - rustfmt --write-mode diff src/lib.rs
-  - rustfmt --write-mode diff examples/*.rs
+  - rustfmt --check src/lib.rs
+  - rustfmt --check examples/*.rs
   - cargo test --lib
   - ./build_examples.sh
