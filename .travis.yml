@@ -9,7 +9,7 @@ cache:
   directories:
     - $HOME/.cargo
     - target
-    - tock/userland/tools/elf2tbf/target
+    - elf2tbf/target
 
 install:
   - rustup target add thumbv7em-none-eabi
