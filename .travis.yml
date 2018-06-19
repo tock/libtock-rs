@@ -5,11 +5,7 @@ rust:
 os:
   - linux
 
-cache:
-  directories:
-    - $HOME/.cargo
-    - target
-    - elf2tbf/target
+cache: rust
 
 install:
   - rustup target add thumbv7em-none-eabi

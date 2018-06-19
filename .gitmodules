@@ -1,3 +1,0 @@
-[submodule "elf2tab"]
-	path = elf2tab
-	url = https://github.com/tock/elf2tab.git
