@@ -1,3 +1,0 @@
-[submodule "tock"]
-	path = tock
-	url = https://github.com/tock/tock

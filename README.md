@@ -8,11 +8,17 @@ This project is nascent and still under heavy development, but first steps:
 
 1. Ensure you have [rustup](https://www.rustup.rs/) installed.
 
-1. Clone the repository and install its submodules.
+1. Clone the repository.
 
     ```bash
     git clone https://github.com/tock/libtock-rs
-    git submodule update --init
+    cd libtock-rs
+    ```
+
+1. Install `elf2tab`.
+
+    ```bash
+    cargo install -f elf2tab --version 0.3.0
     ```
 
 1. Add dependencies for cross-compilation.
@@ -41,7 +47,7 @@ The boiler plate code you would write is
 
 extern crate tock;
 
-fn main() { 
+fn main() {
   // Your code
 }
 ```

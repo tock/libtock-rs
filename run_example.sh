@@ -13,7 +13,7 @@ tab_file_name="target/tab/$1.tab"
 mkdir -p "target/tab/$1"
 cp "target/thumbv7em-none-eabi/release/examples/$1" "$elf_file_name"
 
-cargo run --manifest-path tock/userland/tools/elf2tab/Cargo.toml -- -n "$1" -o "$tab_file_name" "$elf_file_name" --stack 2048 --app-heap 1024 --kernel-heap 1024
+elf2tab -n "$1" -o "$tab_file_name" "$elf_file_name" --stack 2048 --app-heap 1024 --kernel-heap 1024
 
 if [ "$#" -ge "2" ]
 then

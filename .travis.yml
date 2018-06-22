@@ -5,18 +5,14 @@ rust:
 os:
   - linux
 
-cache:
-  directories:
-    - $HOME/.cargo
-    - target
-    - tock/userland/tools/elf2tbf/target
+cache: rust
 
 install:
   - rustup target add thumbv7em-none-eabi
   - rustup component add rustfmt-preview
 
 script:
-  - rustfmt --write-mode diff src/lib.rs
-  - rustfmt --write-mode diff examples/*.rs
+  - rustfmt --check src/lib.rs
+  - rustfmt --check examples/*.rs
   - cargo test --lib
   - ./build_examples.sh

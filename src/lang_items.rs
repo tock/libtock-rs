@@ -18,21 +18,19 @@
 //! `rustc_main`. That's covered by the `_start` function in the root of this
 //! crate.
 
+use core::panic::PanicInfo;
 use led;
 use timer;
 use timer::Duration;
 
 #[lang = "start"]
-extern "C" fn start<T>(main: fn() -> T, _argc: isize, _argv: *const *const u8) -> isize
+extern "C" fn start<T>(main: fn() -> T, _argc: isize, _argv: *const *const u8) -> i32
 where
     T: Termination,
 {
-    main();
-
-    0
+    main().report()
 }
 
-#[lang = "termination"]
 pub trait Termination {
     fn report(self) -> i32;
 }
@@ -43,25 +41,8 @@ impl Termination for () {
     }
 }
 
-#[lang = "eh_personality"]
-fn eh_personality() {
-    cycle_leds();
-}
-
-#[lang = "panic_fmt"]
-fn panic_fmt() {
-    flash_all_leds();
-}
-
-fn cycle_leds() {
-    for led in led::all().cycle() {
-        led.on();
-        timer::sleep(Duration::from_ms(100));
-        led.off();
-    }
-}
-
-fn flash_all_leds() {
+#[panic_implementation]
+fn flash_all_leds(_info: &PanicInfo) -> ! {
     loop {
         for led in led::all() {
             led.on();
@@ -71,5 +52,14 @@ fn flash_all_leds() {
             led.off();
         }
         timer::sleep(Duration::from_ms(100));
+    }
+}
+
+#[lang = "oom"]
+fn cycle_leds() {
+    for led in led::all().cycle() {
+        led.on();
+        timer::sleep(Duration::from_ms(100));
+        led.off();
     }
 }
