@@ -21,9 +21,9 @@ then
     then
         echo "do not delete apps from board."
     else
-        tockloader uninstall --jtag --arch cortex-m4 --board nrf52-dk --jtag-device nrf52 --app-address 0x20000 || true
+        tockloader uninstall --jlink --arch cortex-m4 --board nrf52dk --jtag-device nrf52 --app-address 0x20000 || true
     fi
 else
-    tockloader uninstall --jtag --arch cortex-m4 --board nrf52-dk --jtag-device nrf52 --app-address 0x20000 || true
+    tockloader uninstall --jlink --arch cortex-m4 --board nrf52dk --jtag-device nrf52 --app-address 0x20000 || true
 fi
-tockloader install --jtag --arch cortex-m4 --board nrf52-dk --jtag-device nrf52 --app-address 0x20000 "$tab_file_name"
+tockloader install --jlink --arch cortex-m4 --board nrf52dk --jtag-device nrf52 --app-address 0x20000 "$tab_file_name"

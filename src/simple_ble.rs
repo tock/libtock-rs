@@ -1,5 +1,4 @@
-use alloc::String;
-use alloc::Vec;
+use ble_composer::BlePayload;
 use callback::CallbackSubscription;
 use callback::SubscribableCallback;
 use result;
@@ -13,18 +12,14 @@ pub const BUFFER_SIZE_SCAN: usize = 39;
 
 mod ble_commands {
     pub const START_ADVERTISING: usize = 0;
-    pub const SET_ADVERTISING_INTERVAL: usize = 3;
-    pub const ALLOW_ADVERTISMENT_BUFFER: usize = 0x32;
-    pub const REQ_ADV_ADDRESS: usize = 6;
+    pub const ALLOW_ADVERTISMENT_BUFFER: usize = 0;
     pub const BLE_PASSIVE_SCAN_SUB: usize = 0;
-    pub const ALLOW_SCAN_BUFFER: usize = 0x31;
+    pub const ALLOW_SCAN_BUFFER: usize = 1;
     pub const PASSIVE_SCAN: usize = 5;
 }
 
 mod gap_flags {
-    pub const BLE_DISCOVERABLE: u8 = 0x02;
-    pub const BLE_NOT_DISCOVERABLE: u8 = 0x01;
-    pub const ONLY_LE: u8 = 0x04;
+    pub const BLE_DISCOVERABLE: usize = 0x02;
 }
 
 pub mod gap_data {
@@ -41,83 +36,29 @@ impl BleAdvertisingDriver {
         [0; BUFFER_SIZE_ADVERTISE]
     }
     pub fn initialize<'a>(
-        interval: u16,
-        mut name: String,
-        uuid: &'a mut [u8; 2],
-        stay_visible: bool,
-        service_payload: &'a mut Vec<u8>,
+        interval: usize,
+        service_payload: &BlePayload,
         advertising_buffer: &'a mut [u8; BUFFER_SIZE_ADVERTISE],
     ) -> Result<SharedMemory<'a>, isize> {
-        let mut flags: [u8; 1] = [gap_flags::ONLY_LE | (if stay_visible {
-            gap_flags::BLE_DISCOVERABLE
-        } else {
-            gap_flags::BLE_NOT_DISCOVERABLE
-        })];
-        let shared_memory = syscalls::allow(
+        let mut shared_memory = syscalls::allow(
             DRIVER_NUMBER,
             ble_commands::ALLOW_ADVERTISMENT_BUFFER,
             advertising_buffer,
         )?;
-
-        Self::set_advertising_interval(interval)?;
-        Self::request_adv_address()?;
-        let _name_handle = Self::set_local_name(&mut name)?;
-        let _uuid_handle = Self::set_uuid(uuid)?;
-        let _flags_handle = Self::set_flags(&mut flags)?;
-        let _payload_handle = Self::set_service_payload(service_payload)?;
-        Self::start_advertising()?;
+        shared_memory.write_bytes(&service_payload.bytes);
+        Self::start_advertising(gap_flags::BLE_DISCOVERABLE, interval)?;
         Ok(shared_memory)
     }
 
-    // TODO: Write generic error converter
-
-    fn set_advertising_interval(interval: u16) -> Result<(), isize> {
+    fn start_advertising(pdu_type: usize, interval: usize) -> Result<(), isize> {
         let result = unsafe {
             syscalls::command(
                 DRIVER_NUMBER,
-                ble_commands::SET_ADVERTISING_INTERVAL,
-                interval as usize,
-                0,
+                ble_commands::START_ADVERTISING,
+                pdu_type,
+                interval,
             )
         };
-        convert_result(result)
-    }
-
-    fn request_adv_address() -> Result<(), isize> {
-        let result =
-            unsafe { syscalls::command(DRIVER_NUMBER, ble_commands::REQ_ADV_ADDRESS, 0, 0) };
-        convert_result(result)
-    }
-
-    fn set_local_name(name: &mut String) -> Result<SharedMemory, isize> {
-        unsafe {
-            syscalls::allow(
-                DRIVER_NUMBER,
-                gap_data::COMPLETE_LOCAL_NAME,
-                name.as_bytes_mut(),
-            )
-        }
-    }
-
-    fn set_uuid(uuid: &mut [u8]) -> Result<SharedMemory, isize> {
-        syscalls::allow(
-            DRIVER_NUMBER,
-            gap_data::COMPLETE_LIST_16BIT_SERVICE_IDS,
-            uuid,
-        )
-    }
-
-    fn set_flags(flags: &mut [u8; 1]) -> Result<SharedMemory, isize> {
-        syscalls::allow(DRIVER_NUMBER, gap_data::SET_FLAGS, flags)
-    }
-
-    fn set_service_payload(service_payload: &mut [u8]) -> Result<SharedMemory, isize> {
-        syscalls::allow(DRIVER_NUMBER, gap_data::SERVICE_DATA, service_payload)
-    }
-
-    fn start_advertising() -> Result<(), isize> {
-        let result =
-            unsafe { syscalls::command(DRIVER_NUMBER, ble_commands::START_ADVERTISING, 0, 0) };
         convert_result(result)
     }
 }

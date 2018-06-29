@@ -2,6 +2,8 @@
 # libtock-rs
 Rust userland library for Tock (WIP)
 
+Tested with tock a3b36d5872315ff05ef5ad34ed9453b0789218ce.
+
 ## Getting Started
 
 This project is nascent and still under heavy development, but first steps:
