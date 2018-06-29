@@ -71,6 +71,10 @@ pub unsafe extern "C" fn _start(
 
     asm!("mov sp, $0" : : "r"(effective_stack_top) : "memory" :  "volatile" );
 
+    syscalls::memop(0, effective_stack_top + HEAP_SIZE);
+    syscalls::memop(11, effective_stack_top + HEAP_SIZE);
+    syscalls::memop(10, effective_stack_top);
+
     main(0, ptr::null());
 
     loop {
