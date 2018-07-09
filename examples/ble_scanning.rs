@@ -1,7 +1,6 @@
 #![no_std]
 #![feature(alloc)]
-#[allow(unused)]
-#[macro_use]
+
 extern crate alloc;
 extern crate corepack;
 extern crate serde;
@@ -25,38 +24,20 @@ struct LedCommand {
 #[allow(unreachable_code)]
 fn main() {
     let mut shared_buffer = BleDriver::create_scan_buffer();
-    let mut _my_buffer = BleDriver::create_scan_buffer();
-    let _shared_memory = BleDriver::share_memory(&mut shared_buffer).unwrap();
+    let mut my_buffer = BleDriver::create_scan_buffer();
+    let shared_memory = BleDriver::share_memory(&mut shared_buffer).unwrap();
 
     let mut callback = BleCallback::new(|_: usize, _: usize| {
-        _shared_memory.read_bytes(&mut _my_buffer);
-        match ble_parser::find(&_my_buffer, tock::simple_ble::gap_data::SERVICE_DATA as u8)
-            .and_then(|x| ble_parser::extract_for_service([91, 79], x))
-        {
-            Some(_payload) => {
-                let msg: Result<LedCommand, _> = corepack::from_bytes(&_payload);
-                match msg {
-                    Ok(msg) => {
-                        let led = led::get(msg.nr as isize);
-                        match led {
-                            Some(led) => {
-                                led.set_state(msg.st);
-                            }
-                            None => (),
-                        }
-                    }
-                    _ => (),
-                }
-            }
-            None => (),
-        }
+        shared_memory.read_bytes(&mut my_buffer);
+        ble_parser::find(&my_buffer, tock::simple_ble::gap_data::SERVICE_DATA as u8)
+            .and_then(|service_data| ble_parser::extract_for_service([91, 79], service_data))
+            .and_then(|payload| corepack::from_bytes::<LedCommand>(&payload).ok())
+            .and_then(|msg| led::get(msg.nr as isize).map(|led| led.set_state(msg.st)));
     });
 
-    let _subscription = BleDriver::start(&mut callback);
+    let _subscription = BleDriver::start(&mut callback).unwrap();
 
     loop {
         syscalls::yieldk();
     }
-
-    _subscription.unwrap();
 }
