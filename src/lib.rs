@@ -5,6 +5,7 @@ extern crate alloc;
 
 mod callback;
 
+pub mod ble_composer;
 pub mod ble_parser;
 pub mod buttons;
 pub mod console;

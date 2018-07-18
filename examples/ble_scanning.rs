@@ -8,7 +8,6 @@ extern crate serde;
 extern crate serde_derive;
 extern crate tock;
 
-use alloc::Vec;
 use tock::ble_parser;
 use tock::led;
 use tock::simple_ble::BleCallback;
@@ -30,28 +29,15 @@ fn main() {
 
     let mut callback = BleCallback::new(|_: usize, _: usize| {
         shared_memory.read_bytes(&mut my_buffer);
-        match ble_parser::find(&my_buffer, tock::simple_ble::gap_data::SERVICE_DATA as u8) {
-            Some(payload) => {
-                let payload: Vec<u8> = payload.into_iter().map(|x| *x).collect::<Vec<u8>>();
-                let msg: LedCommand = corepack::from_bytes(payload.as_slice()).unwrap();
-                let msg_led = led::get(msg.nr as isize);
-                match msg_led {
-                    Some(msg_led) => match msg.st {
-                        true => msg_led.on(),
-                        false => msg_led.off(),
-                    },
-                    _ => (),
-                }
-            }
-            None => (),
-        }
+        ble_parser::find(&my_buffer, tock::simple_ble::gap_data::SERVICE_DATA as u8)
+            .and_then(|service_data| ble_parser::extract_for_service([91, 79], service_data))
+            .and_then(|payload| corepack::from_bytes::<LedCommand>(&payload).ok())
+            .and_then(|msg| led::get(msg.nr as isize).map(|led| led.set_state(msg.st)));
     });
 
-    let _subscription = BleDriver::start(&mut callback);
+    let _subscription = BleDriver::start(&mut callback).unwrap();
 
     loop {
         syscalls::yieldk();
     }
-
-    _subscription.unwrap();
 }

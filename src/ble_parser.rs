@@ -1,14 +1,16 @@
-use alloc::*;
-
-pub fn find(buffer: &[u8], kind: u8) -> Option<Vec<&u8>> {
-    let mut iter = buffer[8..].iter();
+pub fn find(buffer: &[u8], kind: u8) -> Option<&[u8]> {
+    let mut iter = buffer[8..].iter().enumerate();
+    let buffer_len = buffer.len();
 
     loop {
         match iter.next() {
-            Some(&len) => {
-                let data_type = iter.next();
-                if data_type == Some(&kind) {
-                    return Some(iter.take(len as usize - 1).collect::<Vec<&u8>>());
+            Some((_, &len)) => match iter.next() {
+                Some((i, potentialkind)) => if potentialkind == &kind {
+                    if (8 + i) + len as usize > buffer_len {
+                        return None;
+                    } else {
+                        return Some(&buffer[9 + i..8 + i + len as usize]);
+                    }
                 } else {
                     if len > 0 {
                         for _ in 0..len - 1 {
@@ -17,12 +19,26 @@ pub fn find(buffer: &[u8], kind: u8) -> Option<Vec<&u8>> {
                     } else {
                         return None;
                     }
-                }
-            }
+                },
+                _ => return None,
+            },
             None => return None,
         }
     }
 }
+
+pub fn extract_for_service(service: [u8; 2], data: &[u8]) -> Option<&[u8]> {
+    if data.len() > 1 {
+        if service[0] == data[0] && service[1] == data[1] {
+            Some(&data[2..])
+        } else {
+            None
+        }
+    } else {
+        None
+    }
+}
+
 #[cfg(test)]
 mod test {
     use ble_parser::*;
@@ -39,10 +55,10 @@ mod test {
             ];
             slice.clone_from_slice(data);
         }
-        assert_eq!(find(&buf, 0x02), Some(vec![&0x01]));
-        assert_eq!(find(&buf, 0x01), Some(vec![&0x03]));
-        assert_eq!(find(&buf, 0x16), Some(vec![&0x01, &0x02]));
-        assert_eq!(find(&buf, 0xFF), Some(vec![&0x01, &0x02, &0x03]));
+        assert_eq!(find(&buf, 0x02), Some(&[0x01][0..1]));
+        assert_eq!(find(&buf, 0x01), Some(&[0x03][0..1]));
+        assert_eq!(find(&buf, 0x16), Some(&[0x01, 0x02][0..2]));
+        assert_eq!(find(&buf, 0xFF), Some(&[0x01, 0x02, 0x03][0..3]));
     }
 
     #[test]
@@ -54,4 +70,16 @@ mod test {
             slice.clone_from_slice(data);
         }
     }
+
+    #[test]
+    pub fn ignores_illegal_lengths_in_packets() {
+        let mut buf = [0; 11];
+        {
+            let slice = &mut buf[8..10];
+            let data = &[0x04, 0x02];
+            slice.clone_from_slice(data);
+        }
+        assert_eq!(find(&buf, 0xF2), None);
+    }
+
 }
