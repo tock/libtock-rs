@@ -33,16 +33,16 @@ fn write_u32_as_any_base(result: &mut String, value: u32, start: u32, base: u32)
         let digit = remaining / scanning;
         result.push(render_digit(digit as u8));
 
-        remaining = remaining % scanning;
-        scanning = scanning / base;
+        remaining %= scanning;
+        scanning /= base;
     }
 }
 
 fn render_digit(digit: u8) -> char {
     if digit < 10 {
-        ('0' as u8 + digit) as char
+        (b'0' + digit) as char
     } else {
-        ('a' as u8 + digit - 10) as char
+        (b'a' + digit - 10) as char
     }
 }
 

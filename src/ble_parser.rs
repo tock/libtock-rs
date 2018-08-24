@@ -11,14 +11,12 @@ pub fn find(buffer: &[u8], kind: u8) -> Option<&[u8]> {
                     } else {
                         return Some(&buffer[9 + i..8 + i + len as usize]);
                     }
-                } else {
-                    if len > 0 {
-                        for _ in 0..len - 1 {
-                            iter.next();
-                        }
-                    } else {
-                        return None;
+                } else if len > 0 {
+                    for _ in 0..len - 1 {
+                        iter.next();
                     }
+                } else {
+                    return None;
                 },
                 _ => return None,
             },

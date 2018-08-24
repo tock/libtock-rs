@@ -5,12 +5,15 @@ authors = ["Tock Project Developers <tock-dev@googlegroups.com>"]
 license = "MIT/Apache-2.0"
 
 [dependencies]
-linked_list_allocator = "0.6.2"
+linked_list_allocator = "0.6.3"
+
+[build-dependencies]
+proc-macro2 = "=0.4.13"
 
 [dev-dependencies]
-corepack = { version = "0.3.1", default-features = false, features = ["alloc"] }
-serde_derive = { version = "=1.0.69", default-features = false }
-serde = { version = "=1.0.69", default-features = false }
+corepack = { version = "0.4.0", default-features = false, features = ["alloc"] }
+serde_derive = { version = "=1.0.77", default-features = false }
+serde = { version = "=1.0.77", default-features = false }
 
 [profile.dev]
 panic = "abort"

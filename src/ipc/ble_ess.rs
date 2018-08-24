@@ -1,4 +1,4 @@
-use alloc::String;
+use alloc::string::String;
 use ipc::IPCBuffer;
 use ipc::ServerHandle;
 use shared_memory::SharedMemory;
