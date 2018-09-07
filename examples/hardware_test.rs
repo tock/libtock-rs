@@ -23,10 +23,10 @@ fn main() {
     // the client/server pair the tests are only run once.
     timer::sleep(Duration::from_ms(3000));
 
-    console.write(String::from("[test-results]\n"));
+    console.write("[test-results]\n");
     let mut string = String::from("heap_test = \"Heap ");
     string.push_str("works.\"\n");
-    console.write(string);
+    console.write(&string);
 
     let mut server = ServerHandle::discover_service(String::from("hardware_test_server")).unwrap();
     let mut payload: [u8; 32] = [0; 32];
@@ -47,8 +47,8 @@ fn main() {
             .filter(|&x| x != 0)
             .collect::<Vec<_>>();
         let s = String::from_utf8_lossy(&filtered);
-        console.write(String::from(s).clone());
-        console.write(String::from("test=\"done\"\n"));
+        console.write(&s);
+        console.write("test=\"done\"\n");
     });
 
     let handle = server.subscribe_callback(&mut callback);

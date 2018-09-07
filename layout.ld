@@ -12,9 +12,15 @@ ENTRY(_start)
  * value for relocation fixup routines. The application loader will select the
  * actual location in flash where the app is placed.
  */
+ /*
+ * DATA section is an extra memory location, to force fixup of load adress.
+ * Arithmetics: 9FFE2800=80000000+20000000+2800-20000
+ * Number = sentinel value + start of memory + stack top if loaded as first app - start of flash region for apps
+ */
 MEMORY {
     FLASH (rx) : ORIGIN = 0x80000000, LENGTH = 0x0040000
     SRAM (RWX) : ORIGIN = 0x00000000, LENGTH = 0x0010000
+    DATA (RW) : ORIGIN =  0x9FFE2800, LENGTH = 0x0040000
 }
 
 SECTIONS {
@@ -47,7 +53,8 @@ SECTIONS {
         /* Size of GOT section */
         LONG(SIZEOF(.got));
         /* Offset of data symbols in flash */
-        LONG(LOADADDR(.data) - _beginning);
+        /*LONG(LOADADDR(.data) - _beginning);*/
+        LONG(LOADADDR(.data));
         /* Offset of data section in memory */
         LONG(_data);
         /* Size of data section */
@@ -80,7 +87,6 @@ SECTIONS {
         _text = .;
         KEEP (*(.start))
         *(.text*)
-        *(.rodata*)
         KEEP (*(.syscalls))
         _etext = .;
         *(.ARM.extab*)
@@ -106,8 +112,9 @@ SECTIONS {
         . = ALIGN(4); /* Make sure we're word-aligned here */
         _data = .;
         KEEP(*(.data*))
+        *(.rodata*)
         . = ALIGN(4); /* Make sure we're word-aligned at the end of flash */
-    } > SRAM AT > FLASH
+    } > DATA AT > SRAM
 
     /* BSS section, static uninitialized variables */
     .bss :

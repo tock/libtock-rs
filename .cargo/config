@@ -2,7 +2,6 @@
 rustflags = [
   "-C", "link-arg=-Tlayout.ld",
   "-C", "linker=rust-lld",
-  "-Z", "linker-flavor=ld.lld",
+  "-Z", "linker-flavor=ld.lld", 
   "-C", "relocation-model=ropi-rwpi",
-  "-D", "warnings",
 ]

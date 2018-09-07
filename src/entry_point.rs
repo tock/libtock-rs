@@ -47,6 +47,23 @@ unsafe impl GlobalAlloc for TockAllocator {
     }
 }
 
+#[repr(C)]
+struct Header {
+    got_sym_start: usize,
+    got_start: usize,
+    got_size: usize,
+
+    data_sym_start: usize,
+    data_start: usize,
+    data_size: usize,
+
+    bss_start: usize,
+    bss_size: usize,
+    reldata_start: usize,
+
+    stack_size: usize,
+}
+
 /// Tock programs' entry point
 #[doc(hidden)]
 #[no_mangle]
@@ -74,6 +91,28 @@ pub unsafe extern "C" fn _start(
     syscalls::memop(0, effective_stack_top + HEAP_SIZE);
     syscalls::memop(11, effective_stack_top + HEAP_SIZE);
     syscalls::memop(10, effective_stack_top);
+
+    let header = &*(text_start as *const Header);
+
+    // FIXME: relies on empty got, compute begin of data section correctly in linker script
+    let flash_vtable_location = text_start + header.got_sym_start;
+
+    let sentinel = 0x80000000;
+    let crt0_header_size = 0x2c;
+    let _data_in_memory = real_stack_top + crt0_header_size;
+
+    // copy and fixup data segment
+    // FIXME: only modify vtable entries
+    for i in 0..header.data_size / 4 {
+        let ram_position = (_data_in_memory as *mut usize).offset(i as isize);
+        let flash_position = (flash_vtable_location as *const usize).offset(i as isize);
+        let mut bla = ptr::read_volatile(flash_position);
+        if bla & sentinel == 0 {
+            ptr::write(ram_position, bla)
+        } else {
+            ptr::write(ram_position, (bla ^ sentinel) + (text_start));
+        }
+    }
 
     main(0, ptr::null());
 

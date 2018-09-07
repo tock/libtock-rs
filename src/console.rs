@@ -1,4 +1,3 @@
-use alloc::string::String;
 use core::cell::Cell;
 use core::fmt;
 use core::result::Result;
@@ -26,8 +25,8 @@ impl Console {
         Console
     }
 
-    pub fn write(&mut self, text: String) {
-        self.write_bytes(text.as_bytes());
+    pub fn write(&mut self, text: &str) {
+        self.write_bytes(&text.as_bytes());
     }
 
     // TODO: Use this method after relocation is fixed
@@ -64,7 +63,7 @@ impl Console {
 
 impl fmt::Write for Console {
     fn write_str(&mut self, string: &str) -> Result<(), fmt::Error> {
-        self.write(String::from(string));
+        self.write(string);
         Ok(())
     }
 }

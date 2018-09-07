@@ -4,7 +4,6 @@
 extern crate alloc;
 extern crate tock;
 
-use alloc::string::String;
 use tock::console::Console;
 use tock::gpio::{GpioPinUnitialized, InputMode};
 use tock::timer;
@@ -18,9 +17,9 @@ fn main() {
 
     loop {
         if pin.read() {
-            console.write(String::from("true\n"));
+            console.write("true\n");
         } else {
-            console.write(String::from("false\n"));
+            console.write("false\n");
         }
         timer::sleep(Duration::from_ms(500));
     }
