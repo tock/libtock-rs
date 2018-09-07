@@ -27,7 +27,7 @@ pub enum IrqMode {
 }
 
 impl InputMode {
-    fn to_num(self) -> usize {
+    fn to_num(&self) -> usize {
         match self {
             InputMode::PullNone => 0,
             InputMode::PullUp => 1,
@@ -37,7 +37,7 @@ impl InputMode {
 }
 
 impl IrqMode {
-    fn to_num(self) -> usize {
+    fn to_num(&self) -> usize {
         match self {
             IrqMode::EitherEdge => 0,
             IrqMode::RisingEdge => 1,

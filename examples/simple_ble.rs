@@ -8,7 +8,7 @@ extern crate serde;
 extern crate serde_derive;
 extern crate tock;
 
-use alloc::String;
+use alloc::string::String;
 use tock::ble_composer;
 use tock::ble_composer::BlePayload;
 use tock::led;

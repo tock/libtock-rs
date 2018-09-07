@@ -1,4 +1,4 @@
-use alloc::*;
+use alloc::vec::Vec;
 
 pub mod gap_types {
     pub static COMPLETE_LOCAL_NAME: u8 = 0x09;
@@ -47,7 +47,8 @@ impl BlePayload {
 
 #[cfg(test)]
 mod test {
-    use ble_composer::*;
+    use super::*;
+
     #[test]
     pub fn test_add() {
         let mut pld = BlePayload::new();

@@ -4,7 +4,7 @@
 extern crate alloc;
 extern crate tock;
 
-use alloc::String;
+use alloc::string::String;
 use tock::console::Console;
 use tock::syscalls;
 use tock::timer;

@@ -1,4 +1,4 @@
-use alloc::String;
+use alloc::string::String;
 use callback::CallbackSubscription;
 use callback::SubscribableCallback;
 use shared_memory::SharedMemory;

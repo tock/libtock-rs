@@ -3,7 +3,7 @@
 use console::Console;
 
 pub fn print_as_hex(value: usize) {
-    let mut buffer = ['\n' as u8; 11];
+    let mut buffer = [b'\n'; 11];
     write_as_hex(&mut buffer, value);
     Console::new().write_bytes(&buffer);
 }
@@ -12,7 +12,7 @@ pub fn print_stack_pointer() {
     let stack_pointer;
     unsafe { asm!("mov $0, sp" : "=r"(stack_pointer) : : : "volatile") };
 
-    let mut buffer = ['\n' as u8; 15];
+    let mut buffer = [b'\n'; 15];
     buffer[0..4].clone_from_slice(b"SP: ");
     write_as_hex(&mut buffer[4..15], stack_pointer);
     Console::new().write_bytes(&buffer);
@@ -20,7 +20,7 @@ pub fn print_stack_pointer() {
 
 #[inline(always)] // Initial stack size is too small (64 bytes currently)
 pub fn dump_address(address: *const usize) {
-    let mut buffer = ['\n' as u8; 23];
+    let mut buffer = [b'\n'; 23];
     write_as_hex(&mut buffer[0..10], address as usize);
     buffer[10..12].clone_from_slice(b": ");
     write_as_hex(&mut buffer[12..22], unsafe { *address });
@@ -41,16 +41,16 @@ fn write_formatted(buffer: &mut [u8], value: usize, start: usize, base: usize) {
         let digit = remainder / scanning;
         buffer[position] = render_digit(digit as u8) as u8;
 
-        remainder = remainder % scanning;
-        scanning = scanning / base;
+        remainder %= scanning;
+        scanning /= base;
         position += 1;
     }
 }
 
 fn render_digit(digit: u8) -> char {
     if digit < 10 {
-        ('0' as u8 + digit) as char
+        (b'0' + digit) as char
     } else {
-        ('a' as u8 + digit - 10) as char
+        (b'a' + digit - 10) as char
     }
 }

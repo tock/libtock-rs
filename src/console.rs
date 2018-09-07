@@ -1,4 +1,4 @@
-use alloc::String;
+use alloc::string::String;
 use core::cell::Cell;
 use core::fmt;
 use core::result::Result;

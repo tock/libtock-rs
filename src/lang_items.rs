@@ -18,6 +18,7 @@
 //! `rustc_main`. That's covered by the `_start` function in the root of this
 //! crate.
 
+use core::alloc::Layout;
 use core::panic::PanicInfo;
 use led;
 use timer;
@@ -55,11 +56,13 @@ fn flash_all_leds(_info: &PanicInfo) -> ! {
     }
 }
 
-#[lang = "oom"]
-fn cycle_leds() {
-    for led in led::all().cycle() {
-        led.on();
-        timer::sleep(Duration::from_ms(100));
-        led.off();
+#[alloc_error_handler]
+fn cycle_leds(_: Layout) -> ! {
+    loop {
+        for led in led::all() {
+            led.on();
+            timer::sleep(Duration::from_ms(100));
+            led.off();
+        }
     }
 }
