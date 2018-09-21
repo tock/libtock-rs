@@ -107,7 +107,7 @@ pub unsafe extern "C" fn _start(
         let ram_position = (_data_in_memory as *mut usize).offset(i as isize);
         let flash_position = (flash_vtable_location as *const usize).offset(i as isize);
         let mut bla = ptr::read_volatile(flash_position);
-        if bla & sentinel == 0 {
+        if (bla & sentinel == 0) && !(bla ^ 0x7FFF0000 == 0) {
             ptr::write(ram_position, bla)
         } else {
             ptr::write(ram_position, (bla ^ sentinel) + (text_start));

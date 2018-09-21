@@ -3,15 +3,16 @@
 #![feature(alloc)]
 #![feature(compiler_builtins_lib)]
 #[prelude_import]
+#[macro_use]
 extern crate alloc;
 extern crate tock;
 use core::mem;
 use core::ptr;
+use tock::console::Console;
 use tock::debug;
 use tock::gpio::{GpioPinUnitialized, InputMode};
 use tock::timer;
 use tock::timer::Duration;
-
 pub trait MyTrait {
     fn print_something(&self);
 }
@@ -65,8 +66,14 @@ fn dynamic_dispatch_works() {
     }
     dispatch_printing(w);
 }
+
+fn format_works() {
+    let mut console = Console::new();
+    console.write(&format!("Test Zahl {} String {}\n", 3, "Kebes"));
+}
 fn main() {
     dynamic_dispatch_works();
+    format_works();
     for _ in 0.. {
         timer::sleep(Duration::from_ms(500))
     }
