@@ -54,7 +54,7 @@ SECTIONS {
         LONG(SIZEOF(.got));
         /* Offset of data symbols in flash */
         /*LONG(LOADADDR(.data) - _beginning);*/
-        LONG(LOADADDR(.data));
+        LONG(ADDR(.text)+SIZEOF(.text)-_beginning);
         /* Offset of data section in memory */
         LONG(_data);
         /* Size of data section */

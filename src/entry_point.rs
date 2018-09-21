@@ -95,7 +95,7 @@ pub unsafe extern "C" fn _start(
     let header = &*(text_start as *const Header);
 
     // FIXME: relies on empty got, compute begin of data section correctly in linker script
-    let flash_vtable_location = text_start + header.got_sym_start;
+    let flash_vtable_location = text_start + header.data_sym_start;
 
     let sentinel = 0x80000000;
     let crt0_header_size = 0x2c;
