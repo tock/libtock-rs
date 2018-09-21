@@ -7,6 +7,7 @@ use core::alloc::Layout;
 use core::mem;
 use core::ptr;
 use core::ptr::NonNull;
+use debug;
 use syscalls;
 
 const HEAP_SIZE: usize = 0x400;
@@ -100,6 +101,9 @@ pub unsafe extern "C" fn _start(
     let sentinel = 0x80000000;
     let crt0_header_size = 0x2c;
     let _data_in_memory = real_stack_top + crt0_header_size;
+
+    debug::print_as_hex(text_start);
+    debug::print_as_hex(mem_start);
 
     // copy and fixup data segment
     // FIXME: only modify vtable entries
