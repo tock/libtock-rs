@@ -11,6 +11,8 @@ use debug;
 use syscalls;
 
 const HEAP_SIZE: usize = 0x400;
+const SENTINEL: usize = 0x8000_0000; // Mask for addresses that need a relocation fixup
+const TBF_HEADER_SIZE_MASK: usize = 0x0000_FFFF; // Assumes that TBF header size is encoded in the last bytes of the text start address
 
 // None-threaded heap wrapper based on `r9` register instead of global variable
 pub(crate) struct TockAllocator;
@@ -76,11 +78,6 @@ pub unsafe extern "C" fn _start(
     _memory_len: usize,
     _app_heap_break: usize,
 ) -> ! {
-    extern "C" {
-        // This function is created internally by`rustc`. See `src/lang_items.rs` for more details.
-        fn main(argc: isize, argv: *const *const u8) -> isize;
-    }
-
     let stack_size = *(text_start as *const usize).offset(9);
     let real_stack_top = mem_start + stack_size;
     // Set the effective stack top below the real stack stop and use the space in between for the heap
@@ -98,9 +95,8 @@ pub unsafe extern "C" fn _start(
     // FIXME: relies on empty got, compute begin of data section correctly in linker script
     let flash_vtable_location = text_start + header.data_sym_start;
 
-    let sentinel = 0x80000000;
-    let crt0_header_size = 0x2c;
-    let _data_in_memory = real_stack_top + crt0_header_size;
+    let tbf_header_size = text_start & TBF_HEADER_SIZE_MASK;
+    let data_in_memory = real_stack_top + tbf_header_size;
 
     debug::print_as_hex(text_start);
     debug::print_as_hex(mem_start);
@@ -108,14 +104,28 @@ pub unsafe extern "C" fn _start(
     // copy and fixup data segment
     // FIXME: only modify vtable entries
     for i in 0..header.data_size / 4 {
-        let ram_position = (_data_in_memory as *mut usize).offset(i as isize);
-        let flash_position = (flash_vtable_location as *const usize).offset(i as isize);
-        let mut bla = ptr::read_volatile(flash_position);
-        if (bla & sentinel == 0) && !(bla ^ 0x7FFF0000 == 0) {
-            ptr::write(ram_position, bla)
+        let ram_position = (data_in_memory as *mut usize).add(i);
+        let flash_position = (flash_vtable_location as *const usize).add(i);
+
+        let value_in_flash = ptr::read(flash_position);
+
+        let value_needs_fixup = value_in_flash & SENTINEL != 0;
+        let value_in_ram = if value_needs_fixup {
+            text_start + (value_in_flash ^ SENTINEL)
         } else {
-            ptr::write(ram_position, (bla ^ sentinel) + (text_start));
-        }
+            value_in_flash
+        };
+
+        ptr::write(ram_position, value_in_ram);
+    }
+
+    start_program()
+}
+
+unsafe fn start_program() -> ! {
+    extern "C" {
+        // This function is created internally by`rustc`. See `src/lang_items.rs` for more details.
+        fn main(argc: isize, argv: *const *const u8) -> isize;
     }
 
     main(0, ptr::null());
