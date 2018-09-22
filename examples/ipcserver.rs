@@ -1,10 +1,11 @@
 #![feature(alloc)]
 #![no_std]
+
 extern crate alloc;
 extern crate tock;
 
+use core::fmt::Write;
 use tock::console::Console;
-use tock::fmt::*;
 use tock::ipc;
 use tock::ipc::IpcServerCallback;
 use tock::ipc::IpcServerDriver;
@@ -13,13 +14,10 @@ use tock::ipc::IpcServerDriver;
 // Prints the payload and adds one to the first byte.
 fn main() {
     let mut console = Console::new();
-    console.write("Start service:\n");
+    writeln!(console, "Start service:");
 
     let mut callback = IpcServerCallback::new(|pid: usize, _: usize, message: &mut [u8]| {
-        console.write("Server: \"Payload: ");
-
-        console.write(&u32_as_hex(message[0] as u32));
-        console.write("\"\n");
+        writeln!(console, "Server: \"Payload: {}\"", message[0]);
         message[0] += 1;
         ipc::notify_client(pid);
     });

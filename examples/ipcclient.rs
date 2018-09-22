@@ -1,11 +1,12 @@
 #![feature(alloc)]
 #![no_std]
+
 extern crate alloc;
 extern crate tock;
 
 use alloc::string::String;
+use core::fmt::Write;
 use tock::console::Console;
-use tock::fmt;
 use tock::ipc;
 use tock::ipc::IpcClientCallback;
 use tock::ipc::ServerHandle;
@@ -25,11 +26,9 @@ fn main() {
         handle.write_bytes(&payload);
 
         let mut callback = IpcClientCallback::new(|_: usize, _: usize| {
-            let mut console = Console::new();
             handle.read_bytes(&mut my_buf.buffer);
-            console.write("Client: \"Payload: ");
-            console.write(&fmt::u32_as_decimal(my_buf.buffer[0] as u32));
-            console.write("\"\n");
+            let mut console = Console::new();
+            writeln!(console, "Client: \"Payload: {}\"", my_buf.buffer[0]);
         });
 
         let handle = server.subscribe_callback(&mut callback);

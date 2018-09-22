@@ -1,13 +1,11 @@
-#![feature(alloc)]
 #![no_std]
 
-extern crate alloc;
 extern crate tock;
 
+use core::fmt::Write;
 use tock::buttons;
 use tock::buttons::ButtonState;
 use tock::console::Console;
-use tock::fmt;
 use tock::timer;
 use tock::timer::Duration;
 
@@ -16,13 +14,11 @@ fn main() {
     let mut console = Console::new();
 
     let mut with_callback = buttons::with_callback(|button_num: usize, state| {
-        console.write("\nButton: ");
-        console.write(&fmt::u32_as_hex(button_num as u32));
-        console.write(" - State: ");
-        console.write(match state {
+        let state_as_text = match state {
             ButtonState::Pressed => "pressed",
             ButtonState::Released => "released",
-        });
+        };
+        writeln!(console, "Button: {} - State: {}", button_num, state_as_text);
     });
 
     let mut buttons = with_callback.init().unwrap();

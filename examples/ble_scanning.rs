@@ -1,7 +1,5 @@
 #![no_std]
-#![feature(alloc)]
 
-extern crate alloc;
 extern crate corepack;
 extern crate serde;
 #[macro_use]

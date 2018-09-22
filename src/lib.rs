@@ -23,7 +23,6 @@ pub mod buttons;
 pub mod console;
 pub mod debug;
 pub mod electronics;
-pub mod fmt;
 pub mod gpio;
 pub mod ipc;
 pub mod led;
