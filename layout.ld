@@ -53,8 +53,7 @@ SECTIONS {
         /* Size of GOT section */
         LONG(SIZEOF(.got));
         /* Offset of data symbols in flash */
-        /*LONG(LOADADDR(.data) - _beginning);*/
-        LONG(ADDR(.text)+SIZEOF(.text)-_beginning);
+        LONG(LOADADDR(.data) - _beginning);
         /* Offset of data section in memory */
         LONG(_data);
         /* Size of data section */
@@ -114,7 +113,7 @@ SECTIONS {
         KEEP(*(.data*))
         *(.rodata*)
         . = ALIGN(4); /* Make sure we're word-aligned at the end of flash */
-    } > DATA AT > SRAM
+    } > DATA AT > FLASH
 
     /* BSS section, static uninitialized variables */
     .bss :
