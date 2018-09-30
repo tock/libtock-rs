@@ -12,7 +12,7 @@ use syscalls;
 
 const HEAP_SIZE: usize = 0x400;
 const SENTINEL: usize = 0x8000_0000; // Mask for addresses that need a relocation fixup
-const TBF_HEADER_SIZE_MASK: usize = 0x0000_FFFF; // Assumes that TBF header size is encoded in the last bytes of the text start address
+const TBF_HEADER_SIZE_MASK: usize = 0x0000_0FFF; // Assumes that TBF header size is encoded in the last bytes of the text start address
 
 // None-threaded heap wrapper based on `r9` register instead of global variable
 pub(crate) struct TockAllocator;
