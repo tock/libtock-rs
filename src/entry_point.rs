@@ -35,8 +35,10 @@ impl TockAllocator {
 
         let effective_heap_bottom = heap_bottom + mem::size_of::<Heap>();
 
-        let heap = heap_bottom as *mut Heap;
-        *heap = Heap::new(effective_heap_bottom, heap_top - effective_heap_bottom);
+        ptr::write(
+            heap_bottom as *mut _,
+            Heap::new(effective_heap_bottom, heap_top - effective_heap_bottom),
+        );
     }
 }
 
