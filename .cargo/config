@@ -3,5 +3,6 @@ rustflags = [
   "-C", "link-arg=-Tlayout.ld",
   "-C", "linker=rust-lld",
   "-Z", "linker-flavor=ld.lld", 
+  "-C", "link-arg=--emit-relocs",
   "-C", "relocation-model=ropi-rwpi",
 ]

@@ -102,21 +102,28 @@ pub unsafe extern "C" fn _start(
 
     debug::print_as_hex(text_start);
     debug::print_as_hex(mem_start);
+    debug::print_as_hex(0xFFFFFFFF);
 
-    // copy and fixup data segment
-    // FIXME: only modify vtable entries
+    // copy data segment
     for i in 0..header.data_size / 4 {
         let ram_position = (data_in_memory as *mut usize).add(i);
         let flash_position = (flash_vtable_location as *const usize).add(i);
+        let value_in_flash = ptr::read(flash_position);
+        ptr::write(ram_position, value_in_flash);
+    }
+
+    // fixup vtable entries
+    for i in 0..header.got_size / 4 {
+        let fixup_adress_offset =
+            ptr::read((header.got_start + text_start - tbf_header_size + 4 * i) as *const usize)
+                / 4;
+
+        let ram_position = (data_in_memory as *mut usize).add(fixup_adress_offset);
+        let flash_position = (flash_vtable_location as *const usize).add(fixup_adress_offset);
 
         let value_in_flash = ptr::read(flash_position);
 
-        let value_needs_fixup = value_in_flash & SENTINEL != 0;
-        let value_in_ram = if value_needs_fixup {
-            text_start + (value_in_flash ^ SENTINEL)
-        } else {
-            value_in_flash
-        };
+        let value_in_ram = text_start + (value_in_flash ^ SENTINEL);
 
         ptr::write(ram_position, value_in_ram);
     }

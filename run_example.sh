@@ -7,13 +7,15 @@ set -eux
 cargo build --release --target=thumbv7em-none-eabi --example "$1"
 
 
-elf_file_name="target/tab/$1/cortex-m4.elf"
-tab_file_name="target/tab/$1.tab"
+elf_file_name="$(pwd)/target/tab/$1/cortex-m4.elf"
+tab_file_name="$(pwd)/target/tab/$1.tab"
 
 mkdir -p "target/tab/$1"
 cp "target/thumbv7em-none-eabi/release/examples/$1" "$elf_file_name"
 
-elf2tab -n "$1" -o "$tab_file_name" "$elf_file_name" --stack 2048 --app-heap 2048 --kernel-heap 1024
+pushd ../elf2tab
+cargo run -- -v -n "$1" -o "$tab_file_name" "$elf_file_name" --stack 2048 --app-heap 2048 --kernel-heap 1024
+popd
 
 if [ "$#" -ge "2" ]
 then
