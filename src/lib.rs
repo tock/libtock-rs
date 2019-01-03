@@ -32,6 +32,7 @@ pub mod shared_memory;
 pub mod simple_ble;
 pub mod temperature;
 pub mod timer;
+pub mod unwind_symbols;
 
 #[cfg(target_arch = "arm")]
 pub mod entry_point;
