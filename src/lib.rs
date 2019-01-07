@@ -3,6 +3,7 @@
     alloc,
     allocator_api,
     alloc_error_handler,
+    core_intrinsics,
     lang_items,
     naked_functions,
     panic_implementation
