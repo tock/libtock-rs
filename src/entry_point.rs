@@ -104,9 +104,10 @@ pub unsafe extern "C" fn _start(
         add ip, ip, r1     // ip = text_start->stack_size + mem_start
         add ip, #7         // ip = text_start->stack_size + mem_start + 7
         bic r1, ip, #7     // r1 = (text_start->stack_size + mem_start + 7) & ~0x7
+        mov sp, r1         // sp = r1
 
-        // Call rust_start, passing text_start, stack_top, and app_heap_break to it.
-        mov sp, r1
+        // Call rust_start. text_start, stack_top, and app_heap_break are
+        // already in the correct registers.
         bl rust_start"
         :                                                              // No output operands
         : "{r0}"(text_start) "{r1}"(mem_start) "{r3}"(app_heap_break)  // Input operands
