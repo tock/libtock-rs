@@ -128,7 +128,7 @@ pub unsafe extern "C" fn rust_start(
     _text_start: usize,
     stack_top: usize,
     _skipped: usize,
-    _app_heap_break: usize
+    _app_heap_break: usize,
 ) -> ! {
     extern "C" {
         // This function is created internally by`rustc`. See `src/lang_items.rs` for more details.
