@@ -98,8 +98,9 @@ pub unsafe extern "C" fn _start(
 ) -> ! {
     asm!("
         // Initialize the stack pointer. The stack pointer is computed as
-        // stack_size + mem_start plus padding to start the stack on a multiple
-        // of 8 bytes.
+        // stack_size + mem_start plus padding to align the stack to a multiple
+        // of 8 bytes. The 8 byte alignment is to follow ARM AAPCS:
+        // http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.faqs/ka4127.html
         ldr ip, [r0, #36]  // ip = text_start->stack_size
         add ip, ip, r1     // ip = text_start->stack_size + mem_start
         add ip, #7         // ip = text_start->stack_size + mem_start + 7
