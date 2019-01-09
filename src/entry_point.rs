@@ -125,7 +125,10 @@ pub unsafe extern "C" fn _start(
 /// global references to globals until it is done setting up the data segment.
 #[no_mangle]
 pub unsafe extern "C" fn rust_start(
-    _text_start: usize, stack_top: usize, _skipped: usize, _app_heap_break: usize
+    _text_start: usize,
+    stack_top: usize,
+    _skipped: usize,
+    _app_heap_break: usize
 ) -> ! {
     extern "C" {
         // This function is created internally by`rustc`. See `src/lang_items.rs` for more details.
