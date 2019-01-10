@@ -42,7 +42,7 @@ impl Termination for () {
     }
 }
 
-#[panic_implementation]
+#[panic_handler]
 fn flash_all_leds(_info: &PanicInfo) -> ! {
     loop {
         for led in led::all() {

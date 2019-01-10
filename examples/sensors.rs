@@ -24,7 +24,8 @@ fn main() {
             &mut console,
             "Accel:       {}\n",
             ninedof.read_acceleration()
-        ).unwrap();
+        )
+        .unwrap();
         timer::sleep(Duration::from_ms(500));
     }
 }

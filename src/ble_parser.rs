@@ -5,19 +5,21 @@ pub fn find(buffer: &[u8], kind: u8) -> Option<&[u8]> {
     loop {
         match iter.next() {
             Some((_, &len)) => match iter.next() {
-                Some((i, potentialkind)) => if potentialkind == &kind {
-                    if (8 + i) + len as usize > buffer_len {
-                        return None;
+                Some((i, potentialkind)) => {
+                    if potentialkind == &kind {
+                        if (8 + i) + len as usize > buffer_len {
+                            return None;
+                        } else {
+                            return Some(&buffer[9 + i..8 + i + len as usize]);
+                        }
+                    } else if len > 0 {
+                        for _ in 0..len - 1 {
+                            iter.next();
+                        }
                     } else {
-                        return Some(&buffer[9 + i..8 + i + len as usize]);
+                        return None;
                     }
-                } else if len > 0 {
-                    for _ in 0..len - 1 {
-                        iter.next();
-                    }
-                } else {
-                    return None;
-                },
+                }
                 _ => return None,
             },
             None => return None,
