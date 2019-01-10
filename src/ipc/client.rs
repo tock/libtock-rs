@@ -1,8 +1,8 @@
+use crate::callback::CallbackSubscription;
+use crate::callback::SubscribableCallback;
+use crate::shared_memory::SharedMemory;
+use crate::syscalls;
 use alloc::string::String;
-use callback::CallbackSubscription;
-use callback::SubscribableCallback;
-use shared_memory::SharedMemory;
-use syscalls;
 
 const DRIVER_NUMBER: usize = 0x10000;
 

@@ -1,7 +1,5 @@
 #![no_std]
 
-extern crate tock;
-
 use tock::buttons;
 use tock::buttons::ButtonState;
 use tock::led;

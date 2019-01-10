@@ -1,9 +1,9 @@
+use crate::syscalls;
 use alloc::string::String;
 use core::cell::Cell;
 use core::fmt;
 use core::result::Result;
 use core::slice;
-use syscalls;
 
 const DRIVER_NUMBER: usize = 1;
 

@@ -18,11 +18,11 @@
 //! `rustc_main`. That's covered by the `_start` function in the root of this
 //! crate.
 
+use crate::led;
+use crate::timer;
+use crate::timer::Duration;
 use core::alloc::Layout;
 use core::panic::PanicInfo;
-use led;
-use timer;
-use timer::Duration;
 
 #[lang = "start"]
 extern "C" fn start<T>(main: fn() -> T, _argc: isize, _argv: *const *const u8) -> i32

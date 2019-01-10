@@ -2,7 +2,6 @@
 #![no_std]
 
 extern crate alloc;
-extern crate tock;
 
 use alloc::string::String;
 use tock::console::Console;

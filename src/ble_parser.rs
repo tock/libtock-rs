@@ -41,8 +41,8 @@ pub fn extract_for_service(service: [u8; 2], data: &[u8]) -> Option<&[u8]> {
 
 #[cfg(test)]
 mod test {
-    use ble_parser::*;
-    use simple_ble::BUFFER_SIZE_SCAN;
+    use crate::ble_parser::*;
+    use crate::simple_ble::BUFFER_SIZE_SCAN;
 
     #[test]
     pub fn extracts_data_for_ids_correctly() {

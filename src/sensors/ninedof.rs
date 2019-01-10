@@ -1,7 +1,7 @@
+use crate::syscalls::{self, yieldk_for};
 use core::cell::Cell;
 use core::fmt;
 use core::mem;
-use syscalls::{self, yieldk_for};
 
 const DRIVER_NUM: usize = 0x60004;
 

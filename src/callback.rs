@@ -1,5 +1,5 @@
+use crate::syscalls;
 use core::ptr;
-use syscalls;
 
 pub trait SubscribableCallback {
     fn call_rust(&mut self, arg0: usize, arg1: usize, arg2: usize);

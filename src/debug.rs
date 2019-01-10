@@ -1,6 +1,6 @@
 //! Heapless debugging functions for Tock troubleshooting
 
-use console::Console;
+use crate::console::Console;
 
 pub fn print_as_hex(value: usize) {
     let mut buffer = [b'\n'; 11];

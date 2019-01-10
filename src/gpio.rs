@@ -1,4 +1,4 @@
-use syscalls;
+use crate::syscalls;
 
 const DRIVER_NUMBER: usize = 0x00004;
 mod gpio_commands {

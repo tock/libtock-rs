@@ -2,7 +2,6 @@
 #![no_std]
 
 extern crate alloc;
-extern crate tock;
 
 use alloc::fmt::Write;
 use tock::console::Console;

@@ -1,9 +1,9 @@
-use callback::CallbackSubscription;
-use callback::SubscribableCallback;
-use result;
-use result::TockResult;
-use result::TockValue;
-use syscalls;
+use crate::callback::CallbackSubscription;
+use crate::callback::SubscribableCallback;
+use crate::result;
+use crate::result::TockResult;
+use crate::result::TockValue;
+use crate::syscalls;
 
 const DRIVER_NUMBER: usize = 0x00003;
 

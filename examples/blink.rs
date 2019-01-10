@@ -1,7 +1,4 @@
 #![no_std]
-#![feature(alloc)]
-
-extern crate tock;
 
 use tock::led;
 use tock::timer;

@@ -1,11 +1,11 @@
-use callback::CallbackSubscription;
-use callback::SubscribableCallback;
+use crate::callback::CallbackSubscription;
+use crate::callback::SubscribableCallback;
+use crate::result;
+use crate::result::TockResult;
+use crate::result::TockValue;
+use crate::syscalls;
 use core::cell::Cell;
 use core::isize;
-use result;
-use result::TockResult;
-use result::TockValue;
-use syscalls;
 
 const DRIVER_NUMBER: usize = 0x00000;
 

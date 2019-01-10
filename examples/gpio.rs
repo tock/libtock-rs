@@ -1,7 +1,5 @@
 #![no_std]
 
-extern crate tock;
-
 use tock::gpio::GpioPinUnitialized;
 use tock::timer;
 use tock::timer::Duration;
