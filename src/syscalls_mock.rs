@@ -1,6 +1,6 @@
-use callback::CallbackSubscription;
-use callback::SubscribableCallback;
-use shared_memory::SharedMemory;
+use crate::callback::CallbackSubscription;
+use crate::callback::SubscribableCallback;
+use crate::shared_memory::SharedMemory;
 
 pub fn yieldk_for<F: Fn() -> bool>(_: F) {
     unimplemented()

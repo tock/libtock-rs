@@ -2,13 +2,9 @@
 #![feature(alloc)]
 
 extern crate alloc;
-extern crate corepack;
-extern crate serde;
-#[macro_use]
-extern crate serde_derive;
-extern crate tock;
 
 use alloc::string::String;
+use serde::Serialize;
 use tock::ble_composer;
 use tock::ble_composer::BlePayload;
 use tock::led;

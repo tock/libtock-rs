@@ -1,8 +1,8 @@
+use crate::syscalls::{self, yieldk_for};
 use core::cell::Cell;
 use core::convert::From;
 use core::fmt;
 use core::mem;
-use syscalls::{self, yieldk_for};
 
 mod ninedof;
 

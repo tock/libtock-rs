@@ -2,7 +2,6 @@
 #![no_std]
 
 extern crate alloc;
-extern crate tock;
 
 use alloc::fmt::Write;
 use tock::console::Console;
@@ -24,7 +23,8 @@ fn main() {
             &mut console,
             "Accel:       {}\n",
             ninedof.read_acceleration()
-        ).unwrap();
+        )
+        .unwrap();
         timer::sleep(Duration::from_ms(500));
     }
 }

@@ -1,13 +1,13 @@
 extern crate linked_list_allocator;
 
 use self::linked_list_allocator::Heap;
+use crate::syscalls;
 use core::alloc::Alloc;
 use core::alloc::GlobalAlloc;
 use core::alloc::Layout;
 use core::mem;
 use core::ptr;
 use core::ptr::NonNull;
-use syscalls;
 
 const HEAP_SIZE: usize = 0x400;
 

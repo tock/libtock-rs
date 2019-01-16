@@ -55,7 +55,7 @@ pub fn convert_le(number: u16) -> [u8; 2] {
 
 #[cfg(test)]
 mod test {
-    use fmt::*;
+    use super::*;
 
     #[test]
     pub fn digits_are_correctly_rendered_in_decimal() {

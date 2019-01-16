@@ -4,8 +4,7 @@
     allocator_api,
     alloc_error_handler,
     lang_items,
-    naked_functions,
-    panic_implementation
+    naked_functions
 )]
 #![no_std]
 

@@ -3,17 +3,14 @@ name = "tock"
 version = "0.1.0"
 authors = ["Tock Project Developers <tock-dev@googlegroups.com>"]
 license = "MIT/Apache-2.0"
+edition = "2018"
 
 [dependencies]
 linked_list_allocator = "0.6.3"
 
-[build-dependencies]
-proc-macro2 = "=0.4.13"
-
 [dev-dependencies]
 corepack = { version = "0.4.0", default-features = false, features = ["alloc"] }
-serde_derive = { version = "=1.0.77", default-features = false }
-serde = { version = "=1.0.77", default-features = false }
+serde = { version = "1.0.84", default-features = false, features = ["derive"] }
 
 [profile.dev]
 panic = "abort"

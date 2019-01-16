@@ -1,7 +1,7 @@
+use crate::ipc::IPCBuffer;
+use crate::ipc::ServerHandle;
+use crate::shared_memory::SharedMemory;
 use alloc::string::String;
-use ipc::IPCBuffer;
-use ipc::ServerHandle;
-use shared_memory::SharedMemory;
 
 #[repr(u32)]
 pub enum ReadingType {

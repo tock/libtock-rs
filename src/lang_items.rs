@@ -18,11 +18,11 @@
 //! `rustc_main`. That's covered by the `_start` function in the root of this
 //! crate.
 
+use crate::led;
+use crate::timer;
+use crate::timer::Duration;
 use core::alloc::Layout;
 use core::panic::PanicInfo;
-use led;
-use timer;
-use timer::Duration;
 
 #[lang = "start"]
 extern "C" fn start<T>(main: fn() -> T, _argc: isize, _argv: *const *const u8) -> i32
@@ -42,7 +42,7 @@ impl Termination for () {
     }
 }
 
-#[panic_implementation]
+#[panic_handler]
 fn flash_all_leds(_info: &PanicInfo) -> ! {
     loop {
         for led in led::all() {

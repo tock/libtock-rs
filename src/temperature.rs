@@ -1,6 +1,6 @@
-use callback::CallbackSubscription;
-use callback::SubscribableCallback;
-use syscalls;
+use crate::callback::CallbackSubscription;
+use crate::callback::SubscribableCallback;
+use crate::syscalls;
 
 const DRIVER_NUMBER: usize = 0x60000;
 const SUBSCRIBE_CALLBACK: usize = 0;

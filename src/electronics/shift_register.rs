@@ -1,4 +1,4 @@
-use gpio::GpioPinWrite;
+use crate::gpio::GpioPinWrite;
 
 pub struct ShiftRegister {
     data_pin: GpioPinWrite,

@@ -1,5 +1,5 @@
+use crate::syscalls;
 use core::ptr;
-use syscalls;
 
 pub struct SharedMemory<'a> {
     driver_number: usize,
