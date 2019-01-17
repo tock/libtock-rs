@@ -102,7 +102,7 @@ pub unsafe extern "C" fn _start(
         bl rust_start"
         :                                                              // No output operands
         : "{r0}"(text_start) "{r1}"(mem_start) "{r3}"(app_heap_break)  // Input operands
-        : "cc" "ip" "lr" "memory" "r0" "r1" "r2" "r3" "r9" "sp"        // Clobbers
+        : "cc" "ip" "lr" "memory" "r0" "r1" "r2" "r3"                  // Clobbers
         :                                                              // Options
     );
     intrinsics::unreachable();
