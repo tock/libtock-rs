@@ -48,6 +48,10 @@ unsafe impl GlobalAlloc for TockAllocator {
     }
 }
 
+// Note: At the moment, rust_start is incomplete. The rest of this comment
+// describes how rust_start *should* work. It does not currently perform data
+// relocation (note the TODO in rust_start's source).
+//
 // _start and rust_start are the first two procedures executed when a Tock
 // application starts. _start is invoked directly by the Tock kernel; it
 // performs stack setup then calls rust_start. rust_start performs data
