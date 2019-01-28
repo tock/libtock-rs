@@ -10,8 +10,6 @@ use core::mem;
 use core::ptr;
 use core::ptr::NonNull;
 
-const HEAP_SIZE: usize = 0x400;
-
 // None-threaded heap wrapper based on `r9` register instead of global variable
 pub(crate) struct TockAllocator;
 
@@ -59,12 +57,13 @@ unsafe impl GlobalAlloc for TockAllocator {
 // rust_start and _start are tightly coupled: the order of rust_start's
 // parameters is designed to simplify _start's implementation.
 //
-// The memory layout set up by these methods is as follows:
+// The memory layout is controlled by the linker script and these methods. These
+// are written for the following memory layout:
 //
 //     +----------------+ <- app_heap_break
 //     | Heap           |
 //     +----------------| <- heap_bottom
-//     | Data (globals) |
+//     | .data and .bss |
 //     +----------------+ <- stack_top
 //     | Stack          |
 //     | (grows down)   |
@@ -72,7 +71,10 @@ unsafe impl GlobalAlloc for TockAllocator {
 //
 // app_heap_break and mem_start are given to us by the kernel. The stack size is
 // determined using pointer text_start, and is used with mem_start to compute
-// stack_top.
+// stack_top. The placement of .data and .bss are given to us by the linker
+// script; the heap is located between the end of .bss and app_heap_break. This
+// requires that .bss is the last (highest-address) section placed by the linker
+// script.
 
 /// Tock programs' entry point. Called by the kernel at program start. Sets up
 /// the stack then calls rust_start() for the remainder of setup.
@@ -108,6 +110,22 @@ pub unsafe extern "C" fn _start(
     intrinsics::unreachable();
 }
 
+/// The header encoded at the beginning of .text by the linker script. It is
+/// accessed by rust_start() using its text_start parameter.
+#[repr(C)]
+struct LayoutHeader {
+    got_sym_start: usize,
+    got_start: usize,
+    got_size: usize,
+    data_sym_start: usize,
+    data_start: usize,
+    data_size: usize,
+    bss_start: usize,
+    bss_size: usize,
+    reldata_start: usize,
+    stack_size: usize,
+}
+
 /// Rust setup, called by _start. Uses the extern "C" calling convention so that
 /// the assembly in _start knows how to call it (the Rust ABI is not defined).
 /// Sets up the data segment (including relocations) and the heap, then calls
@@ -115,21 +133,42 @@ pub unsafe extern "C" fn _start(
 /// global references to globals until it is done setting up the data segment.
 #[no_mangle]
 pub unsafe extern "C" fn rust_start(
-    _text_start: usize,
+    text_start: usize,
     stack_top: usize,
     _skipped: usize,
-    _app_heap_break: usize,
+    app_heap_break: usize,
 ) -> ! {
     extern "C" {
         // This function is created internally by`rustc`. See `src/lang_items.rs` for more details.
         fn main(argc: isize, argv: *const *const u8) -> isize;
     }
 
-    // TODO: Copy over .data and perform relocations, *then* initialize the heap.
-    TockAllocator.init(stack_top, stack_top + HEAP_SIZE);
+    // Copy .data into its final location in RAM (determined by the linker
+    // script -- should be immediately above the stack).
+    let layout_header: &LayoutHeader = core::mem::transmute(text_start);
+    intrinsics::copy_nonoverlapping(
+        (text_start + layout_header.data_sym_start) as *const u8,
+        stack_top as *mut u8,
+        layout_header.data_size,
+    );
 
+    // Zero .bss (specified by the linker script).
+    let bss_end = layout_header.bss_start + layout_header.bss_size; // 1 past the end of .bss
+    for i in layout_header.bss_start..bss_end {
+        core::ptr::write(i as *mut u8, 0);
+    }
+
+    // TODO: Wait for rustc to have working ROPI-RWPI relocation support, then
+    // implement dynamic relocations here. At the moment, rustc does not have
+    // working ROPI-RWPI support, and it is not clear what that support would
+    // look like at the LLVM level. Once we know what the relocation strategy
+    // looks like we can write the dynamic linker.
+
+    // Initialize the heap and tell the kernel where everything is. The heap is
+    // placed between .bss and the end of application memory.
+    TockAllocator.init(bss_end, app_heap_break);
     syscalls::memop(10, stack_top);
-    syscalls::memop(11, stack_top + HEAP_SIZE);
+    syscalls::memop(11, bss_end);
 
     main(0, ptr::null());
 
