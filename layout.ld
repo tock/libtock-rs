@@ -1,21 +1,25 @@
 /* Userland Generic Layout
  *
- * This linker script is designed for Tock apps where the end microcontroller
- * is not known. Therefore, this script over provisions space on some platforms.
+ * Currently, due to incomplete ROPI-RWPI support in rustc (see
+ * https://github.com/tock/libtock-rs/issues/28), this layout implements static
+ * linking. An application init script must define the TEXT and SRAM address
+ * ranges as well as MPU_MIN_ALIGN before including this layout file.
+ *
+ * Here is a an example application linker script to get started:
+ *     MEMORY {
+ *         /* TEXT must start immediately *after* the Tock Binary Format
+ *          * headers, which means you need to offset the beginning of TEXT
+ *          * relative to where the application is loaded.
+ *         TEXT (rx) : ORIGIN = 0x10030, LENGTH = 0x0FFD0
+ *         SRAM (RWX) : ORIGIN = 0x20000, LENGTH = 0x10000
+ *     }
+ *     MPU_MIN_ALIGN = 8K;
+ *     INCLUDE ../libtock-rs/layout.ld
  */
 
 STACK_SIZE = 2048;
 
 ENTRY(_start)
-
-/* Note: Because apps are relocated, the FLASH address here acts as a sentinel
- * value for relocation fixup routines. The application loader will select the
- * actual location in flash where the app is placed.
- */
-MEMORY {
-    FLASH (rx) : ORIGIN = 0x80000000, LENGTH = 0x0040000
-    SRAM (RWX) : ORIGIN = 0x00000000, LENGTH = 0x0010000
-}
 
 SECTIONS {
     /* Section for just the app crt0 header.
@@ -61,17 +65,11 @@ SECTIONS {
         LONG(LOADADDR(.endflash) - _beginning);
         /* The size of the stack requested by this application */
         LONG(STACK_SIZE);
-    } > FLASH =0xFF
-
-    /* App state section. Used for persistent app data.
-     * We put this first so that if the app code changes but the persistent
-     * data doesn't, the app_state can be preserved.
-     */
-    .wfr.app_state :
-    {
-        KEEP (*(.app_state))
-        . = ALIGN(4); /* Make sure we're word-aligned here */
-    } > FLASH =0xFF
+        /* Pad the header out to a multiple of 32 bytes so there is not a gap
+         * between the header and subsequent .data section. It's unclear why,
+         * but LLD is aligning sections to a multiple of 32 bytes. */
+        . = ALIGN(32);
+    } > TEXT =0xFF
 
     /* Text section, Code! */
     .text :
@@ -85,7 +83,22 @@ SECTIONS {
         _etext = .;
         *(.ARM.extab*)
         . = ALIGN(4); /* Make sure we're word-aligned here */
-    } > FLASH =0xFF
+    } > TEXT =0xFF
+
+    /* Data section, static initialized variables
+     *  Note: This is placed in Flash after the text section, but needs to be
+     *  moved to SRAM at runtime
+     */
+    .data :
+    {
+        /* Account for MPU alignment and the stack */
+        . = ALIGN(MPU_MIN_ALIGN);
+        . = . + STACK_SIZE;
+        . = ALIGN(8); /* The stack is aligned to a multiple of 8 bytes. */
+        _data = .;
+        KEEP(*(.data*))
+        . = ALIGN(4); /* Make sure we're word-aligned at the end of flash */
+    } > SRAM
 
     /* Global Offset Table */
     .got :
@@ -95,19 +108,7 @@ SECTIONS {
         *(.got*)
         *(.got.plt*)
         . = ALIGN(4);
-    } > SRAM AT > FLASH
-
-    /* Data section, static initialized variables
-     *  Note: This is placed in Flash after the text section, but needs to be
-     *  moved to SRAM at runtime
-     */
-    .data :
-    {
-        . = ALIGN(4); /* Make sure we're word-aligned here */
-        _data = .;
-        KEEP(*(.data*))
-        . = ALIGN(4); /* Make sure we're word-aligned at the end of flash */
-    } > SRAM AT > FLASH
+    } > SRAM
 
     /* BSS section, static uninitialized variables */
     .bss :
@@ -122,7 +123,7 @@ SECTIONS {
     /* End of flash. */
     .endflash :
     {
-    } > FLASH
+    } > TEXT
 
     /* ARM Exception support
      *
@@ -142,6 +143,6 @@ SECTIONS {
     {
       /* (C++) Index entries for section unwinding */
       *(.ARM.exidx* .gnu.linkonce.armexidx.*)
-    } > FLASH
+    } > TEXT
     PROVIDE_HIDDEN (__exidx_end = .);
 }
