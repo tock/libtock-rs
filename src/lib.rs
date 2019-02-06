@@ -25,7 +25,6 @@ pub mod debug;
 pub mod electronics;
 pub mod fmt;
 pub mod gpio;
-pub mod ipc;
 pub mod led;
 pub mod result;
 pub mod sensors;
