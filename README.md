@@ -20,7 +20,7 @@ This project is nascent and still under heavy development, but first steps:
 1. Install `elf2tab`.
 
     ```bash
-    cargo install -f elf2tab --version 0.3.0
+    cargo install -f elf2tab --version 0.4.0
     ```
 
 1. Add dependencies for cross-compilation.

@@ -1,6 +1,7 @@
+# Target configuration for the example apps on the nRF52-DK
 [target.thumbv7em-none-eabi]
 rustflags = [
-  "-C", "link-arg=-Tlayout.ld",
-  "-C", "relocation-model=ropi-rwpi",
+  "-C", "link-arg=-Tnrf52_layout.ld",
+  "-C", "relocation-model=static",
   "-D", "warnings",
 ]
