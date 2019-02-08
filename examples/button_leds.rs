@@ -1,10 +1,10 @@
 #![no_std]
 
-use tock::buttons;
-use tock::buttons::ButtonState;
-use tock::led;
-use tock::timer;
-use tock::timer::Duration;
+use libtock::buttons;
+use libtock::buttons::ButtonState;
+use libtock::led;
+use libtock::timer;
+use libtock::timer::Duration;
 
 fn main() {
     let mut with_callback = buttons::with_callback(|button_num: usize, state| {

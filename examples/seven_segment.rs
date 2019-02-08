@@ -1,9 +1,9 @@
 #![no_std]
 
-use tock::electronics::ShiftRegister;
-use tock::gpio::GpioPinUnitialized;
-use tock::timer;
-use tock::timer::Duration;
+use libtock::electronics::ShiftRegister;
+use libtock::gpio::GpioPinUnitialized;
+use libtock::timer;
+use libtock::timer::Duration;
 
 fn number_to_bits(n: u8) -> [bool; 8] {
     match n {

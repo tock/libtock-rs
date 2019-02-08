@@ -1,10 +1,10 @@
 #![no_std]
 
 use core::fmt::Write;
-use tock::console::Console;
-use tock::syscalls;
-use tock::timer;
-use tock::timer::Duration;
+use libtock::console::Console;
+use libtock::syscalls;
+use libtock::timer;
+use libtock::timer::Duration;
 
 fn main() {
     let mut console = Console::new();

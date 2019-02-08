@@ -1,10 +1,10 @@
 #![no_std]
 
 use core::fmt::Write;
-use tock::console::Console;
-use tock::gpio::{GpioPinUnitialized, InputMode};
-use tock::timer;
-use tock::timer::Duration;
+use libtock::console::Console;
+use libtock::gpio::{GpioPinUnitialized, InputMode};
+use libtock::timer;
+use libtock::timer::Duration;
 
 // example works on p0.03
 fn main() {

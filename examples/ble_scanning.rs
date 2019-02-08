@@ -1,11 +1,12 @@
 #![no_std]
 
+use libtock::ble_parser;
+use libtock::led;
+use libtock::simple_ble;
+use libtock::simple_ble::BleCallback;
+use libtock::simple_ble::BleDriver;
+use libtock::syscalls;
 use serde::Deserialize;
-use tock::ble_parser;
-use tock::led;
-use tock::simple_ble::BleCallback;
-use tock::simple_ble::BleDriver;
-use tock::syscalls;
 
 #[derive(Deserialize)]
 struct LedCommand {
@@ -22,7 +23,7 @@ fn main() {
 
     let mut callback = BleCallback::new(|_: usize, _: usize| {
         shared_memory.read_bytes(&mut my_buffer);
-        ble_parser::find(&my_buffer, tock::simple_ble::gap_data::SERVICE_DATA as u8)
+        ble_parser::find(&my_buffer, simple_ble::gap_data::SERVICE_DATA as u8)
             .and_then(|service_data| ble_parser::extract_for_service([91, 79], service_data))
             .and_then(|payload| corepack::from_bytes::<LedCommand>(&payload).ok())
             .and_then(|msg| led::get(msg.nr as isize).map(|led| led.set_state(msg.st)));

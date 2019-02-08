@@ -1,8 +1,8 @@
 #![no_std]
 
-use tock::gpio::GpioPinUnitialized;
-use tock::timer;
-use tock::timer::Duration;
+use libtock::gpio::GpioPinUnitialized;
+use libtock::timer;
+use libtock::timer::Duration;
 
 // Example works on P0.03
 fn main() {
