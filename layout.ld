@@ -2,15 +2,16 @@
  *
  * Currently, due to incomplete ROPI-RWPI support in rustc (see
  * https://github.com/tock/libtock-rs/issues/28), this layout implements static
- * linking. An application init script must define the TEXT and SRAM address
+ * linking. An application init script must define the FLASH and SRAM address
  * ranges as well as MPU_MIN_ALIGN before including this layout file.
  *
  * Here is a an example application linker script to get started:
  *     MEMORY {
- *         /* TEXT must start immediately *after* the Tock Binary Format
- *          * headers, which means you need to offset the beginning of TEXT
- *          * relative to where the application is loaded.
- *         TEXT (rx) : ORIGIN = 0x10030, LENGTH = 0x0FFD0
+ *         /* FLASH memory region must start immediately *after* the Tock
+ *          * Binary Format headers, which means you need to offset the
+ *          * beginning of FLASH memory region relative to where the
+ *          * application is loaded.
+ *         FLASH (rx) : ORIGIN = 0x10030, LENGTH = 0x0FFD0
  *         SRAM (RWX) : ORIGIN = 0x20000, LENGTH = 0x10000
  *     }
  *     MPU_MIN_ALIGN = 8K;
@@ -69,7 +70,7 @@ SECTIONS {
          * between the header and subsequent .data section. It's unclear why,
          * but LLD is aligning sections to a multiple of 32 bytes. */
         . = ALIGN(32);
-    } > TEXT =0xFF
+    } > FLASH =0xFF
 
     /* Text section, Code! */
     .text :
@@ -83,7 +84,7 @@ SECTIONS {
         _etext = .;
         *(.ARM.extab*)
         . = ALIGN(4); /* Make sure we're word-aligned here */
-    } > TEXT =0xFF
+    } > FLASH =0xFF
 
     /* Data section, static initialized variables
      *  Note: This is placed in Flash after the text section, but needs to be
@@ -123,7 +124,7 @@ SECTIONS {
     /* End of flash. */
     .endflash :
     {
-    } > TEXT
+    } > FLASH
 
     /* ARM Exception support
      *
@@ -143,6 +144,6 @@ SECTIONS {
     {
       /* (C++) Index entries for section unwinding */
       *(.ARM.exidx* .gnu.linkonce.armexidx.*)
-    } > TEXT
+    } > FLASH
     PROVIDE_HIDDEN (__exidx_end = .);
 }
