@@ -1,9 +1,6 @@
-#![feature(alloc)]
 #![no_std]
 
-extern crate alloc;
-
-use alloc::string::String;
+use core::fmt::Write;
 use tock::buttons;
 use tock::buttons::ButtonState;
 use tock::console::Console;
@@ -19,9 +16,10 @@ fn main() {
 
     loop {
         match button.read() {
-            ButtonState::Pressed => console.write(String::from("pressed\n")),
-            ButtonState::Released => console.write(String::from("released\n")),
+            ButtonState::Pressed => writeln!(console, "pressed"),
+            ButtonState::Released => writeln!(console, "released"),
         }
+        .unwrap();
         timer::sleep(Duration::from_ms(500));
     }
 }

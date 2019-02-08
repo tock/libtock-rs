@@ -1,9 +1,6 @@
-#![feature(alloc)]
 #![no_std]
 
-extern crate alloc;
-
-use alloc::string::String;
+use core::fmt::Write;
 use tock::console::Console;
 use tock::gpio::{GpioPinUnitialized, InputMode};
 use tock::timer;
@@ -17,9 +14,9 @@ fn main() {
 
     loop {
         if pin.read() {
-            console.write(String::from("true\n"));
+            writeln!(console, "true").unwrap();
         } else {
-            console.write(String::from("false\n"));
+            writeln!(console, "false").unwrap();
         }
         timer::sleep(Duration::from_ms(500));
     }

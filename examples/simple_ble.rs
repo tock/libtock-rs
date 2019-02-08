@@ -1,9 +1,5 @@
 #![no_std]
-#![feature(alloc)]
 
-extern crate alloc;
-
-use alloc::string::String;
 use serde::Serialize;
 use tock::ble_composer;
 use tock::ble_composer::BlePayload;
@@ -22,7 +18,6 @@ struct LedCommand {
 fn main() {
     let led = led::get(0).unwrap();
 
-    let name = String::from("Tock!");
     let uuid: [u8; 2] = [0x00, 0x18];
 
     let payload = corepack::to_bytes(LedCommand { nr: 2, st: true }).unwrap();
@@ -35,7 +30,7 @@ fn main() {
 
     gap_payload.add(
         ble_composer::gap_types::COMPLETE_LOCAL_NAME,
-        name.as_bytes(),
+        "Tock!".as_bytes(),
     );
     gap_payload.add_service_payload([91, 79], &payload);
 
