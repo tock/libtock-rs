@@ -1,5 +1,5 @@
 {
     "editor.formatOnSave": true,
-    "rust-client.channel": "nightly-2018-11-30",
     "rust.target": "thumbv7em-none-eabi",
+    "rust.all_targets": false,
 }

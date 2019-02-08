@@ -4,16 +4,17 @@
 extern crate alloc;
 
 use alloc::string::String;
+use core::fmt::Write;
 use tock::console::Console;
 use tock::timer;
 use tock::timer::Duration;
 
 fn main() {
     let mut console = Console::new();
-    console.write(String::from("[test-results]\n"));
+    writeln!(console, "[test-results]").unwrap();
     let mut string = String::from("heap_test = \"Heap ");
     string.push_str("works.\"\n");
-    console.write(string);
+    writeln!(console, "{}", string).unwrap();
 
     for _ in 0.. {
         timer::sleep(Duration::from_ms(500))

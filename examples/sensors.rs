@@ -1,9 +1,6 @@
-#![feature(alloc)]
 #![no_std]
 
-extern crate alloc;
-
-use alloc::fmt::Write;
+use core::fmt::Write;
 use tock::console::Console;
 use tock::sensors::*;
 use tock::timer;
@@ -16,15 +13,10 @@ fn main() {
     let mut light = AmbientLightSensor;
     let mut ninedof = unsafe { Ninedof::new() };
     loop {
-        write!(&mut console, "Humidity:    {}\n", humidity.read()).unwrap();
-        write!(&mut console, "Temperature: {}\n", temperature.read()).unwrap();
-        write!(&mut console, "Light:       {}\n", light.read()).unwrap();
-        write!(
-            &mut console,
-            "Accel:       {}\n",
-            ninedof.read_acceleration()
-        )
-        .unwrap();
+        writeln!(console, "Humidity:    {}\n", humidity.read()).unwrap();
+        writeln!(console, "Temperature: {}\n", temperature.read()).unwrap();
+        writeln!(console, "Light:       {}\n", light.read()).unwrap();
+        writeln!(console, "Accel:       {}\n", ninedof.read_acceleration()).unwrap();
         timer::sleep(Duration::from_ms(500));
     }
 }
