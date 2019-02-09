@@ -49,6 +49,8 @@ impl BlePayload {
 mod test {
     use super::*;
 
+    use alloc::vec;
+
     #[test]
     pub fn test_add() {
         let mut pld = BlePayload::new();
