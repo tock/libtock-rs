@@ -5,7 +5,7 @@ use crate::console::Console;
 pub fn print_as_hex(value: usize) {
     let mut buffer = [b'\n'; 11];
     write_as_hex(&mut buffer, value);
-    Console::new().write_bytes(&buffer);
+    Console::new().write(buffer);
 }
 
 pub fn print_stack_pointer() {
@@ -15,7 +15,7 @@ pub fn print_stack_pointer() {
     let mut buffer = [b'\n'; 15];
     buffer[0..4].clone_from_slice(b"SP: ");
     write_as_hex(&mut buffer[4..15], stack_pointer);
-    Console::new().write_bytes(&buffer);
+    Console::new().write(buffer);
 }
 
 #[inline(always)] // Initial stack size is too small (64 bytes currently)
@@ -24,7 +24,7 @@ pub fn dump_address(address: *const usize) {
     write_as_hex(&mut buffer[0..10], address as usize);
     buffer[10..12].clone_from_slice(b": ");
     write_as_hex(&mut buffer[12..22], unsafe { *address });
-    Console::new().write_bytes(&buffer);
+    Console::new().write(&buffer);
 }
 
 fn write_as_hex(buffer: &mut [u8], value: usize) {
