@@ -12,7 +12,6 @@ install:
   - rustup component add rustfmt-preview
 
 script:
-  - rustfmt --check src/lib.rs
-  - rustfmt --check examples/*.rs
+  - cargo fmt --all -- --check
   - cargo test --lib
   - ./build_examples.sh
