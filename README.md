@@ -40,6 +40,11 @@ to use:
     you will end up with a TAB file in `target/tab` that you can program onto your
     Tock board (e.g. with `tockloader install target/tab/blink.tab`).
 
+    If you have a hail board you can flash your device as follows:
+     - set the environment variable `hail` to `1`
+     - set  `link-arg=-Tnrf52_layout.ld` in `.cargo/config` to `link-arg=-Thail_layout.ld`
+     - run `run_example.sh` as above.
+
 ## Using libtock-rs
 
 The easiest way to start using libtock-rs is adding an example to the examples folder.
