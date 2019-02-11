@@ -71,5 +71,5 @@ pub unsafe fn start_accel_reading() {
 }
 
 pub unsafe fn start_magnetometer_reading() {
-    syscalls::command(DRIVER_NUM, 1, 0, 0);
+    syscalls::command(DRIVER_NUM, 100, 0, 0);
 }
