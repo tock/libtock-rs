@@ -1,4 +1,3 @@
-#![feature(alloc)]
 #![no_std]
 
 use core::fmt::Write;
