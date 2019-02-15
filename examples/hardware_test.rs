@@ -6,11 +6,11 @@ extern crate alloc;
 
 use alloc::string::String;
 use core::fmt::Write;
-use tock::console::Console;
-use tock::gpio::{GpioPinUnitialized, InputMode};
-use tock::syscalls;
-use tock::timer;
-use tock::timer::Duration;
+use libtock::console::Console;
+use libtock::gpio::{GpioPinUnitialized, InputMode};
+use libtock::syscalls;
+use libtock::timer;
+use libtock::timer::Duration;
 
 static mut STATIC: usize = 0;
 

@@ -1,8 +1,8 @@
 #![no_std]
 
-use tock::led;
-use tock::timer;
-use tock::timer::Duration;
+use libtock::led;
+use libtock::timer;
+use libtock::timer::Duration;
 
 fn main() {
     let num_leds = led::count();

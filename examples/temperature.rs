@@ -1,8 +1,9 @@
 #![no_std]
 
 use core::fmt::Write;
-use tock::console::Console;
-use tock::temperature;
+use libtock::console::Console;
+use libtock::syscalls;
+use libtock::temperature;
 
 fn main() {
     let mut console = Console::new();
@@ -14,6 +15,6 @@ fn main() {
     let _temperature = with_callback.start_measurement();
 
     loop {
-        tock::syscalls::yieldk();
+        syscalls::yieldk();
     }
 }

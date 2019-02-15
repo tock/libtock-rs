@@ -1,12 +1,12 @@
 #![no_std]
 
+use libtock::ble_composer;
+use libtock::ble_composer::BlePayload;
+use libtock::led;
+use libtock::simple_ble::BleAdvertisingDriver;
+use libtock::timer;
+use libtock::timer::Duration;
 use serde::Serialize;
-use tock::ble_composer;
-use tock::ble_composer::BlePayload;
-use tock::led;
-use tock::simple_ble::BleAdvertisingDriver;
-use tock::timer;
-use tock::timer::Duration;
 
 #[derive(Serialize)]
 struct LedCommand {
