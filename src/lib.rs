@@ -1,7 +1,6 @@
 #![feature(
     asm,
     alloc,
-    allocator_api,
     alloc_error_handler,
     core_intrinsics,
     lang_items,
@@ -41,4 +40,4 @@ mod syscalls;
 
 #[cfg(target_arch = "arm")]
 #[global_allocator]
-static ALLOCATOR: entry_point::TockAllocator = entry_point::TockAllocator;
+static ALLOCATOR: linked_list_allocator::LockedHeap = linked_list_allocator::LockedHeap::empty();

@@ -1,45 +1,7 @@
-extern crate linked_list_allocator;
-
-use self::linked_list_allocator::Heap;
 use crate::syscalls;
-use core::alloc::Alloc;
-use core::alloc::GlobalAlloc;
-use core::alloc::Layout;
+use crate::ALLOCATOR;
 use core::intrinsics;
 use core::ptr;
-use core::ptr::NonNull;
-
-/// Memory allocation implementation for Tock applications. This must be
-/// instantiated in the crate root.
-pub(crate) struct TockAllocator;
-
-impl TockAllocator {
-    // Retrieve access to the global linked_list_allocator::Heap instance.
-    unsafe fn heap(&self) -> &mut Heap {
-        static mut HEAP: Heap = Heap::empty();
-        &mut HEAP
-    }
-
-    /// Initializes an empty heap
-    ///
-    /// # Unsafety
-    ///
-    /// This function must be called at most once. The memory between [`heap_location`] and [`heap_top`] must not overlap with any other memory section.
-    #[inline(never)]
-    unsafe fn init(&mut self, heap_bottom: usize, heap_top: usize) {
-        self.heap().init(heap_bottom, heap_top - heap_bottom);
-    }
-}
-
-unsafe impl GlobalAlloc for TockAllocator {
-    unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
-        self.heap().alloc(layout).unwrap().as_ptr()
-    }
-
-    unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
-        self.heap().dealloc(NonNull::new_unchecked(ptr), layout)
-    }
-}
 
 // _start and rust_start are the first two procedures executed when a Tock
 // application starts. _start is invoked directly by the Tock kernel; it
@@ -176,7 +138,7 @@ pub unsafe extern "C" fn rust_start(
 
     // Initialize the heap and tell the kernel where everything is. The heap is
     // placed between .bss and the end of application memory.
-    TockAllocator.init(bss_end, app_heap_break);
+    ALLOCATOR.lock().init(bss_end, app_heap_break);
     syscalls::memop(10, stack_top);
     syscalls::memop(11, bss_end);
 
