@@ -1,9 +1,6 @@
 use crate::syscalls;
-use alloc::string::String;
 use core::cell::Cell;
 use core::fmt;
-use core::result::Result;
-use core::slice;
 
 const DRIVER_NUMBER: usize = 1;
 
@@ -19,24 +16,34 @@ mod allow_nr {
     pub const SHARE_BUFFER: usize = 1;
 }
 
-pub struct Console;
+pub struct Console {
+    allow_buffer: [u8; 64],
+}
 
 impl Console {
     pub fn new() -> Console {
-        Console
+        Console {
+            allow_buffer: [0; 64],
+        }
     }
 
-    pub fn write(&mut self, text: String) {
-        self.write_bytes(text.as_bytes());
+    pub fn write<S: AsRef<[u8]>>(&mut self, text: S) {
+        let mut not_written_yet = text.as_ref();
+        while !not_written_yet.is_empty() {
+            let num_bytes_to_print = self.allow_buffer.len().min(not_written_yet.len());
+            self.allow_buffer[..num_bytes_to_print]
+                .copy_from_slice(&not_written_yet[..num_bytes_to_print]);
+            self.flush(num_bytes_to_print);
+            not_written_yet = &not_written_yet[num_bytes_to_print..];
+        }
     }
 
-    // TODO: Use this method after relocation is fixed
-    pub(crate) fn write_bytes(&mut self, text: &[u8]) {
-        let num_bytes = text.len();
-
-        let result = syscalls::allow(DRIVER_NUMBER, allow_nr::SHARE_BUFFER, unsafe {
-            slice::from_raw_parts_mut(text.as_ptr() as *mut _, num_bytes)
-        });
+    fn flush(&mut self, num_bytes_to_print: usize) {
+        let result = syscalls::allow(
+            DRIVER_NUMBER,
+            allow_nr::SHARE_BUFFER,
+            &mut self.allow_buffer[..num_bytes_to_print],
+        );
         if result.is_err() {
             return;
         }
@@ -53,7 +60,7 @@ impl Console {
         }
 
         let result_code =
-            unsafe { syscalls::command(DRIVER_NUMBER, command_nr::WRITE, num_bytes, 0) };
+            unsafe { syscalls::command(DRIVER_NUMBER, command_nr::WRITE, num_bytes_to_print, 0) };
         if result_code < 0 {
             return;
         }
@@ -64,7 +71,7 @@ impl Console {
 
 impl fmt::Write for Console {
     fn write_str(&mut self, string: &str) -> Result<(), fmt::Error> {
-        self.write(String::from(string));
+        self.write(string);
         Ok(())
     }
 }

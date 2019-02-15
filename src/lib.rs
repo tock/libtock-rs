@@ -9,10 +9,6 @@
 )]
 #![no_std]
 
-#[cfg(test)]
-#[macro_use]
-extern crate alloc;
-#[cfg(not(test))]
 extern crate alloc;
 
 mod callback;
