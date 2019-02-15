@@ -12,6 +12,7 @@ extern crate alloc;
 
 mod callback;
 
+pub mod adc;
 pub mod ble_composer;
 pub mod ble_parser;
 pub mod buttons;
@@ -30,10 +31,13 @@ pub mod unwind_symbols;
 
 #[cfg(target_arch = "arm")]
 pub mod entry_point;
+
 #[cfg(target_arch = "arm")]
 mod lang_items;
+
 #[cfg(target_arch = "arm")]
 pub mod syscalls;
+
 #[cfg(not(target_arch = "arm"))]
 #[path = "syscalls_mock.rs"]
 mod syscalls;

@@ -63,9 +63,9 @@ macro_rules! single_value_sensor {
     };
 }
 
-single_value_sensor!(AmbientLightSensor, AmbientLight, 6);
-single_value_sensor!(TemperatureSensor, Temperature, 10);
-single_value_sensor!(HumiditySensor, Humidity, 35);
+single_value_sensor!(AmbientLightSensor, AmbientLight, 0x60002);
+single_value_sensor!(TemperatureSensor, Temperature, 0x60000);
+single_value_sensor!(HumiditySensor, Humidity, 0x60001);
 
 impl fmt::Display for AmbientLight {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
