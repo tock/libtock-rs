@@ -69,6 +69,21 @@ This script does the following steps for you:
  - create a TAB (tock application bundle)
  - if you have a nRF52-DK board connected: flash this TAB to your board (using tockloader)
 
+## Running the Integration Tests
+Having an nRF52-DK board at hand, integration tests can be run using `./run_hardware_tests.sh`.
+The expected output on the UART console will be as follows.
+```
+[test-results]
+heap_test = "Heap works."
+formatting =  works
+should_be_one = 1
+gpio_works = true
+trait_obj_value_usize = 1
+trait_obj_value_string = string
+callbacks_work = true
+all_tests_run = true
+```
+
 ## License
 
 Licensed under either of
