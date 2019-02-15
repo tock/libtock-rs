@@ -24,15 +24,21 @@ fn main() {
 
     let mut buffer = BleAdvertisingDriver::create_advertising_buffer();
     let mut gap_payload = BlePayload::new();
-    gap_payload.add_flag(ble_composer::flags::LE_GENERAL_DISCOVERABLE);
+    gap_payload
+        .add_flag(ble_composer::flags::LE_GENERAL_DISCOVERABLE)
+        .unwrap();
 
-    gap_payload.add(ble_composer::gap_types::UUID, &uuid);
+    gap_payload
+        .add(ble_composer::gap_types::UUID, &uuid)
+        .unwrap();
 
-    gap_payload.add(
-        ble_composer::gap_types::COMPLETE_LOCAL_NAME,
-        "Tock!".as_bytes(),
-    );
-    gap_payload.add_service_payload([91, 79], &payload);
+    gap_payload
+        .add(
+            ble_composer::gap_types::COMPLETE_LOCAL_NAME,
+            "Tock!".as_bytes(),
+        )
+        .unwrap();
+    gap_payload.add_service_payload([91, 79], &payload).unwrap();
 
     let handle = BleAdvertisingDriver::initialize(100, &gap_payload, &mut buffer).unwrap();
 

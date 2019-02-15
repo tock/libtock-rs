@@ -22,7 +22,7 @@ fn main() {
     let shared_memory = BleDriver::share_memory(&mut shared_buffer).unwrap();
 
     let mut callback = BleCallback::new(|_: usize, _: usize| {
-        shared_memory.read_bytes(&mut my_buffer);
+        shared_memory.read_bytes(&mut my_buffer[..]);
         ble_parser::find(&my_buffer, simple_ble::gap_data::SERVICE_DATA as u8)
             .and_then(|service_data| ble_parser::extract_for_service([91, 79], service_data))
             .and_then(|payload| corepack::from_bytes::<LedCommand>(&payload).ok())
