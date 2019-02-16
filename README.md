@@ -76,6 +76,7 @@ This script does the following steps for you:
 
 ## Running the Integration Tests
 Having an nRF52-DK board at hand, integration tests can be run using `./run_hardware_tests.sh`.
+The pins P0.03 and P0.04 need to be connected (on a nRF52-DK).
 The expected output on the UART console will be as follows.
 ```
 [test-results]
