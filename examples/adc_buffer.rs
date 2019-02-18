@@ -15,7 +15,7 @@ fn main() {
     let adc_buffer = libtock::adc::Adc::init_buffer(&mut adc_buffer).unwrap();
 
     let mut with_callback = adc::with_callback(|_, _| {
-        adc_buffer.read_bytes(&mut temp_buffer);
+        adc_buffer.read_bytes(&mut temp_buffer[..]);
         writeln!(console, "First sample in buffer: {}", temp_buffer[0]).unwrap();
     });
 

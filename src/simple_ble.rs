@@ -45,7 +45,7 @@ impl BleAdvertisingDriver {
             ble_commands::ALLOW_ADVERTISMENT_BUFFER,
             advertising_buffer,
         )?;
-        shared_memory.write_bytes(&service_payload.bytes);
+        shared_memory.write_bytes(service_payload);
         Self::start_advertising(gap_flags::BLE_DISCOVERABLE, interval)?;
         Ok(shared_memory)
     }

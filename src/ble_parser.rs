@@ -45,7 +45,7 @@ mod test {
     use crate::simple_ble::BUFFER_SIZE_SCAN;
 
     #[test]
-    pub fn extracts_data_for_ids_correctly() {
+    fn extracts_data_for_ids_correctly() {
         let mut buf = [0; BUFFER_SIZE_SCAN];
         {
             let slice = &mut buf[8..23];
@@ -62,7 +62,7 @@ mod test {
     }
 
     #[test]
-    pub fn doesnt_panic_for_defect_packets() {
+    fn doesnt_panic_for_defect_packets() {
         let mut buf = [0; BUFFER_SIZE_SCAN];
         {
             let slice = &mut buf[8..18];
@@ -72,7 +72,7 @@ mod test {
     }
 
     #[test]
-    pub fn ignores_illegal_lengths_in_packets() {
+    fn ignores_illegal_lengths_in_packets() {
         let mut buf = [0; 11];
         {
             let slice = &mut buf[8..10];

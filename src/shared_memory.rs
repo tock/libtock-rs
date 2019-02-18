@@ -20,12 +20,12 @@ impl<'a> SharedMemory<'a> {
         }
     }
 
-    pub fn read_bytes(&self, destination: &mut [u8]) {
-        safe_copy(self.buffer_to_share, destination);
+    pub fn read_bytes<T: AsMut<[u8]>>(&self, mut destination: T) {
+        safe_copy(self.buffer_to_share, destination.as_mut());
     }
 
-    pub fn write_bytes(&mut self, source: &[u8]) {
-        safe_copy(source, self.buffer_to_share);
+    pub fn write_bytes<T: AsRef<[u8]>>(&mut self, source: T) {
+        safe_copy(source.as_ref(), self.buffer_to_share);
     }
 }
 
