@@ -14,11 +14,10 @@
  *         FLASH (rx) : ORIGIN = 0x10030, LENGTH = 0x0FFD0
  *         SRAM (RWX) : ORIGIN = 0x20000, LENGTH = 0x10000
  *     }
+ *     STACK_SIZE = 2048;
  *     MPU_MIN_ALIGN = 8K;
  *     INCLUDE ../libtock-rs/layout.ld
  */
-
-STACK_SIZE = 2048;
 
 ENTRY(_start)
 
@@ -81,21 +80,28 @@ SECTIONS {
         *(.text*)
         *(.rodata*)
         KEEP (*(.syscalls))
-        _etext = .;
         *(.ARM.extab*)
         . = ALIGN(4); /* Make sure we're word-aligned here */
+        _etext = .;
     } > FLASH =0xFF
+
+    /* Application stack */
+    .stack :
+    {
+        . = . + STACK_SIZE;
+
+	_stack_top_unaligned = .;
+        . = ALIGN(8);
+	_stack_top_aligned = .;
+    } > SRAM
 
     /* Data section, static initialized variables
      *  Note: This is placed in Flash after the text section, but needs to be
      *  moved to SRAM at runtime
      */
-    .data :
+    .data : AT (_etext)
     {
-        /* Account for MPU alignment and the stack */
-        . = ALIGN(MPU_MIN_ALIGN);
-        . = . + STACK_SIZE;
-        . = ALIGN(8); /* The stack is aligned to a multiple of 8 bytes. */
+        . = ALIGN(4); /* Make sure we're word-aligned here */
         _data = .;
         KEEP(*(.data*))
         . = ALIGN(4); /* Make sure we're word-aligned at the end of flash */
@@ -147,3 +153,6 @@ SECTIONS {
     } > FLASH
     PROVIDE_HIDDEN (__exidx_end = .);
 }
+
+ASSERT((_stack_top_aligned - _stack_top_unaligned) == 0, "
+STACK_SIZE must be 8 byte multiple")
