@@ -1,7 +1,28 @@
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone)]
 pub enum TockValue<E> {
     Expected(E),
     Unexpected(isize),
+}
+
+// Size-optimized implementation of Debug.
+impl<E: core::fmt::Debug> core::fmt::Debug for TockValue<E> {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> Result<(), core::fmt::Error> {
+        match self {
+            // Printing out the value of E would cause TockResult::unwrap() to
+            // use a &dyn core::fmt::Debug, which defeats LLVM's
+            // devirtualization and prevents LTO from removing unused Debug
+            // implementations. Unfortunately, that generates too much code
+            // bloat (several kB), so we cannot display the value contained in
+            // this TockValue.
+            TockValue::Expected(_) => f.write_str("Expected(...)"),
+
+            TockValue::Unexpected(n) => {
+                f.write_str("Unexpected(")?;
+                n.fmt(f)?;
+                f.write_str(")")
+            }
+        }
+    }
 }
 
 pub type TockResult<T, E> = Result<T, TockValue<E>>;
