@@ -12,7 +12,7 @@ fn main() {
     loop {
         pin.set_high();
         timer::sleep(Duration::from_ms(500));
-        pin.set_low();;
+        pin.set_low();
         timer::sleep(Duration::from_ms(500));
     }
 }

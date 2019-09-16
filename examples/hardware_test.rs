@@ -1,4 +1,3 @@
-#![feature(alloc)]
 #![no_std]
 /// Hardware regression tests.
 /// Need P0.03 and P0.04 to be connected (on a nrf52-dk).
