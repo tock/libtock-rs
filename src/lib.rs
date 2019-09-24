@@ -1,11 +1,4 @@
-#![feature(
-    asm,
-    alloc,
-    alloc_error_handler,
-    core_intrinsics,
-    lang_items,
-    naked_functions
-)]
+#![feature(asm, alloc_error_handler, core_intrinsics, lang_items, naked_functions)]
 #![no_std]
 
 extern crate alloc;

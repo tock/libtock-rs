@@ -81,5 +81,4 @@ mod test {
         }
         assert_eq!(find(&buf, 0xF2), None);
     }
-
 }
