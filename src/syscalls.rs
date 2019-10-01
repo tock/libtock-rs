@@ -2,6 +2,7 @@ use crate::callback::CallbackSubscription;
 use crate::callback::SubscribableCallback;
 use crate::shared_memory::SharedMemory;
 
+#[cfg(target_arch = "arm")]
 pub fn yieldk() {
     // Note: A process stops yielding when there is a callback ready to run,
     // which the kernel executes by modifying the stack frame pushed by the
@@ -31,6 +32,21 @@ pub fn yieldk() {
             :
             :
             : "memory", "r0", "r1", "r2", "r3", "r12", "lr"
+            : "volatile");
+    }
+}
+
+#[cfg(target_arch = "riscv32")]
+pub fn yieldk() {
+    /* TODO: Stop yielding */
+    unsafe {
+        asm! (
+            "li    a0, 0
+            ecall"
+            :
+            :
+            : "memory", "a0", "a1", "a2", "a3", "a4", "a5", "a6", "a7",
+            "t0", "t1", "t2", "t3", "t4", "t5", "t6", "ra"
             : "volatile");
     }
 }
@@ -72,6 +88,7 @@ extern "C" fn c_callback<CB: SubscribableCallback>(
     callback.call_rust(arg0, arg1, arg2);
 }
 
+#[cfg(target_arch = "arm")]
 pub unsafe fn subscribe_ptr(
     major: usize,
     minor: usize,
@@ -86,12 +103,42 @@ pub unsafe fn subscribe_ptr(
     res
 }
 
+#[cfg(target_arch = "riscv32")]
+pub unsafe fn subscribe_ptr(
+    major: usize,
+    minor: usize,
+    cb: *const unsafe extern "C" fn(usize, usize, usize, usize),
+    ud: usize,
+) -> isize {
+    let res;
+    asm!("li    a0, 1
+          ecall"
+         : "=r" (res)
+         : "r" (major), "r" (minor), "r" (cb), "r" (ud)
+         : "memory"
+         : "volatile" );
+    res
+}
+
+#[cfg(target_arch = "arm")]
 pub unsafe fn command(major: usize, minor: usize, arg1: usize, arg2: usize) -> isize {
     let res;
     asm!("svc 2" : "={r0}"(res)
                  : "{r0}"(major) "{r1}"(minor) "{r2}"(arg1) "{r3}"(arg2)
                  : "memory"
                  : "volatile");
+    res
+}
+
+#[cfg(target_arch = "riscv32")]
+pub unsafe fn command(major: usize, minor: usize, arg1: usize, arg2: usize) -> isize {
+    let res;
+    asm!("li    a0, 2
+          ecall"
+         : "=r" (res)
+         : "r" (major), "r" (minor), "r" (arg1), "r" (arg2)
+         : "memory"
+         : "volatile");
     res
 }
 
@@ -120,6 +167,7 @@ pub fn allow(
     }
 }
 
+#[cfg(target_arch = "arm")]
 pub unsafe fn allow_ptr(major: usize, minor: usize, slice: *mut u8, len: usize) -> isize {
     let res;
     asm!("svc 3" : "={r0}"(res)
@@ -129,11 +177,36 @@ pub unsafe fn allow_ptr(major: usize, minor: usize, slice: *mut u8, len: usize) 
     res
 }
 
+#[cfg(target_arch = "riscv32")]
+pub unsafe fn allow_ptr(major: usize, minor: usize, slice: *mut u8, len: usize) -> isize {
+    let res;
+    asm!("li    a0, 3
+          ecall"
+         : "=r" (res)
+         : "r" (major), "r" (minor), "r" (slice), "r" (len)
+         : "memory"
+         : "volatile");
+    res
+}
+
+#[cfg(target_arch = "arm")]
 pub unsafe fn memop(major: u32, arg1: usize) -> isize {
     let res;
     asm!("svc 4" : "={r0}"(res)
                  : "{r0}"(major) "{r1}"(arg1)
                  : "memory"
                  : "volatile");
+    res
+}
+
+#[cfg(target_arch = "riscv32")]
+pub unsafe fn memop(major: u32, arg1: usize) -> isize {
+    let res;
+    asm!("li    a0, 4
+          ecall"
+         : "=r" (res)
+         : "r" (major), "r" (arg1)
+         : "memory"
+         : "volatile");
     res
 }

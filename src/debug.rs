@@ -13,6 +13,7 @@ pub fn print_as_hex(value: usize) {
     Console::new().write(buffer);
 }
 
+#[cfg(target_arch = "arm")]
 pub fn print_stack_pointer() {
     let stack_pointer;
     unsafe { asm!("mov $0, sp" : "=r"(stack_pointer) : : : "volatile") };
@@ -22,6 +23,9 @@ pub fn print_stack_pointer() {
     write_as_hex(&mut buffer[4..15], stack_pointer);
     Console::new().write(buffer);
 }
+
+#[cfg(target_arch = "riscv32")]
+pub fn print_stack_pointer() {}
 
 #[inline(always)] // Initial stack size is too small (128 bytes currently)
 pub fn dump_address(address: *const usize) {

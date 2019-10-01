@@ -5,3 +5,10 @@ rustflags = [
   "-C", "relocation-model=static",
   "-D", "warnings",
 ]
+
+[target.riscv32imac-unknown-none-elf]
+rustflags = [
+  "-C", "link-arg=-Triscv32_layout.ld",
+  "-C", "relocation-model=static",
+  "-D", "warnings",
+]
