@@ -6,6 +6,7 @@ use crate::result::TockValue;
 use crate::syscalls;
 use core::cell::Cell;
 use core::isize;
+use core::ops::{Add, AddAssign, Sub};
 
 const DRIVER_NUMBER: usize = 0x00000;
 
@@ -21,7 +22,7 @@ mod subscribe_nr {
     pub const SUBSCRIBE_CALLBACK: usize = 0;
 }
 
-pub fn sleep(duration: Duration) {
+pub fn sleep(duration: Duration<isize>) {
     let expired = Cell::new(false);
     let mut with_callback = with_callback(|_, _| expired.set(true));
 
@@ -140,7 +141,7 @@ impl<'a> Timer<'a> {
         }
     }
 
-    pub fn set_alarm(&mut self, duration: Duration) -> TockResult<Alarm, SetAlarmError> {
+    pub fn set_alarm(&mut self, duration: Duration<isize>) -> TockResult<Alarm, SetAlarmError> {
         let now = self.get_current_clock();
         let alarm_instant =
             now.num_ticks() as usize + (duration.ms() as usize * self.clock_frequency.hz()) / 1000;
@@ -187,6 +188,10 @@ impl ClockValue {
             1000 * (self.num_ticks / self.clock_frequency.hz() as isize)
         }
     }
+
+    pub fn ms_f64(&self) -> f64 {
+        1000.0 * (self.num_ticks as f64) / (self.clock_frequency.hz() as f64)
+    }
 }
 
 pub struct Alarm {
@@ -209,17 +214,100 @@ pub enum SetAlarmError {
     NoMemoryAvailable,
 }
 
-#[derive(Copy, Clone, Debug)]
-pub struct Duration {
-    ms: isize,
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub struct Duration<T> {
+    ms: T,
 }
 
-impl Duration {
-    pub fn from_ms(ms: isize) -> Duration {
+impl<T> Duration<T> {
+    pub const fn from_ms(ms: T) -> Duration<T> {
         Duration { ms }
     }
+}
 
-    pub fn ms(&self) -> isize {
+impl<T> Duration<T>
+where
+    T: Copy,
+{
+    pub fn ms(&self) -> T {
         self.ms
+    }
+}
+
+impl<T> Sub for Duration<T>
+where
+    T: Sub<Output = T>,
+{
+    type Output = Duration<T>;
+
+    fn sub(self, other: Duration<T>) -> Duration<T> {
+        Duration {
+            ms: self.ms - other.ms,
+        }
+    }
+}
+
+#[derive(Copy, Clone, Debug)]
+pub struct Timestamp<T> {
+    ms: T,
+}
+
+impl<T> Timestamp<T> {
+    pub const fn from_ms(ms: T) -> Timestamp<T> {
+        Timestamp { ms }
+    }
+}
+
+impl<T> Timestamp<T>
+where
+    T: Copy,
+{
+    pub fn ms(&self) -> T {
+        self.ms
+    }
+}
+
+impl Timestamp<isize> {
+    pub fn from_clock_value(value: ClockValue) -> Timestamp<isize> {
+        Timestamp { ms: value.ms() }
+    }
+}
+
+impl Timestamp<f64> {
+    pub fn from_clock_value(value: ClockValue) -> Timestamp<f64> {
+        Timestamp { ms: value.ms_f64() }
+    }
+}
+
+impl<T> Sub for Timestamp<T>
+where
+    T: Sub<Output = T>,
+{
+    type Output = Duration<T>;
+
+    fn sub(self, other: Timestamp<T>) -> Duration<T> {
+        Duration::from_ms(self.ms - other.ms)
+    }
+}
+
+impl<T> Add<Duration<T>> for Timestamp<T>
+where
+    T: Copy + Add<Output = T>,
+{
+    type Output = Timestamp<T>;
+
+    fn add(self, duration: Duration<T>) -> Timestamp<T> {
+        Timestamp {
+            ms: self.ms + duration.ms(),
+        }
+    }
+}
+
+impl<T> AddAssign<Duration<T>> for Timestamp<T>
+where
+    T: Copy + AddAssign,
+{
+    fn add_assign(&mut self, duration: Duration<T>) {
+        self.ms += duration.ms();
     }
 }
