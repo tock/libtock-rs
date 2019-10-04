@@ -41,4 +41,4 @@ static ALLOCATOR: linked_list_allocator::LockedHeap = linked_list_allocator::Loc
 
 // Dummy structure to force importing the panic_handler and other no_std elements when nothing else
 // is imported.
-pub struct LibTock {}
+pub struct LibTock;
