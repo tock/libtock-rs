@@ -1,0 +1,14 @@
+# Target configuration for the example apps on the nRF52-DK
+[target.thumbv7em-none-eabi]
+rustflags = [
+  "-C", "link-arg=-Tnrf52_layout.ld",
+  "-C", "relocation-model=static",
+  "-D", "warnings",
+]
+
+[target.riscv32imac-unknown-none-elf]
+rustflags = [
+  "-C", "link-arg=-Triscv32_layout.ld",
+  "-C", "relocation-model=static",
+  "-D", "warnings",
+]

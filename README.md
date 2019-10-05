@@ -47,25 +47,11 @@ to use:
 
 ## Using libtock-rs
 
+### Within this project (as example)
 The easiest way to start using libtock-rs is adding an example to the examples folder.
-The boiler plate code you would write is
-```rust
-#![no_std]
+Just copy an example for the quickstart.
 
-extern crate tock;
-
-fn main() {
-  // Your code
-}
-```
-If you want to use heap based allocation you will have to add
-```rust
-#![feature(alloc)]
-extern crate alloc;
-```
-to the preamble.
-
-To run on the code on your board you can use
+To run the code on your board you can use
 ```bash
 ./run_example.sh <your app>
 ```
@@ -73,6 +59,30 @@ This script does the following steps for you:
  - cross-compile your program
  - create a TAB (tock application bundle)
  - if you have a nRF52-DK board connected: flash this TAB to your board (using tockloader)
+
+### Within a new project
+A little bit more complex will be to setup libtock for a new project.
+
+Within the `templates` folder you find the files you need to setup your own project.
+It includes:
+1. `.cargo/config` to setup the targets for cargo
+1. A bunch of layout files for the different boards
+1. `rust-toolchain` to setup the use of the nightly build of Rust
+1. `deploy.sh` to deploy your code onto your hardware (please check if the correct
+    target is selected and the application name matches!)
+1. `setup.sh` to download and setup the nightly build of Rust, Tockloader and the targets
+1. `Cargo.toml` for your project (please remember to insert your name as autor and 
+    setup the application name!)
+1. `src/main.rs` as the starting point of the development
+
+---
+
+If you want to use heap based allocation you will have to add
+```rust
+#![feature(alloc)]
+extern crate alloc;
+```
+to the preamble.
 
 ## Running the Integration Tests
 Having an nRF52-DK board at hand, integration tests can be run using `./run_hardware_tests.sh`.
