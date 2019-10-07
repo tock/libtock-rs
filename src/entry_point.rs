@@ -339,7 +339,7 @@ pub unsafe extern "C" fn rust_start(app_start: usize, stacktop: usize, app_heap_
     // `sbrk` system call to dynamically request heap memory from the kernel, we
     // need to tell `linked_list_allocator` where the heap starts and ends.
     //
-    // Heap size is set using `elf2tab` with `--heap-size` option, which is
+    // Heap size is set using `elf2tab` with `--app-heap` option, which is
     // currently at 1024. If you change the `elf2tab` heap size, make sure to
     // make the corresponding change here.
     const HEAP_SIZE: usize = 1024;
