@@ -4,6 +4,7 @@ rust:
 
 os:
   - linux
+  - osx
 
 cache: rust
 
