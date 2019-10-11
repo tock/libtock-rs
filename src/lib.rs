@@ -1,4 +1,11 @@
-#![feature(asm, alloc_error_handler, core_intrinsics, lang_items, naked_functions)]
+#![feature(
+    asm,
+    alloc_error_handler,
+    core_intrinsics,
+    lang_items,
+    naked_functions,
+    ptr_offset_from
+)]
 #![no_std]
 
 extern crate alloc;
@@ -14,6 +21,7 @@ pub mod debug;
 pub mod electronics;
 pub mod gpio;
 pub mod led;
+pub mod memop;
 pub mod result;
 pub mod sensors;
 pub mod shared_memory;
