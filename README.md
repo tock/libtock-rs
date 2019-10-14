@@ -2,13 +2,14 @@
 # libtock-rs
 Rust userland library for Tock (WIP)
 
-Tested with a tock [master from 2019-10-09](https://github.com/tock/tock/commit/6519a10275fc9b673cd78f612701af282e937d29)
+Tested with tock [Release 1.4](https://github.com/tock/tock/commit/2cef02405e699c06cefd0aae6a89f0e8cc4395ab).
 
-The library works in principle but there is currently the [showstopper
+The library works in principle on most boards, but there is currently the [showstopper
 bug #28](https://github.com/tock/libtock-rs/issues/28) that prevents
 the generation of relocatable code. This means that all applications
 must be installed at the flash address they are compiled with, which
-usually means that there can only be on application written in rust
+usually means that they must be compiled especially for your board
+and that there can only be one application written in rust at a time
 and it must be installed as the first application on the board, unless
 you want to play games with linker scripts.
 
