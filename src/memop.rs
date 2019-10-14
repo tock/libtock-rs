@@ -1,3 +1,5 @@
+// Last updated for Tock 1.4.
+// See https://github.com/tock/tock/blob/master/doc/syscalls/memop.md
 use crate::syscalls;
 use core::slice;
 
