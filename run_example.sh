@@ -11,7 +11,7 @@ elf_file_name="target/tab/$1/cortex-m4.elf"
 tab_file_name="target/tab/$1.tab"
 
 # Default value for nRF52-DK
-tockloader_flags="--jlink --arch cortex-m4 --board nrf52dk --jtag-device nrf52 --app-address 0x20000"
+tockloader_flags="--jlink --arch cortex-m4 --board nrf52dk --jtag-device nrf52"
 
 hail_defined=${hail:-}
 if [ -n "$hail_defined" ]
