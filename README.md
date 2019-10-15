@@ -45,14 +45,17 @@ to use:
     ./run_example.sh blink
     ```
 
-    This should work if you are using the nRF52-DK platform. For other platforms,
-    you will end up with a TAB file in `target/tab` that you can program onto your
-    Tock board (e.g. with `tockloader install target/tab/blink.tab`).
+    Due to bug #28 this will currently only work if you are using the nRF52-DK platform.
+
+    If you have a nRF52840-DK you must change `link-arg=-Tnrf52_layout.ld` in
+    `.cargo/config` to `link-arg=-Tnrf52840_layout.ld`
 
     If you have a hail board you can flash your device as follows:
      - set the environment variable `hail` to `1`
-     - set  `link-arg=-Tnrf52_layout.ld` in `.cargo/config` to `link-arg=-Thail_layout.ld`
+     - change `link-arg=-Tnrf52_layout.ld` in `.cargo/config` to `link-arg=-Thail_layout.ld`
      - run `run_example.sh` as above.
+
+    For other platforms, you may have to create your own memory layout definition.
 
 ## Using libtock-rs
 
