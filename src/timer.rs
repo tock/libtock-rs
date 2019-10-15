@@ -143,8 +143,27 @@ impl<'a> Timer<'a> {
 
     pub fn set_alarm(&mut self, duration: Duration<isize>) -> TockResult<Alarm, SetAlarmError> {
         let now = self.get_current_clock();
-        let alarm_instant =
-            now.num_ticks() as usize + (duration.ms() as usize * self.clock_frequency.hz()) / 1000;
+        let freq = self.clock_frequency.hz();
+        let duration_ms = duration.ms() as usize;
+        let ticks = match duration_ms.checked_mul(freq) {
+            Some(x) => x / 1000,
+            None => {
+                // Divide the largest of the two operands by 1000, to improve precision of the
+                // result.
+                if duration_ms > freq {
+                    match (duration_ms / 1000).checked_mul(freq) {
+                        Some(y) => y,
+                        None => return Err(TockValue::Expected(SetAlarmError::DurationTooLong)),
+                    }
+                } else {
+                    match (freq / 1000).checked_mul(duration_ms) {
+                        Some(y) => y,
+                        None => return Err(TockValue::Expected(SetAlarmError::DurationTooLong)),
+                    }
+                }
+            }
+        };
+        let alarm_instant = now.num_ticks() as usize + ticks;
 
         let alarm_id =
             unsafe { syscalls::command(DRIVER_NUMBER, command_nr::SET_ALARM, alarm_instant, 0) };
@@ -212,6 +231,7 @@ pub enum StopAlarmError {
 #[derive(Clone, Copy, Debug)]
 pub enum SetAlarmError {
     NoMemoryAvailable,
+    DurationTooLong,
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
