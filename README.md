@@ -12,6 +12,11 @@ usually means that they must be compiled especially for your board
 and that there can only be one application written in rust at a time
 and it must be installed as the first application on the board, unless
 you want to play games with linker scripts.
+There are some `*_layout.ld` files provided that allow to run the
+examples on common boards.
+Due to MPU region alignment issues they may not work for applications
+that use a lot of RAM, in that case you may have to change the SRAM
+start address to fit your application.
 
 ## Getting Started
 
