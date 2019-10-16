@@ -209,6 +209,7 @@ pub unsafe extern "C" fn _start() -> ! {
     // Move arguments we need to keep over to callee-saved locations.
     mv   s0, a0             // s0 = void* app_start
     mv   s1, t0             // s1 = stack_top
+    mv   s2, a3             // s2 = app_heap_break
     //
     // Now we may want to move the stack pointer. If the kernel set the
     // `app_heap_break` larger than we need (and we are going to call `brk()`
@@ -255,7 +256,7 @@ pub unsafe extern "C" fn _start() -> ! {
     mv   a0, s0             // first arg is app_start
     mv   s0, sp             // Set the frame pointer to sp.
     mv   a1, s1             // second arg is stacktop
-    mv   a1, s1             // second arg is stackto
+    mv   a2, s2             // third arg is app_heap_break
     jal  rust_start"
     :                                                              // No output operands
     :
