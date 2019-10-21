@@ -1,3 +1,4 @@
+use crate::memop;
 use crate::syscalls;
 use crate::ALLOCATOR;
 use core::intrinsics;
@@ -348,8 +349,8 @@ pub unsafe extern "C" fn rust_start(app_start: usize, stacktop: usize, app_heap_
     let app_heap_start = app_heap_break;
     let app_heap_end = app_heap_break + HEAP_SIZE;
 
-    // tell the kernel the new app heap break
-    syscalls::memop(0, app_heap_end);
+    // Tell the kernel the new app heap break.
+    memop::set_brk(app_heap_end as *const u8);
 
     ALLOCATOR.lock().init(app_heap_start, HEAP_SIZE);
 

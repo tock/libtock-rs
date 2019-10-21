@@ -35,6 +35,10 @@ pub unsafe fn allow_ptr(_: usize, _: usize, _: *mut u8, _: usize) -> isize {
     unimplemented()
 }
 
+pub unsafe fn memop(_: u32, _: usize) -> isize {
+    unimplemented()
+}
+
 fn unimplemented() -> ! {
     unimplemented!("Unimplemented for tests");
 }
