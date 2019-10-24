@@ -43,7 +43,20 @@ impl Termination for () {
 }
 
 #[panic_handler]
-fn flash_all_leds(_info: &PanicInfo) -> ! {
+fn panic_handler(_info: &PanicInfo) -> ! {
+    // Signal a panic using the LowLevelDebug capsule (if available).
+    unsafe {
+        asm!("svc 2"
+            :              // No output operands
+            : "{r0}"(0x8)  // Driver number
+              "{r1}"(1)    // Command number
+              "{r2}"(1)    // Panic status code
+            : "r0"         // Clobbers (syscall return value)
+            : "volatile"
+        );
+    }
+
+    // Flash all LEDs (if available).
     loop {
         for led in led::all() {
             led.on();

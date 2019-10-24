@@ -85,8 +85,12 @@ pub unsafe extern "C" fn _start(
         ldr r5, =.start   // r5 = address of .start
         cmp r4, r5
         beq .Lstack_init  // Jump to stack initialization if pc was correct
+        movw r0, #8       // LowLevelDebug driver number
+        movw r1, #1       // LowLevelDebug 'print status code' command
+        movw r2, #2       // LowLevelDebug relocation failed status code
+        svc 2             // command() syscall
         .Lyield_loop:
-        svc 0             // yield() syscall
+        svc 0             // yield() syscall (in infinite loop)
         b .Lyield_loop
 
         .Lstack_init:

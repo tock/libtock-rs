@@ -52,6 +52,39 @@ pub fn dump_memory(start_address: *const usize, count: isize) {
     }
 }
 
+/// Use the LowLevelDebug capsule (if present) to print a single number. If the
+/// capsule is not present, this is a no-op.
+#[inline(always)] // Improve reliability for relocation issues
+pub fn low_level_print1(value: usize) {
+    unsafe {
+        asm!("svc 2"
+            :                // No output operands
+            : "{r0}"(0x8)    // Driver number
+              "{r1}"(2)      // Command number
+              "{r2}"(value)  // Value to print
+            : "r0"           // Clobbers (syscall return value)
+            : "volatile"
+        );
+    }
+}
+
+/// Use the LowLevelDebug capsule (if present) to print two numbers. If the
+/// capsule is not present, this is a no-op.
+#[inline(always)] // Improve reliability for relocation issues
+pub fn low_level_print2(value1: usize, value2: usize) {
+    unsafe {
+        asm!("svc 2"
+            :                 // No output operands
+            : "{r0}"(0x8)     // Driver number
+              "{r1}"(3)       // Command number
+              "{r2}"(value1)  // First value to print
+              "{r3}"(value2)  // Second value to print
+            : "r0"            // Clobbers (syscall return value)
+            : "volatile"
+        );
+    }
+}
+
 fn write_as_hex(buffer: &mut [u8], value: usize) {
     write_formatted(buffer, value, 0x10_00_00_00, 0x10);
 }
