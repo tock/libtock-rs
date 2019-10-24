@@ -1,7 +1,8 @@
 /* Layout for the RISC-V 32 boards, used by the examples in this repository. */
 
 MEMORY {
-  FLASH (rx) : ORIGIN = 0x20430000, LENGTH = 32M
+  /* The TBF header region is 32 bytes (0x20) */
+  FLASH (rx) : ORIGIN = 0x20430020, LENGTH = 32M
   SRAM (rwx) : ORIGIN = 0x80000000, LENGTH = 512K
 }
 

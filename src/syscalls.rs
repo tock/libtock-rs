@@ -113,8 +113,8 @@ pub unsafe fn subscribe_ptr(
     let res;
     asm!("li    a0, 1
           ecall"
-         : "=r" (res)
-         : "r" (major), "r" (minor), "r" (cb), "r" (ud)
+         : "={x10}" (res)
+         : "{x11}" (major), "{x12}" (minor), "{x13}" (cb), "{x14}" (ud)
          : "memory"
          : "volatile" );
     res
@@ -135,8 +135,8 @@ pub unsafe fn command(major: usize, minor: usize, arg1: usize, arg2: usize) -> i
     let res;
     asm!("li    a0, 2
           ecall"
-         : "=r" (res)
-         : "r" (major), "r" (minor), "r" (arg1), "r" (arg2)
+         : "={x10}" (res)
+         : "{x11}" (major), "{x12}" (minor), "{x13}" (arg1), "{x14}" (arg2)
          : "memory"
          : "volatile");
     res
@@ -182,8 +182,8 @@ pub unsafe fn allow_ptr(major: usize, minor: usize, slice: *mut u8, len: usize) 
     let res;
     asm!("li    a0, 3
           ecall"
-         : "=r" (res)
-         : "r" (major), "r" (minor), "r" (slice), "r" (len)
+         : "={x10}" (res)
+         : "{x11}" (major), "{x12}" (minor), "{x13}" (slice), "{x14}" (len)
          : "memory"
          : "volatile");
     res
@@ -204,8 +204,8 @@ pub unsafe fn memop(major: u32, arg1: usize) -> isize {
     let res;
     asm!("li    a0, 4
           ecall"
-         : "=r" (res)
-         : "r" (major), "r" (arg1)
+         : "={x10}" (res)
+         : "{x11}" (major), "{x12}" (arg1)
          : "memory"
          : "volatile");
     res
