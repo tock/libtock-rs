@@ -45,16 +45,7 @@ impl Termination for () {
 #[panic_handler]
 fn panic_handler(_info: &PanicInfo) -> ! {
     // Signal a panic using the LowLevelDebug capsule (if available).
-    unsafe {
-        asm!("svc 2"
-            :              // No output operands
-            : "{r0}"(0x8)  // Driver number
-              "{r1}"(1)    // Command number
-              "{r2}"(1)    // Panic status code
-            : "r0"         // Clobbers (syscall return value)
-            : "volatile"
-        );
-    }
+    super::debug::low_level_status_code(1);
 
     // Flash all LEDs (if available).
     loop {

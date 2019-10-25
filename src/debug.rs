@@ -54,6 +54,7 @@ pub fn dump_memory(start_address: *const usize, count: isize) {
 
 /// Use the LowLevelDebug capsule (if present) to print a single number. If the
 /// capsule is not present, this is a no-op.
+#[cfg(target_arch = "arm")]
 #[inline(always)] // Improve reliability for relocation issues
 pub fn low_level_print1(value: usize) {
     unsafe {
@@ -70,6 +71,7 @@ pub fn low_level_print1(value: usize) {
 
 /// Use the LowLevelDebug capsule (if present) to print two numbers. If the
 /// capsule is not present, this is a no-op.
+#[cfg(target_arch = "arm")]
 #[inline(always)] // Improve reliability for relocation issues
 pub fn low_level_print2(value1: usize, value2: usize) {
     unsafe {
@@ -84,6 +86,30 @@ pub fn low_level_print2(value1: usize, value2: usize) {
         );
     }
 }
+
+/// Use the LowLevelDebug capsule (if present) to indicate the given status
+/// code. If the capsule is not present, this is a no-op.
+// TODO: Someone with RISC-V hardware should port this to RISC-V.
+#[cfg(target_arch = "arm")]
+#[inline(always)] // Improve reliability for relocation issues
+pub fn low_level_status_code(code: usize) {
+    unsafe {
+        asm!("svc 2"
+            :               // No output operands
+            : "{r0}"(0x8)   // Driver number
+              "{r1}"(1)     // Command number
+              "{r2}"(code)  // Value to print
+            : "r0"          // Clobbers (syscall return value)
+            : "volatile"
+        );
+    }
+}
+
+// Non-functional wrapper so that the panic handler (in lang_items) can build on
+// non-ARM architectures.
+#[cfg(not(target_arch = "arm"))]
+#[inline(always)]
+pub fn low_level_status_code(_code: usize) {}
 
 fn write_as_hex(buffer: &mut [u8], value: usize) {
     write_formatted(buffer, value, 0x10_00_00_00, 0x10);
