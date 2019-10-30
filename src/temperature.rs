@@ -26,7 +26,7 @@ where
 {
     pub fn start_measurement(&mut self) -> Result<CallbackSubscription, isize> {
         let subscription = syscalls::subscribe(DRIVER_NUMBER, SUBSCRIBE_CALLBACK, self)?;
-        unsafe { syscalls::command(DRIVER_NUMBER, START_MEASUREMENT, 0, 0) };
+        unsafe { syscalls::command0(DRIVER_NUMBER, START_MEASUREMENT) };
         Ok(subscription)
     }
 }

@@ -120,8 +120,39 @@ pub unsafe fn subscribe_ptr(
     res
 }
 
+// There are multiple implementations of the command() system call, implementing
+// a variable number of arguments. All implementations receive a major and minor
+// command number. For example, command0() takes the major (driver) and minor
+// number but 0 additional arguments, command1() takes 1 additional argument,
+// etc. This is to avoid needlessly overwriting/reserving registers when calling
+// into drivers that do not use the extra arguments, which improves code size
+// and assembly readability.
+
 #[cfg(target_arch = "arm")]
-pub unsafe fn command(major: usize, minor: usize, arg1: usize, arg2: usize) -> isize {
+#[inline(always)]
+pub unsafe fn command0(major: usize, minor: usize) -> isize {
+    let res;
+    asm!("svc 2" : "={r0}"(res)
+                 : "{r0}"(major) "{r1}"(minor)
+                 : "memory"
+                 : "volatile");
+    res
+}
+
+#[cfg(target_arch = "arm")]
+#[inline(always)]
+pub unsafe fn command1(major: usize, minor: usize, arg: usize) -> isize {
+    let res;
+    asm!("svc 2" : "={r0}"(res)
+                 : "{r0}"(major) "{r1}"(minor) "{r2}"(arg)
+                 : "memory"
+                 : "volatile");
+    res
+}
+
+#[cfg(target_arch = "arm")]
+#[inline(always)]
+pub unsafe fn command2(major: usize, minor: usize, arg1: usize, arg2: usize) -> isize {
     let res;
     asm!("svc 2" : "={r0}"(res)
                  : "{r0}"(major) "{r1}"(minor) "{r2}"(arg1) "{r3}"(arg2)
@@ -131,7 +162,34 @@ pub unsafe fn command(major: usize, minor: usize, arg1: usize, arg2: usize) -> i
 }
 
 #[cfg(target_arch = "riscv32")]
-pub unsafe fn command(major: usize, minor: usize, arg1: usize, arg2: usize) -> isize {
+#[inline(always)]
+pub unsafe fn command0(major: usize, minor: usize) -> isize {
+    let res;
+    asm!("li    a0, 2
+          ecall"
+         : "={x10}" (res)
+         : "{x11}" (major), "{x12}" (minor)
+         : "memory"
+         : "volatile");
+    res
+}
+
+#[cfg(target_arch = "riscv32")]
+#[inline(always)]
+pub unsafe fn command1(major: usize, minor: usize, arg: usize) -> isize {
+    let res;
+    asm!("li    a0, 2
+          ecall"
+         : "={x10}" (res)
+         : "{x11}" (major), "{x12}" (minor), "{x13}" (arg),
+         : "memory"
+         : "volatile");
+    res
+}
+
+#[cfg(target_arch = "riscv32")]
+#[inline(always)]
+pub unsafe fn command2(major: usize, minor: usize, arg1: usize, arg2: usize) -> isize {
     let res;
     asm!("li    a0, 2
           ecall"

@@ -1,4 +1,4 @@
-use crate::syscalls::command;
+use crate::syscalls::{command0,command1};
 
 const DRIVER_NUMBER: usize = 0x00002;
 
@@ -14,7 +14,7 @@ pub struct Led {
 }
 
 pub fn count() -> isize {
-    unsafe { command(DRIVER_NUMBER, command_nr::COUNT, 0, 0) }
+    unsafe { command0(DRIVER_NUMBER, command_nr::COUNT) }
 }
 
 pub fn get(led_num: isize) -> Option<Led> {
@@ -45,19 +45,19 @@ impl Led {
 
     pub fn on(&self) {
         unsafe {
-            command(DRIVER_NUMBER, command_nr::ON, self.led_num, 0);
+            command1(DRIVER_NUMBER, command_nr::ON, self.led_num);
         }
     }
 
     pub fn off(&self) {
         unsafe {
-            command(DRIVER_NUMBER, command_nr::OFF, self.led_num, 0);
+            command1(DRIVER_NUMBER, command_nr::OFF, self.led_num);
         }
     }
 
     pub fn toggle(&self) {
         unsafe {
-            command(DRIVER_NUMBER, command_nr::TOGGLE, self.led_num, 0);
+            command1(DRIVER_NUMBER, command_nr::TOGGLE, self.led_num);
         }
     }
 }

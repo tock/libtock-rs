@@ -29,7 +29,7 @@ pub trait Sensor<Reading: Copy + From<(usize, usize, usize)>> {
                 cb::<Reading> as *const _,
                 mem::transmute(&res),
             );
-            syscalls::command(driver_num, 1, 0, 0);
+            syscalls::command0(driver_num, 1);
             yieldk_for(|| res.get().is_some());
             res.get().unwrap()
         }

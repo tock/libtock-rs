@@ -23,7 +23,15 @@ pub unsafe fn subscribe_ptr(
     unimplemented()
 }
 
-pub unsafe fn command(_: usize, _: usize, _: usize, _: usize) -> isize {
+pub unsafe fn command0(_: usize, _: usize) -> isize {
+    unimplemented()
+}
+
+pub unsafe fn command1(_: usize, _: usize, _: usize) -> isize {
+    unimplemented()
+}
+
+pub unsafe fn command2(_: usize, _: usize, _: usize, _: usize) -> isize {
     unimplemented()
 }
 

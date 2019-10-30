@@ -67,9 +67,9 @@ pub unsafe fn subscribe(cb: extern "C" fn(usize, usize, usize, usize), ud: usize
 }
 
 pub unsafe fn start_accel_reading() {
-    syscalls::command(DRIVER_NUM, 1, 0, 0);
+    syscalls::command1(DRIVER_NUM, 1, 0);
 }
 
 pub unsafe fn start_magnetometer_reading() {
-    syscalls::command(DRIVER_NUM, 100, 0, 0);
+    syscalls::command1(DRIVER_NUM, 100, 0);
 }

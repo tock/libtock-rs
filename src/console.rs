@@ -60,7 +60,7 @@ impl Console {
         }
 
         let result_code =
-            unsafe { syscalls::command(DRIVER_NUMBER, command_nr::WRITE, num_bytes_to_print, 0) };
+            unsafe { syscalls::command1(DRIVER_NUMBER, command_nr::WRITE, num_bytes_to_print) };
         if result_code < 0 {
             return;
         }

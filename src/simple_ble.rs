@@ -52,7 +52,7 @@ impl BleAdvertisingDriver {
 
     fn start_advertising(pdu_type: usize, interval: usize) -> Result<(), isize> {
         let result = unsafe {
-            syscalls::command(
+            syscalls::command2(
                 DRIVER_NUMBER,
                 ble_commands::START_ADVERTISING,
                 pdu_type,
@@ -97,7 +97,7 @@ impl BleDriver {
         let subscription =
             syscalls::subscribe(DRIVER_NUMBER, ble_commands::BLE_PASSIVE_SCAN_SUB, callback)?;
 
-        let result = unsafe { syscalls::command(DRIVER_NUMBER, ble_commands::PASSIVE_SCAN, 1, 0) };
+        let result = unsafe { syscalls::command0(DRIVER_NUMBER, ble_commands::PASSIVE_SCAN) };
         convert_result(result)?;
         Ok(subscription)
     }

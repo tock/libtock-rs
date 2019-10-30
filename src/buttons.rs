@@ -37,7 +37,7 @@ where
     Self: SubscribableCallback,
 {
     pub fn init(&mut self) -> TockResult<Buttons, ButtonsError> {
-        let count = unsafe { syscalls::command(DRIVER_NUMBER, command_nr::COUNT, 0, 0) };
+        let count = unsafe { syscalls::command0(DRIVER_NUMBER, command_nr::COUNT) };
         if count < 1 {
             return Err(TockValue::Expected(ButtonsError::NotSupported));
         }
@@ -134,11 +134,10 @@ pub struct ButtonHandle<'a> {
 impl<'a> ButtonHandle<'a> {
     pub fn enable(&mut self) -> TockResult<Button, ButtonError> {
         let return_code = unsafe {
-            syscalls::command(
+            syscalls::command1(
                 DRIVER_NUMBER,
                 command_nr::ENABLE_INTERRUPT,
                 self.button_num,
-                0,
             )
         };
 
@@ -151,11 +150,10 @@ impl<'a> ButtonHandle<'a> {
 
     pub fn disable(&mut self) -> TockResult<(), ButtonError> {
         let return_code = unsafe {
-            syscalls::command(
+            syscalls::command1(
                 DRIVER_NUMBER,
                 command_nr::DISABLE_INTERRUPT,
                 self.button_num,
-                0,
             )
         };
 
@@ -179,11 +177,10 @@ pub enum ButtonError {
 impl<'a> Button<'a> {
     pub fn read(&self) -> ButtonState {
         unsafe {
-            ButtonState::from(syscalls::command(
+            ButtonState::from(syscalls::command1(
                 DRIVER_NUMBER,
                 command_nr::READ,
                 self.handle.button_num,
-                0,
             ) as usize)
         }
     }
