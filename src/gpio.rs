@@ -174,11 +174,7 @@ impl Drop for GpioPinWrite {
 impl Drop for GpioPinRead {
     fn drop(&mut self) {
         unsafe {
-            syscalls::command1(
-                DRIVER_NUMBER,
-                gpio_commands::DISABLE_INTERRUPT,
-                self.number,
-            );
+            syscalls::command1(DRIVER_NUMBER, gpio_commands::DISABLE_INTERRUPT, self.number);
             syscalls::command1(DRIVER_NUMBER, gpio_commands::DISABLE, self.number);
         }
     }

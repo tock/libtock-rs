@@ -121,8 +121,7 @@ impl<'a> Timer<'a> {
     }
 
     pub fn get_current_clock(&self) -> ClockValue {
-        let num_ticks =
-            unsafe { syscalls::command0(DRIVER_NUMBER, command_nr::GET_CLOCK_VALUE) };
+        let num_ticks = unsafe { syscalls::command0(DRIVER_NUMBER, command_nr::GET_CLOCK_VALUE) };
 
         ClockValue {
             num_ticks,

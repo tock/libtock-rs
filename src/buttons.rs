@@ -134,11 +134,7 @@ pub struct ButtonHandle<'a> {
 impl<'a> ButtonHandle<'a> {
     pub fn enable(&mut self) -> TockResult<Button, ButtonError> {
         let return_code = unsafe {
-            syscalls::command1(
-                DRIVER_NUMBER,
-                command_nr::ENABLE_INTERRUPT,
-                self.button_num,
-            )
+            syscalls::command1(DRIVER_NUMBER, command_nr::ENABLE_INTERRUPT, self.button_num)
         };
 
         match return_code {

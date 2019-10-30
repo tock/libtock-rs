@@ -1,4 +1,4 @@
-use crate::syscalls::{command0,command1};
+use crate::syscalls::{command0, command1};
 
 const DRIVER_NUMBER: usize = 0x00002;
 
