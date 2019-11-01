@@ -121,6 +121,7 @@ pub unsafe fn subscribe_ptr(
 }
 
 #[cfg(target_arch = "arm")]
+#[inline(always)]
 pub unsafe fn command(major: usize, minor: usize, arg1: usize, arg2: usize) -> isize {
     let res;
     asm!("svc 2" : "={r0}"(res)
@@ -131,12 +132,48 @@ pub unsafe fn command(major: usize, minor: usize, arg1: usize, arg2: usize) -> i
 }
 
 #[cfg(target_arch = "riscv32")]
+#[inline(always)]
 pub unsafe fn command(major: usize, minor: usize, arg1: usize, arg2: usize) -> isize {
     let res;
     asm!("li    a0, 2
           ecall"
          : "={x10}" (res)
          : "{x11}" (major), "{x12}" (minor), "{x13}" (arg1), "{x14}" (arg2)
+         : "memory"
+         : "volatile");
+    res
+}
+
+// command1_insecure, is a variant of command() that only sets the first
+// argument in the system call interface. It has the benefit of generating
+// simpler assembly than command(), but it leaves the second argument's register
+// as-is which leaks it to the kernel driver being called. Prefer to use
+// command() instead of command1_insecure(), unless the benefit of generating
+// simpler assembly outweighs the drawbacks of potentially leaking arbitrary
+// information to the driver you are calling.
+//
+// At the moment, the only suitable use case for command1_insecure is the low
+// level debug interface.
+
+#[cfg(target_arch = "arm")]
+#[inline(always)]
+pub unsafe fn command1_insecure(major: usize, minor: usize, arg: usize) -> isize {
+    let res;
+    asm!("svc 2" : "={r0}"(res)
+                 : "{r0}"(major) "{r1}"(minor) "{r2}"(arg)
+                 : "memory"
+                 : "volatile");
+    res
+}
+
+#[cfg(target_arch = "riscv32")]
+#[inline(always)]
+pub unsafe fn command1_insecure(major: usize, minor: usize, arg: usize) -> isize {
+    let res;
+    asm!("li    a0, 2
+          ecall"
+         : "={x10}" (res)
+         : "{x11}" (major), "{x12}" (minor), "{x13}" (arg)
          : "memory"
          : "volatile");
     res
