@@ -1,5 +1,8 @@
 //! Heapless debugging functions for Tock troubleshooting
 
+mod low_level_debug;
+pub use low_level_debug::*;
+
 use crate::console::Console;
 
 pub fn println() {
@@ -49,33 +52,6 @@ pub fn dump_memory(start_address: *const usize, count: isize) {
 
     for offset in range {
         dump_address(unsafe { start_address.offset(offset) });
-    }
-}
-
-/// Use the LowLevelDebug capsule (if present) to indicate the given status
-/// code. If the capsule is not present, this is a no-op.
-#[inline(always)] // Improve reliability for relocation issues
-pub fn low_level_status_code(code: usize) {
-    unsafe {
-        crate::syscalls::command1_insecure(0x8, 1, code);
-    }
-}
-
-/// Use the LowLevelDebug capsule (if present) to print a single number. If the
-/// capsule is not present, this is a no-op.
-#[inline(always)] // Improve reliability for relocation issues
-pub fn low_level_print1(value: usize) {
-    unsafe {
-        crate::syscalls::command1_insecure(0x8, 2, value);
-    }
-}
-
-/// Use the LowLevelDebug capsule (if present) to print two numbers. If the
-/// capsule is not present, this is a no-op.
-#[inline(always)] // Improve reliability for relocation issues
-pub fn low_level_print2(value1: usize, value2: usize) {
-    unsafe {
-        crate::syscalls::command(0x8, 3, value1, value2);
     }
 }
 
