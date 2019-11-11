@@ -2,7 +2,7 @@
 //! useful for toolchain issues. The capsule is documented at:
 //! https://github.com/tock/tock/blob/master/doc/syscalls/00008_low_level_debug.md
 
-use crate::syscalls::{command,command1_insecure};
+use crate::syscalls::{command, command1_insecure};
 
 const DRIVER_NUMBER: usize = 8;
 
