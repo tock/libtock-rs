@@ -6,6 +6,7 @@ license = "MIT/Apache-2.0"
 edition = "2018"
 
 [dependencies]
+core = { package = "async-support", path = "async-support" }
 linked_list_allocator = "0.6.4"
 
 [dev-dependencies]

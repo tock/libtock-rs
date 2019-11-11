@@ -2,6 +2,11 @@ use crate::callback::CallbackSubscription;
 use crate::callback::SubscribableCallback;
 use crate::shared_memory::SharedMemory;
 
+#[export_name = "libtock::syscalls::yieldk"]
+pub fn yieldk_c() {
+    yieldk()
+}
+
 #[cfg(target_arch = "arm")]
 pub fn yieldk() {
     // Note: A process stops yielding when there is a callback ready to run,
