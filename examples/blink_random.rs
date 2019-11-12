@@ -16,9 +16,9 @@ fn main() {
 
         for &x in buf.iter() {
             blink_nibble(x);
-            timer::sleep(Duration::from_ms(100));
+            timer::sleep_sync(Duration::from_ms(100));
             blink_nibble(x >> 4);
-            timer::sleep(Duration::from_ms(100));
+            timer::sleep_sync(Duration::from_ms(100));
         }
     }
 }

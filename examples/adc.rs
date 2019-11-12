@@ -16,6 +16,6 @@ fn main() {
 
     loop {
         adc.sample(0).unwrap();
-        timer::sleep(Duration::from_ms(2000));
+        timer::sleep_sync(Duration::from_ms(2000));
     }
 }

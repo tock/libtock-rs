@@ -48,11 +48,11 @@ fn flash_all_leds(_info: &PanicInfo) -> ! {
         for led in led::all() {
             led.on();
         }
-        timer::sleep(Duration::from_ms(100));
+        timer::sleep_sync(Duration::from_ms(100));
         for led in led::all() {
             led.off();
         }
-        timer::sleep(Duration::from_ms(100));
+        timer::sleep_sync(Duration::from_ms(100));
     }
 }
 
@@ -61,7 +61,7 @@ fn cycle_leds(_: Layout) -> ! {
     loop {
         for led in led::all() {
             led.on();
-            timer::sleep(Duration::from_ms(100));
+            timer::sleep_sync(Duration::from_ms(100));
             led.off();
         }
     }

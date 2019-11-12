@@ -20,6 +20,6 @@ fn main() {
             ButtonState::Released => writeln!(console, "released"),
         }
         .unwrap();
-        timer::sleep(Duration::from_ms(500));
+        timer::sleep_sync(Duration::from_ms(500));
     }
 }

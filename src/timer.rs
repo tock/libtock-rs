@@ -1,10 +1,12 @@
 use crate::callback::CallbackSubscription;
 use crate::callback::SubscribableCallback;
+use crate::futures;
 use crate::result;
 use crate::result::TockResult;
 use crate::result::TockValue;
 use crate::syscalls;
 use core::cell::Cell;
+use core::executor;
 use core::isize;
 use core::ops::{Add, AddAssign, Sub};
 
@@ -22,14 +24,24 @@ mod subscribe_nr {
     pub const SUBSCRIBE_CALLBACK: usize = 0;
 }
 
-pub fn sleep(duration: Duration<isize>) {
+pub fn sleep_sync(duration: Duration<isize>) {
     let expired = Cell::new(false);
     let mut with_callback = with_callback(|_, _| expired.set(true));
 
     let mut timer = with_callback.init().unwrap();
     timer.set_alarm(duration).unwrap();
 
-    syscalls::yieldk_for(|| expired.get());
+    executor::block_on(futures::wait_until(|| expired.get()));
+}
+
+pub async fn sleep(duration: Duration<isize>) {
+    let expired = Cell::new(false);
+    let mut with_callback = with_callback(|_, _| expired.set(true));
+
+    let mut timer = with_callback.init().unwrap();
+    timer.set_alarm(duration).unwrap();
+
+    futures::wait_until(|| expired.get()).await;
 }
 
 pub fn with_callback<CB>(callback: CB) -> WithCallback<CB> {

@@ -18,6 +18,6 @@ fn main() {
         } else {
             writeln!(console, "false").unwrap();
         }
-        timer::sleep(Duration::from_ms(500));
+        timer::sleep_sync(Duration::from_ms(500));
     }
 }

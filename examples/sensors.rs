@@ -17,6 +17,6 @@ fn main() {
         writeln!(console, "Temperature: {}\n", temperature.read()).unwrap();
         writeln!(console, "Light:       {}\n", light.read()).unwrap();
         writeln!(console, "Accel:       {}\n", ninedof.read_acceleration()).unwrap();
-        timer::sleep(Duration::from_ms(500));
+        timer::sleep_sync(Duration::from_ms(500));
     }
 }

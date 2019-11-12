@@ -1,5 +1,7 @@
+use crate::futures;
 use crate::syscalls;
 use core::cell::Cell;
+use core::executor;
 
 const DRIVER_NUMBER: usize = 0x40001;
 
@@ -40,6 +42,6 @@ pub fn fill_buffer(buf: &mut [u8]) -> bool {
         return false;
     }
 
-    syscalls::yieldk_for(|| is_filled.get());
+    executor::block_on(futures::wait_until(|| is_filled.get()));
     return true;
 }

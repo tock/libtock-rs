@@ -10,6 +10,6 @@ fn main() {
 
     for i in 0.. {
         writeln!(console, "Hello world! {}", i).unwrap();
-        timer::sleep(Duration::from_ms(500))
+        timer::sleep_sync(Duration::from_ms(500))
     }
 }

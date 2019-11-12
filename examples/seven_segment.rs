@@ -33,6 +33,6 @@ fn main() {
     loop {
         i = (i + 1) % 11;
         shift_register.write_bits(&number_to_bits(i));
-        timer::sleep(Duration::from_ms(200));
+        timer::sleep_sync(Duration::from_ms(200));
     }
 }

@@ -44,8 +44,8 @@ fn main() {
 
     loop {
         led.on();
-        timer::sleep(Duration::from_ms(500));
+        timer::sleep_sync(Duration::from_ms(500));
         led.off();
-        timer::sleep(Duration::from_ms(500));
+        timer::sleep_sync(Duration::from_ms(500));
     }
 }

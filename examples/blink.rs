@@ -1,5 +1,6 @@
 #![no_std]
 
+use core::executor;
 use libtock::led;
 use libtock::timer;
 use libtock::timer::Duration;
@@ -21,6 +22,6 @@ fn main() {
         count = count.wrapping_add(1);
 
         // This delay uses an underlying timer in the kernel.
-        timer::sleep(Duration::from_ms(250));
+        executor::block_on(timer::sleep(Duration::from_ms(250)));
     }
 }

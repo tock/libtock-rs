@@ -56,12 +56,6 @@ pub fn yieldk() {
     }
 }
 
-pub fn yieldk_for<F: Fn() -> bool>(cond: F) {
-    while !cond() {
-        yieldk();
-    }
-}
-
 pub fn subscribe<CB: SubscribableCallback>(
     driver_number: usize,
     subscribe_number: usize,

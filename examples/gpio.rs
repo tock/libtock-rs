@@ -11,8 +11,8 @@ fn main() {
 
     loop {
         pin.set_high();
-        timer::sleep(Duration::from_ms(500));
+        timer::sleep_sync(Duration::from_ms(500));
         pin.set_low();
-        timer::sleep(Duration::from_ms(500));
+        timer::sleep_sync(Duration::from_ms(500));
     }
 }
