@@ -14,7 +14,7 @@ fn main() {
     let mut buf = [0; 64];
     executor::block_on(async {
         loop {
-            assert!(rng::fill_buffer(&mut buf));
+            assert!(rng::fill_buffer(&mut buf).await);
 
             for &x in buf.iter() {
                 blink_nibble(x);

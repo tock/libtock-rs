@@ -1,7 +1,6 @@
 use crate::futures;
 use crate::syscalls;
 use core::cell::Cell;
-use core::executor;
 
 const DRIVER_NUMBER: usize = 0x40001;
 
@@ -17,7 +16,7 @@ mod allow_nr {
     pub const SHARE_BUFFER: usize = 0;
 }
 
-pub fn fill_buffer(buf: &mut [u8]) -> bool {
+pub async fn fill_buffer(buf: &mut [u8]) -> bool {
     let buf_len = buf.len();
 
     let result = syscalls::allow(DRIVER_NUMBER, allow_nr::SHARE_BUFFER, buf);
@@ -42,6 +41,6 @@ pub fn fill_buffer(buf: &mut [u8]) -> bool {
         return false;
     }
 
-    executor::block_on(futures::wait_until(|| is_filled.get()));
-    return true;
+    futures::wait_until(|| is_filled.get()).await;
+    true
 }
