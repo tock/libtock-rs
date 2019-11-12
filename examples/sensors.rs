@@ -1,5 +1,6 @@
 #![no_std]
 
+use core::executor;
 use core::fmt::Write;
 use libtock::console::Console;
 use libtock::sensors::*;
@@ -12,11 +13,13 @@ fn main() {
     let mut temperature = TemperatureSensor;
     let mut light = AmbientLightSensor;
     let mut ninedof = unsafe { Ninedof::new() };
-    loop {
-        writeln!(console, "Humidity:    {}\n", humidity.read()).unwrap();
-        writeln!(console, "Temperature: {}\n", temperature.read()).unwrap();
-        writeln!(console, "Light:       {}\n", light.read()).unwrap();
-        writeln!(console, "Accel:       {}\n", ninedof.read_acceleration()).unwrap();
-        timer::sleep_sync(Duration::from_ms(500));
-    }
+    executor::block_on(async {
+        loop {
+            writeln!(console, "Humidity:    {}\n", humidity.read()).unwrap();
+            writeln!(console, "Temperature: {}\n", temperature.read()).unwrap();
+            writeln!(console, "Light:       {}\n", light.read()).unwrap();
+            writeln!(console, "Accel:       {}\n", ninedof.read_acceleration()).unwrap();
+            timer::sleep(Duration::from_ms(500)).await;
+        }
+    });
 }

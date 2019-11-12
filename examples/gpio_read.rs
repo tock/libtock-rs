@@ -1,5 +1,6 @@
 #![no_std]
 
+use core::executor;
 use core::fmt::Write;
 use libtock::console::Console;
 use libtock::gpio::{GpioPinUnitialized, InputMode};
@@ -12,12 +13,14 @@ fn main() {
     let pin = GpioPinUnitialized::new(0);
     let pin = pin.open_for_read(None, InputMode::PullDown).unwrap();
 
-    loop {
-        if pin.read() {
-            writeln!(console, "true").unwrap();
-        } else {
-            writeln!(console, "false").unwrap();
+    executor::block_on(async {
+        loop {
+            if pin.read() {
+                writeln!(console, "true").unwrap();
+            } else {
+                writeln!(console, "false").unwrap();
+            }
+            timer::sleep(Duration::from_ms(500)).await;
         }
-        timer::sleep_sync(Duration::from_ms(500));
-    }
+    });
 }

@@ -22,6 +22,7 @@ use crate::led;
 use crate::timer;
 use crate::timer::Duration;
 use core::alloc::Layout;
+use core::executor;
 use core::panic::PanicInfo;
 
 #[lang = "start"]
@@ -44,25 +45,33 @@ impl Termination for () {
 
 #[panic_handler]
 fn flash_all_leds(_info: &PanicInfo) -> ! {
-    loop {
-        for led in led::all() {
-            led.on();
+    executor::block_on(async {
+        loop {
+            for led in led::all() {
+                led.on();
+            }
+            timer::sleep(Duration::from_ms(100)).await;
+            for led in led::all() {
+                led.off();
+            }
+            timer::sleep(Duration::from_ms(100)).await;
         }
-        timer::sleep_sync(Duration::from_ms(100));
-        for led in led::all() {
-            led.off();
-        }
-        timer::sleep_sync(Duration::from_ms(100));
-    }
+    });
+    // Never type is not supported for T in Future
+    unreachable!()
 }
 
 #[alloc_error_handler]
 fn cycle_leds(_: Layout) -> ! {
-    loop {
-        for led in led::all() {
-            led.on();
-            timer::sleep_sync(Duration::from_ms(100));
-            led.off();
+    executor::block_on(async {
+        loop {
+            for led in led::all() {
+                led.on();
+                timer::sleep(Duration::from_ms(100)).await;
+                led.off();
+            }
         }
-    }
+    });
+    // Never type is not supported for T in Future
+    unreachable!()
 }

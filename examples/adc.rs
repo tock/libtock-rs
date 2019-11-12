@@ -1,5 +1,6 @@
 #![no_std]
 
+use core::executor;
 use core::fmt::Write;
 use libtock::adc;
 use libtock::console::Console;
@@ -14,8 +15,10 @@ fn main() {
 
     let adc = with_callback.init().unwrap();
 
-    loop {
-        adc.sample(0).unwrap();
-        timer::sleep_sync(Duration::from_ms(2000));
-    }
+    executor::block_on(async {
+        loop {
+            adc.sample(0).unwrap();
+            timer::sleep(Duration::from_ms(2000)).await;
+        }
+    });
 }

@@ -1,5 +1,6 @@
 #![no_std]
 
+use core::executor;
 use libtock::ble_composer;
 use libtock::ble_composer::BlePayload;
 use libtock::led;
@@ -41,11 +42,12 @@ fn main() {
     gap_payload.add_service_payload([91, 79], &payload).unwrap();
 
     let handle = BleAdvertisingDriver::initialize(100, &gap_payload, &mut buffer).unwrap();
-
-    loop {
-        led.on();
-        timer::sleep_sync(Duration::from_ms(500));
-        led.off();
-        timer::sleep_sync(Duration::from_ms(500));
-    }
+    executor::block_on(async {
+        loop {
+            led.on();
+            timer::sleep(Duration::from_ms(500)).await;
+            led.off();
+            timer::sleep(Duration::from_ms(500)).await;
+        }
+    });
 }

@@ -4,8 +4,7 @@ use core::fmt::Write;
 use libtock::buttons;
 use libtock::buttons::ButtonState;
 use libtock::console::Console;
-use libtock::timer;
-use libtock::timer::Duration;
+use libtock::syscalls;
 
 // FIXME: Hangs up when buttons are pressed rapidly - problem in console?
 fn main() {
@@ -31,6 +30,6 @@ fn main() {
     }
 
     loop {
-        timer::sleep_sync(Duration::from_ms(500));
+        syscalls::yieldk();
     }
 }

@@ -1,5 +1,6 @@
 #![no_std]
 
+use core::executor;
 use core::fmt::Write;
 use libtock::buttons;
 use libtock::buttons::ButtonState;
@@ -14,12 +15,14 @@ fn main() {
     let mut button = buttons.iter_mut().next().unwrap();
     let button = button.enable().unwrap();
 
-    loop {
-        match button.read() {
-            ButtonState::Pressed => writeln!(console, "pressed"),
-            ButtonState::Released => writeln!(console, "released"),
+    executor::block_on(async {
+        loop {
+            match button.read() {
+                ButtonState::Pressed => writeln!(console, "pressed"),
+                ButtonState::Released => writeln!(console, "released"),
+            }
+            .unwrap();
+            timer::sleep(Duration::from_ms(500)).await;
         }
-        .unwrap();
-        timer::sleep_sync(Duration::from_ms(500));
-    }
+    });
 }

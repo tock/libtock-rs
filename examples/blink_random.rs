@@ -1,5 +1,6 @@
 #![no_std]
 
+use core::executor;
 use libtock::led;
 use libtock::rng;
 use libtock::timer;
@@ -11,16 +12,18 @@ fn main() {
     assert_eq!(num_leds, 4);
 
     let mut buf = [0; 64];
-    loop {
-        assert!(rng::fill_buffer(&mut buf));
+    executor::block_on(async {
+        loop {
+            assert!(rng::fill_buffer(&mut buf));
 
-        for &x in buf.iter() {
-            blink_nibble(x);
-            timer::sleep_sync(Duration::from_ms(100));
-            blink_nibble(x >> 4);
-            timer::sleep_sync(Duration::from_ms(100));
+            for &x in buf.iter() {
+                blink_nibble(x);
+                timer::sleep(Duration::from_ms(100)).await;
+                blink_nibble(x >> 4);
+                timer::sleep(Duration::from_ms(100)).await;
+            }
         }
-    }
+    });
 }
 
 // Takes the 4 least-significant bits of x, and turn the 4 leds on/off accordingly.

@@ -3,8 +3,7 @@
 use libtock::buttons;
 use libtock::buttons::ButtonState;
 use libtock::led;
-use libtock::timer;
-use libtock::timer::Duration;
+use libtock::syscalls;
 
 fn main() {
     let mut with_callback = buttons::with_callback(|button_num: usize, state| {
@@ -22,6 +21,6 @@ fn main() {
     }
 
     loop {
-        timer::sleep_sync(Duration::from_ms(500));
+        syscalls::yieldk();
     }
 }
