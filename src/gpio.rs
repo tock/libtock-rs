@@ -89,14 +89,12 @@ impl GpioPinUnitialized {
         self,
         callback: extern "C" fn(usize, usize, usize, usize),
     ) -> Result<GpioPinUnitialized, &'static str> {
-        if unsafe {
-            syscalls::subscribe_ptr(
-                DRIVER_NUMBER,
-                gpio_commands::SUBSCRIBE_CALLBACK,
-                callback as *const _,
-                self.number as usize,
-            )
-        } == 0
+        if syscalls::subscribe_fn(
+            DRIVER_NUMBER,
+            gpio_commands::SUBSCRIBE_CALLBACK,
+            callback,
+            self.number as usize,
+        ) == 0
         {
             Ok(self)
         } else {

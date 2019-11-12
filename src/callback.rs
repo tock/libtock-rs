@@ -32,7 +32,7 @@ impl<'a> CallbackSubscription<'a> {
 impl<'a> Drop for CallbackSubscription<'a> {
     fn drop(&mut self) {
         unsafe {
-            syscalls::subscribe_ptr(self.driver_number, self.subscribe_number, ptr::null(), 0);
+            syscalls::raw::subscribe(self.driver_number, self.subscribe_number, ptr::null(), 0);
         }
     }
 }

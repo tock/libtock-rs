@@ -33,7 +33,7 @@ impl<'a> SharedMemory<'a> {
 impl<'a> Drop for SharedMemory<'a> {
     fn drop(&mut self) {
         unsafe {
-            syscalls::allow_ptr(self.driver_number, self.allow_number, ptr::null_mut(), 0);
+            syscalls::raw::allow(self.driver_number, self.allow_number, ptr::null_mut(), 0);
         }
     }
 }
