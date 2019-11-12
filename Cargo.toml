@@ -14,6 +14,7 @@ corepack = { version = "0.4.0", default-features = false, features = ["alloc"] }
 # We pin the serde version because newer serde versions may not be compatible
 # with the nightly toolchain used by libtock-rs.
 serde = { version = "=1.0.84", default-features = false, features = ["derive"] }
+futures = { version = "0.3.1", default-features = false }
 
 [profile.dev]
 panic = "abort"
