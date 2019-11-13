@@ -1,20 +1,18 @@
 #![no_std]
 
-use core::executor;
 use core::fmt::Write;
 use libtock::console::Console;
 use libtock::temperature;
 use libtock::timer;
+use libtock_support_macros::generate_main;
 
-fn main() {
+#[generate_main]
+async fn main() {
     let mut console = Console::new();
 
     loop {
-        let result = executor::block_on(async {
-            timer::sleep(timer::Duration::from_ms(1000)).await;
-            temperature::measure_temperature().await
-        });
-
+        let result = temperature::measure_temperature().await;
         writeln!(console, "Temperature: {}", result).unwrap();
+        timer::sleep(timer::Duration::from_ms(1000)).await;
     }
 }
