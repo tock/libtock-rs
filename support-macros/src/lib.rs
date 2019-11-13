@@ -10,7 +10,7 @@ use syn::Error;
 use syn::ItemFn;
 
 #[proc_macro_attribute]
-pub fn generate_main(_: TokenStream, input: TokenStream) -> TokenStream {
+pub fn libtock_main(_: TokenStream, input: TokenStream) -> TokenStream {
     generate_main_wrapped(input.into()).into()
 }
 

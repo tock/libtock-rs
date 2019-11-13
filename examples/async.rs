@@ -1,16 +1,17 @@
 #![no_std]
 
-use core::executor;
 use futures::future;
 use libtock::buttons;
 use libtock::buttons::ButtonState;
 use libtock::futures as libtock_futures;
 use libtock::led;
+use libtock::libtock_main;
 use libtock::timer;
 use libtock::timer::Duration;
 
-fn main() {
-    executor::block_on(future::join(blink_periodically(), blink_on_button_press()));
+#[libtock_main]
+async fn main() {
+    future::join(blink_periodically(), blink_on_button_press()).await;
 }
 
 async fn blink_periodically() {

@@ -31,6 +31,7 @@ pub mod simple_ble;
 pub mod temperature;
 pub mod timer;
 pub mod unwind_symbols;
+pub use libtock_support_macros::*;
 
 #[cfg(any(target_arch = "arm", target_arch = "riscv32"))]
 pub mod entry_point;

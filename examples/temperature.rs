@@ -2,11 +2,11 @@
 
 use core::fmt::Write;
 use libtock::console::Console;
+use libtock::libtock_main;
 use libtock::temperature;
 use libtock::timer;
-use libtock_support_macros::generate_main;
 
-#[generate_main]
+#[libtock_main]
 async fn main() {
     let mut console = Console::new();
 
