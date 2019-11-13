@@ -27,6 +27,10 @@ pub unsafe fn command(_: usize, _: usize, _: usize, _: usize) -> isize {
     unimplemented()
 }
 
+pub unsafe fn command1_insecure(_: usize, _: usize, _: usize) -> isize {
+    unimplemented()
+}
+
 pub fn allow(_: usize, _: usize, _: &mut [u8]) -> Result<SharedMemory, isize> {
     unimplemented()
 }
