@@ -1,5 +1,8 @@
 //! Heapless debugging functions for Tock troubleshooting
 
+mod low_level_debug;
+pub use low_level_debug::*;
+
 use crate::console::Console;
 
 pub fn println() {

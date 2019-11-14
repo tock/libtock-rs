@@ -44,7 +44,11 @@ impl Termination for () {
 }
 
 #[panic_handler]
-fn flash_all_leds(_info: &PanicInfo) -> ! {
+fn panic_handler(_info: &PanicInfo) -> ! {
+    // Signal a panic using the LowLevelDebug capsule (if available).
+    super::debug::low_level_status_code(1);
+
+    // Flash all LEDs (if available).
     executor::block_on(async {
         loop {
             for led in led::all() {
