@@ -1,6 +1,5 @@
 #![no_std]
 
-use core::executor;
 use libtock::electronics::ShiftRegister;
 use libtock::gpio::GpioPinUnitialized;
 use libtock::timer;
@@ -31,11 +30,9 @@ async fn main() {
     );
 
     let mut i = 0;
-    executor::block_on(async {
-        loop {
-            i = (i + 1) % 11;
-            shift_register.write_bits(&number_to_bits(i));
-            timer::sleep(Duration::from_ms(200)).await;
-        }
-    });
+    loop {
+        i = (i + 1) % 11;
+        shift_register.write_bits(&number_to_bits(i));
+        timer::sleep(Duration::from_ms(200)).await;
+    }
 }
