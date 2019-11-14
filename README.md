@@ -52,16 +52,13 @@ The boiler plate code you would write is
 ```rust
 #![no_std]
 
-extern crate tock;
-
-fn main() {
+async fn main() {
   // Your code
 }
 ```
 If you want to use heap based allocation you will have to add
 ```rust
 #![feature(alloc)]
-extern crate alloc;
 ```
 to the preamble.
 
