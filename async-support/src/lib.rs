@@ -35,9 +35,8 @@ pub mod executor {
     use core::task::RawWakerVTable;
     use core::task::Waker;
 
-    const DUMMY_WAKER_VTABLE: RawWakerVTable =
-        RawWakerVTable::new(get_waker, do_nothing, do_nothing, do_nothing);
-    const DUMMY_WAKER: RawWaker = RawWaker::new(ptr::null(), &DUMMY_WAKER_VTABLE);
+    static DUMMY_WAKER_VTABLE: RawWakerVTable =
+        RawWakerVTable::new(clone, do_nothing, do_nothing, do_nothing);
 
     extern "Rust" {
         #[link_name = "libtock::syscalls::yieldk"]
@@ -45,7 +44,7 @@ pub mod executor {
     }
 
     pub fn block_on<T>(mut future: impl Future<Output = T>) -> T {
-        let waker = unsafe { Waker::from_raw(DUMMY_WAKER) };
+        let waker = unsafe { Waker::from_raw(get_dummy_waker()) };
         let mut context = Context::from_waker(&waker);
 
         loop {
@@ -61,7 +60,7 @@ pub mod executor {
     }
 
     pub(crate) fn poll<F: Future>(pinned_future: Pin<&mut F>) -> Poll<F::Output> {
-        let waker = unsafe { Waker::from_raw(DUMMY_WAKER) };
+        let waker = unsafe { Waker::from_raw(get_dummy_waker()) };
         let mut context = Context::from_waker(&waker);
         pinned_future.poll(&mut context)
     }
@@ -88,9 +87,13 @@ pub mod executor {
         }
     }
 
-    const fn get_waker(_x: *const ()) -> RawWaker {
-        DUMMY_WAKER
+    fn clone(_x: *const ()) -> RawWaker {
+        get_dummy_waker()
     }
 
-    const fn do_nothing(_x: *const ()) {}
+    fn get_dummy_waker() -> RawWaker {
+        RawWaker::new(ptr::null(), &DUMMY_WAKER_VTABLE)
+    }
+
+    fn do_nothing(_x: *const ()) {}
 }
