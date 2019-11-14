@@ -23,7 +23,7 @@ fn number_to_bits(n: u8) -> [bool; 8] {
 }
 
 // Example works on a shift register on P0.03, P0.04, P0.28
-fn main() {
+async fn main() {
     let shift_register = ShiftRegister::new(
         GpioPinUnitialized::new(0).open_for_write().unwrap(),
         GpioPinUnitialized::new(1).open_for_write().unwrap(),

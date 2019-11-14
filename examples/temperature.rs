@@ -6,7 +6,7 @@ use libtock::console::Console;
 use libtock::temperature;
 use libtock::timer;
 
-fn main() {
+async fn main() {
     let mut console = Console::new();
 
     loop {

@@ -23,6 +23,7 @@ use crate::timer;
 use crate::timer::Duration;
 use core::alloc::Layout;
 use core::executor;
+use core::future::Future;
 use core::panic::PanicInfo;
 
 #[lang = "start"]
@@ -33,12 +34,17 @@ where
     main().report()
 }
 
+#[lang = "termination"]
 pub trait Termination {
     fn report(self) -> i32;
 }
 
-impl Termination for () {
+impl<T> Termination for T
+where
+    T: Future<Output = ()>,
+{
     fn report(self) -> i32 {
+        executor::block_on(self);
         0
     }
 }

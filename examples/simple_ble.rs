@@ -1,6 +1,5 @@
 #![no_std]
 
-use core::executor;
 use libtock::ble_composer;
 use libtock::ble_composer::BlePayload;
 use libtock::led;
@@ -16,7 +15,7 @@ struct LedCommand {
 }
 
 #[allow(unused_variables)]
-fn main() {
+async fn main() {
     let led = led::get(0).unwrap();
 
     let uuid: [u8; 2] = [0x00, 0x18];
@@ -42,12 +41,11 @@ fn main() {
     gap_payload.add_service_payload([91, 79], &payload).unwrap();
 
     let handle = BleAdvertisingDriver::initialize(100, &gap_payload, &mut buffer).unwrap();
-    executor::block_on(async {
-        loop {
-            led.on();
-            timer::sleep(Duration::from_ms(500)).await;
-            led.off();
-            timer::sleep(Duration::from_ms(500)).await;
-        }
-    });
+    loop {
+        led.on();
+        timer::sleep(Duration::from_ms(500)).await;
+        led.off();
+        timer::sleep(Duration::from_ms(500)).await;
+        break;
+    }
 }
