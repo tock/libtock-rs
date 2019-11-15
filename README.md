@@ -58,7 +58,7 @@ async fn main() {
 ```
 If you want to use heap based allocation you will have to add
 ```rust
-#![feature(alloc)]
+extern crate alloc;
 ```
 to the preamble.
 

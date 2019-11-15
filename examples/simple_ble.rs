@@ -46,6 +46,5 @@ async fn main() {
         timer::sleep(Duration::from_ms(500)).await;
         led.off();
         timer::sleep(Duration::from_ms(500)).await;
-        break;
     }
 }
