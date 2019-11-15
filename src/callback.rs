@@ -1,20 +1,22 @@
 use crate::syscalls;
+use core::marker::PhantomData;
 use core::ptr;
 
 pub trait SubscribableCallback {
-    fn call_rust(&mut self, arg0: usize, arg1: usize, arg2: usize);
+    fn call_rust(&mut self, arg1: usize, arg2: usize, arg3: usize);
 }
 
 impl<F: FnMut(usize, usize, usize)> SubscribableCallback for F {
-    fn call_rust(&mut self, arg0: usize, arg1: usize, arg2: usize) {
-        self(arg0, arg1, arg2)
+    fn call_rust(&mut self, arg1: usize, arg2: usize, arg3: usize) {
+        self(arg1, arg2, arg3)
     }
 }
 
+#[must_use = "Subscriptions risk being dropped too early. Drop them manually."]
 pub struct CallbackSubscription<'a> {
     driver_number: usize,
     subscribe_number: usize,
-    _lifetime: &'a (),
+    _lifetime: PhantomData<&'a ()>,
 }
 
 impl<'a> CallbackSubscription<'a> {
@@ -22,7 +24,7 @@ impl<'a> CallbackSubscription<'a> {
         CallbackSubscription {
             driver_number,
             subscribe_number,
-            _lifetime: &(),
+            _lifetime: Default::default(),
         }
     }
 }

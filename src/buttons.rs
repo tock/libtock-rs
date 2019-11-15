@@ -4,6 +4,7 @@ use crate::result;
 use crate::result::TockResult;
 use crate::result::TockValue;
 use crate::syscalls;
+use core::marker::PhantomData;
 
 const DRIVER_NUMBER: usize = 0x00003;
 
@@ -73,7 +74,7 @@ impl<'a> Buttons<'a> {
         ButtonIter {
             curr_button: 0,
             button_count: self.count,
-            _lifetime: &(),
+            _lifetime: Default::default(),
         }
     }
 }
@@ -106,7 +107,7 @@ impl<'a, 'b> IntoIterator for &'b mut Buttons<'a> {
 pub struct ButtonIter<'a> {
     curr_button: usize,
     button_count: usize,
-    _lifetime: &'a (),
+    _lifetime: PhantomData<&'a ()>,
 }
 
 impl<'a> Iterator for ButtonIter<'a> {
@@ -116,7 +117,7 @@ impl<'a> Iterator for ButtonIter<'a> {
         if self.curr_button < self.button_count {
             let item = ButtonHandle {
                 button_num: self.curr_button,
-                _lifetime: &(),
+                _lifetime: Default::default(),
             };
             self.curr_button += 1;
             Some(item)
@@ -128,7 +129,7 @@ impl<'a> Iterator for ButtonIter<'a> {
 
 pub struct ButtonHandle<'a> {
     button_num: usize,
-    _lifetime: &'a (),
+    _lifetime: PhantomData<&'a ()>,
 }
 
 impl<'a> ButtonHandle<'a> {

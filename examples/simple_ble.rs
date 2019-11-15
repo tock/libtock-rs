@@ -14,7 +14,6 @@ struct LedCommand {
     pub st: bool,
 }
 
-#[allow(unused_variables)]
 async fn main() {
     let led = led::get(0).unwrap();
 
@@ -40,7 +39,8 @@ async fn main() {
         .unwrap();
     gap_payload.add_service_payload([91, 79], &payload).unwrap();
 
-    let handle = BleAdvertisingDriver::initialize(100, &gap_payload, &mut buffer).unwrap();
+    let _handle = BleAdvertisingDriver::initialize(100, &gap_payload, &mut buffer).unwrap();
+
     loop {
         led.on();
         timer::sleep(Duration::from_ms(500)).await;

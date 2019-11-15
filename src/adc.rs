@@ -38,7 +38,7 @@ impl AdcBuffer {
 
 pub struct Adc<'a> {
     count: usize,
-    #[allow(dead_code)]
+    #[allow(dead_code)] // Used in drop
     subscription: CallbackSubscription<'a>,
 }
 

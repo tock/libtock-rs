@@ -1,6 +1,7 @@
 use crate::syscalls;
 use core::ptr;
 
+#[must_use = "Shared memory risks being dropped too early. Drop it manually."]
 pub struct SharedMemory<'a> {
     driver_number: usize,
     allow_number: usize,

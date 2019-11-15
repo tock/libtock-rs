@@ -74,8 +74,8 @@ impl<CB> BleCallback<CB> {
 }
 
 impl<CB: FnMut(usize, usize)> SubscribableCallback for BleCallback<CB> {
-    fn call_rust(&mut self, arg0: usize, arg1: usize, _: usize) {
-        (self.callback)(arg0, arg1);
+    fn call_rust(&mut self, arg1: usize, arg2: usize, _: usize) {
+        (self.callback)(arg1, arg2);
     }
 }
 
