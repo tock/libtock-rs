@@ -35,22 +35,18 @@ pub mod executor {
     use core::task::RawWakerVTable;
     use core::task::Waker;
 
-    static DUMMY_WAKER_VTABLE: RawWakerVTable =
-        RawWakerVTable::new(clone, do_nothing, do_nothing, do_nothing);
-
     extern "Rust" {
         #[link_name = "libtock::syscalls::yieldk"]
         fn yieldk();
     }
 
     pub fn block_on<T>(mut future: impl Future<Output = T>) -> T {
-        let waker = unsafe { Waker::from_raw(get_dummy_waker()) };
-        let mut context = Context::from_waker(&waker);
+        // Contract described in the Rustdoc: "A value, once pinned, must remain pinned forever (...).".
+        // IOW calling Pin::new_unchecked is safe as long as no &mut future is leaked after pinning.
+        let mut pinned_future = unsafe { Pin::new_unchecked(&mut future) };
 
         loop {
-            let pinned_future = unsafe { Pin::new_unchecked(&mut future) };
-            let result = pinned_future.poll(&mut context);
-            match result {
+            match poll(pinned_future.as_mut()) {
                 Poll::Pending => unsafe { yieldk() },
                 Poll::Ready(value) => {
                     return value;
@@ -63,6 +59,23 @@ pub mod executor {
         let waker = unsafe { Waker::from_raw(get_dummy_waker()) };
         let mut context = Context::from_waker(&waker);
         pinned_future.poll(&mut context)
+    }
+
+    // Since Tock OS comes with waking-up functionality built-in, we use dummy wakers that do nothing at all.
+    fn get_dummy_waker() -> RawWaker {
+        fn clone(_x: *const ()) -> RawWaker {
+            get_dummy_waker()
+        }
+
+        fn do_nothing(_x: *const ()) {}
+
+        // This vtable implements the methods required for managing the lifecycle of the wakers.
+        // Our wakers are dummies, so those functions don't do anything.
+        static DUMMY_WAKER_VTABLE: RawWakerVTable =
+            RawWakerVTable::new(clone, do_nothing, do_nothing, do_nothing);
+
+        // The wakers don't have any implementation, so the instance can simply be null.
+        RawWaker::new(ptr::null(), &DUMMY_WAKER_VTABLE)
     }
 
     pub(crate) fn from_generator<G: Generator<Yield = ()>>(
@@ -79,21 +92,15 @@ pub mod executor {
         type Output = G::Return;
 
         fn poll(self: Pin<&mut Self>, _cx: &mut Context<'_>) -> Poll<Self::Output> {
-            let pin = unsafe { Pin::new_unchecked(&mut Pin::into_inner_unchecked(self).generator) };
-            match pin.resume() {
+            // Pin::map_unchecked_mut is safe as long as the move and drop guarantees are propagated through the mapping.
+            // This is trivially satisfied since our future is only a newtype decorator of the generator.
+            let pinned_generator =
+                unsafe { self.map_unchecked_mut(|future| &mut future.generator) };
+
+            match pinned_generator.resume() {
                 GeneratorState::Yielded(()) => Poll::Pending,
                 GeneratorState::Complete(out) => Poll::Ready(out),
             }
         }
     }
-
-    fn clone(_x: *const ()) -> RawWaker {
-        get_dummy_waker()
-    }
-
-    fn get_dummy_waker() -> RawWaker {
-        RawWaker::new(ptr::null(), &DUMMY_WAKER_VTABLE)
-    }
-
-    fn do_nothing(_x: *const ()) {}
 }
