@@ -1,4 +1,5 @@
 use crate::futures;
+use crate::result::TockResult;
 use crate::syscalls;
 use core::cell::Cell;
 use core::executor;
@@ -33,20 +34,20 @@ impl Ninedof {
         Ninedof
     }
 
-    pub fn read_acceleration(&mut self) -> NinedofReading {
+    pub fn read_acceleration(&mut self) -> TockResult<NinedofReading> {
         let res: CbData = Default::default();
-        subscribe(Self::cb, unsafe { mem::transmute(&res) });
-        start_accel_reading();
+        subscribe(Self::cb, unsafe { mem::transmute(&res) })?;
+        start_accel_reading()?;
         unsafe { executor::block_on(futures::wait_until(|| res.ready.get())) };
-        res.res.get()
+        Ok(res.res.get())
     }
 
-    pub fn read_magnetometer(&mut self) -> NinedofReading {
+    pub fn read_magnetometer(&mut self) -> TockResult<NinedofReading> {
         let res: CbData = Default::default();
-        subscribe(Self::cb, unsafe { mem::transmute(&res) });
-        start_magnetometer_reading();
+        subscribe(Self::cb, unsafe { mem::transmute(&res) })?;
+        start_magnetometer_reading()?;
         unsafe { executor::block_on(futures::wait_until(|| res.ready.get())) };
-        res.res.get()
+        Ok(res.res.get())
     }
 
     extern "C" fn cb(x: usize, y: usize, z: usize, ptr: usize) {
@@ -60,14 +61,17 @@ impl Ninedof {
     }
 }
 
-pub fn subscribe(cb: extern "C" fn(usize, usize, usize, usize), ud: usize) {
-    syscalls::subscribe_fn(DRIVER_NUM, 0, cb, ud);
+pub fn subscribe(cb: extern "C" fn(usize, usize, usize, usize), ud: usize) -> TockResult<()> {
+    syscalls::subscribe_fn(DRIVER_NUM, 0, cb, ud)?;
+    Ok(())
 }
 
-pub fn start_accel_reading() {
-    syscalls::command(DRIVER_NUM, 1, 0, 0);
+pub fn start_accel_reading() -> TockResult<()> {
+    syscalls::command(DRIVER_NUM, 1, 0, 0)?;
+    Ok(())
 }
 
-pub fn start_magnetometer_reading() {
-    syscalls::command(DRIVER_NUM, 100, 0, 0);
+pub fn start_magnetometer_reading() -> TockResult<()> {
+    syscalls::command(DRIVER_NUM, 100, 0, 0)?;
+    Ok(())
 }

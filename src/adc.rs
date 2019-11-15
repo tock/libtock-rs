@@ -1,4 +1,5 @@
 use crate::callback::{CallbackSubscription, SubscribableCallback};
+use crate::result::TockResult;
 use crate::shared_memory::SharedMemory;
 use crate::syscalls;
 
@@ -60,28 +61,22 @@ impl<'a, CB> WithCallback<CB>
 where
     Self: SubscribableCallback,
 {
-    pub fn init(&mut self) -> Result<Adc, isize> {
-        let return_value = syscalls::command(DRIVER_NUM, command::COUNT, 0, 0);
-        if return_value < 0 {
-            return Err(return_value);
-        }
-
-        syscalls::subscribe(DRIVER_NUM, subscribe::SUBSCRIBE_CALLBACK, self).map(|subscription| {
-            Adc {
-                count: return_value as usize,
-                subscription,
-            }
-        })
+    pub fn init(&mut self) -> TockResult<Adc> {
+        let adc = Adc {
+            count: syscalls::command(DRIVER_NUM, command::COUNT, 0, 0)?,
+            subscription: syscalls::subscribe(DRIVER_NUM, subscribe::SUBSCRIBE_CALLBACK, self)?,
+        };
+        Ok(adc)
     }
 }
 
 impl<'a> Adc<'a> {
-    pub fn init_buffer(buffer: &'a mut AdcBuffer) -> Result<SharedMemory, isize> {
-        syscalls::allow(DRIVER_NUM, allow::BUFFER, &mut buffer.buffer)
+    pub fn init_buffer(buffer: &'a mut AdcBuffer) -> TockResult<SharedMemory> {
+        syscalls::allow(DRIVER_NUM, allow::BUFFER, &mut buffer.buffer).map_err(Into::into)
     }
 
-    pub fn init_alt_buffer(alt_buffer: &'a mut AdcBuffer) -> Result<SharedMemory, isize> {
-        syscalls::allow(DRIVER_NUM, allow::BUFFER_ALT, &mut alt_buffer.buffer)
+    pub fn init_alt_buffer(alt_buffer: &'a mut AdcBuffer) -> TockResult<SharedMemory> {
+        syscalls::allow(DRIVER_NUM, allow::BUFFER_ALT, &mut alt_buffer.buffer).map_err(Into::into)
     }
 
     /// Return the number of available channels
@@ -90,37 +85,21 @@ impl<'a> Adc<'a> {
     }
 
     /// Start a single sample of channel
-    pub fn sample(&self, channel: usize) -> Result<(), isize> {
-        let code = syscalls::command(DRIVER_NUM, command::START, channel, 0);
-        if code < 0 {
-            Err(code)
-        } else {
-            Ok(())
-        }
+    pub fn sample(&self, channel: usize) -> TockResult<()> {
+        syscalls::command(DRIVER_NUM, command::START, channel, 0)?;
+        Ok(())
     }
 
     /// Start continuous sampling of channel
-    pub fn sample_continuous(&self, channel: usize) -> Result<(), isize> {
-        let code = syscalls::command(DRIVER_NUM, command::START_REPEAT, channel, 0);
-        if code < 0 {
-            Err(code)
-        } else {
-            Ok(())
-        }
+    pub fn sample_continuous(&self, channel: usize) -> TockResult<()> {
+        syscalls::command(DRIVER_NUM, command::START_REPEAT, channel, 0)?;
+        Ok(())
     }
 
     /// Start continuous sampling to first buffer
-    pub fn sample_continuous_buffered(
-        &self,
-        channel: usize,
-        frequency: usize,
-    ) -> Result<(), isize> {
-        let code = syscalls::command(DRIVER_NUM, command::START_REPEAT_BUFFER, channel, frequency);
-        if code < 0 {
-            Err(code)
-        } else {
-            Ok(())
-        }
+    pub fn sample_continuous_buffered(&self, channel: usize, frequency: usize) -> TockResult<()> {
+        syscalls::command(DRIVER_NUM, command::START_REPEAT_BUFFER, channel, frequency)?;
+        Ok(())
     }
 
     /// Start continuous sampling to alternating buffer
@@ -128,33 +107,25 @@ impl<'a> Adc<'a> {
         &self,
         channel: usize,
         frequency: usize,
-    ) -> Result<(), isize> {
-        let code = syscalls::command(
+    ) -> TockResult<()> {
+        syscalls::command(
             DRIVER_NUM,
             command::START_REPEAT_BUFFER_ALT,
             channel,
             frequency,
-        );
-        if code < 0 {
-            Err(code)
-        } else {
-            Ok(())
-        }
+        )?;
+        Ok(())
     }
 
     /// Stop any started sampling operation
-    pub fn stop(&self) -> Result<(), isize> {
-        let code = syscalls::command(DRIVER_NUM, command::STOP, 0, 0);
-        if code < 0 {
-            Err(code)
-        } else {
-            Ok(())
-        }
+    pub fn stop(&self) -> TockResult<()> {
+        syscalls::command(DRIVER_NUM, command::STOP, 0, 0)?;
+        Ok(())
     }
 }
 
 impl<'a> Drop for Adc<'a> {
     fn drop(&mut self) {
-        self.stop().unwrap();
+        let _ = self.stop();
     }
 }

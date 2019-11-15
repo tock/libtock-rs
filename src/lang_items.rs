@@ -19,6 +19,7 @@
 //! crate.
 
 use crate::led;
+use crate::result::TockError;
 use crate::timer;
 use crate::timer::Duration;
 use core::alloc::Layout;
@@ -41,10 +42,10 @@ pub trait Termination {
 
 impl<T> Termination for T
 where
-    T: Future<Output = ()>,
+    T: Future<Output = Result<(), TockError>>,
 {
     fn report(self) -> i32 {
-        unsafe { executor::block_on(self) };
+        let _ = unsafe { executor::block_on(self) };
         0
     }
 }
@@ -58,13 +59,13 @@ unsafe fn panic_handler(_info: &PanicInfo) -> ! {
     executor::block_on(async {
         loop {
             for led in led::all() {
-                led.on();
+                let _ = led.on();
             }
-            timer::sleep(Duration::from_ms(100)).await;
+            let _ = timer::sleep(Duration::from_ms(100)).await;
             for led in led::all() {
-                led.off();
+                let _ = led.off();
             }
-            timer::sleep(Duration::from_ms(100)).await;
+            let _ = timer::sleep(Duration::from_ms(100)).await;
         }
     });
     // Never type is not supported for T in Future
@@ -76,9 +77,9 @@ unsafe fn cycle_leds(_: Layout) -> ! {
     executor::block_on(async {
         loop {
             for led in led::all() {
-                led.on();
-                timer::sleep(Duration::from_ms(100)).await;
-                led.off();
+                let _ = led.on();
+                let _ = timer::sleep(Duration::from_ms(100)).await;
+                let _ = led.off();
             }
         }
     });

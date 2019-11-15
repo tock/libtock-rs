@@ -1,7 +1,7 @@
 use crate::ble_composer::BlePayload;
 use crate::callback::CallbackSubscription;
 use crate::callback::SubscribableCallback;
-use crate::result;
+use crate::result::TockResult;
 use crate::shared_memory::SharedMemory;
 use crate::syscalls;
 
@@ -39,7 +39,7 @@ impl BleAdvertisingDriver {
         interval: usize,
         service_payload: &BlePayload,
         advertising_buffer: &'a mut [u8; BUFFER_SIZE_ADVERTISE],
-    ) -> Result<SharedMemory<'a>, isize> {
+    ) -> TockResult<SharedMemory<'a>> {
         let mut shared_memory = syscalls::allow(
             DRIVER_NUMBER,
             ble_commands::ALLOW_ADVERTISMENT_BUFFER,
@@ -50,14 +50,14 @@ impl BleAdvertisingDriver {
         Ok(shared_memory)
     }
 
-    fn start_advertising(pdu_type: usize, interval: usize) -> Result<(), isize> {
-        let result = syscalls::command(
+    fn start_advertising(pdu_type: usize, interval: usize) -> TockResult<()> {
+        syscalls::command(
             DRIVER_NUMBER,
             ble_commands::START_ADVERTISING,
             pdu_type,
             interval,
-        );
-        convert_result(result)
+        )?;
+        Ok(())
     }
 }
 
@@ -84,26 +84,18 @@ impl BleDriver {
         [0; BUFFER_SIZE_SCAN]
     }
 
-    pub fn share_memory(scan_buffer: &mut [u8; BUFFER_SIZE_SCAN]) -> Result<SharedMemory, isize> {
+    pub fn share_memory(scan_buffer: &mut [u8; BUFFER_SIZE_SCAN]) -> TockResult<SharedMemory> {
         syscalls::allow(DRIVER_NUMBER, ble_commands::ALLOW_SCAN_BUFFER, scan_buffer)
+            .map_err(Into::into)
     }
 
-    pub fn start<CB>(callback: &mut BleCallback<CB>) -> Result<CallbackSubscription, isize>
+    pub fn start<CB>(callback: &mut BleCallback<CB>) -> TockResult<CallbackSubscription>
     where
         BleCallback<CB>: SubscribableCallback,
     {
         let subscription =
             syscalls::subscribe(DRIVER_NUMBER, ble_commands::BLE_PASSIVE_SCAN_SUB, callback)?;
-
-        let result = syscalls::command(DRIVER_NUMBER, ble_commands::PASSIVE_SCAN, 1, 0);
-        convert_result(result)?;
+        syscalls::command(DRIVER_NUMBER, ble_commands::PASSIVE_SCAN, 1, 0)?;
         Ok(subscription)
-    }
-}
-
-fn convert_result(code: isize) -> Result<(), isize> {
-    match code {
-        result::SUCCESS => Ok(()),
-        code => Err(code),
     }
 }

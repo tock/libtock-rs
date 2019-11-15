@@ -7,13 +7,13 @@ use crate::console::Console;
 
 pub fn println() {
     let buffer = [b'\n'];
-    Console::new().write(&buffer);
+    let _ = Console::new().write(&buffer);
 }
 
 pub fn print_as_hex(value: usize) {
     let mut buffer = [b'\n'; 11];
     write_as_hex(&mut buffer, value);
-    Console::new().write(buffer);
+    let _ = Console::new().write(buffer);
 }
 
 #[cfg(target_arch = "arm")]
@@ -24,7 +24,7 @@ pub fn print_stack_pointer() {
     let mut buffer = [b'\n'; 15];
     buffer[0..4].clone_from_slice(b"SP: ");
     write_as_hex(&mut buffer[4..15], stack_pointer);
-    Console::new().write(buffer);
+    let _ = Console::new().write(buffer);
 }
 
 #[cfg(target_arch = "riscv32")]
@@ -44,7 +44,7 @@ pub fn dump_address(address: *const usize) {
         }
     }
     buffer[27] = b'\n';
-    Console::new().write(&buffer);
+    let _ = Console::new().write(&buffer);
 }
 
 pub fn dump_memory(start_address: *const usize, count: isize) {

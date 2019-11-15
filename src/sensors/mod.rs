@@ -1,4 +1,5 @@
 use crate::futures;
+use crate::result::TockResult;
 use crate::syscalls;
 use core::cell::Cell;
 use core::convert::From;
@@ -21,15 +22,14 @@ where
 pub trait Sensor<Reading: Copy + From<(usize, usize, usize)>> {
     fn driver_num(&self) -> usize;
 
-    fn read(&mut self) -> Reading {
+    fn read(&mut self) -> TockResult<Reading> {
         let res: Cell<Option<Reading>> = Cell::new(None);
         let driver_num = self.driver_num();
         syscalls::subscribe_fn(driver_num, 0, cb::<Reading>, unsafe {
             mem::transmute(&res)
-        });
-        syscalls::command(driver_num, 1, 0, 0);
-        unsafe { executor::block_on(futures::wait_until(|| res.get().is_some())) };
-        res.get().unwrap()
+        })?;
+        syscalls::command(driver_num, 1, 0, 0)?;
+        Ok(unsafe { executor::block_on(futures::wait_for_value(|| res.get())) })
     }
 }
 

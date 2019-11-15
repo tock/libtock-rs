@@ -1,6 +1,8 @@
 #![no_std]
 
-async fn main() {
+use libtock::result::TockResult;
+
+async fn main() -> TockResult<()> {
     let _ = libtock::LibTock {};
     panic!("Bye world!");
 }
