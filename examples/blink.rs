@@ -8,6 +8,9 @@ use libtock::timer::Duration;
 #[libtock::main]
 async fn main() -> TockResult<()> {
     let num_leds = led::count()?;
+    let context = timer::DriverContext::create()?;
+    let mut driver = context.create_timer_driver().unwrap();
+    let timer_driver = driver.activate()?;
 
     // Blink the LEDs in a binary count pattern and scale
     // to the number of LEDs on the board.
@@ -23,6 +26,6 @@ async fn main() -> TockResult<()> {
         count = count.wrapping_add(1);
 
         // This delay uses an underlying timer in the kernel.
-        timer::sleep(Duration::from_ms(250)).await?;
+        timer_driver.parallel_sleep(Duration::from_ms(250)).await?;
     }
 }

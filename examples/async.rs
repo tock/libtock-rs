@@ -16,11 +16,15 @@ async fn main() -> TockResult<()> {
 }
 
 async fn blink_periodically() -> TockResult<()> {
+    let context = timer::DriverContext::create()?;
+    let mut driver = context.create_timer_driver().unwrap();
+    let timer_driver = driver.activate()?;
+
     let led = led::get(0).unwrap();
     loop {
-        timer::sleep(Duration::from_ms(250)).await?;
+        timer_driver.parallel_sleep(Duration::from_ms(250)).await?;
         led.on()?;
-        timer::sleep(Duration::from_ms(250)).await?;
+        timer_driver.parallel_sleep(Duration::from_ms(250)).await?;
         led.off()?;
     }
 }

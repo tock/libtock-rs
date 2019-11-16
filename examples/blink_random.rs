@@ -8,7 +8,11 @@ use libtock::timer::Duration;
 
 #[libtock::main]
 async fn main() -> TockResult<()> {
-    let num_leds = led::count().ok().unwrap();
+    let context = timer::DriverContext::create()?;
+    let mut driver = context.create_timer_driver().unwrap();
+    let timer_driver = driver.activate()?;
+
+    let num_leds = led::count()?;
     // blink_nibble assumes 4 leds.
     assert_eq!(num_leds, 4);
 
@@ -18,9 +22,9 @@ async fn main() -> TockResult<()> {
 
         for &x in buf.iter() {
             blink_nibble(x)?;
-            timer::sleep(Duration::from_ms(100)).await?;
+            timer_driver.parallel_sleep(Duration::from_ms(100)).await?;
             blink_nibble(x >> 4)?;
-            timer::sleep(Duration::from_ms(100)).await?;
+            timer_driver.parallel_sleep(Duration::from_ms(100)).await?;
         }
     }
 }

@@ -10,11 +10,14 @@ use libtock::timer::Duration;
 async fn main() -> TockResult<()> {
     let pin = GpioPinUnitialized::new(0);
     let pin = pin.open_for_write()?;
+    let context = timer::DriverContext::create()?;
+    let mut driver = context.create_timer_driver().unwrap();
+    let timer_driver = driver.activate()?;
 
     loop {
         pin.set_high()?;
-        timer::sleep(Duration::from_ms(500)).await?;
+        timer_driver.parallel_sleep(Duration::from_ms(500)).await?;
         pin.set_low()?;
-        timer::sleep(Duration::from_ms(500)).await?;
+        timer_driver.parallel_sleep(Duration::from_ms(500)).await?;
     }
 }

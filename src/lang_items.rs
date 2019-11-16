@@ -47,15 +47,26 @@ unsafe fn panic_handler(_info: &PanicInfo) -> ! {
 
     // Flash all LEDs (if available).
     executor::block_on(async {
+        let context = timer::DriverContext::create().ok().unwrap();
+        let mut driver = context.create_timer_driver_unsafe();
+        let timer_driver = driver.activate().ok().unwrap();
         loop {
             for led in led::all() {
-                let _ = led.on();
+                let _ = led.on().ok().unwrap();
             }
-            let _ = timer::sleep(Duration::from_ms(100)).await;
+            timer_driver
+                .parallel_sleep(Duration::from_ms(100))
+                .await
+                .ok()
+                .unwrap();
             for led in led::all() {
-                let _ = led.off();
+                led.off().ok().unwrap();
             }
-            let _ = timer::sleep(Duration::from_ms(100)).await;
+            timer_driver
+                .parallel_sleep(Duration::from_ms(100))
+                .await
+                .ok()
+                .unwrap();
         }
     });
     // Never type is not supported for T in Future
@@ -65,11 +76,18 @@ unsafe fn panic_handler(_info: &PanicInfo) -> ! {
 #[alloc_error_handler]
 unsafe fn cycle_leds(_: Layout) -> ! {
     executor::block_on(async {
+        let context = timer::DriverContext::create().ok().unwrap();
+        let mut driver = context.create_timer_driver_unsafe();
+        let timer_driver = driver.activate().ok().unwrap();
         loop {
             for led in led::all() {
-                let _ = led.on();
-                let _ = timer::sleep(Duration::from_ms(100)).await;
-                let _ = led.off();
+                led.on().ok().unwrap();
+                timer_driver
+                    .parallel_sleep(Duration::from_ms(100))
+                    .await
+                    .ok()
+                    .unwrap();
+                led.off().ok().unwrap();
             }
         }
     });

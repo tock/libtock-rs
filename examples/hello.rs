@@ -9,10 +9,13 @@ use libtock::timer::Duration;
 #[libtock::main]
 async fn main() -> TockResult<()> {
     let mut console = Console::new();
+    let context = timer::DriverContext::create()?;
+    let mut driver = context.create_timer_driver().unwrap();
+    let timer_driver = driver.activate()?;
 
     for i in 0.. {
         writeln!(console, "Hello world! {}", i)?;
-        timer::sleep(Duration::from_ms(500)).await?;
+        timer_driver.parallel_sleep(Duration::from_ms(500)).await?;
     }
 
     Ok(())

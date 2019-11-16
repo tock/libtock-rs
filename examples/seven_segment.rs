@@ -31,10 +31,14 @@ async fn main() -> TockResult<()> {
         GpioPinUnitialized::new(2).open_for_write()?,
     );
 
+    let context = timer::DriverContext::create()?;
+    let mut driver = context.create_timer_driver().unwrap();
+    let timer_driver = driver.activate()?;
+
     let mut i = 0;
     loop {
         i = (i + 1) % 11;
         shift_register.write_bits(&number_to_bits(i))?;
-        timer::sleep(Duration::from_ms(200)).await?;
+        timer_driver.parallel_sleep(Duration::from_ms(200)).await?;
     }
 }
