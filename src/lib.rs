@@ -45,10 +45,6 @@ pub mod syscalls;
 #[path = "syscalls_mock.rs"]
 mod syscalls;
 
-#[cfg(any(target_arch = "arm", target_arch = "riscv32"))]
-#[global_allocator]
-static ALLOCATOR: linked_list_allocator::LockedHeap = linked_list_allocator::LockedHeap::empty();
-
 // Dummy structure to force importing the panic_handler and other no_std elements when nothing else
 // is imported.
 pub struct LibTock;
