@@ -34,7 +34,5 @@ pub fn low_level_print1(value: usize) {
 /// capsule is not present, this is a no-op.
 #[inline(always)] // Improve reliability for relocation issues
 pub fn low_level_print2(value1: usize, value2: usize) {
-    unsafe {
-        syscalls::raw::command(DRIVER_NUMBER, command_nr::PRINT2, value1, value2);
-    }
+    syscalls::command(DRIVER_NUMBER, command_nr::PRINT2, value1, value2);
 }

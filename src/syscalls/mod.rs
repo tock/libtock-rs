@@ -62,18 +62,8 @@ pub fn subscribe_fn(
     }
 }
 
-/// # Safety
-///
-/// This function is not really unsafe.
-/// The only way that a command can have a process-level side effects is calling a callback or mutating a shared memory buffer.
-/// Both, however, are known to the Rust compiler.
-pub unsafe fn command(
-    driver_number: usize,
-    command_number: usize,
-    arg1: usize,
-    arg2: usize,
-) -> isize {
-    raw::command(driver_number, command_number, arg1, arg2)
+pub fn command(driver_number: usize, command_number: usize, arg1: usize, arg2: usize) -> isize {
+    unsafe { raw::command(driver_number, command_number, arg1, arg2) }
 }
 
 pub fn allow(

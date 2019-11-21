@@ -61,7 +61,7 @@ where
     Self: SubscribableCallback,
 {
     pub fn init(&mut self) -> Result<Adc, isize> {
-        let return_value = unsafe { syscalls::command(DRIVER_NUM, command::COUNT, 0, 0) };
+        let return_value = syscalls::command(DRIVER_NUM, command::COUNT, 0, 0);
         if return_value < 0 {
             return Err(return_value);
         }
@@ -91,25 +91,21 @@ impl<'a> Adc<'a> {
 
     /// Start a single sample of channel
     pub fn sample(&self, channel: usize) -> Result<(), isize> {
-        unsafe {
-            let code = syscalls::command(DRIVER_NUM, command::START, channel, 0);
-            if code < 0 {
-                Err(code)
-            } else {
-                Ok(())
-            }
+        let code = syscalls::command(DRIVER_NUM, command::START, channel, 0);
+        if code < 0 {
+            Err(code)
+        } else {
+            Ok(())
         }
     }
 
     /// Start continuous sampling of channel
     pub fn sample_continuous(&self, channel: usize) -> Result<(), isize> {
-        unsafe {
-            let code = syscalls::command(DRIVER_NUM, command::START_REPEAT, channel, 0);
-            if code < 0 {
-                Err(code)
-            } else {
-                Ok(())
-            }
+        let code = syscalls::command(DRIVER_NUM, command::START_REPEAT, channel, 0);
+        if code < 0 {
+            Err(code)
+        } else {
+            Ok(())
         }
     }
 
@@ -119,14 +115,11 @@ impl<'a> Adc<'a> {
         channel: usize,
         frequency: usize,
     ) -> Result<(), isize> {
-        unsafe {
-            let code =
-                syscalls::command(DRIVER_NUM, command::START_REPEAT_BUFFER, channel, frequency);
-            if code < 0 {
-                Err(code)
-            } else {
-                Ok(())
-            }
+        let code = syscalls::command(DRIVER_NUM, command::START_REPEAT_BUFFER, channel, frequency);
+        if code < 0 {
+            Err(code)
+        } else {
+            Ok(())
         }
     }
 
@@ -136,30 +129,26 @@ impl<'a> Adc<'a> {
         channel: usize,
         frequency: usize,
     ) -> Result<(), isize> {
-        unsafe {
-            let code = syscalls::command(
-                DRIVER_NUM,
-                command::START_REPEAT_BUFFER_ALT,
-                channel,
-                frequency,
-            );
-            if code < 0 {
-                Err(code)
-            } else {
-                Ok(())
-            }
+        let code = syscalls::command(
+            DRIVER_NUM,
+            command::START_REPEAT_BUFFER_ALT,
+            channel,
+            frequency,
+        );
+        if code < 0 {
+            Err(code)
+        } else {
+            Ok(())
         }
     }
 
     /// Stop any started sampling operation
     pub fn stop(&self) -> Result<(), isize> {
-        unsafe {
-            let code = syscalls::command(DRIVER_NUM, command::STOP, 0, 0);
-            if code < 0 {
-                Err(code)
-            } else {
-                Ok(())
-            }
+        let code = syscalls::command(DRIVER_NUM, command::STOP, 0, 0);
+        if code < 0 {
+            Err(code)
+        } else {
+            Ok(())
         }
     }
 }
