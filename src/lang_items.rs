@@ -44,13 +44,13 @@ where
     T: Future<Output = ()>,
 {
     fn report(self) -> i32 {
-        executor::block_on(self);
+        unsafe { executor::block_on(self) };
         0
     }
 }
 
 #[panic_handler]
-fn panic_handler(_info: &PanicInfo) -> ! {
+unsafe fn panic_handler(_info: &PanicInfo) -> ! {
     // Signal a panic using the LowLevelDebug capsule (if available).
     super::debug::low_level_status_code(1);
 
@@ -72,7 +72,7 @@ fn panic_handler(_info: &PanicInfo) -> ! {
 }
 
 #[alloc_error_handler]
-fn cycle_leds(_: Layout) -> ! {
+unsafe fn cycle_leds(_: Layout) -> ! {
     executor::block_on(async {
         loop {
             for led in led::all() {

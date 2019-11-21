@@ -28,7 +28,7 @@ pub trait Sensor<Reading: Copy + From<(usize, usize, usize)>> {
             mem::transmute(&res)
         });
         syscalls::command(driver_num, 1, 0, 0);
-        executor::block_on(futures::wait_until(|| res.get().is_some()));
+        unsafe { executor::block_on(futures::wait_until(|| res.get().is_some())) };
         res.get().unwrap()
     }
 }

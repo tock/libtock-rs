@@ -67,7 +67,7 @@ impl Console {
             return;
         }
 
-        executor::block_on(futures::wait_until(|| is_written.get()));
+        unsafe { executor::block_on(futures::wait_until(|| is_written.get())) };
     }
 }
 

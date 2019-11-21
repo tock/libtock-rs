@@ -37,7 +37,7 @@ impl Ninedof {
         let res: CbData = Default::default();
         subscribe(Self::cb, unsafe { mem::transmute(&res) });
         start_accel_reading();
-        executor::block_on(futures::wait_until(|| res.ready.get()));
+        unsafe { executor::block_on(futures::wait_until(|| res.ready.get())) };
         res.res.get()
     }
 
@@ -45,7 +45,7 @@ impl Ninedof {
         let res: CbData = Default::default();
         subscribe(Self::cb, unsafe { mem::transmute(&res) });
         start_magnetometer_reading();
-        executor::block_on(futures::wait_until(|| res.ready.get()));
+        unsafe { executor::block_on(futures::wait_until(|| res.ready.get())) };
         res.res.get()
     }
 
