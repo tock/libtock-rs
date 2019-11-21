@@ -10,6 +10,7 @@ cache: rust
 
 install:
   - rustup target add thumbv7em-none-eabi
+  - rustup target add riscv32imc-unknown-none-elf
   - rustup component add rustfmt-preview
 
 script:
