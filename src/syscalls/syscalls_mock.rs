@@ -1,4 +1,4 @@
-pub fn yieldk() {}
+pub unsafe fn yieldk() {}
 
 pub unsafe fn subscribe(
     _: usize,

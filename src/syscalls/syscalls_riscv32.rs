@@ -1,8 +1,7 @@
 #[inline(always)]
-pub fn yieldk() {
+pub unsafe fn yieldk() {
     /* TODO: Stop yielding */
-    unsafe {
-        asm! (
+    asm! (
             "li    a0, 0
             ecall"
             :
@@ -10,7 +9,6 @@ pub fn yieldk() {
             : "memory", "a0", "a1", "a2", "a3", "a4", "a5", "a6", "a7",
             "t0", "t1", "t2", "t3", "t4", "t5", "t6", "ra"
             : "volatile");
-    }
 }
 
 #[inline(always)]

@@ -1,11 +1,11 @@
 #![no_std]
 
+use futures::future;
 use libtock::ble_parser;
 use libtock::led;
 use libtock::simple_ble;
 use libtock::simple_ble::BleCallback;
 use libtock::simple_ble::BleDriver;
-use libtock::syscalls;
 use serde::Deserialize;
 
 #[derive(Deserialize)]
@@ -29,7 +29,5 @@ async fn main() {
 
     let _subscription = BleDriver::start(&mut callback).unwrap();
 
-    loop {
-        syscalls::yieldk();
-    }
+    future::pending().await
 }

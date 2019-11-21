@@ -10,8 +10,15 @@ use crate::callback::CallbackSubscription;
 use crate::callback::SubscribableCallback;
 use crate::shared_memory::SharedMemory;
 
+/// # Safety
+///
+/// Yielding in the main function should be safe. Nevertheless, yielding manually is not required as this is already achieved by the `async` runtime.
+///
+/// When yielding in callbacks, two problems can arise:
+/// - The guarantees of `FnMut` are violated. In this case, make sure your callback has `Fn` behavior.
+/// - Callbacks can get executed in a nested manner and overflow the stack quickly.
 #[export_name = "libtock::syscalls::yieldk"]
-pub fn yieldk() {
+pub unsafe fn yieldk() {
     raw::yieldk()
 }
 

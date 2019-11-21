@@ -1,5 +1,5 @@
 #[inline(always)]
-pub fn yieldk() {
+pub unsafe fn yieldk() {
     // Note: A process stops yielding when there is a callback ready to run,
     // which the kernel executes by modifying the stack frame pushed by the
     // hardware. The kernel copies the PC value from the stack frame to the LR
@@ -22,14 +22,12 @@ pub fn yieldk() {
     // registers r4-r8, r10, r11 and SP (and r9 in PCS variants that designate
     // r9 as v6) As our compilation flags mark r9 as the PIC base register, it
     // does not need to be saved. Thus we must clobber r0-3, r12, and LR
-    unsafe {
-        asm!(
+    asm!(
             "svc 0"
             :
             :
             : "memory", "r0", "r1", "r2", "r3", "r12", "lr"
             : "volatile");
-    }
 }
 
 #[inline(always)]

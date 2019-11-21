@@ -1,9 +1,9 @@
 #![no_std]
 
+use futures::future;
 use libtock::buttons;
 use libtock::buttons::ButtonState;
 use libtock::led;
-use libtock::syscalls;
 
 async fn main() {
     let mut with_callback = buttons::with_callback(|button_num: usize, state| {
@@ -20,7 +20,5 @@ async fn main() {
         button.enable().unwrap();
     }
 
-    loop {
-        syscalls::yieldk();
-    }
+    future::pending().await
 }

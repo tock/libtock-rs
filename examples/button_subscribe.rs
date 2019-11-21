@@ -1,10 +1,10 @@
 #![no_std]
 
 use core::fmt::Write;
+use futures::future;
 use libtock::buttons;
 use libtock::buttons::ButtonState;
 use libtock::console::Console;
-use libtock::syscalls;
 
 // FIXME: Hangs up when buttons are pressed rapidly - problem in console?
 async fn main() {
@@ -29,7 +29,5 @@ async fn main() {
         button.enable().unwrap();
     }
 
-    loop {
-        syscalls::yieldk();
-    }
+    future::pending().await
 }
