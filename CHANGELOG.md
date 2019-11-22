@@ -9,6 +9,13 @@
     - Not recommended: Use `core::executor::block_on(value)` to retrieve the `value`
 - `syscalls::yieldk_for` is no longer available
   - Yielding manually is discouraged as it conflicts with Rust's safety guarantees. If you need to wait for a condition, use `futures::wait_until` and `.await`.
+- `syscalls::yieldk` has become `unsafe` for the same reason
+- Commands are no longer `unsafe`
+- The low-level syscalls have been moved to `syscalls::raw`
+  - `syscalls::subscribe_ptr` becomes `syscalls::raw::subscribe`
+  - `syscalls::command1_insecure` becomes `syscalls::raw::command1`
+  - `syscalls::allow_ptr` becomes `syscalls::raw::allow`
+- Targets without support for atomics can be built
 
 ## a8bb4fa9be504517d5533511fd8e607ea61f1750 (0.1.0)
 
