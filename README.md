@@ -2,7 +2,7 @@
 # libtock-rs
 Rust userland library for Tock (WIP)
 
-Tested with tock [Release 1.4](https://github.com/tock/tock/commit/2cef02405e699c06cefd0aae6a89f0e8cc4395ab).
+Tested with tock [Release 1.4.1](https://github.com/tock/tock/commit/7e37bf67761d83fd585cace4fb201e2864d300b1).
 
 The library works in principle on most boards, but there is currently the [showstopper
 bug #28](https://github.com/tock/libtock-rs/issues/28) that prevents
