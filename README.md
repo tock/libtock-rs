@@ -2,7 +2,21 @@
 # libtock-rs
 Rust userland library for Tock (WIP)
 
-Tested with tock a3b36d5872315ff05ef5ad34ed9453b0789218ce.
+Tested with tock [Release 1.4.1](https://github.com/tock/tock/commit/7e37bf67761d83fd585cace4fb201e2864d300b1).
+
+The library works in principle on most boards, but there is currently the [showstopper
+bug #28](https://github.com/tock/libtock-rs/issues/28) that prevents
+the generation of relocatable code. This means that all applications
+must be installed at the flash address they are compiled with, which
+usually means that they must be compiled especially for your board
+and that there can only be one application written in rust at a time
+and it must be installed as the first application on the board, unless
+you want to play games with linker scripts.
+There are some `*_layout.ld` files provided that allow to run the
+examples on common boards.
+Due to MPU region alignment issues they may not work for applications
+that use a lot of RAM, in that case you may have to change the SRAM
+start address to fit your application.
 
 ## Getting Started
 
@@ -36,14 +50,17 @@ to use:
     ./run_example.sh blink
     ```
 
-    This should work if you are using the nRF52-DK platform. For other platforms,
-    you will end up with a TAB file in `target/tab` that you can program onto your
-    Tock board (e.g. with `tockloader install target/tab/blink.tab`).
+    Due to bug #28 this will currently only work if you are using the nRF52-DK platform.
+
+    If you have a nRF52840-DK you must change `link-arg=-Tnrf52_layout.ld` in
+    `.cargo/config` to `link-arg=-Tnrf52840_layout.ld`
 
     If you have a hail board you can flash your device as follows:
      - set the environment variable `hail` to `1`
-     - set  `link-arg=-Tnrf52_layout.ld` in `.cargo/config` to `link-arg=-Thail_layout.ld`
+     - change `link-arg=-Tnrf52_layout.ld` in `.cargo/config` to `link-arg=-Thail_layout.ld`
      - run `run_example.sh` as above.
+
+    For other platforms, you may have to create your own memory layout definition.
 
 ## Using libtock-rs
 
