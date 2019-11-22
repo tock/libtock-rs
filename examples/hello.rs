@@ -5,11 +5,11 @@ use libtock::console::Console;
 use libtock::timer;
 use libtock::timer::Duration;
 
-fn main() {
+async fn main() {
     let mut console = Console::new();
 
     for i in 0.. {
         writeln!(console, "Hello world! {}", i).unwrap();
-        timer::sleep(Duration::from_ms(500))
+        timer::sleep(Duration::from_ms(500)).await;
     }
 }

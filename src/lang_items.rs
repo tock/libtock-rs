@@ -22,6 +22,8 @@ use crate::led;
 use crate::timer;
 use crate::timer::Duration;
 use core::alloc::Layout;
+use core::executor;
+use core::future::Future;
 use core::panic::PanicInfo;
 
 #[lang = "start"]
@@ -32,12 +34,17 @@ where
     main().report()
 }
 
+#[lang = "termination"]
 pub trait Termination {
     fn report(self) -> i32;
 }
 
-impl Termination for () {
+impl<T> Termination for T
+where
+    T: Future<Output = ()>,
+{
     fn report(self) -> i32 {
+        executor::block_on(self);
         0
     }
 }
@@ -48,25 +55,33 @@ fn panic_handler(_info: &PanicInfo) -> ! {
     super::debug::low_level_status_code(1);
 
     // Flash all LEDs (if available).
-    loop {
-        for led in led::all() {
-            led.on();
+    executor::block_on(async {
+        loop {
+            for led in led::all() {
+                led.on();
+            }
+            timer::sleep(Duration::from_ms(100)).await;
+            for led in led::all() {
+                led.off();
+            }
+            timer::sleep(Duration::from_ms(100)).await;
         }
-        timer::sleep(Duration::from_ms(100));
-        for led in led::all() {
-            led.off();
-        }
-        timer::sleep(Duration::from_ms(100));
-    }
+    });
+    // Never type is not supported for T in Future
+    unreachable!()
 }
 
 #[alloc_error_handler]
 fn cycle_leds(_: Layout) -> ! {
-    loop {
-        for led in led::all() {
-            led.on();
-            timer::sleep(Duration::from_ms(100));
-            led.off();
+    executor::block_on(async {
+        loop {
+            for led in led::all() {
+                led.on();
+                timer::sleep(Duration::from_ms(100)).await;
+                led.off();
+            }
         }
-    }
+    });
+    // Never type is not supported for T in Future
+    unreachable!()
 }

@@ -1,6 +1,8 @@
-use crate::syscalls::{self, yieldk_for};
+use crate::futures;
+use crate::syscalls;
 use core::cell::Cell;
 use core::convert::From;
+use core::executor;
 use core::fmt;
 use core::mem;
 
@@ -30,7 +32,7 @@ pub trait Sensor<Reading: Copy + From<(usize, usize, usize)>> {
                 mem::transmute(&res),
             );
             syscalls::command(driver_num, 1, 0, 0);
-            yieldk_for(|| res.get().is_some());
+            executor::block_on(futures::wait_until(|| res.get().is_some()));
             res.get().unwrap()
         }
     }

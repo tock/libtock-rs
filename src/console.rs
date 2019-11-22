@@ -1,5 +1,7 @@
+use crate::futures;
 use crate::syscalls;
 use core::cell::Cell;
+use core::executor;
 use core::fmt;
 
 const DRIVER_NUMBER: usize = 1;
@@ -65,7 +67,7 @@ impl Console {
             return;
         }
 
-        syscalls::yieldk_for(|| is_written.get());
+        executor::block_on(futures::wait_until(|| is_written.get()));
     }
 }
 

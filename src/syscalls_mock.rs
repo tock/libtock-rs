@@ -2,10 +2,6 @@ use crate::callback::CallbackSubscription;
 use crate::callback::SubscribableCallback;
 use crate::shared_memory::SharedMemory;
 
-pub fn yieldk_for<F: Fn() -> bool>(_: F) {
-    unimplemented()
-}
-
 pub fn subscribe<CB: SubscribableCallback>(
     _: usize,
     _: usize,

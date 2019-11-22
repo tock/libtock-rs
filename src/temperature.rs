@@ -1,16 +1,18 @@
 use crate::callback::CallbackSubscription;
 use crate::callback::SubscribableCallback;
+use crate::futures;
 use crate::syscalls;
+use core::cell::Cell;
 
 const DRIVER_NUMBER: usize = 0x60000;
 const SUBSCRIBE_CALLBACK: usize = 0;
 const START_MEASUREMENT: usize = 1;
 
-pub fn with_callback<CB>(callback: CB) -> WithCallback<CB> {
+fn with_callback<CB>(callback: CB) -> WithCallback<CB> {
     WithCallback { callback }
 }
 
-pub struct WithCallback<CB> {
+struct WithCallback<CB> {
     callback: CB,
 }
 
@@ -24,9 +26,17 @@ impl<CB> WithCallback<CB>
 where
     Self: SubscribableCallback,
 {
-    pub fn start_measurement(&mut self) -> Result<CallbackSubscription, isize> {
+    fn start_measurement(&mut self) -> Result<CallbackSubscription, isize> {
         let subscription = syscalls::subscribe(DRIVER_NUMBER, SUBSCRIBE_CALLBACK, self)?;
         unsafe { syscalls::command(DRIVER_NUMBER, START_MEASUREMENT, 0, 0) };
         Ok(subscription)
     }
+}
+
+pub async fn measure_temperature() -> isize {
+    let temperature = Cell::<Option<isize>>::new(None);
+    let mut callback = |temp: isize| temperature.set(Some(temp));
+    let mut withcallback = with_callback(&mut callback);
+    let _subscription = withcallback.start_measurement();
+    futures::wait_for_value(|| temperature.get()).await
 }

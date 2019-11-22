@@ -4,7 +4,7 @@ use libtock::led;
 use libtock::timer;
 use libtock::timer::Duration;
 
-fn main() {
+async fn main() {
     let num_leds = led::count();
 
     // Blink the LEDs in a binary count pattern and scale
@@ -21,6 +21,6 @@ fn main() {
         count = count.wrapping_add(1);
 
         // This delay uses an underlying timer in the kernel.
-        timer::sleep(Duration::from_ms(250));
+        timer::sleep(Duration::from_ms(250)).await;
     }
 }

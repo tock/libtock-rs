@@ -6,7 +6,7 @@ use libtock::syscalls;
 use libtock::timer;
 use libtock::timer::Duration;
 
-fn main() {
+async fn main() {
     let mut console = Console::new();
 
     let mut with_callback = timer::with_callback(|_, _| {

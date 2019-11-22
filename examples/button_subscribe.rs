@@ -4,11 +4,10 @@ use core::fmt::Write;
 use libtock::buttons;
 use libtock::buttons::ButtonState;
 use libtock::console::Console;
-use libtock::timer;
-use libtock::timer::Duration;
+use libtock::syscalls;
 
 // FIXME: Hangs up when buttons are pressed rapidly - problem in console?
-fn main() {
+async fn main() {
     let mut console = Console::new();
 
     let mut with_callback = buttons::with_callback(|button_num: usize, state| {
@@ -31,6 +30,6 @@ fn main() {
     }
 
     loop {
-        timer::sleep(Duration::from_ms(500));
+        syscalls::yieldk();
     }
 }

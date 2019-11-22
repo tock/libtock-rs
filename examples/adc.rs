@@ -6,7 +6,7 @@ use libtock::console::Console;
 use libtock::timer;
 use libtock::timer::Duration;
 
-fn main() {
+async fn main() {
     let mut console = Console::new();
     let mut with_callback = adc::with_callback(|channel: usize, value: usize| {
         writeln!(console, "channel: {}, value: {}", channel, value).unwrap();
@@ -16,6 +16,6 @@ fn main() {
 
     loop {
         adc.sample(0).unwrap();
-        timer::sleep(Duration::from_ms(2000));
+        timer::sleep(Duration::from_ms(2000)).await;
     }
 }

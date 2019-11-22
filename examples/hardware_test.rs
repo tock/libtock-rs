@@ -29,7 +29,7 @@ impl MyTrait for String {
     }
 }
 
-fn main() {
+async fn main() {
     let mut console = Console::new();
     write!(console, "[test-results]\n").unwrap();
 

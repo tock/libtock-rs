@@ -16,7 +16,7 @@ struct LedCommand {
 
 // Prevents the compiler from dropping the subscription too early.
 #[allow(unreachable_code)]
-fn main() {
+async fn main() {
     let mut shared_buffer = BleDriver::create_scan_buffer();
     let mut my_buffer = BleDriver::create_scan_buffer();
     let shared_memory = BleDriver::share_memory(&mut shared_buffer).unwrap();

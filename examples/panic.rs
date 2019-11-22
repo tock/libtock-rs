@@ -1,6 +1,6 @@
 #![no_std]
 
-fn main() {
+async fn main() {
     let _ = libtock::LibTock {};
     panic!("Bye world!");
 }

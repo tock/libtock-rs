@@ -1,5 +1,7 @@
-use crate::syscalls::{self, yieldk_for};
+use crate::futures;
+use crate::syscalls;
 use core::cell::Cell;
+use core::executor;
 use core::fmt;
 use core::mem;
 
@@ -36,7 +38,7 @@ impl Ninedof {
         unsafe {
             subscribe(Self::cb, mem::transmute(&res));
             start_accel_reading();
-            yieldk_for(|| res.ready.get());
+            executor::block_on(futures::wait_until(|| res.ready.get()));
         }
         res.res.get()
     }
@@ -46,7 +48,7 @@ impl Ninedof {
         unsafe {
             subscribe(Self::cb, mem::transmute(&res));
             start_magnetometer_reading();
-            yieldk_for(|| res.ready.get());
+            executor::block_on(futures::wait_until(|| res.ready.get()));
         }
         res.res.get()
     }
