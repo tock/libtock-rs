@@ -13,7 +13,6 @@
 - Commands are no longer `unsafe`
 - The low-level syscalls have been moved to `syscalls::raw`
   - `syscalls::subscribe_ptr` becomes `syscalls::raw::subscribe`
-  - `syscalls::command1_insecure` becomes `syscalls::raw::command1`
   - `syscalls::allow_ptr` becomes `syscalls::raw::allow`
 - Targets without support for atomics can be built
 

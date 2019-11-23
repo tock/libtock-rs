@@ -1,25 +1,31 @@
-#[cfg_attr(target_arch = "riscv32", path = "syscalls_riscv32.rs")]
-#[cfg_attr(target_arch = "arm", path = "syscalls_arm.rs")]
+#[cfg_attr(target_arch = "riscv32", path = "platform_riscv32.rs")]
+#[cfg_attr(target_arch = "arm", path = "platform_arm.rs")]
 #[cfg_attr(
     not(any(target_arch = "arm", target_arch = "riscv32")),
-    path = "syscalls_mock.rs"
+    path = "platform_mock.rs"
 )]
-pub mod raw;
+mod platform;
 
 use crate::callback::CallbackSubscription;
 use crate::callback::SubscribableCallback;
 use crate::shared_memory::SharedMemory;
 
-/// # Safety
-///
-/// Yielding in the main function should be safe. Nevertheless, yielding manually is not required as this is already achieved by the `async` runtime.
-///
-/// When yielding in callbacks, two problems can arise:
-/// - The guarantees of `FnMut` are violated. In this case, make sure your callback has `Fn` behavior.
-/// - Callbacks can get executed in a nested manner and overflow the stack quickly.
-#[export_name = "libtock::syscalls::yieldk"]
-pub unsafe fn yieldk() {
-    raw::yieldk()
+pub mod raw {
+    use super::platform;
+
+    pub use platform::*;
+
+    /// # Safety
+    ///
+    /// Yielding in the main function should be safe. Nevertheless, yielding manually is not required as this is already achieved by the `async` runtime.
+    ///
+    /// When yielding in callbacks, two problems can arise:
+    /// - The guarantees of `FnMut` are violated. In this case, make sure your callback has `Fn` behavior.
+    /// - Callbacks can get executed in a nested manner and overflow the stack quickly.
+    #[export_name = "libtock::syscalls::raw::yieldk"]
+    pub unsafe fn yieldk() {
+        platform::yieldk()
+    }
 }
 
 pub fn subscribe<CB: SubscribableCallback>(
@@ -71,6 +77,21 @@ pub fn subscribe_fn(
 
 pub fn command(driver_number: usize, command_number: usize, arg1: usize, arg2: usize) -> isize {
     unsafe { raw::command(driver_number, command_number, arg1, arg2) }
+}
+
+// command1_insecure, is a variant of command() that only sets the first
+// argument in the system call interface. It has the benefit of generating
+// simpler assembly than command(), but it leaves the second argument's register
+// as-is which leaks it to the kernel driver being called. Prefer to use
+// command() instead of command1_insecure(), unless the benefit of generating
+// simpler assembly outweighs the drawbacks of potentially leaking arbitrary
+// information to the driver you are calling.
+//
+// At the moment, the only suitable use case for command1_insecure is the low
+// level debug interface.
+
+pub fn command1_insecure(driver_number: usize, command_number: usize, arg: usize) -> isize {
+    unsafe { raw::command1(driver_number, command_number, arg) }
 }
 
 pub fn allow(

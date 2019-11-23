@@ -361,7 +361,7 @@ pub unsafe extern "C" fn rust_start(app_start: usize, stacktop: usize, app_heap_
     main(0, ptr::null());
 
     loop {
-        syscalls::yieldk();
+        syscalls::raw::yieldk();
     }
 }
 

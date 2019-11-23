@@ -16,18 +16,14 @@ mod command_nr {
 /// code. If the capsule is not present, this is a no-op.
 #[inline(always)] // Improve reliability for relocation issues
 pub fn low_level_status_code(code: usize) {
-    unsafe {
-        syscalls::raw::command1(DRIVER_NUMBER, command_nr::ALERT_CODE, code);
-    }
+    syscalls::command1_insecure(DRIVER_NUMBER, command_nr::ALERT_CODE, code);
 }
 
 /// Use the LowLevelDebug capsule (if present) to print a single number. If the
 /// capsule is not present, this is a no-op.
 #[inline(always)] // Improve reliability for relocation issues
 pub fn low_level_print1(value: usize) {
-    unsafe {
-        syscalls::raw::command1(DRIVER_NUMBER, command_nr::PRINT1, value);
-    }
+    syscalls::command1_insecure(DRIVER_NUMBER, command_nr::PRINT1, value);
 }
 
 /// Use the LowLevelDebug capsule (if present) to print two numbers. If the

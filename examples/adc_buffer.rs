@@ -23,6 +23,6 @@ async fn main() {
 
     loop {
         adc.sample_continuous_buffered(0, 128).unwrap();
-        unsafe { syscalls::yieldk() };
+        unsafe { syscalls::raw::yieldk() };
     }
 }

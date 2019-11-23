@@ -36,7 +36,7 @@ pub mod executor {
     use core::task::Waker;
 
     extern "Rust" {
-        #[link_name = "libtock::syscalls::yieldk"]
+        #[link_name = "libtock::syscalls::raw::yieldk"]
         fn yieldk();
     }
 
