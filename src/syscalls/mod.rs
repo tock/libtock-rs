@@ -22,6 +22,8 @@ pub mod raw {
     /// When yielding in callbacks, two problems can arise:
     /// - The guarantees of `FnMut` are violated. In this case, make sure your callback has `Fn` behavior.
     /// - Callbacks can get executed in a nested manner and overflow the stack quickly.
+    ///
+    /// This function is exported as `libtock::syscalls::raw::yieldk`. Do not reference this name directly. Its only purpose is to establish a back-channel from `async-support`, a patched version of `core` to `libtock-rs` via linking. This workaround has been chosen to keep the `core` crate free of dependencies on platform-specific syscall implementations and is expected to get removed as soon as possible.
     #[export_name = "libtock::syscalls::raw::yieldk"]
     pub unsafe fn yieldk() {
         platform::yieldk()
