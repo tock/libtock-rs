@@ -1,11 +1,11 @@
 #![no_std]
 
+use futures::future;
 use libtock::ble_parser;
 use libtock::led;
 use libtock::simple_ble;
 use libtock::simple_ble::BleCallback;
 use libtock::simple_ble::BleDriver;
-use libtock::syscalls;
 use serde::Deserialize;
 
 #[derive(Deserialize)]
@@ -14,8 +14,6 @@ struct LedCommand {
     pub st: bool,
 }
 
-// Prevents the compiler from dropping the subscription too early.
-#[allow(unreachable_code)]
 async fn main() {
     let mut shared_buffer = BleDriver::create_scan_buffer();
     let mut my_buffer = BleDriver::create_scan_buffer();
@@ -31,7 +29,5 @@ async fn main() {
 
     let _subscription = BleDriver::start(&mut callback).unwrap();
 
-    loop {
-        syscalls::yieldk();
-    }
+    future::pending().await
 }

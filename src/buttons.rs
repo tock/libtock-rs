@@ -4,6 +4,7 @@ use crate::result;
 use crate::result::TockResult;
 use crate::result::TockValue;
 use crate::syscalls;
+use core::marker::PhantomData;
 
 const DRIVER_NUMBER: usize = 0x00003;
 
@@ -37,7 +38,7 @@ where
     Self: SubscribableCallback,
 {
     pub fn init(&mut self) -> TockResult<Buttons, ButtonsError> {
-        let count = unsafe { syscalls::command(DRIVER_NUMBER, command_nr::COUNT, 0, 0) };
+        let count = syscalls::command(DRIVER_NUMBER, command_nr::COUNT, 0, 0);
         if count < 1 {
             return Err(TockValue::Expected(ButtonsError::NotSupported));
         }
@@ -73,7 +74,7 @@ impl<'a> Buttons<'a> {
         ButtonIter {
             curr_button: 0,
             button_count: self.count,
-            _lifetime: &(),
+            _lifetime: Default::default(),
         }
     }
 }
@@ -106,7 +107,7 @@ impl<'a, 'b> IntoIterator for &'b mut Buttons<'a> {
 pub struct ButtonIter<'a> {
     curr_button: usize,
     button_count: usize,
-    _lifetime: &'a (),
+    _lifetime: PhantomData<&'a ()>,
 }
 
 impl<'a> Iterator for ButtonIter<'a> {
@@ -116,7 +117,7 @@ impl<'a> Iterator for ButtonIter<'a> {
         if self.curr_button < self.button_count {
             let item = ButtonHandle {
                 button_num: self.curr_button,
-                _lifetime: &(),
+                _lifetime: Default::default(),
             };
             self.curr_button += 1;
             Some(item)
@@ -128,19 +129,17 @@ impl<'a> Iterator for ButtonIter<'a> {
 
 pub struct ButtonHandle<'a> {
     button_num: usize,
-    _lifetime: &'a (),
+    _lifetime: PhantomData<&'a ()>,
 }
 
 impl<'a> ButtonHandle<'a> {
     pub fn enable(&mut self) -> TockResult<Button, ButtonError> {
-        let return_code = unsafe {
-            syscalls::command(
-                DRIVER_NUMBER,
-                command_nr::ENABLE_INTERRUPT,
-                self.button_num,
-                0,
-            )
-        };
+        let return_code = syscalls::command(
+            DRIVER_NUMBER,
+            command_nr::ENABLE_INTERRUPT,
+            self.button_num,
+            0,
+        );
 
         match return_code {
             result::SUCCESS => Ok(Button { handle: self }),
@@ -150,14 +149,12 @@ impl<'a> ButtonHandle<'a> {
     }
 
     pub fn disable(&mut self) -> TockResult<(), ButtonError> {
-        let return_code = unsafe {
-            syscalls::command(
-                DRIVER_NUMBER,
-                command_nr::DISABLE_INTERRUPT,
-                self.button_num,
-                0,
-            )
-        };
+        let return_code = syscalls::command(
+            DRIVER_NUMBER,
+            command_nr::DISABLE_INTERRUPT,
+            self.button_num,
+            0,
+        );
 
         match return_code {
             result::SUCCESS => Ok(()),
@@ -178,13 +175,11 @@ pub enum ButtonError {
 
 impl<'a> Button<'a> {
     pub fn read(&self) -> ButtonState {
-        unsafe {
-            ButtonState::from(syscalls::command(
-                DRIVER_NUMBER,
-                command_nr::READ,
-                self.handle.button_num,
-                0,
-            ) as usize)
-        }
+        ButtonState::from(syscalls::command(
+            DRIVER_NUMBER,
+            command_nr::READ,
+            self.handle.button_num,
+            0,
+        ) as usize)
     }
 }

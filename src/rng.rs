@@ -35,8 +35,7 @@ pub async fn fill_buffer(buf: &mut [u8]) -> bool {
         return false;
     }
 
-    let result_code =
-        unsafe { syscalls::command(DRIVER_NUMBER, command_nr::REQUEST_RNG, buf_len, 0) };
+    let result_code = syscalls::command(DRIVER_NUMBER, command_nr::REQUEST_RNG, buf_len, 0);
     if result_code < 0 {
         return false;
     }

@@ -5,9 +5,9 @@ extern crate alloc;
 
 use alloc::string::String;
 use core::fmt::Write;
+use futures::future;
 use libtock::console::Console;
 use libtock::gpio::{GpioPinUnitialized, InputMode};
-use libtock::syscalls;
 use libtock::timer;
 use libtock::timer::Duration;
 
@@ -41,11 +41,7 @@ async fn main() {
 
     test_trait_objects(&mut console);
 
-    test_callbacks_and_wait_forever(&mut console);
-
-    for _ in 0.. {
-        syscalls::yieldk();
-    }
+    test_callbacks_and_wait_forever(&mut console).await;
 }
 
 fn test_heap(console: &mut Console) {
@@ -106,7 +102,7 @@ fn test_gpio(console: &mut Console) {
     write!(console, "gpio_works = {}\n", pin_in.read()).unwrap();
 }
 
-fn test_callbacks_and_wait_forever(console: &mut Console) {
+async fn test_callbacks_and_wait_forever(console: &mut Console) {
     let mut with_callback = timer::with_callback(|_, _| {
         write!(console, "callbacks_work = true\n").unwrap();
         write!(console, "all_tests_run = true").unwrap();
@@ -116,9 +112,7 @@ fn test_callbacks_and_wait_forever(console: &mut Console) {
 
     timer.set_alarm(Duration::from_ms(500)).unwrap();
 
-    for _ in 0.. {
-        syscalls::yieldk();
-    }
+    future::pending().await
 }
 
 #[inline(never)]

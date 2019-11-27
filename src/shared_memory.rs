@@ -1,6 +1,7 @@
 use crate::syscalls;
 use core::ptr;
 
+#[must_use = "Shared memory risks being dropped too early. Drop it manually."]
 pub struct SharedMemory<'a> {
     driver_number: usize,
     allow_number: usize,
@@ -32,7 +33,7 @@ impl<'a> SharedMemory<'a> {
 impl<'a> Drop for SharedMemory<'a> {
     fn drop(&mut self) {
         unsafe {
-            syscalls::allow_ptr(self.driver_number, self.allow_number, ptr::null_mut(), 0);
+            syscalls::raw::allow(self.driver_number, self.allow_number, ptr::null_mut(), 0);
         }
     }
 }

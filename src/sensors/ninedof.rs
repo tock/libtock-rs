@@ -35,21 +35,17 @@ impl Ninedof {
 
     pub fn read_acceleration(&mut self) -> NinedofReading {
         let res: CbData = Default::default();
-        unsafe {
-            subscribe(Self::cb, mem::transmute(&res));
-            start_accel_reading();
-            executor::block_on(futures::wait_until(|| res.ready.get()));
-        }
+        subscribe(Self::cb, unsafe { mem::transmute(&res) });
+        start_accel_reading();
+        unsafe { executor::block_on(futures::wait_until(|| res.ready.get())) };
         res.res.get()
     }
 
     pub fn read_magnetometer(&mut self) -> NinedofReading {
         let res: CbData = Default::default();
-        unsafe {
-            subscribe(Self::cb, mem::transmute(&res));
-            start_magnetometer_reading();
-            executor::block_on(futures::wait_until(|| res.ready.get()));
-        }
+        subscribe(Self::cb, unsafe { mem::transmute(&res) });
+        start_magnetometer_reading();
+        unsafe { executor::block_on(futures::wait_until(|| res.ready.get())) };
         res.res.get()
     }
 
@@ -64,14 +60,14 @@ impl Ninedof {
     }
 }
 
-pub unsafe fn subscribe(cb: extern "C" fn(usize, usize, usize, usize), ud: usize) {
-    syscalls::subscribe_ptr(DRIVER_NUM, 0, cb as *const _, ud);
+pub fn subscribe(cb: extern "C" fn(usize, usize, usize, usize), ud: usize) {
+    syscalls::subscribe_fn(DRIVER_NUM, 0, cb, ud);
 }
 
-pub unsafe fn start_accel_reading() {
+pub fn start_accel_reading() {
     syscalls::command(DRIVER_NUM, 1, 0, 0);
 }
 
-pub unsafe fn start_magnetometer_reading() {
+pub fn start_magnetometer_reading() {
     syscalls::command(DRIVER_NUM, 100, 0, 0);
 }

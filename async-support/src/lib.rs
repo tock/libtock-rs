@@ -36,18 +36,21 @@ pub mod executor {
     use core::task::Waker;
 
     extern "Rust" {
-        #[link_name = "libtock::syscalls::yieldk"]
+        #[link_name = "libtock::syscalls::raw::yieldk"]
         fn yieldk();
     }
 
-    pub fn block_on<T>(mut future: impl Future<Output = T>) -> T {
+    /// # Safety
+    ///
+    /// [[block_on]] yields whenever a future cannot make any progress at present. Yielding is considered unsafe.
+    pub unsafe fn block_on<T>(mut future: impl Future<Output = T>) -> T {
         // Contract described in the Rustdoc: "A value, once pinned, must remain pinned forever (...).".
         // IOW calling Pin::new_unchecked is safe as long as no &mut future is leaked after pinning.
-        let mut pinned_future = unsafe { Pin::new_unchecked(&mut future) };
+        let mut pinned_future = Pin::new_unchecked(&mut future);
 
         loop {
             match poll(pinned_future.as_mut()) {
-                Poll::Pending => unsafe { yieldk() },
+                Poll::Pending => yieldk(),
                 Poll::Ready(value) => {
                     return value;
                 }

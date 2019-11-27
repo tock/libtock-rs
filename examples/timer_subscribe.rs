@@ -1,8 +1,8 @@
 #![no_std]
 
 use core::fmt::Write;
+use futures::future;
 use libtock::console::Console;
-use libtock::syscalls;
 use libtock::timer;
 use libtock::timer::Duration;
 
@@ -18,9 +18,7 @@ async fn main() {
     });
 
     let mut timer = with_callback.init().unwrap();
-
     timer.set_alarm(Duration::from_ms(2000)).unwrap();
-    loop {
-        syscalls::yieldk();
-    }
+
+    future::pending().await
 }

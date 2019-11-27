@@ -62,12 +62,12 @@ impl Console {
         }
 
         let result_code =
-            unsafe { syscalls::command(DRIVER_NUMBER, command_nr::WRITE, num_bytes_to_print, 0) };
+            syscalls::command(DRIVER_NUMBER, command_nr::WRITE, num_bytes_to_print, 0);
         if result_code < 0 {
             return;
         }
 
-        executor::block_on(futures::wait_until(|| is_written.get()));
+        unsafe { executor::block_on(futures::wait_until(|| is_written.get())) };
     }
 }
 

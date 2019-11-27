@@ -14,7 +14,7 @@ pub struct Led {
 }
 
 pub fn count() -> isize {
-    unsafe { command(DRIVER_NUMBER, command_nr::COUNT, 0, 0) }
+    command(DRIVER_NUMBER, command_nr::COUNT, 0, 0)
 }
 
 pub fn get(led_num: isize) -> Option<Led> {
@@ -44,21 +44,15 @@ impl Led {
     }
 
     pub fn on(&self) {
-        unsafe {
-            command(DRIVER_NUMBER, command_nr::ON, self.led_num, 0);
-        }
+        command(DRIVER_NUMBER, command_nr::ON, self.led_num, 0);
     }
 
     pub fn off(&self) {
-        unsafe {
-            command(DRIVER_NUMBER, command_nr::OFF, self.led_num, 0);
-        }
+        command(DRIVER_NUMBER, command_nr::OFF, self.led_num, 0);
     }
 
     pub fn toggle(&self) {
-        unsafe {
-            command(DRIVER_NUMBER, command_nr::TOGGLE, self.led_num, 0);
-        }
+        command(DRIVER_NUMBER, command_nr::TOGGLE, self.led_num, 0);
     }
 }
 

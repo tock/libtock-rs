@@ -38,12 +38,7 @@ pub mod entry_point;
 #[cfg(any(target_arch = "arm", target_arch = "riscv32"))]
 mod lang_items;
 
-#[cfg(any(target_arch = "arm", target_arch = "riscv32"))]
 pub mod syscalls;
-
-#[cfg(not(any(target_arch = "arm", target_arch = "riscv32")))]
-#[path = "syscalls_mock.rs"]
-mod syscalls;
 
 // Dummy structure to force importing the panic_handler and other no_std elements when nothing else
 // is imported.

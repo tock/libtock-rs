@@ -63,14 +63,14 @@ where
 {
     pub fn init(&mut self) -> TockResult<Timer, TimerError> {
         let num_notifications =
-            unsafe { syscalls::command(DRIVER_NUMBER, command_nr::IS_DRIVER_AVAILABLE, 0, 0) };
+            syscalls::command(DRIVER_NUMBER, command_nr::IS_DRIVER_AVAILABLE, 0, 0);
 
         if num_notifications < 1 {
             return Err(TockValue::Expected(TimerError::NotSupported));
         }
 
         let clock_frequency =
-            unsafe { syscalls::command(DRIVER_NUMBER, command_nr::GET_CLOCK_FREQUENCY, 0, 0) };
+            syscalls::command(DRIVER_NUMBER, command_nr::GET_CLOCK_FREQUENCY, 0, 0);
 
         if clock_frequency < 1 {
             return Err(TockValue::Expected(TimerError::ErroneousClockFrequency(
@@ -122,8 +122,7 @@ impl<'a> Timer<'a> {
     }
 
     pub fn get_current_clock(&self) -> ClockValue {
-        let num_ticks =
-            unsafe { syscalls::command(DRIVER_NUMBER, command_nr::GET_CLOCK_VALUE, 0, 0) };
+        let num_ticks = syscalls::command(DRIVER_NUMBER, command_nr::GET_CLOCK_VALUE, 0, 0);
 
         ClockValue {
             num_ticks,
@@ -133,7 +132,7 @@ impl<'a> Timer<'a> {
 
     pub fn stop_alarm(&mut self, alarm: Alarm) -> TockResult<(), StopAlarmError> {
         let return_code =
-            unsafe { syscalls::command(DRIVER_NUMBER, command_nr::STOP_ALARM, alarm.alarm_id, 0) };
+            syscalls::command(DRIVER_NUMBER, command_nr::STOP_ALARM, alarm.alarm_id, 0);
 
         match return_code {
             result::SUCCESS => Ok(()),
@@ -166,8 +165,7 @@ impl<'a> Timer<'a> {
         };
         let alarm_instant = now.num_ticks() as usize + ticks;
 
-        let alarm_id =
-            unsafe { syscalls::command(DRIVER_NUMBER, command_nr::SET_ALARM, alarm_instant, 0) };
+        let alarm_id = syscalls::command(DRIVER_NUMBER, command_nr::SET_ALARM, alarm_instant, 0);
 
         match alarm_id {
             _ if alarm_id >= 0 => Ok(Alarm {
