@@ -1,7 +1,7 @@
 //! Async timer driver. Can be used for (non-busy)  sleeping.
 
 use crate::callback::CallbackSubscription;
-use crate::callback::SubscribableCallback;
+use crate::callback::Consumer;
 use crate::futures;
 use crate::result::OtherError;
 use crate::result::TockError;
@@ -33,12 +33,14 @@ pub struct WithCallback<'a, CB> {
     phantom: PhantomData<&'a mut ()>,
 }
 
-impl<CB: FnMut(ClockValue, Alarm)> SubscribableCallback for WithCallback<'_, CB> {
-    fn call_rust(&mut self, clock_value: usize, alarm_id: usize, _: usize) {
-        (self.callback)(
+struct TimerEventConsumer;
+
+impl<CB: FnMut(ClockValue, Alarm)> Consumer<WithCallback<'_, CB>> for TimerEventConsumer {
+    fn consume(data: &mut WithCallback<CB>, clock_value: usize, alarm_id: usize, _: usize) {
+        (data.callback)(
             ClockValue {
                 num_ticks: clock_value as isize,
-                clock_frequency: self.clock_frequency,
+                clock_frequency: data.clock_frequency,
             },
             Alarm { alarm_id },
         );
@@ -61,8 +63,11 @@ impl<'a, CB: FnMut(ClockValue, Alarm)> WithCallback<'a, CB> {
             hz: clock_frequency,
         };
 
-        let subscription =
-            syscalls::subscribe_cb(DRIVER_NUMBER, subscribe_nr::SUBSCRIBE_CALLBACK, self)?;
+        let subscription = syscalls::subscribe::<TimerEventConsumer, _>(
+            DRIVER_NUMBER,
+            subscribe_nr::SUBSCRIBE_CALLBACK,
+            self,
+        )?;
 
         Ok(Timer {
             num_notifications,
@@ -331,8 +336,10 @@ pub struct TimerDriver<'a> {
 
 struct Callback;
 
-impl SubscribableCallback for Callback {
-    fn call_rust(&mut self, _: usize, _: usize, _: usize) {}
+struct ParallelTimerConsumer;
+
+impl<'a> Consumer<Callback> for ParallelTimerConsumer {
+    fn consume(_: &mut Callback, _: usize, _: usize, _: usize) {}
 }
 
 /// Activated time driver. Updates current time in the context and manages
@@ -358,7 +365,7 @@ impl<'a> TimerDriver<'a> {
     /// Activate the timer driver, will return a ParallelSleepDriver which
     /// can used to sleep.
     pub fn activate(&'a mut self) -> TockResult<ParallelSleepDriver<'a>> {
-        let subscription = syscalls::subscribe_cb(
+        let subscription = syscalls::subscribe::<ParallelTimerConsumer, _>(
             DRIVER_NUMBER,
             subscribe_nr::SUBSCRIBE_CALLBACK,
             &mut self.callback,

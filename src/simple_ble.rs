@@ -1,6 +1,6 @@
 use crate::ble_composer::BlePayload;
 use crate::callback::CallbackSubscription;
-use crate::callback::SubscribableCallback;
+use crate::callback::Consumer;
 use crate::result::TockResult;
 use crate::shared_memory::SharedMemory;
 use crate::syscalls;
@@ -79,9 +79,9 @@ impl<CB> BleCallback<CB> {
     }
 }
 
-impl<CB: FnMut(usize, usize)> SubscribableCallback for BleCallback<CB> {
-    fn call_rust(&mut self, arg1: usize, arg2: usize, _: usize) {
-        (self.callback)(arg1, arg2);
+impl<CB: FnMut(usize, usize)> Consumer<BleCallback<CB>> for BleCallback<CB> {
+    fn consume(data: &mut BleCallback<CB>, arg1: usize, arg2: usize, _: usize) {
+        (data.callback)(arg1, arg2);
     }
 }
 
@@ -104,8 +104,11 @@ impl BleScanningDriver {
         &'a mut self,
         callback: &'a mut BleCallback<CB>,
     ) -> TockResult<CallbackSubscription> {
-        let subscription =
-            syscalls::subscribe_cb(DRIVER_NUMBER, subscribe_nr::BLE_PASSIVE_SCAN_SUB, callback)?;
+        let subscription = syscalls::subscribe::<BleCallback<CB>, _>(
+            DRIVER_NUMBER,
+            subscribe_nr::BLE_PASSIVE_SCAN_SUB,
+            callback,
+        )?;
         syscalls::command(DRIVER_NUMBER, command_nr::PASSIVE_SCAN, 1, 0)?;
         Ok(subscription)
     }

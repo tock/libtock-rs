@@ -38,10 +38,6 @@ impl<CB: FnMut()> Consumer<CB> for Identity0Consumer {
     }
 }
 
-pub(crate) trait SubscribableCallback {
-    fn call_rust(&mut self, arg1: usize, arg2: usize, arg3: usize);
-}
-
 #[must_use = "Subscriptions risk being dropped too early. Drop them manually."]
 pub struct CallbackSubscription<'a> {
     driver_number: usize,

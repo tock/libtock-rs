@@ -8,7 +8,6 @@ mod platform;
 
 use crate::callback::CallbackSubscription;
 use crate::callback::Consumer;
-use crate::callback::SubscribableCallback;
 use crate::result::AllowError;
 use crate::result::CommandError;
 use crate::result::SubscribeError;
@@ -31,22 +30,6 @@ pub mod raw {
     #[export_name = "libtock::syscalls::raw::yieldk"]
     pub unsafe fn yieldk() {
         platform::yieldk()
-    }
-}
-
-pub(crate) fn subscribe_cb<CB: SubscribableCallback>(
-    driver_number: usize,
-    subscribe_number: usize,
-    callback: &mut CB,
-) -> Result<CallbackSubscription, SubscribeError> {
-    subscribe::<SubscribableCallbackConsumer, _>(driver_number, subscribe_number, callback)
-}
-
-struct SubscribableCallbackConsumer;
-
-impl<CB: SubscribableCallback> Consumer<CB> for SubscribableCallbackConsumer {
-    fn consume(data: &mut CB, arg1: usize, arg2: usize, arg3: usize) {
-        data.call_rust(arg1, arg2, arg3);
     }
 }
 
