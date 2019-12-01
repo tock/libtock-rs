@@ -8,9 +8,10 @@ use alloc::string::String;
 use core::fmt::Write;
 use futures::future;
 use libtock::console::Console;
-use libtock::gpio::GpioPinRead;
-use libtock::gpio::GpioPinWrite;
-use libtock::gpio::InputMode;
+use libtock::gpio::GpioRead;
+use libtock::gpio::GpioState;
+use libtock::gpio::GpioWrite;
+use libtock::gpio::ResistorMode;
 use libtock::result::TockResult;
 use libtock::timer::DriverContext;
 use libtock::timer::Duration;
@@ -37,17 +38,20 @@ impl MyTrait for String {
 #[libtock::main]
 async fn main() -> TockResult<()> {
     let Drivers {
-        console_driver,
-        gpio_driver,
+        mut gpio_driver_factory,
         mut timer_context,
+        console_driver,
         ..
     } = libtock::retrieve_drivers()?;
-    let mut gpio_iter = gpio_driver.all_pins()?;
+
+    let mut gpio_driver = gpio_driver_factory.init_driver()?;
     let mut console = console_driver.create_console();
-    let pin_in = gpio_iter.next().unwrap();
-    let pin_out = gpio_iter.next().unwrap();
-    let pin_in = pin_in.open_for_read(None, InputMode::PullDown)?;
-    let mut pin_out = pin_out.open_for_write()?;
+
+    let mut gpios = gpio_driver.gpios();
+    let mut pin_in = gpios.next().unwrap();
+    let pin_in = pin_in.enable_input(ResistorMode::PullDown)?;
+    let mut pin_out = gpios.next().unwrap();
+    let mut pin_out = pin_out.enable_output()?;
 
     writeln!(console, "[test-results]")?;
 
@@ -78,27 +82,26 @@ fn test_formatting(console: &mut Console) {
 /// trait_obj_value_string = string
 fn test_trait_objects(
     console: &mut Console,
-    pin_in: &GpioPinRead,
-    pin_out: &mut GpioPinWrite,
+    pin_in: &GpioRead,
+    pin_out: &mut GpioWrite,
 ) -> TockResult<()> {
     pin_out.set_high()?;
 
     let string = String::from("string");
 
-    let x = if pin_in.read() {
-        &1usize as &dyn MyTrait
-    } else {
-        &string as &dyn MyTrait
+    let x = match pin_in.read()? {
+        GpioState::Low => &string as &dyn MyTrait,
+        GpioState::High => &1usize as &dyn MyTrait,
     };
 
-    let y = if !pin_in.read() {
-        &1usize as &dyn MyTrait
-    } else {
-        &string as &dyn MyTrait
+    let y = match pin_in.read()? {
+        GpioState::Low => &1usize as &dyn MyTrait,
+        GpioState::High => &string as &dyn MyTrait,
     };
 
     x.do_something_with_a_console(console);
     y.do_something_with_a_console(console);
+
     Ok(())
 }
 
@@ -109,10 +112,15 @@ fn test_static_mut(console: &mut Console) {
 }
 
 /// needs P0.03 and P0.04 to be connected
-fn test_gpio(console: &mut Console, pin_in: &GpioPinRead, pin_out: &mut GpioPinWrite) {
+fn test_gpio(console: &mut Console, pin_in: &GpioRead, pin_out: &mut GpioWrite) {
     pin_out.set_high().ok().unwrap();
 
-    writeln!(console, "gpio_works = {}", pin_in.read()).unwrap();
+    writeln!(
+        console,
+        "gpio_works = {}",
+        pin_in.read().ok() == Some(GpioState::High)
+    )
+    .unwrap();
 }
 
 async fn test_callbacks_and_wait_forever(

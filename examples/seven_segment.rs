@@ -25,15 +25,20 @@ fn number_to_bits(n: u8) -> [bool; 8] {
 #[libtock::main]
 async fn main() -> TockResult<()> {
     let Drivers {
+        mut gpio_driver_factory,
         timer_context,
-        gpio_driver,
         ..
     } = libtock::retrieve_drivers()?;
-    let mut shift_register = ShiftRegister::new(
-        gpio_driver.pin(0)?.open_for_write()?,
-        gpio_driver.pin(1)?.open_for_write()?,
-        gpio_driver.pin(2)?.open_for_write()?,
-    );
+
+    let mut gpio_driver = gpio_driver_factory.init_driver()?;
+    let mut gpios = gpio_driver.gpios();
+    let mut gpio0 = gpios.next().unwrap();
+    let gpio0 = gpio0.enable_output()?;
+    let mut gpio1 = gpios.next().unwrap();
+    let gpio1 = gpio1.enable_output()?;
+    let mut gpio2 = gpios.next().unwrap();
+    let gpio2 = gpio2.enable_output()?;
+    let mut shift_register = ShiftRegister::new(&gpio0, &gpio1, &gpio2);
 
     let mut driver = timer_context.create_timer_driver();
     let timer_driver = driver.activate()?;

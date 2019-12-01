@@ -68,10 +68,10 @@ impl From<fmt::Error> for TockError {
 #[derive(Copy, Clone)]
 pub enum OtherError {
     ButtonsDriverInvalidState,
+    GpioDriverInvalidState,
     TimerDriverDurationOutOfRange,
     TimerDriverErroneousClockFrequency,
     DriverAlreadyTaken,
-    NotEnoughGpioPins,
 }
 
 impl From<OtherError> for TockError {

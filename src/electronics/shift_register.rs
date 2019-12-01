@@ -1,17 +1,17 @@
-use crate::gpio::GpioPinWrite;
+use crate::gpio::GpioWrite;
 use crate::result::TockResult;
 
 pub struct ShiftRegister<'a> {
-    data_pin: GpioPinWrite<'a>,
-    clock_pin: GpioPinWrite<'a>,
-    latch_pin: GpioPinWrite<'a>,
+    data_pin: &'a GpioWrite<'a>,
+    clock_pin: &'a GpioWrite<'a>,
+    latch_pin: &'a GpioWrite<'a>,
 }
 
 impl<'a> ShiftRegister<'a> {
     pub fn new(
-        data_pin: GpioPinWrite<'a>,
-        clock_pin: GpioPinWrite<'a>,
-        latch_pin: GpioPinWrite<'a>,
+        data_pin: &'a GpioWrite<'a>,
+        clock_pin: &'a GpioWrite<'a>,
+        latch_pin: &'a GpioWrite<'a>,
     ) -> ShiftRegister<'a> {
         ShiftRegister {
             data_pin,
