@@ -67,6 +67,7 @@ impl From<fmt::Error> for TockError {
 
 #[derive(Copy, Clone)]
 pub enum OtherError {
+    ButtonsDriverInvalidState,
     TimerDriverDurationOutOfRange,
     TimerDriverErroneousClockFrequency,
     DriverAlreadyTaken,

@@ -18,12 +18,12 @@ struct LedCommand {
 #[libtock::main]
 async fn main() -> TockResult<()> {
     let Drivers {
-        led_driver_factory,
         mut ble_scanning_driver,
+        mut leds_driver_factory,
         ..
     } = libtock::retrieve_drivers()?;
 
-    let led_driver = led_driver_factory.create_driver()?;
+    let leds_driver = leds_driver_factory.init_driver()?;
 
     let mut shared_buffer = BleScanningDriver::create_scan_buffer();
     let mut my_buffer = BleScanningDriver::create_scan_buffer();
@@ -34,11 +34,7 @@ async fn main() -> TockResult<()> {
         ble_parser::find(&my_buffer, simple_ble::gap_data::SERVICE_DATA as u8)
             .and_then(|service_data| ble_parser::extract_for_service([91, 79], service_data))
             .and_then(|payload| corepack::from_bytes::<LedCommand>(&payload).ok())
-            .and_then(|msg| {
-                led_driver
-                    .get(msg.nr as usize)
-                    .map(|led| led.set_state(msg.st))
-            });
+            .and_then(|msg| leds_driver.get(msg.nr as usize).map(|led| led.set(msg.st)));
     });
 
     let _subscription = ble_scanning_driver.start(&mut callback)?;

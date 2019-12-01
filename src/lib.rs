@@ -11,7 +11,7 @@ pub mod debug;
 pub mod electronics;
 pub mod futures;
 pub mod gpio;
-pub mod led;
+pub mod leds;
 pub mod memop;
 pub mod result;
 pub mod rng;
