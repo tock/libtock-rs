@@ -62,14 +62,15 @@ impl<CB: FnMut(usize, usize)> SubscribableCallback for WithCallback<CB> {
     }
 }
 
-impl<'a, CB> WithCallback<CB>
-where
-    Self: SubscribableCallback,
-{
+impl<CB: FnMut(usize, usize)> WithCallback<CB> {
     pub fn init(&mut self) -> TockResult<Adc> {
         let adc = Adc {
             count: syscalls::command(DRIVER_NUM, command_nr::COUNT, 0, 0)?,
-            subscription: syscalls::subscribe(DRIVER_NUM, subscribe_nr::SUBSCRIBE_CALLBACK, self)?,
+            subscription: syscalls::subscribe_cb(
+                DRIVER_NUM,
+                subscribe_nr::SUBSCRIBE_CALLBACK,
+                self,
+            )?,
         };
         Ok(adc)
     }

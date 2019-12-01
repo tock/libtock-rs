@@ -2,21 +2,51 @@ use crate::syscalls;
 use core::marker::PhantomData;
 use core::ptr;
 
-pub trait SubscribableCallback {
-    fn call_rust(&mut self, arg1: usize, arg2: usize, arg3: usize);
+pub trait Consumer<T> {
+    fn consume(data: &mut T, arg1: usize, arg2: usize, arg3: usize);
 }
 
-impl<F: FnMut(usize, usize, usize)> SubscribableCallback for F {
-    fn call_rust(&mut self, arg1: usize, arg2: usize, arg3: usize) {
-        self(arg1, arg2, arg3)
+pub struct Identity3Consumer;
+
+impl<CB: FnMut(usize, usize, usize)> Consumer<CB> for Identity3Consumer {
+    fn consume(data: &mut CB, arg1: usize, arg2: usize, arg3: usize) {
+        data(arg1, arg2, arg3);
     }
+}
+
+pub struct Identity2Consumer;
+
+impl<CB: FnMut(usize, usize)> Consumer<CB> for Identity2Consumer {
+    fn consume(data: &mut CB, arg1: usize, arg2: usize, _: usize) {
+        data(arg1, arg2);
+    }
+}
+
+pub struct Identity1Consumer;
+
+impl<CB: FnMut(usize)> Consumer<CB> for Identity1Consumer {
+    fn consume(data: &mut CB, arg1: usize, _: usize, _: usize) {
+        data(arg1);
+    }
+}
+
+pub struct Identity0Consumer;
+
+impl<CB: FnMut()> Consumer<CB> for Identity0Consumer {
+    fn consume(data: &mut CB, _: usize, _: usize, _: usize) {
+        data();
+    }
+}
+
+pub(crate) trait SubscribableCallback {
+    fn call_rust(&mut self, arg1: usize, arg2: usize, arg3: usize);
 }
 
 #[must_use = "Subscriptions risk being dropped too early. Drop them manually."]
 pub struct CallbackSubscription<'a> {
     driver_number: usize,
     subscribe_number: usize,
-    _lifetime: PhantomData<&'a ()>,
+    lifetime: PhantomData<&'a ()>,
 }
 
 impl<'a> CallbackSubscription<'a> {
@@ -24,7 +54,7 @@ impl<'a> CallbackSubscription<'a> {
         CallbackSubscription {
             driver_number,
             subscribe_number,
-            _lifetime: Default::default(),
+            lifetime: PhantomData,
         }
     }
 }

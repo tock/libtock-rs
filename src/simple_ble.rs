@@ -100,15 +100,12 @@ impl BleScanningDriver {
         syscalls::allow(DRIVER_NUMBER, allow_nr::ALLOW_SCAN_BUFFER, scan_buffer).map_err(Into::into)
     }
 
-    pub fn start<'a, CB>(
+    pub fn start<'a, CB: FnMut(usize, usize)>(
         &'a mut self,
         callback: &'a mut BleCallback<CB>,
-    ) -> TockResult<CallbackSubscription>
-    where
-        BleCallback<CB>: SubscribableCallback,
-    {
+    ) -> TockResult<CallbackSubscription> {
         let subscription =
-            syscalls::subscribe(DRIVER_NUMBER, subscribe_nr::BLE_PASSIVE_SCAN_SUB, callback)?;
+            syscalls::subscribe_cb(DRIVER_NUMBER, subscribe_nr::BLE_PASSIVE_SCAN_SUB, callback)?;
         syscalls::command(DRIVER_NUMBER, command_nr::PASSIVE_SCAN, 1, 0)?;
         Ok(subscription)
     }

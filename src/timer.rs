@@ -45,10 +45,7 @@ impl<CB: FnMut(ClockValue, Alarm)> SubscribableCallback for WithCallback<'_, CB>
     }
 }
 
-impl<'a, CB> WithCallback<'a, CB>
-where
-    Self: SubscribableCallback,
-{
+impl<'a, CB: FnMut(ClockValue, Alarm)> WithCallback<'a, CB> {
     pub fn init(&'a mut self) -> TockResult<Timer<'a>> {
         let num_notifications =
             syscalls::command(DRIVER_NUMBER, command_nr::IS_DRIVER_AVAILABLE, 0, 0)?;
@@ -65,7 +62,7 @@ where
         };
 
         let subscription =
-            syscalls::subscribe(DRIVER_NUMBER, subscribe_nr::SUBSCRIBE_CALLBACK, self)?;
+            syscalls::subscribe_cb(DRIVER_NUMBER, subscribe_nr::SUBSCRIBE_CALLBACK, self)?;
 
         Ok(Timer {
             num_notifications,
@@ -368,7 +365,7 @@ impl<'a> TimerDriver<'a> {
     /// Activate the timer driver, will return a ParallelSleepDriver which
     /// can used to sleep.
     pub fn activate(&'a mut self) -> TockResult<ParallelSleepDriver<'a>> {
-        let subscription = syscalls::subscribe(
+        let subscription = syscalls::subscribe_cb(
             DRIVER_NUMBER,
             subscribe_nr::SUBSCRIBE_CALLBACK,
             &mut self.callback,

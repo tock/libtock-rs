@@ -1,12 +1,11 @@
 #![feature(asm, alloc_error_handler, lang_items, naked_functions)]
 #![cfg_attr(any(target_arch = "arm", target_arch = "riscv32"), no_std)]
 
-mod callback;
-
 pub mod adc;
 pub mod ble_composer;
 pub mod ble_parser;
 pub mod buttons;
+pub mod callback;
 pub mod console;
 pub mod debug;
 pub mod electronics;

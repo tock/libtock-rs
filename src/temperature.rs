@@ -1,3 +1,4 @@
+use crate::callback::Identity1Consumer;
 use crate::futures;
 use crate::result::TockError;
 use crate::syscalls;
@@ -21,21 +22,23 @@ pub struct TemperatureDriver;
 
 impl TemperatureDriver {
     pub async fn measure_temperature(&mut self) -> Result<Temperature, TockError> {
-        let temperature = Cell::<Option<isize>>::new(None);
-        let mut callback = |arg1, _, _| temperature.set(Some(arg1 as isize));
-        let subscription = syscalls::subscribe(
+        let temperature = Cell::new(None);
+        let mut callback = |centi_celsius| temperature.set(Some(centi_celsius as isize));
+        let subscription = syscalls::subscribe::<Identity1Consumer, _>(
             DRIVER_NUMBER,
             subscribe_nr::SUBSCRIBE_CALLBACK,
             &mut callback,
         )?;
+
         syscalls::command(DRIVER_NUMBER, command_nr::START_MEASUREMENT, 0, 0)?;
-        let temperatur = Temperature {
+        let result = Temperature {
             centi_celsius: futures::wait_for_value(|| temperature.get()).await,
         };
         mem::drop(subscription);
-        Ok(temperatur)
+        Ok(result)
     }
 }
+
 #[derive(Copy, Clone)]
 pub struct Temperature {
     centi_celsius: isize,

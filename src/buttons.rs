@@ -36,14 +36,11 @@ impl<CB: FnMut(usize, ButtonState)> SubscribableCallback for WithCallback<CB> {
     }
 }
 
-impl<CB> WithCallback<CB>
-where
-    Self: SubscribableCallback,
-{
+impl<CB: FnMut(usize, ButtonState)> WithCallback<CB> {
     pub fn init(&mut self) -> TockResult<Buttons> {
         let buttons = Buttons {
             count: syscalls::command(DRIVER_NUMBER, command_nr::COUNT, 0, 0)?,
-            subscription: syscalls::subscribe(
+            subscription: syscalls::subscribe_cb(
                 DRIVER_NUMBER,
                 subscribe_nr::SUBSCRIBE_CALLBACK,
                 self,
