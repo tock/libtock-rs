@@ -13,7 +13,7 @@ use crate::sensors::HumiditySensor;
 use crate::sensors::TemperatureSensor;
 use crate::simple_ble::BleAdvertisingDriver;
 use crate::simple_ble::BleScanningDriver;
-use crate::temperature::TemperatureDriver;
+use crate::temperature::TemperatureDriverFactory;
 use crate::timer::DriverContext;
 use core::cell::Cell;
 
@@ -24,7 +24,7 @@ pub struct Drivers {
     pub leds_driver_factory: LedsDriverFactory,
     pub timer_context: DriverContext,
     pub gpio_driver_factory: GpioDriverFactory,
-    pub temperature_driver: TemperatureDriver,
+    pub temperature_driver_factory: TemperatureDriverFactory,
     pub buttons_driver_factory: ButtonsDriverFactory,
     pub adc_driver: AdcDriver,
     pub rng_driver: RngDriver,
@@ -66,7 +66,7 @@ const DRIVERS: Drivers = Drivers {
         active_timer: Cell::new(None),
     },
     gpio_driver_factory: GpioDriverFactory,
-    temperature_driver: TemperatureDriver,
+    temperature_driver_factory: TemperatureDriverFactory,
     rng_driver: RngDriver,
     ambient_light_sensor: AmbientLightSensor,
     temperature_sensor: TemperatureSensor,
