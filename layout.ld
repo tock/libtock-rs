@@ -53,11 +53,11 @@ SECTIONS {
         /* Offset of data symbols in flash */
         LONG(LOADADDR(.data) - _beginning);
         /* Offset of data section in memory */
-        LONG(_data);
+        LONG(_data - _stack_top_aligned);
         /* Size of data section */
         LONG(SIZEOF(.data));
         /* Offset of BSS section in memory */
-        LONG(_bss);
+        LONG(_bss - _stack_top_aligned);
         /* Size of BSS section */
         LONG(SIZEOF(.bss));
         /* First address offset after program flash, where elf2tab places
