@@ -118,17 +118,15 @@ pub unsafe extern "C" fn _start(
 
         // Debug support, tell the kernel the heap_start location
         mov r0, r6
-        ldr r4, [r0, #24] // r4 = app_start->bss_start
+        ldr r8, [r0, #24] // r4 = app_start->bss_start
         ldr r5, [r0, #28] // r5 = app_start->bss_size
-        add r4, r4, r5    // r4 = bss_start + bss_size
+        add r8, r8, r5    // r8 = bss_start + bss_size
+        add r8, r8, r4    // r8 = bss_start + bss_size + stack_top
         //
         // memop(11, r4)
         mov r0, #11
-        mov r1, r4
+        mov r1, r8
         svc 4
-
-        // Store heap_start (and soon to be app_heap_break) in r8
-        mov r8, r4
 
         // There is a possibility that stack + .data + .bss is greater than
         // 3072. Therefore setup the initial app_heap_break to heap_start (that
@@ -259,7 +257,7 @@ pub unsafe extern "C" fn _start() -> ! {
     mv   a0, s0             // first arg is app_start
     mv   s0, sp             // Set the frame pointer to sp.
     mv   a1, s1             // second arg is stacktop
-    mv   a2, s2             // third arg is app_heap_break
+    mv   a2, t2             // third arg is app_heap_break
     jal  rust_start"
     :                                                              // No output operands
     :
@@ -329,8 +327,9 @@ pub unsafe extern "C" fn rust_start(app_start: usize, stacktop: usize, app_heap_
     );
 
     // Zero .bss (specified by the linker script).
-    let bss_end = layout_header.bss_start + layout_header.bss_size; // 1 past the end of .bss
-    for i in layout_header.bss_start..bss_end {
+    let bss_start = stacktop + layout_header.bss_start;
+    let bss_end = stacktop + layout_header.bss_start + layout_header.bss_size; // 1 past the end of .bss
+    for i in bss_start..bss_end {
         core::ptr::write(i as *mut u8, 0);
     }
 
