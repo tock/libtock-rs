@@ -3,6 +3,7 @@
 use libtock::ble_composer;
 use libtock::ble_composer::BlePayload;
 use libtock::led;
+use libtock::result::TockResult;
 use libtock::simple_ble::BleAdvertisingDriver;
 use libtock::timer;
 use libtock::timer::Duration;
@@ -14,7 +15,7 @@ struct LedCommand {
     pub st: bool,
 }
 
-async fn main() {
+async fn main() -> TockResult<()> {
     let led = led::get(0).unwrap();
 
     let uuid: [u8; 2] = [0x00, 0x18];
@@ -39,12 +40,12 @@ async fn main() {
         .unwrap();
     gap_payload.add_service_payload([91, 79], &payload).unwrap();
 
-    let _handle = BleAdvertisingDriver::initialize(100, &gap_payload, &mut buffer).unwrap();
+    let _handle = BleAdvertisingDriver::initialize(100, &gap_payload, &mut buffer);
 
     loop {
-        led.on();
-        timer::sleep(Duration::from_ms(500)).await;
-        led.off();
-        timer::sleep(Duration::from_ms(500)).await;
+        led.on()?;
+        timer::sleep(Duration::from_ms(500)).await?;
+        led.off()?;
+        timer::sleep(Duration::from_ms(500)).await?;
     }
 }

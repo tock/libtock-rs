@@ -1,3 +1,4 @@
+use crate::result::TockResult;
 use crate::syscalls::command;
 
 const DRIVER_NUMBER: usize = 0x00002;
@@ -13,15 +14,13 @@ pub struct Led {
     led_num: usize,
 }
 
-pub fn count() -> isize {
-    command(DRIVER_NUMBER, command_nr::COUNT, 0, 0)
+pub fn count() -> TockResult<usize> {
+    command(DRIVER_NUMBER, command_nr::COUNT, 0, 0).map_err(Into::into)
 }
 
-pub fn get(led_num: isize) -> Option<Led> {
-    if led_num >= 0 && led_num < count() {
-        Some(Led {
-            led_num: led_num as usize,
-        })
+pub fn get(led_num: usize) -> Option<Led> {
+    if led_num < count().ok().unwrap() {
+        Some(Led { led_num })
     } else {
         None
     }
@@ -30,12 +29,12 @@ pub fn get(led_num: isize) -> Option<Led> {
 pub fn all() -> LedIter {
     LedIter {
         curr_led: 0,
-        led_count: count() as usize,
+        led_count: count().ok().unwrap(),
     }
 }
 
 impl Led {
-    pub fn set_state(&self, state: bool) {
+    pub fn set_state(&self, state: bool) -> TockResult<()> {
         if state {
             self.on()
         } else {
@@ -43,16 +42,19 @@ impl Led {
         }
     }
 
-    pub fn on(&self) {
-        command(DRIVER_NUMBER, command_nr::ON, self.led_num, 0);
+    pub fn on(&self) -> TockResult<()> {
+        command(DRIVER_NUMBER, command_nr::ON, self.led_num, 0)?;
+        Ok(())
     }
 
-    pub fn off(&self) {
-        command(DRIVER_NUMBER, command_nr::OFF, self.led_num, 0);
+    pub fn off(&self) -> TockResult<()> {
+        command(DRIVER_NUMBER, command_nr::OFF, self.led_num, 0)?;
+        Ok(())
     }
 
-    pub fn toggle(&self) {
-        command(DRIVER_NUMBER, command_nr::TOGGLE, self.led_num, 0);
+    pub fn toggle(&self) -> TockResult<()> {
+        command(DRIVER_NUMBER, command_nr::TOGGLE, self.led_num, 0)?;
+        Ok(())
     }
 }
 

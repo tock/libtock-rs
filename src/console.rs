@@ -1,8 +1,10 @@
 use crate::futures;
+use crate::result::TockResult;
 use crate::syscalls;
 use core::cell::Cell;
 use core::executor;
 use core::fmt;
+use core::mem;
 
 const DRIVER_NUMBER: usize = 1;
 
@@ -29,26 +31,24 @@ impl Console {
         }
     }
 
-    pub fn write<S: AsRef<[u8]>>(&mut self, text: S) {
+    pub fn write<S: AsRef<[u8]>>(&mut self, text: S) -> TockResult<()> {
         let mut not_written_yet = text.as_ref();
         while !not_written_yet.is_empty() {
             let num_bytes_to_print = self.allow_buffer.len().min(not_written_yet.len());
             self.allow_buffer[..num_bytes_to_print]
                 .copy_from_slice(&not_written_yet[..num_bytes_to_print]);
-            self.flush(num_bytes_to_print);
+            self.flush(num_bytes_to_print)?;
             not_written_yet = &not_written_yet[num_bytes_to_print..];
         }
+        Ok(())
     }
 
-    fn flush(&mut self, num_bytes_to_print: usize) {
-        let result = syscalls::allow(
+    fn flush(&mut self, num_bytes_to_print: usize) -> TockResult<()> {
+        let shared_memory = syscalls::allow(
             DRIVER_NUMBER,
             allow_nr::SHARE_BUFFER,
             &mut self.allow_buffer[..num_bytes_to_print],
-        );
-        if result.is_err() {
-            return;
-        }
+        )?;
 
         let is_written = Cell::new(false);
         let mut is_written_alarm = |_, _, _| is_written.set(true);
@@ -56,24 +56,21 @@ impl Console {
             DRIVER_NUMBER,
             subscribe_nr::SET_ALARM,
             &mut is_written_alarm,
-        );
-        if subscription.is_err() {
-            return;
-        }
+        )?;
 
-        let result_code =
-            syscalls::command(DRIVER_NUMBER, command_nr::WRITE, num_bytes_to_print, 0);
-        if result_code < 0 {
-            return;
-        }
+        syscalls::command(DRIVER_NUMBER, command_nr::WRITE, num_bytes_to_print, 0)?;
 
         unsafe { executor::block_on(futures::wait_until(|| is_written.get())) };
+
+        mem::drop(subscription);
+        mem::drop(shared_memory);
+
+        Ok(())
     }
 }
 
 impl fmt::Write for Console {
     fn write_str(&mut self, string: &str) -> Result<(), fmt::Error> {
-        self.write(string);
-        Ok(())
+        self.write(string).map_err(|_| fmt::Error)
     }
 }

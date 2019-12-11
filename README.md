@@ -69,7 +69,9 @@ The boiler plate code you would write is
 ```rust
 #![no_std]
 
-async fn main() {
+use libtock::result::TockResult;
+
+async fn main() -> TockResult<()> {
   // Your code
 }
 ```

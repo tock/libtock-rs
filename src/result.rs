@@ -1,43 +1,72 @@
+use core::fmt;
+
+pub type TockResult<T> = Result<T, TockError>;
+
 #[derive(Copy, Clone)]
-pub enum TockValue<E> {
-    Expected(E),
-    Unexpected(isize),
+pub enum TockError {
+    Subscribe(SubscribeError),
+    Command(CommandError),
+    Allow(AllowError),
+    Format,
+    Other(OtherError),
 }
 
-// Size-optimized implementation of Debug.
-impl<E: core::fmt::Debug> core::fmt::Debug for TockValue<E> {
-    fn fmt(&self, f: &mut core::fmt::Formatter) -> Result<(), core::fmt::Error> {
-        match self {
-            // Printing out the value of E would cause TockResult::unwrap() to
-            // use a &dyn core::fmt::Debug, which defeats LLVM's
-            // devirtualization and prevents LTO from removing unused Debug
-            // implementations. Unfortunately, that generates too much code
-            // bloat (several kB), so we cannot display the value contained in
-            // this TockValue.
-            TockValue::Expected(_) => f.write_str("Expected(...)"),
+#[derive(Copy, Clone)]
+pub struct SubscribeError {
+    pub driver_number: usize,
+    pub subscribe_number: usize,
+    pub return_code: isize,
+}
 
-            TockValue::Unexpected(n) => {
-                f.write_str("Unexpected(")?;
-                n.fmt(f)?;
-                f.write_str(")")
-            }
-        }
+impl From<SubscribeError> for TockError {
+    fn from(subscribe_error: SubscribeError) -> Self {
+        TockError::Subscribe(subscribe_error)
     }
 }
 
-pub type TockResult<T, E> = Result<T, TockValue<E>>;
-
-pub trait TockResultExt<T, E>: Sized {
-    fn as_expected(self) -> Result<T, E>;
+#[derive(Copy, Clone)]
+pub struct CommandError {
+    pub driver_number: usize,
+    pub command_number: usize,
+    pub arg1: usize,
+    pub arg2: usize,
+    pub return_code: isize,
 }
 
-impl<T, E> TockResultExt<T, E> for TockResult<T, E> {
-    fn as_expected(self) -> Result<T, E> {
-        match self {
-            Ok(ok) => Ok(ok),
-            Err(TockValue::Expected(err)) => Err(err),
-            Err(TockValue::Unexpected(_)) => panic!("Unexpected error"),
-        }
+impl From<CommandError> for TockError {
+    fn from(command_error: CommandError) -> Self {
+        TockError::Command(command_error)
+    }
+}
+
+#[derive(Copy, Clone)]
+pub struct AllowError {
+    pub driver_number: usize,
+    pub allow_number: usize,
+    pub return_code: isize,
+}
+
+impl From<AllowError> for TockError {
+    fn from(allow_error: AllowError) -> Self {
+        TockError::Allow(allow_error)
+    }
+}
+
+impl From<fmt::Error> for TockError {
+    fn from(fmt::Error: fmt::Error) -> Self {
+        TockError::Format
+    }
+}
+
+#[derive(Copy, Clone)]
+pub enum OtherError {
+    TimerDriverDurationOutOfRange,
+    TimerDriverErroneousClockFrequency,
+}
+
+impl From<OtherError> for TockError {
+    fn from(other: OtherError) -> Self {
+        TockError::Other(other)
     }
 }
 

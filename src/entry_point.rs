@@ -381,7 +381,7 @@ unsafe impl GlobalAlloc for TockAllocator {
     unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
         HEAP.allocate_first_fit(layout)
             .ok()
-            .map_or(0 as *mut u8, |allocation| allocation.as_ptr())
+            .map_or(ptr::null_mut(), NonNull::as_ptr)
     }
 
     unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {

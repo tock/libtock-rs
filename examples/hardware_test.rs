@@ -1,4 +1,5 @@
 #![no_std]
+
 /// Hardware regression tests.
 /// Need P0.03 and P0.04 to be connected (on a nrf52-dk).
 extern crate alloc;
@@ -8,6 +9,7 @@ use core::fmt::Write;
 use futures::future;
 use libtock::console::Console;
 use libtock::gpio::{GpioPinUnitialized, InputMode};
+use libtock::result::TockResult;
 use libtock::timer;
 use libtock::timer::Duration;
 
@@ -29,7 +31,7 @@ impl MyTrait for String {
     }
 }
 
-async fn main() {
+async fn main() -> TockResult<()> {
     let mut console = Console::new();
     write!(console, "[test-results]\n").unwrap();
 
@@ -42,6 +44,8 @@ async fn main() {
     test_trait_objects(&mut console);
 
     test_callbacks_and_wait_forever(&mut console).await;
+
+    Ok(())
 }
 
 fn test_heap(console: &mut Console) {
@@ -60,11 +64,14 @@ fn test_formatting(console: &mut Console) {
 /// trait_obj_value_string = string
 fn test_trait_objects(console: &mut Console) {
     let pin_in = GpioPinUnitialized::new(0);
-    let pin_in = pin_in.open_for_read(None, InputMode::PullDown).unwrap();
+    let pin_in = pin_in
+        .open_for_read(None, InputMode::PullDown)
+        .ok()
+        .unwrap();
 
     let pin_out = GpioPinUnitialized::new(1);
-    let pin_out = pin_out.open_for_write().unwrap();
-    pin_out.set_high();
+    let pin_out = pin_out.open_for_write().ok().unwrap();
+    pin_out.set_high().ok().unwrap();
 
     let string = String::from("string");
 
@@ -93,11 +100,14 @@ fn test_static_mut(console: &mut Console) {
 /// needs P0.03 and P0.04 to be connected
 fn test_gpio(console: &mut Console) {
     let pin_in = GpioPinUnitialized::new(0);
-    let pin_in = pin_in.open_for_read(None, InputMode::PullDown).unwrap();
+    let pin_in = pin_in
+        .open_for_read(None, InputMode::PullDown)
+        .ok()
+        .unwrap();
 
     let pin_out = GpioPinUnitialized::new(1);
-    let pin_out = pin_out.open_for_write().unwrap();
-    pin_out.set_high();
+    let pin_out = pin_out.open_for_write().ok().unwrap();
+    pin_out.set_high().ok().unwrap();
 
     write!(console, "gpio_works = {}\n", pin_in.read()).unwrap();
 }
@@ -108,9 +118,9 @@ async fn test_callbacks_and_wait_forever(console: &mut Console) {
         write!(console, "all_tests_run = true").unwrap();
     });
 
-    let mut timer = with_callback.init().unwrap();
+    let mut timer = with_callback.init().ok().unwrap();
 
-    timer.set_alarm(Duration::from_ms(500)).unwrap();
+    timer.set_alarm(Duration::from_ms(500)).ok().unwrap();
 
     future::pending().await
 }

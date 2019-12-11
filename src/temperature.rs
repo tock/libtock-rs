@@ -1,42 +1,70 @@
-use crate::callback::CallbackSubscription;
-use crate::callback::SubscribableCallback;
 use crate::futures;
+use crate::result::TockError;
 use crate::syscalls;
 use core::cell::Cell;
+use core::fmt;
+use core::fmt::Display;
+use core::mem;
 
 const DRIVER_NUMBER: usize = 0x60000;
 const SUBSCRIBE_CALLBACK: usize = 0;
 const START_MEASUREMENT: usize = 1;
 
-fn with_callback<CB>(callback: CB) -> WithCallback<CB> {
-    WithCallback { callback }
-}
-
-struct WithCallback<CB> {
-    callback: CB,
-}
-
-impl<CB: FnMut(isize)> SubscribableCallback for WithCallback<CB> {
-    fn call_rust(&mut self, arg0: usize, _: usize, _: usize) {
-        (self.callback)(arg0 as isize);
-    }
-}
-
-impl<CB> WithCallback<CB>
-where
-    Self: SubscribableCallback,
-{
-    fn start_measurement(&mut self) -> Result<CallbackSubscription, isize> {
-        let subscription = syscalls::subscribe(DRIVER_NUMBER, SUBSCRIBE_CALLBACK, self)?;
-        syscalls::command(DRIVER_NUMBER, START_MEASUREMENT, 0, 0);
-        Ok(subscription)
-    }
-}
-
-pub async fn measure_temperature() -> isize {
+pub async fn measure_temperature() -> Result<Temperature, TockError> {
     let temperature = Cell::<Option<isize>>::new(None);
-    let mut callback = |temp: isize| temperature.set(Some(temp));
-    let mut withcallback = with_callback(&mut callback);
-    let _subscription = withcallback.start_measurement();
-    futures::wait_for_value(|| temperature.get()).await
+    let mut callback = |arg1, _, _| temperature.set(Some(arg1 as isize));
+    let subscription = syscalls::subscribe(DRIVER_NUMBER, SUBSCRIBE_CALLBACK, &mut callback)?;
+    syscalls::command(DRIVER_NUMBER, START_MEASUREMENT, 0, 0)?;
+    let temperatur = Temperature {
+        centi_celsius: futures::wait_for_value(|| temperature.get()).await,
+    };
+    mem::drop(subscription);
+    Ok(temperatur)
+}
+
+#[derive(Copy, Clone)]
+pub struct Temperature {
+    centi_celsius: isize,
+}
+
+impl Temperature {
+    pub fn in_celsius(self) -> isize {
+        self.centi_celsius / 100
+    }
+
+    pub fn in_centi_celsius(self) -> isize {
+        self.centi_celsius
+    }
+}
+
+impl Display for Temperature {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}.{:02}°C",
+            self.centi_celsius / 100,
+            self.centi_celsius.abs() % 100
+        )
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use alloc::string::String;
+    use alloc::string::ToString;
+
+    #[test]
+    fn render_temperature() {
+        assert_eq!(render_temperature_for(0), "0.00°C");
+        assert_eq!(render_temperature_for(5), "0.05°C");
+        assert_eq!(render_temperature_for(105), "1.05°C");
+        assert_eq!(render_temperature_for(125), "1.25°C");
+        assert_eq!(render_temperature_for(1025), "10.25°C");
+        assert_eq!(render_temperature_for(-1025), "-10.25°C");
+    }
+
+    fn render_temperature_for(centi_celsius: isize) -> String {
+        Temperature { centi_celsius }.to_string()
+    }
 }

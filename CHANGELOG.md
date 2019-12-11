@@ -2,7 +2,7 @@
 
 ## 0.2.0 (WIP)
 
-- Many functions, including `main()` are asynchronous
+- Many functions, including `main()`, are asynchronous
   - To retrieve the value of an asynchronous `value`, use `value.await`
   - This is only possible within an `async fn`, so either
     - Make the caller `fn` of `.await` an `async fn`
@@ -15,6 +15,7 @@
   - `syscalls::subscribe_ptr` becomes `syscalls::raw::subscribe`
   - `syscalls::allow_ptr` becomes `syscalls::raw::allow`
 - Targets without support for atomics can be built
+- Most API functions, including `main()`, return a `Result<T, TockError>`
 
 ## a8bb4fa9be504517d5533511fd8e607ea61f1750 (0.1.0)
 

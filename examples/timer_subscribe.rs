@@ -3,10 +3,11 @@
 use core::fmt::Write;
 use futures::future;
 use libtock::console::Console;
+use libtock::result::TockResult;
 use libtock::timer;
 use libtock::timer::Duration;
 
-async fn main() {
+async fn main() -> TockResult<()> {
     let mut console = Console::new();
 
     let mut with_callback = timer::with_callback(|_, _| {
@@ -17,8 +18,8 @@ async fn main() {
         .unwrap();
     });
 
-    let mut timer = with_callback.init().unwrap();
-    timer.set_alarm(Duration::from_ms(2000)).unwrap();
+    let mut timer = with_callback.init()?;
+    timer.set_alarm(Duration::from_ms(2000))?;
 
     future::pending().await
 }
