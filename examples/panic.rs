@@ -2,7 +2,7 @@
 
 use libtock::result::TockResult;
 
-fn main() -> TockResult<()> {
+fn main() {
     let _ = libtock::LibTock {};
     panic!("Bye world!");
 }
