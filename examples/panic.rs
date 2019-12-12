@@ -2,7 +2,8 @@
 
 use libtock::result::TockResult;
 
-async fn main() -> TockResult<()> {
+libtock::async_main!(async_main);
+fn async_main() -> TockResult<()> {
     let _ = libtock::LibTock {};
     panic!("Bye world!");
 }

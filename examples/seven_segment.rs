@@ -23,7 +23,8 @@ fn number_to_bits(n: u8) -> [bool; 8] {
 }
 
 // Example works on a shift register on P0.03, P0.04, P0.28
-async fn main() -> TockResult<()> {
+libtock::async_main!(async_main);
+fn async_main() -> TockResult<()> {
     let shift_register = ShiftRegister::new(
         GpioPinUnitialized::new(0).open_for_write()?,
         GpioPinUnitialized::new(1).open_for_write()?,

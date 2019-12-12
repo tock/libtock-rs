@@ -5,7 +5,8 @@ use libtock::result::TockResult;
 use libtock::timer;
 use libtock::timer::Duration;
 
-async fn main() -> TockResult<()> {
+libtock::async_main!(async_main);
+fn async_main() -> TockResult<()> {
     let num_leds = led::count()?;
 
     // Blink the LEDs in a binary count pattern and scale

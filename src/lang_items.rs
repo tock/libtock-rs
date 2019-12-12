@@ -19,36 +19,26 @@
 //! crate.
 
 use crate::led;
-use crate::result::TockError;
 use crate::timer;
 use crate::timer::Duration;
 use core::alloc::Layout;
 use core::executor;
-use core::future::Future;
 use core::panic::PanicInfo;
 
 #[lang = "start"]
-extern "C" fn start<T>(main: fn() -> T, _argc: isize, _argv: *const *const u8) -> i32
+extern "C" fn start<T>(main: fn() -> T, _argc: isize, _argv: *const *const u8)
 where
     T: Termination,
 {
-    main().report()
+    main();
 }
 
+// Termination is a required lang item, so we must include it. We don't have
+// much use for it, however (unlike Unix-based OSes, Tock does not have a
+// concept of an exit code), so it is a minimal trait.
 #[lang = "termination"]
-pub trait Termination {
-    fn report(self) -> i32;
-}
-
-impl<T> Termination for T
-where
-    T: Future<Output = Result<(), TockError>>,
-{
-    fn report(self) -> i32 {
-        let _ = unsafe { executor::block_on(self) };
-        0
-    }
-}
+pub trait Termination {}
+impl Termination for () {}
 
 #[panic_handler]
 unsafe fn panic_handler(_info: &PanicInfo) -> ! {

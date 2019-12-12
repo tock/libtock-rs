@@ -27,3 +27,23 @@ impl<T, F: Fn() -> Option<T>> Future for WaitForValue<F> {
         }
     }
 }
+
+/// Generates a synchronous `main()` function that calls the provided
+/// asynchronous function. To avoid name conflicts, the asynchronous function
+/// must not be called `main()`; `async_main()` is fine.
+///
+/// Example:
+///     libtock::async_main!(async_main);
+///     async fn async_main() {
+///         // Snipped
+///     }
+#[macro_export]
+macro_rules! async_main {
+    ($main_name:ident) => {
+        fn main() {
+            unsafe {
+                ::core::executor::block_on($main_name());
+            }
+        }
+    };
+}

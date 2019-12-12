@@ -9,7 +9,8 @@ use libtock::result::TockResult;
 use libtock::timer;
 use libtock::timer::Duration;
 
-async fn main() -> TockResult<()> {
+libtock::async_main!(async_main);
+fn async_main() -> TockResult<()> {
     future::try_join(blink_periodically(), blink_on_button_press()).await?;
     Ok(())
 }

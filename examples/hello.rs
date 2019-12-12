@@ -6,7 +6,8 @@ use libtock::result::TockResult;
 use libtock::timer;
 use libtock::timer::Duration;
 
-async fn main() -> TockResult<()> {
+libtock::async_main!(async_main);
+fn async_main() -> TockResult<()> {
     let mut console = Console::new();
 
     for i in 0.. {

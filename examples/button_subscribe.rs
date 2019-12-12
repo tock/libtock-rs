@@ -8,7 +8,8 @@ use libtock::console::Console;
 use libtock::result::TockResult;
 
 // FIXME: Hangs up when buttons are pressed rapidly. Yielding in callback leads to stack overflow.
-async fn main() -> TockResult<()> {
+libtock::async_main!(async_main);
+fn async_main() -> TockResult<()> {
     let mut console = Console::new();
 
     let mut with_callback = buttons::with_callback(|button_num: usize, state| {
