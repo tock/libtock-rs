@@ -16,7 +16,7 @@ struct LedCommand {
 }
 
 libtock::async_main!(async_main);
-fn async_main() -> TockResult<()> {
+async fn async_main() -> TockResult<()> {
     let mut shared_buffer = BleDriver::create_scan_buffer();
     let mut my_buffer = BleDriver::create_scan_buffer();
     let shared_memory = BleDriver::share_memory(&mut shared_buffer)?;

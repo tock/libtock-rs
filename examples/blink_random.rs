@@ -7,7 +7,7 @@ use libtock::timer;
 use libtock::timer::Duration;
 
 libtock::async_main!(async_main);
-fn async_main() -> TockResult<()> {
+async fn async_main() -> TockResult<()> {
     let num_leds = led::count().ok().unwrap();
     // blink_nibble assumes 4 leds.
     assert_eq!(num_leds, 4);

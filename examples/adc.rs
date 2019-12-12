@@ -8,7 +8,7 @@ use libtock::timer;
 use libtock::timer::Duration;
 
 libtock::async_main!(async_main);
-fn async_main() -> TockResult<()> {
+async fn async_main() -> TockResult<()> {
     let mut console = Console::new();
     let mut with_callback = adc::with_callback(|channel: usize, value: usize| {
         writeln!(console, "channel: {}, value: {}", channel, value).unwrap();

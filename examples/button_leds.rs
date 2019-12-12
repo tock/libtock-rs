@@ -7,7 +7,7 @@ use libtock::led;
 use libtock::result::TockResult;
 
 libtock::async_main!(async_main);
-fn async_main() -> TockResult<()> {
+async fn async_main() -> TockResult<()> {
     let mut with_callback = buttons::with_callback(|button_num: usize, state| {
         match state {
             ButtonState::Pressed => led::get(button_num).unwrap().toggle().ok().unwrap(),

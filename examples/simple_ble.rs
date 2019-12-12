@@ -16,7 +16,7 @@ struct LedCommand {
 }
 
 libtock::async_main!(async_main);
-fn async_main() -> TockResult<()> {
+async fn async_main() -> TockResult<()> {
     let led = led::get(0).unwrap();
 
     let uuid: [u8; 2] = [0x00, 0x18];
