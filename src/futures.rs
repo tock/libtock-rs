@@ -62,3 +62,44 @@ macro_rules! async_main {
         }
     };
 }
+
+#[cfg(test)]
+mod test {
+    extern crate std;
+
+    /// Test case verifying async_main!'s operation with a well-behaved
+    /// (non-reentrant) async_main().
+    #[test]
+    fn async_main_good() {
+        use std::sync::atomic::AtomicUsize;
+
+        // Tracks the number of times increment() has been called. This is an
+        // atomic rather than a Mutex as atomics can be const-initialized.
+        // Accessed using SeqCst as that is the strongest,
+        // easiest-to-reason-about form of consistency and this test doesn't
+        // need to be particularly fast.
+        static COUNT: AtomicUsize = AtomicUsize::new(0);
+
+        async fn increment() {
+            COUNT.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+        }
+
+        async_main!(increment);
+        main();
+        assert_eq!(COUNT.load(std::sync::atomic::Ordering::SeqCst), 1);
+    }
+
+    /// Test case verifying async_main! panics if invoked recursively rather
+    /// than triggering UB.
+    #[test]
+    #[should_panic]
+    fn async_main_reentrance() {
+        // async_main function that calls back into main.
+        async fn async_main() {
+            main();
+        }
+
+        async_main!(async_main);
+        main();
+    }
+}
