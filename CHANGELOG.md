@@ -2,11 +2,13 @@
 
 ## 0.2.0 (WIP)
 
-- Many functions, including `main()`, are asynchronous
+- Many functions are asynchronous
   - To retrieve the value of an asynchronous `value`, use `value.await`
   - This is only possible within an `async fn`, so either
     - Make the caller `fn` of `.await` an `async fn`
     - Not recommended: Use `core::executor::block_on(value)` to retrieve the `value`
+  - `async_main!` is provided for applications that want to have an `async`
+    `main()`
 - `syscalls::yieldk_for` is no longer available
   - Yielding manually is discouraged as it conflicts with Rust's safety guarantees. If you need to wait for a condition, use `futures::wait_until` and `.await`.
 - `syscalls::yieldk` has become `unsafe` for the same reason

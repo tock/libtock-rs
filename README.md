@@ -71,7 +71,7 @@ The boiler plate code you would write is
 
 use libtock::result::TockResult;
 
-async fn main() -> TockResult<()> {
+fn main() {
   // Your code
 }
 ```
@@ -89,6 +89,16 @@ This script does the following steps for you:
  - cross-compile your program
  - create a TAB (tock application bundle)
  - if you have a nRF52-DK board connected: flash this TAB to your board (using tockloader)
+
+If you would like your `main()` to be `async`, you can wrap it using
+`libtock::async_main!`:
+```rust
+#![no_std]
+
+libtock::async_main!(async_main);
+async fn async_main() {
+}
+```
 
 ## Running the Integration Tests
 Having an nRF52-DK board at hand, integration tests can be run using `./run_hardware_tests.sh`.
