@@ -9,9 +9,9 @@ use core::fmt::Write;
 use futures::future;
 use libtock::console::Console;
 use libtock::gpio::{GpioPinUnitialized, InputMode};
-use libtock::result::TockResult;
 use libtock::timer;
 use libtock::timer::Duration;
+use libtock_support_macros::libtock_main;
 
 static mut STATIC: usize = 0;
 
@@ -31,7 +31,8 @@ impl MyTrait for String {
     }
 }
 
-async fn main() -> TockResult<()> {
+#[libtock_main]
+async fn main() -> libtock::result::TockResult<()> {
     let mut console = Console::new();
     write!(console, "[test-results]\n").unwrap();
 

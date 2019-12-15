@@ -1,11 +1,12 @@
 #![no_std]
 
 use libtock::led;
-use libtock::result::TockResult;
 use libtock::timer;
 use libtock::timer::Duration;
+use libtock_support_macros::libtock_main;
 
-async fn main() -> TockResult<()> {
+#[libtock_main]
+async fn main() -> libtock::result::TockResult<()> {
     let num_leds = led::count()?;
 
     // Blink the LEDs in a binary count pattern and scale

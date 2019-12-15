@@ -8,6 +8,7 @@ edition = "2018"
 [dependencies]
 core = { package = "async-support", path = "async-support" }
 linked_list_allocator = { version = "0.6.4", default-features = false }
+libtock-support-macros = { path = "support-macros" }
 
 [dev-dependencies]
 corepack = { version = "0.4.0", default-features = false, features = ["alloc"] }
@@ -23,3 +24,9 @@ lto = true
 [profile.release]
 panic = "abort"
 lto = true
+
+[workspace]
+members = [
+    "async-support",
+    "support-macros",
+]
