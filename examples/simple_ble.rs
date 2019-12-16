@@ -3,6 +3,7 @@
 use libtock::ble_composer;
 use libtock::ble_composer::BlePayload;
 use libtock::led;
+use libtock::result::TockResult;
 use libtock::simple_ble::BleAdvertisingDriver;
 use libtock::timer;
 use libtock::timer::Duration;
@@ -16,7 +17,7 @@ struct LedCommand {
 }
 
 #[libtock_main]
-async fn main() -> libtock::result::TockResult<()> {
+async fn main() -> TockResult<()> {
     let led = led::get(0).unwrap();
 
     let uuid: [u8; 2] = [0x00, 0x18];

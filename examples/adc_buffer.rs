@@ -4,6 +4,7 @@ use core::fmt::Write;
 use libtock::adc;
 use libtock::adc::AdcBuffer;
 use libtock::console::Console;
+use libtock::result::TockResult;
 use libtock::syscalls;
 use libtock_support_macros::libtock_main;
 
@@ -25,6 +26,6 @@ async fn main() -> TockResult<()> {
 
     loop {
         adc.sample_continuous_buffered(0, 128)?;
-        syscalls::raw::yieldk();
+        unsafe { syscalls::raw::yieldk() };
     }
 }

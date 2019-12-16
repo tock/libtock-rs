@@ -23,8 +23,9 @@ fn try_generate_main_wrapped(
 ) -> Result<proc_macro2::TokenStream, Error> {
     let ast = syn::parse2::<ItemFn>(input)?;
     let block = ast.block;
+    let output = &ast.sig.output;
     Ok(quote!(
-        fn main() -> ::libtock::result::TockResult<()> {
+        fn main() #output {
             let _block = async #block;
             unsafe {::core::executor::block_on(_block) }
         }

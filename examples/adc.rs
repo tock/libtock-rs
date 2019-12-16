@@ -3,6 +3,7 @@
 use core::fmt::Write;
 use libtock::adc;
 use libtock::console::Console;
+use libtock::result::TockResult;
 use libtock::timer;
 use libtock::timer::Duration;
 use libtock_support_macros::libtock_main;

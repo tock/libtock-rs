@@ -5,11 +5,12 @@ use futures::future;
 use libtock::buttons;
 use libtock::buttons::ButtonState;
 use libtock::console::Console;
+use libtock::result::TockResult;
 use libtock_support_macros::libtock_main;
 
 // FIXME: Hangs up when buttons are pressed rapidly. Yielding in callback leads to stack overflow.
 #[libtock_main]
-async fn main() -> libtock::result::TockResult<()> {
+async fn main() -> TockResult<()> {
     let mut console = Console::new();
 
     let mut with_callback = buttons::with_callback(|button_num: usize, state| {

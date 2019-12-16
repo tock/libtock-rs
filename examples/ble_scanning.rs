@@ -3,6 +3,7 @@
 use futures::future;
 use libtock::ble_parser;
 use libtock::led;
+use libtock::result::TockResult;
 use libtock::simple_ble;
 use libtock::simple_ble::BleCallback;
 use libtock::simple_ble::BleDriver;
@@ -16,7 +17,7 @@ struct LedCommand {
 }
 
 #[libtock_main]
-async fn main() -> libtock::result::TockResult<()> {
+async fn main() -> TockResult<()> {
     let mut shared_buffer = BleDriver::create_scan_buffer();
     let mut my_buffer = BleDriver::create_scan_buffer();
     let shared_memory = BleDriver::share_memory(&mut shared_buffer)?;
