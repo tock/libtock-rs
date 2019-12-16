@@ -14,7 +14,7 @@ use syn::ItemFn;
 /// `main()`. In other words, this will not compile with libtock-rs:
 ///     async fn main() {}
 /// and this will:
-///     #[async_main]
+///     #[libtock::main]
 ///     async fn main() {}
 #[proc_macro_attribute]
 pub fn main(_: TokenStream, input: TokenStream) -> TokenStream {

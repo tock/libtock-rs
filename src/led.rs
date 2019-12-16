@@ -26,10 +26,12 @@ pub fn get(led_num: usize) -> Option<Led> {
     }
 }
 
+/// Returns an iterator over all available LEDs. If the LED driver is not
+/// present, the iterator will be empty.
 pub fn all() -> LedIter {
     LedIter {
         curr_led: 0,
-        led_count: count().ok().unwrap(),
+        led_count: count().unwrap_or(0),
     }
 }
 
