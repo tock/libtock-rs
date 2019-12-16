@@ -36,7 +36,7 @@ pub mod unwind_symbols;
 pub mod entry_point;
 
 #[cfg(any(target_arch = "arm", target_arch = "riscv32"))]
-mod lang_items;
+pub mod lang_items;
 
 pub mod syscalls;
 

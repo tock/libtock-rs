@@ -41,6 +41,7 @@ impl<T, F: Fn() -> Option<T>> Future for WaitForValue<F> {
 macro_rules! async_main {
     ($main_name:ident) => {
         fn main() {
+            use ::libtock::lang_items::Termination;
             static mut MAIN_INVOKED: bool = false;
             unsafe {
                 // core::executor::block_on is unsafe and documented as being
@@ -53,11 +54,7 @@ macro_rules! async_main {
                 }
                 MAIN_INVOKED = true;
 
-                // TODO: We would like to be able to handle errors, but doing so
-                // is nontrivial. In particular, it is not obvious how errors
-                // should be displayed. In the meantime, we silence the "unused
-                // Result" warning.
-                let _ = ::core::executor::block_on($main_name());
+                ::core::executor::block_on($main_name()).report();
             }
         }
     };

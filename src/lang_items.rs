@@ -18,7 +18,9 @@
 //! `rustc_main`. That's covered by the `_start` function in the root of this
 //! crate.
 
+use crate::console;
 use crate::led;
+use crate::result;
 use crate::timer;
 use crate::timer::Duration;
 use core::alloc::Layout;
@@ -30,15 +32,25 @@ extern "C" fn start<T>(main: fn() -> T, _argc: isize, _argv: *const *const u8)
 where
     T: Termination,
 {
-    main();
+    main().report();
 }
 
-// Termination is a required lang item, so we must include it. We don't have
-// much use for it, however (unlike Unix-based OSes, Tock does not have a
-// concept of an exit code), so it is a minimal trait.
 #[lang = "termination"]
-pub trait Termination {}
-impl Termination for () {}
+pub trait Termination {
+    fn report(self);
+}
+
+impl Termination for () {
+    fn report(self) {}
+}
+
+impl<T> Termination for result::TockResult<T> {
+    fn report(self) {
+        if self.is_err() {
+            let  _ = console::Console::new().write("main returned Err");
+        }
+    }
+}
 
 #[panic_handler]
 unsafe fn panic_handler(_info: &PanicInfo) -> ! {
