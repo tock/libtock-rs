@@ -25,7 +25,8 @@ fn try_generate_main_wrapped(
     let block = ast.block;
     Ok(quote!(
         fn main() -> ::libtock::result::TockResult<()> {
-            unsafe {::core::executor::block_on( async #block ) }
+            let _block = async #block;
+            unsafe {::core::executor::block_on(_block) }
         }
     ))
 }
@@ -36,8 +37,8 @@ mod tests {
     #[test]
     fn wraps_main_into_blocking_executor() {
         let method_def: proc_macro2::TokenStream = quote! {
-            async fn main() {
-                do_stuff().await;
+            async fn main() -> ::libtock::result::TockResult<()>{
+                method_call().await;
             }
         }
         .into();
@@ -45,10 +46,11 @@ mod tests {
             .unwrap()
             .into();
         let expected: ItemFn = syn::parse2::<ItemFn>(quote!(
-            fn main() {
-                ::core::executor::block_on(async {
-                    do_stuff().await;
-                });
+            fn main() -> ::libtock::result::TockResult<()> {
+                let _block = async {
+                    method_call().await;
+                };
+                unsafe { ::core::executor::block_on(_block) }
             }
         ))
         .unwrap()
