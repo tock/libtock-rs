@@ -9,6 +9,13 @@ use syn;
 use syn::Error;
 use syn::ItemFn;
 
+/// Procedural attribute macro. This is meant to be applied to a binary's async
+/// `main()`, transforming into a function that returns a type acceptable for
+/// `main()`. In other words, this will not compile with libtock-rs:
+///     async fn main() {}
+/// and this will:
+///     #[async_main]
+///     async fn main() {}
 #[proc_macro_attribute]
 pub fn libtock_main(_: TokenStream, input: TokenStream) -> TokenStream {
     generate_main_wrapped(input.into()).into()
