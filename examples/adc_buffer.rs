@@ -6,9 +6,8 @@ use libtock::adc::AdcBuffer;
 use libtock::console::Console;
 use libtock::result::TockResult;
 use libtock::syscalls;
-use libtock_support_macros::libtock_main;
 
-#[libtock_main]
+#[libtock::main]
 /// Reads a 128 byte sample into a buffer and prints the first value to the console.
 async fn main() -> TockResult<()> {
     let mut console = Console::new();

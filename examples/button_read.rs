@@ -7,9 +7,8 @@ use libtock::console::Console;
 use libtock::result::TockResult;
 use libtock::timer;
 use libtock::timer::Duration;
-use libtock_support_macros::libtock_main;
 
-#[libtock_main]
+#[libtock::main]
 async fn main() -> TockResult<()> {
     let mut console = Console::new();
     let mut with_callback = buttons::with_callback(|_, _| {});

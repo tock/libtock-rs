@@ -5,9 +5,8 @@ use libtock::result::TockResult;
 use libtock::rng;
 use libtock::timer;
 use libtock::timer::Duration;
-use libtock_support_macros::libtock_main;
 
-#[libtock_main]
+#[libtock::main]
 async fn main() -> TockResult<()> {
     let num_leds = led::count().ok().unwrap();
     // blink_nibble assumes 4 leds.

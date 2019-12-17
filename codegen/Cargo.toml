@@ -1,5 +1,5 @@
 [package]
-name = "libtock-support-macros"
+name = "libtock_codegen"
 version = "0.1.0"
 authors = ["torfmaster <briefe@kebes.de>"]
 edition = "2018"

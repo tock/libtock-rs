@@ -9,6 +9,7 @@
 #![no_std]
 
 extern crate alloc;
+pub use libtock_codegen::main;
 
 mod callback;
 

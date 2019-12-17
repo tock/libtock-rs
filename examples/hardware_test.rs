@@ -12,7 +12,6 @@ use libtock::gpio::{GpioPinUnitialized, InputMode};
 use libtock::result::TockResult;
 use libtock::timer;
 use libtock::timer::Duration;
-use libtock_support_macros::libtock_main;
 
 static mut STATIC: usize = 0;
 
@@ -32,7 +31,7 @@ impl MyTrait for String {
     }
 }
 
-#[libtock_main]
+#[libtock::main]
 async fn main() -> TockResult<()> {
     let mut console = Console::new();
     write!(console, "[test-results]\n").unwrap();

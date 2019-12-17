@@ -17,7 +17,7 @@ use syn::ItemFn;
 ///     #[async_main]
 ///     async fn main() {}
 #[proc_macro_attribute]
-pub fn libtock_main(_: TokenStream, input: TokenStream) -> TokenStream {
+pub fn main(_: TokenStream, input: TokenStream) -> TokenStream {
     generate_main_wrapped(input.into()).into()
 }
 

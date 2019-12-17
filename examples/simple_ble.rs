@@ -7,7 +7,6 @@ use libtock::result::TockResult;
 use libtock::simple_ble::BleAdvertisingDriver;
 use libtock::timer;
 use libtock::timer::Duration;
-use libtock_support_macros::libtock_main;
 use serde::Serialize;
 
 #[derive(Serialize)]
@@ -16,7 +15,7 @@ struct LedCommand {
     pub st: bool,
 }
 
-#[libtock_main]
+#[libtock::main]
 async fn main() -> TockResult<()> {
     let led = led::get(0).unwrap();
 

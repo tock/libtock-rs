@@ -5,7 +5,6 @@ use libtock::gpio::GpioPinUnitialized;
 use libtock::result::TockResult;
 use libtock::timer;
 use libtock::timer::Duration;
-use libtock_support_macros::libtock_main;
 
 fn number_to_bits(n: u8) -> [bool; 8] {
     match n {
@@ -24,7 +23,7 @@ fn number_to_bits(n: u8) -> [bool; 8] {
 }
 
 // Example works on a shift register on P0.03, P0.04, P0.28
-#[libtock_main]
+#[libtock::main]
 async fn main() -> TockResult<()> {
     let shift_register = ShiftRegister::new(
         GpioPinUnitialized::new(0).open_for_write()?,
