@@ -11,6 +11,13 @@ pub enum TockError {
     Other(OtherError),
 }
 
+#[cfg(not(any(target_arch = "arm", target_arch = "riscv32")))]
+impl core::fmt::Debug for TockError {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        writeln!(f, "impl Debug only for test builds")
+    }
+}
+
 #[derive(Copy, Clone)]
 pub struct SubscribeError {
     pub driver_number: usize,

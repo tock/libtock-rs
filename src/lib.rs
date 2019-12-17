@@ -6,9 +6,7 @@
     naked_functions,
     ptr_offset_from
 )]
-#![no_std]
-
-extern crate alloc;
+#![cfg_attr(any(target_arch = "arm", target_arch = "riscv32"), no_std)]
 
 mod callback;
 
@@ -31,7 +29,6 @@ pub mod simple_ble;
 pub mod temperature;
 pub mod timer;
 pub mod unwind_symbols;
-pub use libtock_codegen::main;
 
 #[cfg(any(target_arch = "arm", target_arch = "riscv32"))]
 pub mod entry_point;
@@ -40,6 +37,8 @@ pub mod entry_point;
 mod lang_items;
 
 pub mod syscalls;
+
+pub use libtock_codegen::main;
 
 // Dummy structure to force importing the panic_handler and other no_std elements when nothing else
 // is imported.
