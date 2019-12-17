@@ -7,6 +7,7 @@ use libtock::console::Console;
 use libtock::result::TockResult;
 use libtock::syscalls;
 
+#[libtock::main]
 /// Reads a 128 byte sample into a buffer and prints the first value to the console.
 async fn main() -> TockResult<()> {
     let mut console = Console::new();

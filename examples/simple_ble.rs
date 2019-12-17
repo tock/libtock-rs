@@ -15,6 +15,7 @@ struct LedCommand {
     pub st: bool,
 }
 
+#[libtock::main]
 async fn main() -> TockResult<()> {
     let led = led::get(0).unwrap();
 

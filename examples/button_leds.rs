@@ -6,6 +6,7 @@ use libtock::buttons::ButtonState;
 use libtock::led;
 use libtock::result::TockResult;
 
+#[libtock::main]
 async fn main() -> TockResult<()> {
     let mut with_callback = buttons::with_callback(|button_num: usize, state| {
         match state {

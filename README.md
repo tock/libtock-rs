@@ -71,6 +71,7 @@ The boiler plate code you would write is
 
 use libtock::result::TockResult;
 
+#[libtock::main]
 async fn main() -> TockResult<()> {
   // Your code
 }

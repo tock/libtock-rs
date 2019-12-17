@@ -9,6 +9,7 @@ use libtock::timer;
 use libtock::timer::Duration;
 
 // example works on p0.03
+#[libtock::main]
 async fn main() -> TockResult<()> {
     let mut console = Console::new();
     let pin = GpioPinUnitialized::new(0);

@@ -5,6 +5,7 @@ use libtock::console::Console;
 use libtock::result::TockResult;
 use libtock::temperature;
 
+#[libtock::main]
 async fn main() -> TockResult<()> {
     let mut console = Console::new();
     let temperature = temperature::measure_temperature().await?;

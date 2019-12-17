@@ -19,36 +19,26 @@
 //! crate.
 
 use crate::led;
-use crate::result::TockError;
 use crate::timer;
 use crate::timer::Duration;
 use core::alloc::Layout;
 use core::executor;
-use core::future::Future;
 use core::panic::PanicInfo;
 
 #[lang = "start"]
-extern "C" fn start<T>(main: fn() -> T, _argc: isize, _argv: *const *const u8) -> i32
+extern "C" fn start<T>(main: fn() -> T, _argc: isize, _argv: *const *const u8)
 where
     T: Termination,
 {
-    main().report()
+    main();
 }
 
 #[lang = "termination"]
-pub trait Termination {
-    fn report(self) -> i32;
-}
+pub trait Termination {}
 
-impl<T> Termination for T
-where
-    T: Future<Output = Result<(), TockError>>,
-{
-    fn report(self) -> i32 {
-        let _ = unsafe { executor::block_on(self) };
-        0
-    }
-}
+impl Termination for () {}
+
+impl Termination for crate::result::TockResult<()> {}
 
 #[panic_handler]
 unsafe fn panic_handler(_info: &PanicInfo) -> ! {

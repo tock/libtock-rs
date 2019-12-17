@@ -31,6 +31,7 @@ impl MyTrait for String {
     }
 }
 
+#[libtock::main]
 async fn main() -> TockResult<()> {
     let mut console = Console::new();
     write!(console, "[test-results]\n").unwrap();
