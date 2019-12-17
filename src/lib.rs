@@ -9,7 +9,6 @@
 #![no_std]
 
 extern crate alloc;
-pub use libtock_codegen::main;
 
 mod callback;
 
@@ -32,6 +31,7 @@ pub mod simple_ble;
 pub mod temperature;
 pub mod timer;
 pub mod unwind_symbols;
+pub use libtock_codegen::main;
 
 #[cfg(any(target_arch = "arm", target_arch = "riscv32"))]
 pub mod entry_point;
