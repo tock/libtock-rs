@@ -33,6 +33,13 @@ fn try_generate_main_wrapped(
     let output = &ast.sig.output;
     Ok(quote!(
         fn main() #output {
+            static mut MAIN_INVOKED: bool = false;
+            unsafe {
+                if MAIN_INVOKED {
+                    panic!("Main called recursively; this is unsafe with #[libtock::main]");
+                }
+                MAIN_INVOKED = true;
+            }
             let _block = async #block;
             unsafe {::core::executor::block_on(_block) }
         }
@@ -55,6 +62,13 @@ mod tests {
             .into();
         let expected: ItemFn = syn::parse2::<ItemFn>(quote!(
             fn main() -> ::libtock::result::TockResult<()> {
+                static mut MAIN_INVOKED: bool = false;
+                unsafe {
+                    if MAIN_INVOKED {
+                        panic!("Main called recursively; this is unsafe with #[libtock::main]");
+                    }
+                    MAIN_INVOKED = true;
+                }
                 let _block = async {
                     method_call().await;
                 };
