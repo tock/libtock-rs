@@ -1,5 +1,4 @@
 {
     "editor.formatOnSave": true,
-    "rust.target": "thumbv7em-none-eabi",
-    "rust.all_targets": false,
+    "rust.all_targets": true,
 }
