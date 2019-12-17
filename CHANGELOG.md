@@ -2,7 +2,8 @@
 
 ## 0.2.0 (WIP)
 
-- Many functions, including `main()`, are asynchronous
+- Many functions are asynchronous
+  - To make create an `async` main function you can use the attribute `#[libtock::main]`
   - To retrieve the value of an asynchronous `value`, use `value.await`
   - This is only possible within an `async fn`, so either
     - Make the caller `fn` of `.await` an `async fn`
