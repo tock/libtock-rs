@@ -78,7 +78,7 @@ mod test {
     #[test]
     fn test_add() {
         let mut pld = BlePayload::new();
-        pld.add(1, &[2]);
+        pld.add(1, &[2]).unwrap();
         assert_eq!(pld.as_ref().len(), 3);
         assert_eq!(pld.as_ref(), &mut [2, 1, 2])
     }
@@ -86,15 +86,15 @@ mod test {
     #[test]
     fn test_add_service_payload() {
         let mut pld = BlePayload::new();
-        pld.add_service_payload([1, 2], &[2]);
+        pld.add_service_payload([1, 2], &[2]).unwrap();
         assert_eq!(pld.as_ref(), &[4, 0x16, 1, 2, 2])
     }
 
     #[test]
     fn test_add_service_payload_two_times() {
         let mut pld = BlePayload::new();
-        pld.add_service_payload([1, 2], &[2]);
-        pld.add_service_payload([1, 2], &[2, 3]);
+        pld.add_service_payload([1, 2], &[2]).unwrap();
+        pld.add_service_payload([1, 2], &[2, 3]).unwrap();
 
         assert_eq!(pld.as_ref(), &[4, 0x16, 1, 2, 2, 5, 0x16, 1, 2, 2, 3])
     }

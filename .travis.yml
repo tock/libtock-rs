@@ -15,5 +15,5 @@ install:
 
 script:
   - cargo fmt --all -- --check
-  - cargo test --lib --all
+  - cargo test --workspace
   - ./build_examples.sh

@@ -12,10 +12,18 @@ use syn::ItemFn;
 /// Procedural attribute macro. This is meant to be applied to a binary's async
 /// `main()`, transforming into a function that returns a type acceptable for
 /// `main()`. In other words, this will not compile with libtock-rs:
-///     async fn main() {}
+/// ```ignore
+/// async fn main() {
+///     // async code
+/// }
+/// ```
 /// and this will:
-///     #[libtock::main]
-///     async fn main() {}
+/// ```ignore
+/// #[libtock::main]
+/// async fn main() {
+///     // async code
+/// }
+/// ```
 #[proc_macro_attribute]
 pub fn main(_: TokenStream, input: TokenStream) -> TokenStream {
     generate_main_wrapped(input.into()).into()

@@ -12,3 +12,15 @@ rustflags = [
   "-C", "relocation-model=static",
   "-D", "warnings",
 ]
+
+# Target configuration for the travis CI Linux build
+[target.x86_64-unknown-linux-gnu]
+rustflags = [
+  "-D", "warnings",
+]
+
+# Target configuration for the travis CI OS-X build
+[target.x86_64-apple-darwin]
+rustflags = [
+  "-D", "warnings",
+]

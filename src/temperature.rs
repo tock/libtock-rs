@@ -51,8 +51,6 @@ impl Display for Temperature {
 #[cfg(test)]
 mod test {
     use super::*;
-    use alloc::string::String;
-    use alloc::string::ToString;
 
     #[test]
     fn render_temperature() {
