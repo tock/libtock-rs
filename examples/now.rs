@@ -11,7 +11,7 @@ use libtock::timer::Duration;
 
 #[libtock::main]
 async fn main() -> TockResult<()> {
-    const DELAY_MS: isize = 50;
+    const DELAY_MS: usize = 50;
 
     let mut console = Console::new();
     let mut previous_ticks = None;
@@ -23,16 +23,41 @@ async fn main() -> TockResult<()> {
         let frequency = timer.clock_frequency().hz();
         writeln!(
             console,
-            "[{}] Waited {} ms. Now is {:#010x} ticks ({} ticks since last time at {} Hz)",
+            "[{}] Waited {:?}. Now is {:#010x} ticks ({:?} ticks since last time at {} Hz)",
             i,
-            i * DELAY_MS,
+            PrettyTime::from_ms(i * DELAY_MS),
             ticks,
             previous_ticks.map(|previous| ticks - previous),
             frequency
         )?;
         previous_ticks = Some(ticks);
-        timer::sleep(Duration::from_ms(DELAY_MS)).await?;
+        timer::sleep(Duration::from_ms(DELAY_MS as isize)).await?;
     }
 
     Ok(())
+}
+
+struct PrettyTime {
+    mins: usize,
+    secs: usize,
+    ms: usize,
+}
+
+impl PrettyTime {
+    fn from_ms(ms: usize) -> PrettyTime {
+        PrettyTime {
+            ms: ms % 1000,
+            secs: (ms / 1000) % 60,
+            mins: ms / (60 * 1000),
+        }
+    }
+}
+
+impl core::fmt::Debug for PrettyTime {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        if self.mins != 0 {
+            write!(f, "{}m", self.mins)?
+        }
+        write!(f, "{}.{:03}s", self.secs, self.ms)
+    }
 }
