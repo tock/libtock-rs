@@ -6,13 +6,13 @@ use crate::futures;
 use crate::result::OtherError;
 use crate::result::TockError;
 use crate::result::TockResult;
+use crate::result::EALREADY;
 use crate::syscalls;
 use core::cell::Cell;
 use core::isize;
 use core::ops::{Add, AddAssign, Sub};
 
 const DRIVER_NUMBER: usize = 0x00000;
-const EALREADY: isize = -3;
 
 mod command_nr {
     pub const IS_DRIVER_AVAILABLE: usize = 0;
