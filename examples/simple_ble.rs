@@ -49,8 +49,8 @@ async fn main() -> TockResult<()> {
 
     loop {
         led.on()?;
-        timer_driver.parallel_sleep(Duration::from_ms(500)).await?;
+        timer_driver.sleep(Duration::from_ms(500)).await?;
         led.off()?;
-        timer_driver.parallel_sleep(Duration::from_ms(500)).await?;
+        timer_driver.sleep(Duration::from_ms(500)).await?;
     }
 }

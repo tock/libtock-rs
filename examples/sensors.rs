@@ -23,6 +23,6 @@ async fn main() -> TockResult<()> {
         writeln!(console, "Temperature: {}\n", temperature.read()?)?;
         writeln!(console, "Light:       {}\n", light.read()?)?;
         writeln!(console, "Accel:       {}\n", ninedof.read_acceleration()?)?;
-        timer_driver.parallel_sleep(Duration::from_ms(500)).await?;
+        timer_driver.sleep(Duration::from_ms(500)).await?;
     }
 }

@@ -15,7 +15,7 @@ async fn main() -> TockResult<()> {
 
     for i in 0.. {
         writeln!(console, "Hello world! {}", i)?;
-        timer_driver.parallel_sleep(Duration::from_ms(500)).await?;
+        timer_driver.sleep(Duration::from_ms(500)).await?;
     }
 
     Ok(())

@@ -15,7 +15,7 @@ async fn blink<'a>(
     loop {
         led::get(led_number).unwrap().toggle()?;
 
-        timer_driver.parallel_sleep(duration).await?;
+        timer_driver.sleep(duration).await?;
     }
 }
 

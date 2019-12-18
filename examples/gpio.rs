@@ -16,8 +16,8 @@ async fn main() -> TockResult<()> {
 
     loop {
         pin.set_high()?;
-        timer_driver.parallel_sleep(Duration::from_ms(500)).await?;
+        timer_driver.sleep(Duration::from_ms(500)).await?;
         pin.set_low()?;
-        timer_driver.parallel_sleep(Duration::from_ms(500)).await?;
+        timer_driver.sleep(Duration::from_ms(500)).await?;
     }
 }

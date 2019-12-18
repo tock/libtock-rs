@@ -39,6 +39,6 @@ async fn main() -> TockResult<()> {
     loop {
         i = (i + 1) % 11;
         shift_register.write_bits(&number_to_bits(i))?;
-        timer_driver.parallel_sleep(Duration::from_ms(200)).await?;
+        timer_driver.sleep(Duration::from_ms(200)).await?;
     }
 }

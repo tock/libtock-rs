@@ -379,7 +379,7 @@ impl<'a> SubscribableCallback for Callback<'a> {
 /// let context = timer::DriverContext::create();
 /// let mut driver = context.create_timer_driver().unwrap();
 /// let timer_driver = driver.activate();
-/// timer.driver.parallel_sleep(1000);
+/// timer_driver.sleep(Duration::from_ms(1000));
 /// ```
 pub struct ParallelSleepDriver<'a> {
     _callback_subscription: CallbackSubscription<'a>,
@@ -404,8 +404,8 @@ impl<'a> TimerDriver<'a> {
 }
 
 impl<'a> ParallelSleepDriver<'a> {
-    /// Sleep for the given time of milliseconds.
-    pub async fn parallel_sleep(&self, duration: Duration<usize>) -> TockResult<()> {
+    /// Sleep for the given duration
+    pub async fn sleep(&self, duration: Duration<usize>) -> TockResult<()> {
         let now = get_current_ticks()?;
         self.context.current_time.set(now);
         let freq = get_clock_frequency()?;

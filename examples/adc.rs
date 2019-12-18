@@ -22,6 +22,6 @@ async fn main() -> TockResult<()> {
 
     loop {
         adc.sample(0)?;
-        timer_driver.parallel_sleep(Duration::from_ms(2000)).await?;
+        timer_driver.sleep(Duration::from_ms(2000)).await?;
     }
 }

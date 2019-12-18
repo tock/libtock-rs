@@ -22,9 +22,9 @@ async fn blink_periodically() -> TockResult<()> {
 
     let led = led::get(0).unwrap();
     loop {
-        timer_driver.parallel_sleep(Duration::from_ms(250)).await?;
+        timer_driver.sleep(Duration::from_ms(250)).await?;
         led.on()?;
-        timer_driver.parallel_sleep(Duration::from_ms(250)).await?;
+        timer_driver.sleep(Duration::from_ms(250)).await?;
         led.off()?;
     }
 }

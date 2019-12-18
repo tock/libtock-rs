@@ -26,6 +26,6 @@ async fn main() -> TockResult<()> {
         count = count.wrapping_add(1);
 
         // This delay uses an underlying timer in the kernel.
-        timer_driver.parallel_sleep(Duration::from_ms(250)).await?;
+        timer_driver.sleep(Duration::from_ms(250)).await?;
     }
 }

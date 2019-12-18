@@ -22,9 +22,9 @@ async fn main() -> TockResult<()> {
 
         for &x in buf.iter() {
             blink_nibble(x)?;
-            timer_driver.parallel_sleep(Duration::from_ms(100)).await?;
+            timer_driver.sleep(Duration::from_ms(100)).await?;
             blink_nibble(x >> 4)?;
-            timer_driver.parallel_sleep(Duration::from_ms(100)).await?;
+            timer_driver.sleep(Duration::from_ms(100)).await?;
         }
     }
 }
