@@ -6,9 +6,8 @@
  *
  * To test whether your kernel unschedules pending callbacks properly, install this app and press
  * all the buttons quickly. This should trigger a panic in this app if your kernel doesn't include
- * https://github.com/tock/tock/pull/1376. You can also manually re-introduce the bug and check with
- * this app by removing the `remove_pending_callbacks` line in `kernel/src/sched.rs` of your Tock
- * kernel.
+ * https://github.com/tock/tock/pull/1376. You can also manually re-introduce the bug in your Tock
+ * kernel by removing the `remove_pending_callbacks` function call in `kernel/src/sched.rs`.
  **/
 use core::cell::Cell;
 use libtock::buttons;
