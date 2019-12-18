@@ -32,7 +32,7 @@ async fn main() -> TockResult<()> {
     );
 
     let context = timer::DriverContext::create()?;
-    let mut driver = context.create_timer_driver().unwrap();
+    let mut driver = context.create_timer_driver()?;
     let timer_driver = driver.activate()?;
 
     let mut i = 0;

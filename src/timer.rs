@@ -332,19 +332,19 @@ impl DriverContext {
     /// Create a driver timer from a context. As the driver is a singleton
     /// from the app perspective this function will return None
     /// if called more than once.
-    pub fn create_timer_driver<'a>(&'a self) -> Option<TimerDriver<'a>> {
+    pub fn create_timer_driver<'a>(&'a self) -> TockResult<TimerDriver<'a>> {
         if unsafe { TIMER_DRIVER_AVAILABLE } {
             unsafe {
                 TIMER_DRIVER_AVAILABLE = false;
             }
-            Some(TimerDriver {
+            Ok(TimerDriver {
                 callback: Callback {
                     now: &self.current_time,
                 },
                 context: &self,
             })
         } else {
-            None
+            Err(TockError::Other(OtherError::DriverAlreadyTaken))
         }
     }
 

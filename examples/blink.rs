@@ -9,7 +9,7 @@ use libtock::timer::Duration;
 async fn main() -> TockResult<()> {
     let num_leds = led::count()?;
     let context = timer::DriverContext::create()?;
-    let mut driver = context.create_timer_driver().unwrap();
+    let mut driver = context.create_timer_driver()?;
     let timer_driver = driver.activate()?;
 
     // Blink the LEDs in a binary count pattern and scale

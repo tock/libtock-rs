@@ -22,7 +22,7 @@ async fn blink<'a>(
 #[libtock::main]
 async fn main() -> TockResult<()> {
     let context = timer::DriverContext::create()?;
-    let mut driver = context.create_timer_driver().unwrap();
+    let mut driver = context.create_timer_driver()?;
     let timer_driver = driver.activate()?;
 
     let fut_1 = blink(&timer_driver, Duration::from_ms(500), 0);

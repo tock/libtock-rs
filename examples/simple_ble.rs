@@ -44,7 +44,7 @@ async fn main() -> TockResult<()> {
     let _handle = BleAdvertisingDriver::initialize(100, &gap_payload, &mut buffer);
 
     let context = timer::DriverContext::create()?;
-    let mut driver = context.create_timer_driver().unwrap();
+    let mut driver = context.create_timer_driver()?;
     let timer_driver = driver.activate()?;
 
     loop {

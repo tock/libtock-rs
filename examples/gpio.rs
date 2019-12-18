@@ -11,7 +11,7 @@ async fn main() -> TockResult<()> {
     let pin = GpioPinUnitialized::new(0);
     let pin = pin.open_for_write()?;
     let context = timer::DriverContext::create()?;
-    let mut driver = context.create_timer_driver().unwrap();
+    let mut driver = context.create_timer_driver()?;
     let timer_driver = driver.activate()?;
 
     loop {
