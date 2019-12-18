@@ -11,7 +11,7 @@ use libtock::timer::Duration;
 
 #[libtock::main]
 async fn main() -> TockResult<()> {
-    const DELAY_MS: usize = 50;
+    const DELAY_MS: usize = 500;
 
     let mut console = Console::new();
     let mut previous_ticks = None;
@@ -19,13 +19,15 @@ async fn main() -> TockResult<()> {
     for i in 0.. {
         let mut timer_with_callback = timer::with_callback(|_, _| {});
         let timer = timer_with_callback.init()?;
-        let ticks = timer.get_current_clock()?.num_ticks();
+        let current_clock = timer.get_current_clock()?;
+        let ticks = current_clock.num_ticks();
         let frequency = timer.clock_frequency().hz();
         writeln!(
             console,
-            "[{}] Waited {:?}. Now is {:#010x} ticks ({:?} ticks since last time at {} Hz)",
+            "[{}] Waited roughly {:?}. Now is {:?} = {:#010x} ticks ({:?} ticks since last time at {} Hz)",
             i,
             PrettyTime::from_ms(i * DELAY_MS),
+            PrettyTime::from_ms(current_clock.ms_f64() as usize),
             ticks,
             previous_ticks.map(|previous| ticks - previous),
             frequency
