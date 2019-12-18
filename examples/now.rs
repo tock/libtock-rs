@@ -9,20 +9,32 @@ use libtock::result::TockResult;
 use libtock::timer;
 use libtock::timer::Duration;
 
+const DELAY_MS: usize = 500;
+
 #[libtock::main]
 async fn main() -> TockResult<()> {
-    const DELAY_MS: usize = 500;
-
     let mut console = Console::new();
     let mut previous_ticks = None;
 
     for i in 0.. {
-        let mut timer_with_callback = timer::with_callback(|_, _| {});
-        let timer = timer_with_callback.init()?;
-        let current_clock = timer.get_current_clock()?;
-        let ticks = current_clock.num_ticks();
-        let frequency = timer.clock_frequency().hz();
-        writeln!(
+        print_now(&mut console, &mut previous_ticks, i)?;
+        timer::sleep(Duration::from_ms(DELAY_MS as isize)).await?;
+    }
+
+    Ok(())
+}
+
+fn print_now(
+    console: &mut Console,
+    previous_ticks: &mut Option<isize>,
+    i: usize,
+) -> TockResult<()> {
+    let mut timer_with_callback = timer::with_callback(|_, _| {});
+    let timer = timer_with_callback.init()?;
+    let current_clock = timer.get_current_clock()?;
+    let ticks = current_clock.num_ticks();
+    let frequency = timer.clock_frequency().hz();
+    writeln!(
             console,
             "[{}] Waited roughly {:?}. Now is {:?} = {:#010x} ticks ({:?} ticks since last time at {} Hz)",
             i,
@@ -32,10 +44,7 @@ async fn main() -> TockResult<()> {
             previous_ticks.map(|previous| ticks - previous),
             frequency
         )?;
-        previous_ticks = Some(ticks);
-        timer::sleep(Duration::from_ms(DELAY_MS as isize)).await?;
-    }
-
+    *previous_ticks = Some(ticks);
     Ok(())
 }
 
