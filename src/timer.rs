@@ -306,8 +306,14 @@ struct ActiveTimer {
 
 /// Context for the time driver.
 /// You can create a context as follows:
-/// ```
+/// ```no_run
+/// # use libtock::timer::DriverContext;
+/// # use libtock::result::TockResult;
+/// # #[libtock::main]
+/// # async fn main() -> TockResult<()> {
 /// let context = DriverContext::create();
+/// # Ok(())
+/// # }
 /// ```
 pub struct DriverContext {
     active_timer: Cell<Option<ActiveTimer>>,
@@ -353,9 +359,15 @@ impl DriverContext {
 }
 
 /// Timer driver instance. You can create a TimerDriver from a DriverContext as follows:
-/// ```
-/// let context = DriverContext::create();
+/// ```no_run
+/// # use libtock::timer::DriverContext;
+/// # use libtock::result::TockResult;
+/// # #[libtock::main]
+/// # async fn main() -> TockResult<()> {
+/// let context = DriverContext::create()?;
 /// context.create_timer_driver().expect("The timer driver is a singleton and can only created once.");
+/// # Ok(())
+/// # }
 /// ```
 pub struct TimerDriver<'a> {
     callback: Callback<'a>,
@@ -375,11 +387,18 @@ impl<'a> SubscribableCallback for Callback<'a> {
 /// Activated time driver. Updates current time in the context and manages
 /// active alarms.
 /// Example usage (sleep for 1 second):
-/// ```
-/// let context = timer::DriverContext::create();
+/// ```no_run
+/// # use libtock::timer::DriverContext;
+/// # use libtock::result::TockResult;
+/// # use libtock::timer::Duration;
+/// # #[libtock::main]
+/// # async fn main() -> TockResult<()> {
+/// let context = DriverContext::create()?;
 /// let mut driver = context.create_timer_driver().unwrap();
-/// let timer_driver = driver.activate();
-/// timer_driver.sleep(Duration::from_ms(1000));
+/// let timer_driver = driver.activate()?;
+/// timer_driver.sleep(Duration::from_ms(1000)).await?;
+/// # Ok(())
+/// # }
 /// ```
 pub struct ParallelSleepDriver<'a> {
     _callback_subscription: CallbackSubscription<'a>,
