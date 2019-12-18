@@ -15,7 +15,7 @@ pub enum TockError {
 pub struct SubscribeError {
     pub driver_number: usize,
     pub subscribe_number: usize,
-    pub return_code: isize,
+    pub return_code: ReturnCode,
 }
 
 impl From<SubscribeError> for TockError {
@@ -30,7 +30,7 @@ pub struct CommandError {
     pub command_number: usize,
     pub arg1: usize,
     pub arg2: usize,
-    pub return_code: isize,
+    pub return_code: ReturnCode,
 }
 
 impl From<CommandError> for TockError {
@@ -43,7 +43,7 @@ impl From<CommandError> for TockError {
 pub struct AllowError {
     pub driver_number: usize,
     pub allow_number: usize,
-    pub return_code: isize,
+    pub return_code: ReturnCode,
 }
 
 impl From<AllowError> for TockError {
@@ -70,10 +70,29 @@ impl From<OtherError> for TockError {
     }
 }
 
-pub const SUCCESS: isize = 0;
-pub const FAIL: isize = -1;
-pub const EBUSY: isize = -2;
-pub const EALREADY: isize = -3;
-pub const EINVAL: isize = -6;
-pub const ESIZE: isize = -7;
-pub const ENOMEM: isize = -9;
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub enum ReturnCode {
+    SUCCESS,
+    FAIL,
+    EBUSY,
+    EALREADY,
+    EINVAL,
+    ESIZE,
+    ENOMEM,
+    UNKNOWN(isize),
+}
+
+impl From<isize> for ReturnCode {
+    fn from(return_code: isize) -> Self {
+        match return_code {
+            0 => ReturnCode::SUCCESS,
+            -1 => ReturnCode::FAIL,
+            -2 => ReturnCode::EBUSY,
+            -3 => ReturnCode::EALREADY,
+            -6 => ReturnCode::EINVAL,
+            -7 => ReturnCode::ESIZE,
+            -9 => ReturnCode::ENOMEM,
+            _ => ReturnCode::UNKNOWN(return_code),
+        }
+    }
+}

@@ -10,6 +10,7 @@ use crate::callback::CallbackSubscription;
 use crate::callback::SubscribableCallback;
 use crate::result::AllowError;
 use crate::result::CommandError;
+use crate::result::ReturnCode;
 use crate::result::SubscribeError;
 use crate::shared_memory::SharedMemory;
 
@@ -71,8 +72,9 @@ pub fn subscribe_fn(
             userdata,
         )
     };
+    let return_code = ReturnCode::from(return_code);
 
-    if return_code == 0 {
+    if return_code == ReturnCode::SUCCESS {
         Ok(())
     } else {
         Err(SubscribeError {
@@ -98,7 +100,7 @@ pub fn command(
             command_number,
             arg1,
             arg2,
-            return_code,
+            return_code: ReturnCode::from(return_code),
         })
     }
 }
@@ -127,7 +129,7 @@ pub fn command1_insecure(
             command_number,
             arg1: arg,
             arg2: 0,
-            return_code,
+            return_code: ReturnCode::from(return_code),
         })
     }
 }
@@ -146,7 +148,9 @@ pub fn allow(
             len,
         )
     };
-    if return_code == 0 {
+    let return_code = ReturnCode::from(return_code);
+
+    if return_code == ReturnCode::SUCCESS {
         Ok(SharedMemory::new(
             driver_number,
             allow_number,
