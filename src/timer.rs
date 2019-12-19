@@ -472,10 +472,9 @@ impl<'a> ParallelSleepDriver<'a> {
     }
 
     fn wakeup_soon(&self) -> TockResult<()> {
-        let mut i = 0;
         self.context.active_timer.set(None);
 
-        loop {
+        for i in 0.. {
             let now = get_current_ticks()?;
 
             let next_timer = ActiveTimer {
@@ -491,7 +490,6 @@ impl<'a> ParallelSleepDriver<'a> {
                     Ok(_) => (),
                     Err(_) => (),
                 }
-                i += 1;
             }
         }
         Ok(())
