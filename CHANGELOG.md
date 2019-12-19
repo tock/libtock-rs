@@ -17,6 +17,7 @@
   - `syscalls::allow_ptr` becomes `syscalls::raw::allow`
 - Targets without support for atomics can be built
 - Most API functions, including `main()`, return a `Result<T, TockError>`
+- The timer now supports to be used simultaneously. To make this safe, `TimerDriver` is now a singleton.
 
 ## a8bb4fa9be504517d5533511fd8e607ea61f1750 (0.1.0)
 
