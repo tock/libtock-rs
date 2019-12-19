@@ -184,20 +184,6 @@ impl Alarm {
     }
 }
 
-#[derive(Clone, Copy, Debug)]
-pub enum StopAlarmError {
-    AlreadyDisabled,
-}
-
-/// Error upon setting an alarm
-#[derive(Clone, Copy, Debug)]
-pub enum SetAlarmError {
-    /// Duration is too large to be handled by the 32 bit systick.
-    DurationTooLong,
-    /// Not enough memory for setting alarm
-    NoMemoryAvailable,
-}
-
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Duration<T> {
     ms: T,
