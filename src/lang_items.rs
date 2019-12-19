@@ -68,14 +68,21 @@ unsafe fn panic_handler(_info: &PanicInfo) -> ! {
 #[alloc_error_handler]
 unsafe fn cycle_leds(_: Layout) -> ! {
     executor::block_on(async {
-        let context = timer::DriverContext::create().ok().unwrap();
-        let mut driver = context.create_timer_driver_unsafe();
-        let timer_driver = driver.activate().ok().unwrap();
+        let context = timer::DriverContext::create().ok();
+        let mut driver = context.as_ref().map(|c| c.create_timer_driver_unsafe());
+        let timer_driver = driver.as_mut().and_then(|d| d.activate().ok());
         loop {
             for led in led::all() {
                 let _ = led.on();
+            }
+            if let Some(ref timer_driver) = timer_driver {
                 let _ = timer_driver.sleep(Duration::from_ms(100)).await;
+            }
+            for led in led::all() {
                 let _ = led.off();
+            }
+            if let Some(ref timer_driver) = timer_driver {
+                let _ = timer_driver.sleep(Duration::from_ms(100)).await;
             }
         }
     });
