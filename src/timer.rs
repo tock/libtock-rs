@@ -423,37 +423,8 @@ impl<'a> ParallelSleepDriver<'a> {
         let suspended_timer: Cell<Option<ActiveTimer>> = Cell::new(None);
 
         futures::wait_until(|| {
-            let now = match get_current_ticks() {
-                Ok(value) => value,
-                Err(_) => return false,
-            };
-            if let Some(active) = self.context.active_timer.get() {
-                if left_is_later(active, this_alarm) {
-                    suspended_timer.set(Some(active));
-                    match self.activate_timer(&this_alarm) {
-                        Ok(_) => (),
-                        Err(_) => return false,
-                    };
-                }
-            } else {
-                match self.activate_timer(&this_alarm) {
-                    Ok(_) => (),
-                    Err(_) => return false,
-                };
-            }
-            if is_over(this_alarm, now as u32) {
-                if let Some(paused) = suspended_timer.get() {
-                    match self.activate_timer(&paused) {
-                        Ok(_) => (),
-                        Err(_) => return false,
-                    };
-                } else {
-                    self.context.active_timer.set(None);
-                }
-                true
-            } else {
-                false
-            }
+            self.activate_current_timer(this_alarm, &suspended_timer)
+                .unwrap_or(false)
         })
         .await;
 
@@ -524,6 +495,33 @@ impl<'a> ParallelSleepDriver<'a> {
         };
         let alarm_instant = num_ticks + ticks;
         Ok(alarm_instant)
+    }
+
+    fn activate_current_timer(
+        &self,
+        this_alarm: ActiveTimer,
+        suspended_timer: &Cell<Option<ActiveTimer>>,
+    ) -> TockResult<bool> {
+        let now = get_current_ticks()?;
+
+        if let Some(active) = self.context.active_timer.get() {
+            if left_is_later(active, this_alarm) {
+                suspended_timer.set(Some(active));
+                self.activate_timer(&this_alarm)?;
+            }
+        } else {
+            self.activate_timer(&this_alarm)?;
+        }
+        if is_over(this_alarm, now as u32) {
+            if let Some(paused) = suspended_timer.get() {
+                self.activate_timer(&paused)?;
+            } else {
+                self.context.active_timer.set(None);
+            }
+            Ok(true)
+        } else {
+            Ok(false)
+        }
     }
 }
 
