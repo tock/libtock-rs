@@ -54,19 +54,11 @@ unsafe fn panic_handler(_info: &PanicInfo) -> ! {
             for led in led::all() {
                 let _ = led.on();
             }
-            timer_driver
-                .sleep(Duration::from_ms(100))
-                .await
-                .ok()
-                .unwrap();
+            let _ = timer_driver.sleep(Duration::from_ms(100)).await;
             for led in led::all() {
                 let _ = led.off();
             }
-            timer_driver
-                .sleep(Duration::from_ms(100))
-                .await
-                .ok()
-                .unwrap();
+            let _ = timer_driver.sleep(Duration::from_ms(100)).await;
         }
     });
     // Never type is not supported for T in Future
@@ -82,11 +74,7 @@ unsafe fn cycle_leds(_: Layout) -> ! {
         loop {
             for led in led::all() {
                 let _ = led.on();
-                timer_driver
-                    .sleep(Duration::from_ms(100))
-                    .await
-                    .ok()
-                    .unwrap();
+                let _ = timer_driver.sleep(Duration::from_ms(100)).await;
                 let _ = led.off();
             }
         }
