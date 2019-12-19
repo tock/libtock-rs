@@ -24,8 +24,7 @@ async fn main() -> TockResult<()> {
         match button.read()? {
             ButtonState::Pressed => writeln!(console, "pressed"),
             ButtonState::Released => writeln!(console, "released"),
-        }
-        .unwrap();
+        }?;
 
         timer_driver.sleep(Duration::from_ms(500)).await?;
     }
