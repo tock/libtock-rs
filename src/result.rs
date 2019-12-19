@@ -69,6 +69,7 @@ impl From<fmt::Error> for TockError {
 pub enum OtherError {
     TimerDriverDurationOutOfRange,
     TimerDriverErroneousClockFrequency,
+    DriverAlreadyTaken,
 }
 
 impl From<OtherError> for TockError {

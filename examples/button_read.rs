@@ -16,11 +16,16 @@ async fn main() -> TockResult<()> {
     let mut button = buttons.iter_mut().next().unwrap();
     let button = button.enable()?;
 
+    let context = timer::DriverContext::create()?;
+    let mut driver = context.create_timer_driver()?;
+    let timer_driver = driver.activate()?;
+
     loop {
         match button.read()? {
             ButtonState::Pressed => writeln!(console, "pressed"),
             ButtonState::Released => writeln!(console, "released"),
         }?;
-        timer::sleep(Duration::from_ms(500)).await?;
+
+        timer_driver.sleep(Duration::from_ms(500)).await?;
     }
 }

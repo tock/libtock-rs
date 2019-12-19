@@ -14,11 +14,15 @@ async fn main() -> TockResult<()> {
     let mut temperature = TemperatureSensor;
     let mut light = AmbientLightSensor;
     let mut ninedof = unsafe { Ninedof::new() };
+    let context = timer::DriverContext::create()?;
+    let mut driver = context.create_timer_driver()?;
+    let timer_driver = driver.activate()?;
+
     loop {
         writeln!(console, "Humidity:    {}\n", humidity.read()?)?;
         writeln!(console, "Temperature: {}\n", temperature.read()?)?;
         writeln!(console, "Light:       {}\n", light.read()?)?;
         writeln!(console, "Accel:       {}\n", ninedof.read_acceleration()?)?;
-        timer::sleep(Duration::from_ms(500)).await?;
+        timer_driver.sleep(Duration::from_ms(500)).await?;
     }
 }

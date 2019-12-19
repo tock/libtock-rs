@@ -14,6 +14,9 @@ async fn main() -> TockResult<()> {
     let mut console = Console::new();
     let pin = GpioPinUnitialized::new(0);
     let pin = pin.open_for_read(None, InputMode::PullDown)?;
+    let context = timer::DriverContext::create()?;
+    let mut driver = context.create_timer_driver()?;
+    let timer_driver = driver.activate()?;
 
     loop {
         if pin.read() {
@@ -21,6 +24,6 @@ async fn main() -> TockResult<()> {
         } else {
             writeln!(console, "false")?;
         }
-        timer::sleep(Duration::from_ms(500)).await?;
+        timer_driver.sleep(Duration::from_ms(500)).await?;
     }
 }

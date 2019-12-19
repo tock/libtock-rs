@@ -34,7 +34,7 @@ impl MyTrait for String {
 #[libtock::main]
 async fn main() -> TockResult<()> {
     let mut console = Console::new();
-    write!(console, "[test-results]\n").unwrap();
+    write!(console, "[test-results]\n")?;
 
     test_heap(&mut console);
     test_formatting(&mut console);
@@ -42,11 +42,9 @@ async fn main() -> TockResult<()> {
 
     test_gpio(&mut console);
 
-    test_trait_objects(&mut console);
+    test_trait_objects(&mut console)?;
 
-    test_callbacks_and_wait_forever(&mut console).await;
-
-    Ok(())
+    test_callbacks_and_wait_forever(&mut console).await
 }
 
 fn test_heap(console: &mut Console) {
@@ -63,16 +61,13 @@ fn test_formatting(console: &mut Console) {
 /// Output order should be:
 /// trait_obj_value_usize = 1
 /// trait_obj_value_string = string
-fn test_trait_objects(console: &mut Console) {
+fn test_trait_objects(console: &mut Console) -> TockResult<()> {
     let pin_in = GpioPinUnitialized::new(0);
-    let pin_in = pin_in
-        .open_for_read(None, InputMode::PullDown)
-        .ok()
-        .unwrap();
+    let pin_in = pin_in.open_for_read(None, InputMode::PullDown)?;
 
     let pin_out = GpioPinUnitialized::new(1);
-    let pin_out = pin_out.open_for_write().ok().unwrap();
-    pin_out.set_high().ok().unwrap();
+    let pin_out = pin_out.open_for_write()?;
+    pin_out.set_high()?;
 
     let string = String::from("string");
 
@@ -90,6 +85,7 @@ fn test_trait_objects(console: &mut Console) {
 
     x.do_something_with_a_console(console);
     y.do_something_with_a_console(console);
+    Ok(())
 }
 
 fn test_static_mut(console: &mut Console) {
@@ -113,15 +109,15 @@ fn test_gpio(console: &mut Console) {
     write!(console, "gpio_works = {}\n", pin_in.read()).unwrap();
 }
 
-async fn test_callbacks_and_wait_forever(console: &mut Console) {
+async fn test_callbacks_and_wait_forever(console: &mut Console) -> TockResult<()> {
     let mut with_callback = timer::with_callback(|_, _| {
         write!(console, "callbacks_work = true\n").unwrap();
         write!(console, "all_tests_run = true").unwrap();
     });
 
-    let mut timer = with_callback.init().ok().unwrap();
+    let mut timer = with_callback.init()?;
 
-    timer.set_alarm(Duration::from_ms(500)).ok().unwrap();
+    timer.set_alarm(Duration::from_ms(500))?;
 
     future::pending().await
 }
