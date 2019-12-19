@@ -29,6 +29,6 @@ async fn main() -> TockResult<()> {
     let fut_2 = blink(&timer_driver, Duration::from_ms(333), 1);
     let fut_3 = blink(&timer_driver, Duration::from_ms(250), 2);
 
-    future::try_join(future::try_join(fut_1, fut_2), fut_3).await?;
+    future::try_join3(fut_1, fut_2, fut_3).await?;
     Ok(())
 }

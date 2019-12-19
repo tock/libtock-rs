@@ -52,7 +52,7 @@ unsafe fn panic_handler(_info: &PanicInfo) -> ! {
         let timer_driver = driver.activate().ok().unwrap();
         loop {
             for led in led::all() {
-                let _ = led.on().ok().unwrap();
+                let _ = led.on();
             }
             timer_driver
                 .sleep(Duration::from_ms(100))
@@ -60,7 +60,7 @@ unsafe fn panic_handler(_info: &PanicInfo) -> ! {
                 .ok()
                 .unwrap();
             for led in led::all() {
-                led.off().ok().unwrap();
+                let _ = led.off();
             }
             timer_driver
                 .sleep(Duration::from_ms(100))
@@ -81,13 +81,13 @@ unsafe fn cycle_leds(_: Layout) -> ! {
         let timer_driver = driver.activate().ok().unwrap();
         loop {
             for led in led::all() {
-                led.on().ok().unwrap();
+                let _ = led.on();
                 timer_driver
                     .sleep(Duration::from_ms(100))
                     .await
                     .ok()
                     .unwrap();
-                led.off().ok().unwrap();
+                let _ = led.off();
             }
         }
     });
