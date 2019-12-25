@@ -2,15 +2,15 @@
 
 use core::fmt::Write;
 use futures::future;
-use libtock::console::Console;
 use libtock::result::TockResult;
 use libtock::timer;
 use libtock::timer::Duration;
+use libtock::Hardware;
 
 #[libtock::main]
 async fn main() -> TockResult<()> {
-    let mut console = Console::default();
-
+    let Hardware { console_driver } = libtock::retrieve_hardware()?;
+    let mut console = console_driver.create_console();
     let mut with_callback = timer::with_callback(|_, _| {
         writeln!(
             console,

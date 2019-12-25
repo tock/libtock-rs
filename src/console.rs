@@ -20,6 +20,18 @@ mod allow_nr {
     pub const SHARE_BUFFER: usize = 1;
 }
 
+pub struct ConsoleDriver {
+    pub(crate) _unconstructible: (),
+}
+
+impl ConsoleDriver {
+    pub fn create_console(self) -> Console {
+        Console {
+            allow_buffer: [0; 64],
+        }
+    }
+}
+
 pub struct Console {
     allow_buffer: [u8; 64],
 }
