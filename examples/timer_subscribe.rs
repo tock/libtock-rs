@@ -9,7 +9,7 @@ use libtock::Hardware;
 
 #[libtock::main]
 async fn main() -> TockResult<()> {
-    let Hardware { console_driver } = libtock::retrieve_hardware()?;
+    let Hardware { console_driver, .. } = libtock::retrieve_hardware()?;
     let mut console = console_driver.create_console();
     let mut with_callback = timer::with_callback(|_, _| {
         writeln!(

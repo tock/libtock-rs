@@ -10,7 +10,7 @@ use libtock::Hardware;
 #[libtock::main]
 /// Reads a 128 byte sample into a buffer and prints the first value to the console.
 async fn main() -> TockResult<()> {
-    let Hardware { console_driver } = libtock::retrieve_hardware()?;
+    let Hardware { console_driver, .. } = libtock::retrieve_hardware()?;
     let mut console = console_driver.create_console();
     let mut adc_buffer = AdcBuffer::default();
     let mut temp_buffer = [0; libtock::adc::BUFFER_SIZE];

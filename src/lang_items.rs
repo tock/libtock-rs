@@ -18,9 +18,9 @@
 //! `rustc_main`. That's covered by the `_start` function in the root of this
 //! crate.
 
-use crate::led;
 use crate::timer;
 use crate::timer::Duration;
+use crate::Hardware;
 use core::alloc::Layout;
 use core::executor;
 use core::panic::PanicInfo;
@@ -50,14 +50,16 @@ unsafe fn panic_handler(_info: &PanicInfo) -> ! {
         let context = timer::DriverContext::create().ok();
         let mut driver = context.as_ref().map(|c| c.create_timer_driver_unsafe());
         let timer_driver = driver.as_mut().and_then(|d| d.activate().ok());
+        let Hardware { mut led_driver, .. } = crate::retrieve_hardware_unsafe();
+
         loop {
-            for led in led::all() {
+            for mut led in led_driver.all() {
                 let _ = led.on();
             }
             if let Some(ref timer_driver) = timer_driver {
                 let _ = timer_driver.sleep(Duration::from_ms(100)).await;
             }
-            for led in led::all() {
+            for mut led in led_driver.all() {
                 let _ = led.off();
             }
             if let Some(ref timer_driver) = timer_driver {
@@ -75,14 +77,16 @@ unsafe fn cycle_leds(_: Layout) -> ! {
         let context = timer::DriverContext::create().ok();
         let mut driver = context.as_ref().map(|c| c.create_timer_driver_unsafe());
         let timer_driver = driver.as_mut().and_then(|d| d.activate().ok());
+        let Hardware { mut led_driver, .. } = crate::retrieve_hardware_unsafe();
+
         loop {
-            for led in led::all() {
+            for mut led in led_driver.all() {
                 let _ = led.on();
             }
             if let Some(ref timer_driver) = timer_driver {
                 let _ = timer_driver.sleep(Duration::from_ms(100)).await;
             }
-            for led in led::all() {
+            for mut led in led_driver.all() {
                 let _ = led.off();
             }
             if let Some(ref timer_driver) = timer_driver {

@@ -10,7 +10,7 @@ use libtock::Hardware;
 
 #[libtock::main]
 async fn main() -> TockResult<()> {
-    let Hardware { console_driver } = libtock::retrieve_hardware()?;
+    let Hardware { console_driver, .. } = libtock::retrieve_hardware()?;
     let mut console = console_driver.create_console();
     let mut humidity = HumiditySensor;
     let mut temperature = TemperatureSensor;

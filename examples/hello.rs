@@ -8,7 +8,7 @@ use libtock::Hardware;
 
 #[libtock::main]
 async fn main() -> TockResult<()> {
-    let Hardware { console_driver } = libtock::retrieve_hardware()?;
+    let Hardware { console_driver, .. } = libtock::retrieve_hardware()?;
     let mut console = console_driver.create_console();
     let context = timer::DriverContext::create()?;
     let mut driver = context.create_timer_driver()?;

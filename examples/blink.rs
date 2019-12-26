@@ -1,13 +1,14 @@
 #![no_std]
 
-use libtock::led;
 use libtock::result::TockResult;
 use libtock::timer;
 use libtock::timer::Duration;
+use libtock::Hardware;
 
 #[libtock::main]
 async fn main() -> TockResult<()> {
-    let num_leds = led::count()?;
+    let Hardware { mut led_driver, .. } = libtock::retrieve_hardware()?;
+
     let context = timer::DriverContext::create()?;
     let mut driver = context.create_timer_driver()?;
     let timer_driver = driver.activate()?;
@@ -16,11 +17,12 @@ async fn main() -> TockResult<()> {
     // to the number of LEDs on the board.
     let mut count: usize = 0;
     loop {
-        for i in 0..num_leds {
+        for mut led in led_driver.all() {
+            let i = led.number();
             if count & (1 << i) == (1 << i) {
-                led::get(i).unwrap().on()?;
+                led.on()?;
             } else {
-                led::get(i).unwrap().off()?;
+                led.off()?;
             }
         }
         count = count.wrapping_add(1);
