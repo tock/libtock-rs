@@ -3,11 +3,14 @@ use crate::led::LedDriver;
 use crate::result::OtherError;
 use crate::result::TockError;
 use crate::result::TockResult;
+use crate::timer::DriverContext;
+use core::cell::Cell;
 
 /// Struct containing all drivers constructible through retrieve_hardware()
 pub struct Hardware {
     pub console_driver: ConsoleDriver,
     pub led_driver: LedDriver,
+    pub timer_context: DriverContext,
 }
 
 /// Retrieve Hardware struct. Returns Hardware only once.
@@ -28,12 +31,16 @@ pub unsafe fn retrieve_hardware_unsafe() -> Hardware {
     HARDWARE
 }
 
+#[allow(clippy::declare_interior_mutable_const)]
 const HARDWARE: Hardware = Hardware {
     console_driver: ConsoleDriver {
         _unconstructible: (),
     },
     led_driver: LedDriver {
         _unconstructible: (),
+    },
+    timer_context: DriverContext {
+        active_timer: Cell::new(None),
     },
 };
 

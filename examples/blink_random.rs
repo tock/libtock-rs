@@ -3,14 +3,14 @@
 use libtock::led::LedDriver;
 use libtock::result::TockResult;
 use libtock::rng;
-use libtock::timer;
 use libtock::timer::Duration;
 use libtock::Hardware;
 
 #[libtock::main]
 async fn main() -> TockResult<()> {
-    let context = timer::DriverContext::create()?;
-    let mut driver = context.create_timer_driver()?;
+    let Hardware { timer_context, .. } = libtock::retrieve_hardware()?;
+
+    let mut driver = timer_context.create_timer_driver();
     let timer_driver = driver.activate()?;
     let Hardware { mut led_driver, .. } = libtock::retrieve_hardware()?;
 

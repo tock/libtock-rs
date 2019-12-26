@@ -4,7 +4,6 @@ use libtock::ble_composer;
 use libtock::ble_composer::BlePayload;
 use libtock::result::TockResult;
 use libtock::simple_ble::BleAdvertisingDriver;
-use libtock::timer;
 use libtock::timer::Duration;
 use libtock::Hardware;
 use serde::Serialize;
@@ -17,7 +16,11 @@ struct LedCommand {
 
 #[libtock::main]
 async fn main() -> TockResult<()> {
-    let Hardware { mut led_driver, .. } = libtock::retrieve_hardware()?;
+    let Hardware {
+        mut led_driver,
+        timer_context,
+        ..
+    } = libtock::retrieve_hardware()?;
 
     let mut led = led_driver.get(0).unwrap();
 
@@ -42,8 +45,7 @@ async fn main() -> TockResult<()> {
 
     let _handle = BleAdvertisingDriver::initialize(100, &gap_payload, &mut buffer);
 
-    let context = timer::DriverContext::create()?;
-    let mut driver = context.create_timer_driver()?;
+    let mut driver = timer_context.create_timer_driver();
     let timer_driver = driver.activate()?;
 
     loop {

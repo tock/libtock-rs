@@ -3,7 +3,6 @@
 use futures::future;
 use libtock::led::Led;
 use libtock::result::TockResult;
-use libtock::timer;
 use libtock::timer::Duration;
 use libtock::timer::ParallelSleepDriver;
 use libtock::Hardware;
@@ -22,14 +21,17 @@ async fn blink<'a>(
 
 #[libtock::main]
 async fn main() -> TockResult<()> {
-    let Hardware { mut led_driver, .. } = libtock::retrieve_hardware()?;
+    let Hardware {
+        mut led_driver,
+        timer_context,
+        ..
+    } = libtock::retrieve_hardware()?;
     let mut led_iter = led_driver.all();
     let mut led_1 = led_iter.next().unwrap();
     let mut led_2 = led_iter.next().unwrap();
     let mut led_3 = led_iter.next().unwrap();
 
-    let context = timer::DriverContext::create()?;
-    let mut driver = context.create_timer_driver()?;
+    let mut driver = timer_context.create_timer_driver();
     let timer_driver = driver.activate()?;
 
     let fut_1 = blink(&timer_driver, Duration::from_ms(500), &mut led_1);
