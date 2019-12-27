@@ -2,7 +2,6 @@
 
 use core::fmt::Write;
 use futures::future;
-use libtock::buttons;
 use libtock::buttons::ButtonState;
 use libtock::result::TockResult;
 use libtock::Hardware;
@@ -10,9 +9,13 @@ use libtock::Hardware;
 // FIXME: Hangs up when buttons are pressed rapidly. Yielding in callback leads to stack overflow.
 #[libtock::main]
 async fn main() -> TockResult<()> {
-    let Hardware { console_driver, .. } = libtock::retrieve_hardware()?;
+    let Hardware {
+        console_driver,
+        button_driver,
+        ..
+    } = libtock::retrieve_hardware()?;
     let mut console = console_driver.create_console();
-    let mut with_callback = buttons::with_callback(|button_num: usize, state| {
+    let mut with_callback = button_driver.with_callback(|button_num: usize, state| {
         writeln!(
             console,
             "Button: {} - State: {}",

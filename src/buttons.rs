@@ -17,8 +17,14 @@ mod subscribe_nr {
     pub const SUBSCRIBE_CALLBACK: usize = 0;
 }
 
-pub fn with_callback<CB>(callback: CB) -> WithCallback<CB> {
-    WithCallback { callback }
+pub struct ButtonDriver {
+    pub(crate) _unconstructible: (),
+}
+
+impl ButtonDriver {
+    pub fn with_callback<CB>(self, callback: CB) -> WithCallback<CB> {
+        WithCallback { callback }
+    }
 }
 
 pub struct WithCallback<CB> {

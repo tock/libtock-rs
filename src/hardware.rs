@@ -1,3 +1,4 @@
+use crate::buttons::ButtonDriver;
 use crate::console::ConsoleDriver;
 use crate::gpio::GpioDriver;
 use crate::led::LedDriver;
@@ -15,6 +16,7 @@ pub struct Hardware {
     pub timer_context: DriverContext,
     pub gpio_driver: GpioDriver,
     pub temperature_driver: TemperatureDriver,
+    pub button_driver: ButtonDriver,
 }
 
 /// Retrieve Hardware struct. Returns Hardware only once.
@@ -50,6 +52,9 @@ const HARDWARE: Hardware = Hardware {
         _unconstructible: (),
     },
     temperature_driver: TemperatureDriver {
+        _unconstructible: (),
+    },
+    button_driver: ButtonDriver {
         _unconstructible: (),
     },
 };
