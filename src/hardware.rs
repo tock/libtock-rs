@@ -4,6 +4,7 @@ use crate::led::LedDriver;
 use crate::result::OtherError;
 use crate::result::TockError;
 use crate::result::TockResult;
+use crate::temperature::TemperatureDriver;
 use crate::timer::DriverContext;
 use core::cell::Cell;
 
@@ -13,6 +14,7 @@ pub struct Hardware {
     pub led_driver: LedDriver,
     pub timer_context: DriverContext,
     pub gpio_driver: GpioDriver,
+    pub temperature_driver: TemperatureDriver,
 }
 
 /// Retrieve Hardware struct. Returns Hardware only once.
@@ -45,6 +47,9 @@ const HARDWARE: Hardware = Hardware {
         active_timer: Cell::new(None),
     },
     gpio_driver: GpioDriver {
+        _unconstructible: (),
+    },
+    temperature_driver: TemperatureDriver {
         _unconstructible: (),
     },
 };

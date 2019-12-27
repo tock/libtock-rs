@@ -10,18 +10,23 @@ const DRIVER_NUMBER: usize = 0x60000;
 const SUBSCRIBE_CALLBACK: usize = 0;
 const START_MEASUREMENT: usize = 1;
 
-pub async fn measure_temperature() -> Result<Temperature, TockError> {
-    let temperature = Cell::<Option<isize>>::new(None);
-    let mut callback = |arg1, _, _| temperature.set(Some(arg1 as isize));
-    let subscription = syscalls::subscribe(DRIVER_NUMBER, SUBSCRIBE_CALLBACK, &mut callback)?;
-    syscalls::command(DRIVER_NUMBER, START_MEASUREMENT, 0, 0)?;
-    let temperatur = Temperature {
-        centi_celsius: futures::wait_for_value(|| temperature.get()).await,
-    };
-    mem::drop(subscription);
-    Ok(temperatur)
+pub struct TemperatureDriver {
+    pub(crate) _unconstructible: (),
 }
 
+impl TemperatureDriver {
+    pub async fn measure_temperature(&mut self) -> Result<Temperature, TockError> {
+        let temperature = Cell::<Option<isize>>::new(None);
+        let mut callback = |arg1, _, _| temperature.set(Some(arg1 as isize));
+        let subscription = syscalls::subscribe(DRIVER_NUMBER, SUBSCRIBE_CALLBACK, &mut callback)?;
+        syscalls::command(DRIVER_NUMBER, START_MEASUREMENT, 0, 0)?;
+        let temperatur = Temperature {
+            centi_celsius: futures::wait_for_value(|| temperature.get()).await,
+        };
+        mem::drop(subscription);
+        Ok(temperatur)
+    }
+}
 #[derive(Copy, Clone)]
 pub struct Temperature {
     centi_celsius: isize,
