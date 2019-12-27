@@ -8,7 +8,9 @@ use core::mem;
 
 const DRIVER_NUM: usize = 0x60004;
 
-pub struct Ninedof;
+pub struct NinedofDriver {
+    pub(crate) _unconstructible: (),
+}
 
 #[derive(Copy, Clone, Default, Debug)]
 pub struct NinedofReading {
@@ -29,7 +31,7 @@ struct CbData {
     ready: Cell<bool>,
 }
 
-impl Ninedof {
+impl NinedofDriver {
     pub fn read_acceleration(&mut self) -> TockResult<NinedofReading> {
         let res: CbData = Default::default();
         subscribe(Self::cb, unsafe { mem::transmute(&res) })?;
@@ -57,9 +59,11 @@ impl Ninedof {
     }
 }
 
-impl Default for Ninedof {
+impl Default for NinedofDriver {
     fn default() -> Self {
-        Ninedof
+        NinedofDriver {
+            _unconstructible: (),
+        }
     }
 }
 

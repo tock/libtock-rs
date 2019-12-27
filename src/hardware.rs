@@ -7,6 +7,10 @@ use crate::result::OtherError;
 use crate::result::TockError;
 use crate::result::TockResult;
 use crate::rng::RngDriver;
+use crate::sensors::ninedof::NinedofDriver;
+use crate::sensors::AmbientLightSensor;
+use crate::sensors::HumiditySensor;
+use crate::sensors::TemperatureSensor;
 use crate::simple_ble::BleAdvertisingDriver;
 use crate::simple_ble::BleScanningDriver;
 use crate::temperature::TemperatureDriver;
@@ -25,6 +29,10 @@ pub struct Hardware {
     pub rng_driver: RngDriver,
     pub ble_advertising_driver: BleAdvertisingDriver,
     pub ble_scanning_driver: BleScanningDriver,
+    pub ambient_light_sensor: AmbientLightSensor,
+    pub temperature_sensor: TemperatureSensor,
+    pub humidity_sensor: HumiditySensor,
+    pub ninedof_driver: NinedofDriver,
 }
 
 /// Retrieve Hardware struct. Returns Hardware only once.
@@ -75,6 +83,18 @@ const HARDWARE: Hardware = Hardware {
         _unconstructible: (),
     },
     ble_scanning_driver: BleScanningDriver {
+        _unconstructible: (),
+    },
+    ambient_light_sensor: AmbientLightSensor {
+        _unconstructible: (),
+    },
+    temperature_sensor: TemperatureSensor {
+        _unconstructible: (),
+    },
+    humidity_sensor: HumiditySensor {
+        _unconstructible: (),
+    },
+    ninedof_driver: NinedofDriver {
         _unconstructible: (),
     },
 };
