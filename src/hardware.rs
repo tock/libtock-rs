@@ -18,6 +18,7 @@ use crate::timer::DriverContext;
 use core::cell::Cell;
 
 /// Struct containing all drivers constructible through retrieve_hardware()
+#[non_exhaustive]
 pub struct Hardware {
     pub console_driver: ConsoleDriver,
     pub led_driver: LedDriver,
