@@ -1,9 +1,12 @@
+use crate::result::OtherError;
+use crate::result::TockError;
 use crate::result::TockResult;
 use crate::syscalls;
+use core::marker::PhantomData;
 
 const DRIVER_NUMBER: usize = 0x00004;
-mod gpio_commands {
-    pub const SUBSCRIBE_CALLBACK: usize = 0;
+mod command_nr {
+    pub const NUMBER_PINS: usize = 0;
     pub const ENABLE_OUTPUT: usize = 1;
     pub const SET_HIGH: usize = 2;
     pub const SET_LOW: usize = 3;
@@ -13,6 +16,65 @@ mod gpio_commands {
     pub const ENABLE_INTERRUPT: usize = 7;
     pub const DISABLE_INTERRUPT: usize = 8;
     pub const DISABLE: usize = 9;
+}
+
+mod subscribe_nr {
+    pub const SUBSCRIBE_CALLBACK: usize = 0;
+}
+
+pub struct GpioDriver {
+    pub(crate) _unconstructible: (),
+}
+
+impl GpioDriver {
+    pub fn all_pins<'a>(&'a mut self) -> TockResult<GpioIter<'a>> {
+        let number = self.number_of_pins()?;
+        Ok(GpioIter {
+            curr_gpio: 0,
+            gpio_count: number,
+            phantom: PhantomData,
+        })
+    }
+
+    pub fn pin<'a>(&'a mut self, pin: usize) -> TockResult<GpioPinUnitialized<'a>> {
+        let number = self.number_of_pins()?;
+        if pin < number {
+            Ok(GpioPinUnitialized {
+                number: pin,
+                phantom: PhantomData,
+            })
+        } else {
+            Err(TockError::Other(OtherError::NotEnoughGpioPins))
+        }
+    }
+
+    fn number_of_pins(&self) -> TockResult<usize> {
+        syscalls::command(DRIVER_NUMBER, command_nr::NUMBER_PINS, 0, 0).map_err(Into::into)
+    }
+}
+
+#[derive(Copy, Clone)]
+pub struct GpioIter<'a> {
+    curr_gpio: usize,
+    gpio_count: usize,
+    phantom: PhantomData<&'a mut ()>,
+}
+
+impl<'a> Iterator for GpioIter<'a> {
+    type Item = GpioPinUnitialized<'a>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.curr_gpio < self.gpio_count {
+            let item = GpioPinUnitialized {
+                number: self.curr_gpio,
+                phantom: PhantomData,
+            };
+            self.curr_gpio += 1;
+            Some(item)
+        } else {
+            None
+        }
+    }
 }
 
 pub enum InputMode {
@@ -47,27 +109,34 @@ impl IrqMode {
     }
 }
 
-pub struct GpioPinUnitialized {
+pub struct GpioPinUnitialized<'a> {
     number: usize,
+    phantom: PhantomData<&'a mut ()>,
 }
 
-pub struct GpioPinWrite {
+pub struct GpioPinWrite<'a> {
     number: usize,
+    phantom: PhantomData<&'a mut ()>,
 }
 
-pub struct GpioPinRead {
+pub struct GpioPinRead<'a> {
     number: usize,
+    phantom: PhantomData<&'a mut ()>,
 }
 
-impl GpioPinUnitialized {
-    pub fn new(number: usize) -> GpioPinUnitialized {
-        GpioPinUnitialized { number }
+impl<'a> GpioPinUnitialized<'a> {
+    pub fn new(number: usize) -> GpioPinUnitialized<'a> {
+        GpioPinUnitialized {
+            number,
+            phantom: PhantomData,
+        }
     }
 
-    pub fn open_for_write(self) -> TockResult<GpioPinWrite> {
-        syscalls::command(DRIVER_NUMBER, gpio_commands::ENABLE_OUTPUT, self.number, 0)?;
+    pub fn open_for_write(self) -> TockResult<GpioPinWrite<'a>> {
+        syscalls::command(DRIVER_NUMBER, command_nr::ENABLE_OUTPUT, self.number, 0)?;
         Ok(GpioPinWrite {
             number: self.number,
+            phantom: PhantomData,
         })
     }
 
@@ -75,85 +144,81 @@ impl GpioPinUnitialized {
         self,
         callback: Option<(extern "C" fn(usize, usize, usize, usize), IrqMode)>,
         input_mode: InputMode,
-    ) -> TockResult<GpioPinRead> {
+    ) -> TockResult<GpioPinRead<'a>> {
         let (callback, irq_mode) = callback.unwrap_or((noop_callback, IrqMode::EitherEdge));
         self.enable_input(input_mode)
             .and_then(|pin| pin.subscribe_callback(callback))
-            .and_then(|pin| pin.enable_callback(irq_mode))
+            .and_then(move |pin| pin.enable_callback(irq_mode))
     }
 
     fn subscribe_callback(
         self,
         callback: extern "C" fn(usize, usize, usize, usize),
-    ) -> TockResult<GpioPinUnitialized> {
+    ) -> TockResult<GpioPinUnitialized<'a>> {
         syscalls::subscribe_fn(
             DRIVER_NUMBER,
-            gpio_commands::SUBSCRIBE_CALLBACK,
+            subscribe_nr::SUBSCRIBE_CALLBACK,
             callback,
             self.number,
         )?;
         Ok(self)
     }
 
-    fn enable_input(self, mode: InputMode) -> TockResult<GpioPinUnitialized> {
+    fn enable_input(self, mode: InputMode) -> TockResult<GpioPinUnitialized<'a>> {
         syscalls::command(
             DRIVER_NUMBER,
-            gpio_commands::ENABLE_INPUT,
+            command_nr::ENABLE_INPUT,
             self.number,
             mode.to_num(),
         )?;
         Ok(self)
     }
 
-    fn enable_callback(self, irq_mode: IrqMode) -> TockResult<GpioPinRead> {
+    fn enable_callback(self, irq_mode: IrqMode) -> TockResult<GpioPinRead<'a>> {
         syscalls::command(
             DRIVER_NUMBER,
-            gpio_commands::ENABLE_INTERRUPT,
+            command_nr::ENABLE_INTERRUPT,
             self.number,
             irq_mode.to_num(),
         )?;
         Ok(GpioPinRead {
             number: self.number,
+            phantom: PhantomData,
         })
     }
 }
 
-impl GpioPinWrite {
-    pub fn set_low(&self) -> TockResult<()> {
-        syscalls::command(DRIVER_NUMBER, gpio_commands::SET_LOW, self.number, 0)?;
+impl<'a> GpioPinWrite<'a> {
+    pub fn set_low(&mut self) -> TockResult<()> {
+        syscalls::command(DRIVER_NUMBER, command_nr::SET_LOW, self.number, 0)?;
         Ok(())
     }
-    pub fn set_high(&self) -> TockResult<()> {
-        syscalls::command(DRIVER_NUMBER, gpio_commands::SET_HIGH, self.number, 0)?;
+    pub fn set_high(&mut self) -> TockResult<()> {
+        syscalls::command(DRIVER_NUMBER, command_nr::SET_HIGH, self.number, 0)?;
         Ok(())
     }
-    pub fn toggle(&self) -> TockResult<()> {
-        syscalls::command(DRIVER_NUMBER, gpio_commands::TOGGLE, self.number, 0)?;
+    pub fn toggle(&mut self) -> TockResult<()> {
+        syscalls::command(DRIVER_NUMBER, command_nr::TOGGLE, self.number, 0)?;
         Ok(())
     }
 }
 
-impl GpioPinRead {
-    pub fn read(&self) -> bool {
-        syscalls::command(DRIVER_NUMBER, gpio_commands::READ, self.number, 0).ok() == Some(1)
+impl<'a> GpioPinRead<'a> {
+    pub fn read(&'a self) -> bool {
+        syscalls::command(DRIVER_NUMBER, command_nr::READ, self.number, 0).ok() == Some(1)
     }
 }
 
-impl Drop for GpioPinWrite {
+impl<'a> Drop for GpioPinWrite<'a> {
     fn drop(&mut self) {
-        let _ = syscalls::command(DRIVER_NUMBER, gpio_commands::DISABLE, self.number, 0);
+        let _ = syscalls::command(DRIVER_NUMBER, command_nr::DISABLE, self.number, 0);
     }
 }
 
-impl Drop for GpioPinRead {
+impl<'a> Drop for GpioPinRead<'a> {
     fn drop(&mut self) {
-        let _ = syscalls::command(
-            DRIVER_NUMBER,
-            gpio_commands::DISABLE_INTERRUPT,
-            self.number,
-            0,
-        );
-        let _ = syscalls::command(DRIVER_NUMBER, gpio_commands::DISABLE, self.number, 0);
+        let _ = syscalls::command(DRIVER_NUMBER, command_nr::DISABLE_INTERRUPT, self.number, 0);
+        let _ = syscalls::command(DRIVER_NUMBER, command_nr::DISABLE, self.number, 0);
     }
 }
 

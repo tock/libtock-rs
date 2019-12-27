@@ -1,4 +1,5 @@
 use crate::console::ConsoleDriver;
+use crate::gpio::GpioDriver;
 use crate::led::LedDriver;
 use crate::result::OtherError;
 use crate::result::TockError;
@@ -11,6 +12,7 @@ pub struct Hardware {
     pub console_driver: ConsoleDriver,
     pub led_driver: LedDriver,
     pub timer_context: DriverContext,
+    pub gpio_driver: GpioDriver,
 }
 
 /// Retrieve Hardware struct. Returns Hardware only once.
@@ -41,6 +43,9 @@ const HARDWARE: Hardware = Hardware {
     },
     timer_context: DriverContext {
         active_timer: Cell::new(None),
+    },
+    gpio_driver: GpioDriver {
+        _unconstructible: (),
     },
 };
 

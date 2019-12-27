@@ -26,7 +26,7 @@ fn number_to_bits(n: u8) -> [bool; 8] {
 #[libtock::main]
 async fn main() -> TockResult<()> {
     let Hardware { timer_context, .. } = libtock::retrieve_hardware()?;
-    let shift_register = ShiftRegister::new(
+    let mut shift_register = ShiftRegister::new(
         GpioPinUnitialized::new(0).open_for_write()?,
         GpioPinUnitialized::new(1).open_for_write()?,
         GpioPinUnitialized::new(2).open_for_write()?,

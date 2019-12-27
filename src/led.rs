@@ -81,7 +81,7 @@ impl<'a> Led<'a> {
 pub struct LedIter<'a> {
     curr_led: usize,
     led_count: usize,
-    phantom: PhantomData<&'a ()>,
+    phantom: PhantomData<&'a mut ()>,
 }
 
 impl<'a> Iterator for LedIter<'a> {

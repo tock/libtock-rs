@@ -70,6 +70,7 @@ pub enum OtherError {
     TimerDriverDurationOutOfRange,
     TimerDriverErroneousClockFrequency,
     DriverAlreadyTaken,
+    NotEnoughGpioPins,
 }
 
 impl From<OtherError> for TockError {

@@ -1,18 +1,18 @@
 use crate::gpio::GpioPinWrite;
 use crate::result::TockResult;
 
-pub struct ShiftRegister {
-    data_pin: GpioPinWrite,
-    clock_pin: GpioPinWrite,
-    latch_pin: GpioPinWrite,
+pub struct ShiftRegister<'a> {
+    data_pin: GpioPinWrite<'a>,
+    clock_pin: GpioPinWrite<'a>,
+    latch_pin: GpioPinWrite<'a>,
 }
 
-impl ShiftRegister {
+impl<'a> ShiftRegister<'a> {
     pub fn new(
-        data_pin: GpioPinWrite,
-        clock_pin: GpioPinWrite,
-        latch_pin: GpioPinWrite,
-    ) -> ShiftRegister {
+        data_pin: GpioPinWrite<'a>,
+        clock_pin: GpioPinWrite<'a>,
+        latch_pin: GpioPinWrite<'a>,
+    ) -> ShiftRegister<'a> {
         ShiftRegister {
             data_pin,
             clock_pin,
@@ -20,14 +20,14 @@ impl ShiftRegister {
         }
     }
 
-    pub fn write_bits(&self, values: &[bool]) -> TockResult<()> {
+    pub fn write_bits(&mut self, values: &[bool]) -> TockResult<()> {
         for i in values {
             self.push_bit(*i)?;
         }
         self.display()
     }
 
-    fn push_bit(&self, value: bool) -> TockResult<()> {
+    fn push_bit(&mut self, value: bool) -> TockResult<()> {
         if value {
             self.data_pin.set_high()
         } else {
@@ -37,7 +37,7 @@ impl ShiftRegister {
         self.clock_pin.set_low()
     }
 
-    fn display(&self) -> TockResult<()> {
+    fn display(&mut self) -> TockResult<()> {
         self.latch_pin.set_high()?;
         self.latch_pin.set_low()
     }
