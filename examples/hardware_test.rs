@@ -12,7 +12,7 @@ use libtock::gpio::GpioPinRead;
 use libtock::gpio::GpioPinWrite;
 use libtock::gpio::InputMode;
 use libtock::result::TockResult;
-use libtock::timer;
+use libtock::timer::DriverContext;
 use libtock::timer::Duration;
 use libtock::Hardware;
 
@@ -39,6 +39,7 @@ async fn main() -> TockResult<()> {
     let Hardware {
         console_driver,
         mut gpio_driver,
+        mut timer_context,
         ..
     } = libtock::retrieve_hardware()?;
     let mut gpio_iter = gpio_driver.all_pins()?;
@@ -58,7 +59,7 @@ async fn main() -> TockResult<()> {
 
     test_trait_objects(&mut console, &pin_in, &mut pin_out)?;
 
-    test_callbacks_and_wait_forever(&mut console).await
+    test_callbacks_and_wait_forever(&mut console, &mut timer_context).await
 }
 
 fn test_heap(console: &mut Console) {
@@ -114,8 +115,11 @@ fn test_gpio(console: &mut Console, pin_in: &GpioPinRead, pin_out: &mut GpioPinW
     writeln!(console, "gpio_works = {}", pin_in.read()).unwrap();
 }
 
-async fn test_callbacks_and_wait_forever(console: &mut Console) -> TockResult<()> {
-    let mut with_callback = timer::with_callback(|_, _| {
+async fn test_callbacks_and_wait_forever(
+    console: &mut Console,
+    timer_context: &mut DriverContext,
+) -> TockResult<()> {
+    let mut with_callback = timer_context.with_callback(|_, _| {
         writeln!(console, "callbacks_work = true").unwrap();
         writeln!(console, "all_tests_run = true").unwrap();
     });

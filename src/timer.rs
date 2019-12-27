@@ -10,6 +10,7 @@ use crate::result::EALREADY;
 use crate::syscalls;
 use core::cell::Cell;
 use core::isize;
+use core::marker::PhantomData;
 use core::ops::{Add, AddAssign, Sub};
 
 const DRIVER_NUMBER: usize = 0x00000;
@@ -26,19 +27,13 @@ mod subscribe_nr {
     pub const SUBSCRIBE_CALLBACK: usize = 0;
 }
 
-pub fn with_callback<CB>(callback: CB) -> WithCallback<CB> {
-    WithCallback {
-        callback,
-        clock_frequency: ClockFrequency { hz: 0 },
-    }
-}
-
-pub struct WithCallback<CB> {
+pub struct WithCallback<'a, CB> {
     callback: CB,
     clock_frequency: ClockFrequency,
+    phantom: PhantomData<&'a mut ()>,
 }
 
-impl<CB: FnMut(ClockValue, Alarm)> SubscribableCallback for WithCallback<CB> {
+impl<CB: FnMut(ClockValue, Alarm)> SubscribableCallback for WithCallback<'_, CB> {
     fn call_rust(&mut self, clock_value: usize, alarm_id: usize, _: usize) {
         (self.callback)(
             ClockValue {
@@ -50,11 +45,11 @@ impl<CB: FnMut(ClockValue, Alarm)> SubscribableCallback for WithCallback<CB> {
     }
 }
 
-impl<CB> WithCallback<CB>
+impl<'a, CB> WithCallback<'a, CB>
 where
     Self: SubscribableCallback,
 {
-    pub fn init(&mut self) -> TockResult<Timer> {
+    pub fn init(&'a mut self) -> TockResult<Timer<'a>> {
         let num_notifications =
             syscalls::command(DRIVER_NUMBER, command_nr::IS_DRIVER_AVAILABLE, 0, 0)?;
 
@@ -310,6 +305,14 @@ impl DriverContext {
         TimerDriver {
             callback: Callback,
             context: &self,
+        }
+    }
+
+    pub fn with_callback<CB>(&mut self, callback: CB) -> WithCallback<CB> {
+        WithCallback {
+            callback,
+            clock_frequency: ClockFrequency { hz: 0 },
+            phantom: PhantomData,
         }
     }
 }
