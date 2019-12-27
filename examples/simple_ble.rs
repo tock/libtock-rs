@@ -19,6 +19,7 @@ async fn main() -> TockResult<()> {
     let Hardware {
         mut led_driver,
         timer_context,
+        mut ble_advertising_driver,
         ..
     } = libtock::retrieve_hardware()?;
 
@@ -43,7 +44,7 @@ async fn main() -> TockResult<()> {
         .unwrap();
     gap_payload.add_service_payload([91, 79], &payload).unwrap();
 
-    let _handle = BleAdvertisingDriver::initialize(100, &gap_payload, &mut buffer);
+    let _handle = ble_advertising_driver.initialize(100, &gap_payload, &mut buffer);
 
     let mut driver = timer_context.create_timer_driver();
     let timer_driver = driver.activate()?;

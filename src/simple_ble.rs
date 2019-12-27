@@ -29,13 +29,16 @@ pub mod gap_data {
     pub const SERVICE_DATA: usize = 0x16;
 }
 
-pub struct BleAdvertisingDriver;
+pub struct BleAdvertisingDriver {
+    pub(crate) _unconstructible: (),
+}
 
 impl BleAdvertisingDriver {
     pub fn create_advertising_buffer() -> [u8; BUFFER_SIZE_ADVERTISE] {
         [0; BUFFER_SIZE_ADVERTISE]
     }
     pub fn initialize<'a>(
+        &'a mut self,
         interval: usize,
         service_payload: &BlePayload,
         advertising_buffer: &'a mut [u8; BUFFER_SIZE_ADVERTISE],
