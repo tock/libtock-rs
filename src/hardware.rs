@@ -8,6 +8,7 @@ use crate::result::TockError;
 use crate::result::TockResult;
 use crate::rng::RngDriver;
 use crate::simple_ble::BleAdvertisingDriver;
+use crate::simple_ble::BleScanningDriver;
 use crate::temperature::TemperatureDriver;
 use crate::timer::DriverContext;
 use core::cell::Cell;
@@ -23,6 +24,7 @@ pub struct Hardware {
     pub adc_driver: AdcDriver,
     pub rng_driver: RngDriver,
     pub ble_advertising_driver: BleAdvertisingDriver,
+    pub ble_scanning_driver: BleScanningDriver,
 }
 
 /// Retrieve Hardware struct. Returns Hardware only once.
@@ -70,6 +72,9 @@ const HARDWARE: Hardware = Hardware {
         _unconstructible: (),
     },
     ble_advertising_driver: BleAdvertisingDriver {
+        _unconstructible: (),
+    },
+    ble_scanning_driver: BleScanningDriver {
         _unconstructible: (),
     },
 };

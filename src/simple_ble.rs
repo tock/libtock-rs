@@ -80,19 +80,27 @@ impl<CB: FnMut(usize, usize)> SubscribableCallback for BleCallback<CB> {
     }
 }
 
-pub struct BleDriver;
+pub struct BleScanningDriver {
+    pub(crate) _unconstructible: (),
+}
 
-impl BleDriver {
+impl BleScanningDriver {
     pub fn create_scan_buffer() -> [u8; BUFFER_SIZE_SCAN] {
         [0; BUFFER_SIZE_SCAN]
     }
 
-    pub fn share_memory(scan_buffer: &mut [u8; BUFFER_SIZE_SCAN]) -> TockResult<SharedMemory> {
+    pub fn share_memory<'a, 'b>(
+        &'a mut self,
+        scan_buffer: &'b mut [u8; BUFFER_SIZE_SCAN],
+    ) -> TockResult<SharedMemory<'b>> {
         syscalls::allow(DRIVER_NUMBER, ble_commands::ALLOW_SCAN_BUFFER, scan_buffer)
             .map_err(Into::into)
     }
 
-    pub fn start<CB>(callback: &mut BleCallback<CB>) -> TockResult<CallbackSubscription>
+    pub fn start<'a, CB>(
+        &'a mut self,
+        callback: &'a mut BleCallback<CB>,
+    ) -> TockResult<CallbackSubscription>
     where
         BleCallback<CB>: SubscribableCallback,
     {
