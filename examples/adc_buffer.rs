@@ -1,7 +1,6 @@
 #![no_std]
 
 use core::fmt::Write;
-use libtock::adc;
 use libtock::adc::AdcBuffer;
 use libtock::result::TockResult;
 use libtock::syscalls;
@@ -10,14 +9,18 @@ use libtock::Hardware;
 #[libtock::main]
 /// Reads a 128 byte sample into a buffer and prints the first value to the console.
 async fn main() -> TockResult<()> {
-    let Hardware { console_driver, .. } = libtock::retrieve_hardware()?;
+    let Hardware {
+        console_driver,
+        adc_driver,
+        ..
+    } = libtock::retrieve_hardware()?;
     let mut console = console_driver.create_console();
     let mut adc_buffer = AdcBuffer::default();
     let mut temp_buffer = [0; libtock::adc::BUFFER_SIZE];
 
     let adc_buffer = libtock::adc::Adc::init_buffer(&mut adc_buffer)?;
 
-    let mut with_callback = adc::with_callback(|_, _| {
+    let mut with_callback = adc_driver.with_callback(|_, _| {
         adc_buffer.read_bytes(&mut temp_buffer[..]);
         writeln!(console, "First sample in buffer: {}", temp_buffer[0]).unwrap();
     });

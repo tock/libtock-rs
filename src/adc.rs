@@ -24,6 +24,16 @@ mod allow {
     pub const BUFFER_ALT: usize = 1;
 }
 
+pub struct AdcDriver {
+    pub(crate) _unconstructible: (),
+}
+
+impl AdcDriver {
+    pub fn with_callback<CB>(self, callback: CB) -> WithCallback<CB> {
+        WithCallback { callback }
+    }
+}
+
 pub struct AdcBuffer {
     // TODO: make this generic if possible with the driver impl
     buffer: [u8; BUFFER_SIZE],
@@ -41,10 +51,6 @@ pub struct Adc<'a> {
     count: usize,
     #[allow(dead_code)] // Used in drop
     subscription: CallbackSubscription<'a>,
-}
-
-pub fn with_callback<CB>(callback: CB) -> WithCallback<CB> {
-    WithCallback { callback }
 }
 
 pub struct WithCallback<CB> {
