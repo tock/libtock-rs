@@ -6,6 +6,7 @@ use crate::led::LedDriver;
 use crate::result::OtherError;
 use crate::result::TockError;
 use crate::result::TockResult;
+use crate::rng::RngDriver;
 use crate::temperature::TemperatureDriver;
 use crate::timer::DriverContext;
 use core::cell::Cell;
@@ -19,6 +20,7 @@ pub struct Hardware {
     pub temperature_driver: TemperatureDriver,
     pub button_driver: ButtonDriver,
     pub adc_driver: AdcDriver,
+    pub rng_driver: RngDriver,
 }
 
 /// Retrieve Hardware struct. Returns Hardware only once.
@@ -60,6 +62,9 @@ const HARDWARE: Hardware = Hardware {
         _unconstructible: (),
     },
     adc_driver: AdcDriver {
+        _unconstructible: (),
+    },
+    rng_driver: RngDriver {
         _unconstructible: (),
     },
 };

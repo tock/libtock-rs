@@ -18,25 +18,25 @@ mod allow_nr {
     pub const SHARE_BUFFER: usize = 0;
 }
 
-pub async fn fill_buffer(buf: &mut [u8]) -> TockResult<()> {
-    let buf_len = buf.len();
+pub struct RngDriver {
+    pub(crate) _unconstructible: (),
+}
 
-    let shared_memory = syscalls::allow(DRIVER_NUMBER, allow_nr::SHARE_BUFFER, buf)?;
-
-    let is_filled = Cell::new(false);
-    let mut is_filled_alarm = |_, _, _| is_filled.set(true);
-    let subscription = syscalls::subscribe(
-        DRIVER_NUMBER,
-        subscribe_nr::BUFFER_FILLED,
-        &mut is_filled_alarm,
-    )?;
-
-    syscalls::command(DRIVER_NUMBER, command_nr::REQUEST_RNG, buf_len, 0)?;
-
-    futures::wait_until(|| is_filled.get()).await;
-
-    mem::drop(subscription);
-    mem::drop(shared_memory);
-
-    Ok(())
+impl RngDriver {
+    pub async fn fill_buffer(&mut self, buf: &mut [u8]) -> TockResult<()> {
+        let buf_len = buf.len();
+        let shared_memory = syscalls::allow(DRIVER_NUMBER, allow_nr::SHARE_BUFFER, buf)?;
+        let is_filled = Cell::new(false);
+        let mut is_filled_alarm = |_, _, _| is_filled.set(true);
+        let subscription = syscalls::subscribe(
+            DRIVER_NUMBER,
+            subscribe_nr::BUFFER_FILLED,
+            &mut is_filled_alarm,
+        )?;
+        syscalls::command(DRIVER_NUMBER, command_nr::REQUEST_RNG, buf_len, 0)?;
+        futures::wait_until(|| is_filled.get()).await;
+        mem::drop(subscription);
+        mem::drop(shared_memory);
+        Ok(())
+    }
 }

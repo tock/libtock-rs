@@ -2,13 +2,16 @@
 
 use libtock::led::LedDriver;
 use libtock::result::TockResult;
-use libtock::rng;
 use libtock::timer::Duration;
 use libtock::Hardware;
 
 #[libtock::main]
 async fn main() -> TockResult<()> {
-    let Hardware { timer_context, .. } = libtock::retrieve_hardware()?;
+    let Hardware {
+        timer_context,
+        mut rng_driver,
+        ..
+    } = libtock::retrieve_hardware()?;
 
     let mut driver = timer_context.create_timer_driver();
     let timer_driver = driver.activate()?;
@@ -20,7 +23,7 @@ async fn main() -> TockResult<()> {
 
     let mut buf = [0; 64];
     loop {
-        rng::fill_buffer(&mut buf).await?;
+        rng_driver.fill_buffer(&mut buf).await?;
 
         for &x in buf.iter() {
             blink_nibble(x, &mut led_driver)?;
