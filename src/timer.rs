@@ -291,8 +291,8 @@ pub(crate) struct ActiveTimer {
 /// # use libtock::Hardware;
 /// # #[libtock::main]
 /// # async fn main() -> TockResult<()> {
-///  let Hardware {  timer_context,.. } = libtock::retrieve_hardware()?;
-///  Ok(())
+///  let Hardware {  timer_context, .. } = libtock::retrieve_hardware()?;
+/// # Ok(())
 /// # }
 /// ```
 pub struct DriverContext {
