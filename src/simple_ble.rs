@@ -10,12 +10,18 @@ pub const MAX_PAYLOAD_SIZE: usize = 9;
 pub const BUFFER_SIZE_ADVERTISE: usize = 39;
 pub const BUFFER_SIZE_SCAN: usize = 39;
 
-mod ble_commands {
+mod command_nr {
     pub const START_ADVERTISING: usize = 0;
-    pub const ALLOW_ADVERTISMENT_BUFFER: usize = 0;
-    pub const BLE_PASSIVE_SCAN_SUB: usize = 0;
-    pub const ALLOW_SCAN_BUFFER: usize = 1;
     pub const PASSIVE_SCAN: usize = 5;
+}
+
+mod subscribe_nr {
+    pub const BLE_PASSIVE_SCAN_SUB: usize = 0;
+}
+
+mod allow_nr {
+    pub const ALLOW_ADVERTISMENT_BUFFER: usize = 0;
+    pub const ALLOW_SCAN_BUFFER: usize = 1;
 }
 
 mod gap_flags {
@@ -45,7 +51,7 @@ impl BleAdvertisingDriver {
     ) -> TockResult<SharedMemory<'a>> {
         let mut shared_memory = syscalls::allow(
             DRIVER_NUMBER,
-            ble_commands::ALLOW_ADVERTISMENT_BUFFER,
+            allow_nr::ALLOW_ADVERTISMENT_BUFFER,
             advertising_buffer,
         )?;
         shared_memory.write_bytes(service_payload);
@@ -56,7 +62,7 @@ impl BleAdvertisingDriver {
     fn start_advertising(pdu_type: usize, interval: usize) -> TockResult<()> {
         syscalls::command(
             DRIVER_NUMBER,
-            ble_commands::START_ADVERTISING,
+            command_nr::START_ADVERTISING,
             pdu_type,
             interval,
         )?;
@@ -93,8 +99,7 @@ impl BleScanningDriver {
         &'a mut self,
         scan_buffer: &'b mut [u8; BUFFER_SIZE_SCAN],
     ) -> TockResult<SharedMemory<'b>> {
-        syscalls::allow(DRIVER_NUMBER, ble_commands::ALLOW_SCAN_BUFFER, scan_buffer)
-            .map_err(Into::into)
+        syscalls::allow(DRIVER_NUMBER, allow_nr::ALLOW_SCAN_BUFFER, scan_buffer).map_err(Into::into)
     }
 
     pub fn start<'a, CB>(
@@ -105,8 +110,8 @@ impl BleScanningDriver {
         BleCallback<CB>: SubscribableCallback,
     {
         let subscription =
-            syscalls::subscribe(DRIVER_NUMBER, ble_commands::BLE_PASSIVE_SCAN_SUB, callback)?;
-        syscalls::command(DRIVER_NUMBER, ble_commands::PASSIVE_SCAN, 1, 0)?;
+            syscalls::subscribe(DRIVER_NUMBER, subscribe_nr::BLE_PASSIVE_SCAN_SUB, callback)?;
+        syscalls::command(DRIVER_NUMBER, command_nr::PASSIVE_SCAN, 1, 0)?;
         Ok(subscription)
     }
 }
