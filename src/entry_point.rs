@@ -119,7 +119,7 @@ pub unsafe extern "C" fn _start(
 
         // Debug support, tell the kernel the heap_start location
         mov r0, r6
-        ldr r8, [r0, #24] // r4 = app_start->bss_start
+        ldr r8, [r0, #24] // r8 = app_start->bss_start
         ldr r5, [r0, #28] // r5 = app_start->bss_size
         add r8, r8, r5    // r8 = bss_start + bss_size
         add r8, r8, r4    // r8 = bss_start + bss_size + stack_top
