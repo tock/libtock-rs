@@ -18,9 +18,8 @@ mod allow_nr {
     pub const SHARE_BUFFER: usize = 0;
 }
 
-pub struct RngDriver {
-    pub(crate) _unconstructible: (),
-}
+#[non_exhaustive]
+pub struct RngDriver;
 
 impl RngDriver {
     pub async fn fill_buffer(&mut self, buf: &mut [u8]) -> TockResult<()> {

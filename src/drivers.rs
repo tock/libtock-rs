@@ -56,48 +56,22 @@ pub unsafe fn retrieve_drivers_unsafe() -> Drivers {
 
 #[allow(clippy::declare_interior_mutable_const)]
 const DRIVERS: Drivers = Drivers {
-    console_driver: ConsoleDriver {
-        _unconstructible: (),
-    },
-    led_driver: LedDriver {
-        _unconstructible: (),
-    },
+    adc_driver: AdcDriver,
+    ble_advertising_driver: BleAdvertisingDriver,
+    ble_scanning_driver: BleScanningDriver,
+    button_driver: ButtonDriver,
+    console_driver: ConsoleDriver,
+    led_driver: LedDriver,
     timer_context: DriverContext {
         active_timer: Cell::new(None),
     },
-    gpio_driver: GpioDriver {
-        _unconstructible: (),
-    },
-    temperature_driver: TemperatureDriver {
-        _unconstructible: (),
-    },
-    button_driver: ButtonDriver {
-        _unconstructible: (),
-    },
-    adc_driver: AdcDriver {
-        _unconstructible: (),
-    },
-    rng_driver: RngDriver {
-        _unconstructible: (),
-    },
-    ble_advertising_driver: BleAdvertisingDriver {
-        _unconstructible: (),
-    },
-    ble_scanning_driver: BleScanningDriver {
-        _unconstructible: (),
-    },
-    ambient_light_sensor: AmbientLightSensor {
-        _unconstructible: (),
-    },
-    temperature_sensor: TemperatureSensor {
-        _unconstructible: (),
-    },
-    humidity_sensor: HumiditySensor {
-        _unconstructible: (),
-    },
-    ninedof_driver: NinedofDriver {
-        _unconstructible: (),
-    },
+    gpio_driver: GpioDriver,
+    temperature_driver: TemperatureDriver,
+    rng_driver: RngDriver,
+    ambient_light_sensor: AmbientLightSensor,
+    temperature_sensor: TemperatureSensor,
+    humidity_sensor: HumiditySensor,
+    ninedof_driver: NinedofDriver,
 };
 
 static mut DRIVERS_SINGLETON: Option<Drivers> = Some(DRIVERS);

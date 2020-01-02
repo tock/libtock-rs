@@ -35,9 +35,8 @@ pub mod gap_data {
     pub const SERVICE_DATA: usize = 0x16;
 }
 
-pub struct BleAdvertisingDriver {
-    pub(crate) _unconstructible: (),
-}
+#[non_exhaustive]
+pub struct BleAdvertisingDriver;
 
 impl BleAdvertisingDriver {
     pub fn create_advertising_buffer() -> [u8; BUFFER_SIZE_ADVERTISE] {
@@ -86,9 +85,8 @@ impl<CB: FnMut(usize, usize)> SubscribableCallback for BleCallback<CB> {
     }
 }
 
-pub struct BleScanningDriver {
-    pub(crate) _unconstructible: (),
-}
+#[non_exhaustive]
+pub struct BleScanningDriver;
 
 impl BleScanningDriver {
     pub fn create_scan_buffer() -> [u8; BUFFER_SIZE_SCAN] {

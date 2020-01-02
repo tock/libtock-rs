@@ -11,9 +11,8 @@ mod command_nr {
     pub const TOGGLE: usize = 3;
 }
 
-pub struct LedDriver {
-    pub(crate) _unconstructible: (),
-}
+#[non_exhaustive]
+pub struct LedDriver;
 
 pub struct Led<'a> {
     led_num: usize,

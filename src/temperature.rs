@@ -16,9 +16,8 @@ mod subscribe_nr {
     pub const SUBSCRIBE_CALLBACK: usize = 0;
 }
 
-pub struct TemperatureDriver {
-    pub(crate) _unconstructible: (),
-}
+#[non_exhaustive]
+pub struct TemperatureDriver;
 
 impl TemperatureDriver {
     pub async fn measure_temperature(&mut self) -> Result<Temperature, TockError> {

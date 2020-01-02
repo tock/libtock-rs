@@ -8,9 +8,8 @@ use core::mem;
 
 const DRIVER_NUM: usize = 0x60004;
 
-pub struct NinedofDriver {
-    pub(crate) _unconstructible: (),
-}
+#[non_exhaustive]
+pub struct NinedofDriver;
 
 #[derive(Copy, Clone, Default, Debug)]
 pub struct NinedofReading {
@@ -61,9 +60,7 @@ impl NinedofDriver {
 
 impl Default for NinedofDriver {
     fn default() -> Self {
-        NinedofDriver {
-            _unconstructible: (),
-        }
+        NinedofDriver
     }
 }
 

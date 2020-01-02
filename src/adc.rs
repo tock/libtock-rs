@@ -24,9 +24,8 @@ mod allow_nr {
     pub const BUFFER_ALT: usize = 1;
 }
 
-pub struct AdcDriver {
-    pub(crate) _unconstructible: (),
-}
+#[non_exhaustive]
+pub struct AdcDriver;
 
 impl AdcDriver {
     pub fn with_callback<CB>(self, callback: CB) -> WithCallback<CB> {

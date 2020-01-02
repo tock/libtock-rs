@@ -52,9 +52,8 @@ macro_rules! single_value_sensor {
             }
         }
 
-        pub struct $sensor_name {
-            pub(crate) _unconstructible: (),
-        }
+        #[non_exhaustive]
+        pub struct $sensor_name;
 
         impl Sensor<$type_name> for $sensor_name {
             fn driver_num(&self) -> usize {

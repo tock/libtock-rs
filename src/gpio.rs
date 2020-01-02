@@ -22,9 +22,8 @@ mod subscribe_nr {
     pub const SUBSCRIBE_CALLBACK: usize = 0;
 }
 
-pub struct GpioDriver {
-    pub(crate) _unconstructible: (),
-}
+#[non_exhaustive]
+pub struct GpioDriver;
 
 impl GpioDriver {
     pub fn all_pins<'a>(&'a self) -> TockResult<GpioIter<'a>> {

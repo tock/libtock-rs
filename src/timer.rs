@@ -295,6 +295,7 @@ pub(crate) struct ActiveTimer {
 /// # Ok(())
 /// # }
 /// ```
+#[non_exhaustive]
 pub struct DriverContext {
     pub(crate) active_timer: Cell<Option<ActiveTimer>>,
 }
