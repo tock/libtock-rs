@@ -17,13 +17,13 @@ struct LedCommand {
 #[libtock::main]
 async fn main() -> TockResult<()> {
     let Hardware {
-        mut led_driver,
+        led_driver,
         timer_context,
         mut ble_advertising_driver,
         ..
     } = libtock::retrieve_hardware()?;
 
-    let mut led = led_driver.get(0).unwrap();
+    let led = led_driver.get(0).unwrap();
 
     let uuid: [u8; 2] = [0x00, 0x18];
 

@@ -1,7 +1,6 @@
 #![no_std]
 
 use libtock::electronics::ShiftRegister;
-use libtock::gpio::GpioPinUnitialized;
 use libtock::result::TockResult;
 use libtock::timer::Duration;
 use libtock::Hardware;
@@ -25,11 +24,15 @@ fn number_to_bits(n: u8) -> [bool; 8] {
 // Example works on a shift register on P0.03, P0.04, P0.28
 #[libtock::main]
 async fn main() -> TockResult<()> {
-    let Hardware { timer_context, .. } = libtock::retrieve_hardware()?;
+    let Hardware {
+        timer_context,
+        gpio_driver,
+        ..
+    } = libtock::retrieve_hardware()?;
     let mut shift_register = ShiftRegister::new(
-        GpioPinUnitialized::new(0).open_for_write()?,
-        GpioPinUnitialized::new(1).open_for_write()?,
-        GpioPinUnitialized::new(2).open_for_write()?,
+        gpio_driver.pin(0)?.open_for_write()?,
+        gpio_driver.pin(1)?.open_for_write()?,
+        gpio_driver.pin(2)?.open_for_write()?,
     );
 
     let mut driver = timer_context.create_timer_driver();

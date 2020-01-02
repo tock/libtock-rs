@@ -9,11 +9,11 @@ use libtock::Hardware;
 async fn main() -> TockResult<()> {
     let Hardware {
         timer_context,
-        mut gpio_driver,
+        gpio_driver,
         ..
     } = libtock::retrieve_hardware()?;
     let pin = gpio_driver.pin(0)?;
-    let mut pin = pin.open_for_write()?;
+    let pin = pin.open_for_write()?;
     let mut driver = timer_context.create_timer_driver();
     let timer_driver = driver.activate()?;
 

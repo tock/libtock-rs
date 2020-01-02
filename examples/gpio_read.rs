@@ -1,7 +1,6 @@
 #![no_std]
 
 use core::fmt::Write;
-use libtock::gpio::GpioPinUnitialized;
 use libtock::gpio::InputMode;
 use libtock::result::TockResult;
 use libtock::timer::Duration;
@@ -13,10 +12,11 @@ async fn main() -> TockResult<()> {
     let Hardware {
         console_driver,
         timer_context,
+        gpio_driver,
         ..
     } = libtock::retrieve_hardware()?;
     let mut console = console_driver.create_console();
-    let pin = GpioPinUnitialized::new(0);
+    let pin = gpio_driver.pin(0)?;
     let pin = pin.open_for_read(None, InputMode::PullDown)?;
     let mut driver = timer_context.create_timer_driver();
     let timer_driver = driver.activate()?;

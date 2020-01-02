@@ -47,7 +47,7 @@ unsafe fn panic_handler(_info: &PanicInfo) -> ! {
     // Flash all LEDs (if available).
     executor::block_on(async {
         let Hardware {
-            mut led_driver,
+            led_driver,
             timer_context,
             ..
         } = crate::retrieve_hardware_unsafe();
@@ -55,13 +55,13 @@ unsafe fn panic_handler(_info: &PanicInfo) -> ! {
         let timer_driver = driver.activate().ok();
 
         loop {
-            for mut led in led_driver.all() {
+            for led in led_driver.all() {
                 let _ = led.on();
             }
             if let Some(ref timer_driver) = timer_driver {
                 let _ = timer_driver.sleep(Duration::from_ms(100)).await;
             }
-            for mut led in led_driver.all() {
+            for led in led_driver.all() {
                 let _ = led.off();
             }
             if let Some(ref timer_driver) = timer_driver {
@@ -77,7 +77,7 @@ unsafe fn panic_handler(_info: &PanicInfo) -> ! {
 unsafe fn cycle_leds(_: Layout) -> ! {
     executor::block_on(async {
         let Hardware {
-            mut led_driver,
+            led_driver,
             timer_context,
             ..
         } = crate::retrieve_hardware_unsafe();
@@ -85,13 +85,13 @@ unsafe fn cycle_leds(_: Layout) -> ! {
         let timer_driver = driver.activate().ok();
 
         loop {
-            for mut led in led_driver.all() {
+            for led in led_driver.all() {
                 let _ = led.on();
             }
             if let Some(ref timer_driver) = timer_driver {
                 let _ = timer_driver.sleep(Duration::from_ms(100)).await;
             }
-            for mut led in led_driver.all() {
+            for led in led_driver.all() {
                 let _ = led.off();
             }
             if let Some(ref timer_driver) = timer_driver {

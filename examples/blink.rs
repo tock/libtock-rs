@@ -7,7 +7,7 @@ use libtock::Hardware;
 #[libtock::main]
 async fn main() -> TockResult<()> {
     let Hardware {
-        mut led_driver,
+        led_driver,
         timer_context,
         ..
     } = libtock::retrieve_hardware()?;
@@ -19,7 +19,7 @@ async fn main() -> TockResult<()> {
     // to the number of LEDs on the board.
     let mut count: usize = 0;
     loop {
-        for mut led in led_driver.all() {
+        for led in led_driver.all() {
             let i = led.number();
             if count & (1 << i) == (1 << i) {
                 led.on()?;

@@ -21,7 +21,7 @@ pub struct Led<'a> {
 }
 
 impl LedDriver {
-    pub fn get(&mut self, led_num: usize) -> Option<Led> {
+    pub fn get(&self, led_num: usize) -> Option<Led> {
         if led_num < self.count().ok().unwrap() {
             Some(Led {
                 led_num,
@@ -36,7 +36,7 @@ impl LedDriver {
         command(DRIVER_NUMBER, command_nr::COUNT, 0, 0).map_err(Into::into)
     }
 
-    pub fn all(&mut self) -> LedIter {
+    pub fn all(&self) -> LedIter {
         LedIter {
             curr_led: 0,
             led_count: self.count().unwrap_or(0),
@@ -49,7 +49,7 @@ impl LedDriver {
 /// present, the iterator will be empty.
 
 impl<'a> Led<'a> {
-    pub fn set_state(&mut self, state: bool) -> TockResult<()> {
+    pub fn set_state(&self, state: bool) -> TockResult<()> {
         if state {
             self.on()
         } else {
@@ -57,17 +57,17 @@ impl<'a> Led<'a> {
         }
     }
 
-    pub fn on(&mut self) -> TockResult<()> {
+    pub fn on(&self) -> TockResult<()> {
         command(DRIVER_NUMBER, command_nr::ON, self.led_num, 0)?;
         Ok(())
     }
 
-    pub fn off(&mut self) -> TockResult<()> {
+    pub fn off(&self) -> TockResult<()> {
         command(DRIVER_NUMBER, command_nr::OFF, self.led_num, 0)?;
         Ok(())
     }
 
-    pub fn toggle(&mut self) -> TockResult<()> {
+    pub fn toggle(&self) -> TockResult<()> {
         command(DRIVER_NUMBER, command_nr::TOGGLE, self.led_num, 0)?;
         Ok(())
     }

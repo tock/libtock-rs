@@ -22,7 +22,7 @@ async fn blink<'a>(
 #[libtock::main]
 async fn main() -> TockResult<()> {
     let Hardware {
-        mut led_driver,
+        led_driver,
         timer_context,
         ..
     } = libtock::retrieve_hardware()?;

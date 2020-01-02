@@ -38,7 +38,7 @@ impl MyTrait for String {
 async fn main() -> TockResult<()> {
     let Hardware {
         console_driver,
-        mut gpio_driver,
+        gpio_driver,
         mut timer_context,
         ..
     } = libtock::retrieve_hardware()?;

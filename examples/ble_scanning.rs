@@ -18,7 +18,7 @@ struct LedCommand {
 #[libtock::main]
 async fn main() -> TockResult<()> {
     let Hardware {
-        mut led_driver,
+        led_driver,
         mut ble_scanning_driver,
         ..
     } = libtock::retrieve_hardware()?;
@@ -35,7 +35,7 @@ async fn main() -> TockResult<()> {
             .and_then(|msg| {
                 led_driver
                     .get(msg.nr as usize)
-                    .map(|mut led| led.set_state(msg.st))
+                    .map(|led| led.set_state(msg.st))
             });
     });
 

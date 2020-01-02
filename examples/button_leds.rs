@@ -8,7 +8,7 @@ use libtock::Hardware;
 #[libtock::main]
 async fn main() -> TockResult<()> {
     let Hardware {
-        mut led_driver,
+        led_driver,
         button_driver,
         ..
     } = libtock::retrieve_hardware()?;

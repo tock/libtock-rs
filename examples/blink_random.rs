@@ -37,7 +37,7 @@ async fn main() -> TockResult<()> {
 // Takes the 4 least-significant bits of x, and turn the 4 leds on/off accordingly.
 fn blink_nibble(x: u8, led_driver: &mut LedDriver) -> TockResult<()> {
     for i in 0..4 {
-        let mut led = led_driver.get(i).unwrap();
+        let led = led_driver.get(i).unwrap();
         if (x >> i) & 1 != 0 {
             led.on()?;
         } else {

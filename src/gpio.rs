@@ -27,7 +27,7 @@ pub struct GpioDriver {
 }
 
 impl GpioDriver {
-    pub fn all_pins<'a>(&'a mut self) -> TockResult<GpioIter<'a>> {
+    pub fn all_pins<'a>(&'a self) -> TockResult<GpioIter<'a>> {
         let number = self.number_of_pins()?;
         Ok(GpioIter {
             curr_gpio: 0,
@@ -36,7 +36,7 @@ impl GpioDriver {
         })
     }
 
-    pub fn pin<'a>(&'a mut self, pin: usize) -> TockResult<GpioPinUnitialized<'a>> {
+    pub fn pin<'a>(&'a self, pin: usize) -> TockResult<GpioPinUnitialized<'a>> {
         let number = self.number_of_pins()?;
         if pin < number {
             Ok(GpioPinUnitialized {
@@ -125,13 +125,6 @@ pub struct GpioPinRead<'a> {
 }
 
 impl<'a> GpioPinUnitialized<'a> {
-    pub fn new(number: usize) -> GpioPinUnitialized<'a> {
-        GpioPinUnitialized {
-            number,
-            phantom: PhantomData,
-        }
-    }
-
     pub fn open_for_write(self) -> TockResult<GpioPinWrite<'a>> {
         syscalls::command(DRIVER_NUMBER, command_nr::ENABLE_OUTPUT, self.number, 0)?;
         Ok(GpioPinWrite {
@@ -189,15 +182,15 @@ impl<'a> GpioPinUnitialized<'a> {
 }
 
 impl<'a> GpioPinWrite<'a> {
-    pub fn set_low(&mut self) -> TockResult<()> {
+    pub fn set_low(&self) -> TockResult<()> {
         syscalls::command(DRIVER_NUMBER, command_nr::SET_LOW, self.number, 0)?;
         Ok(())
     }
-    pub fn set_high(&mut self) -> TockResult<()> {
+    pub fn set_high(&self) -> TockResult<()> {
         syscalls::command(DRIVER_NUMBER, command_nr::SET_HIGH, self.number, 0)?;
         Ok(())
     }
-    pub fn toggle(&mut self) -> TockResult<()> {
+    pub fn toggle(&self) -> TockResult<()> {
         syscalls::command(DRIVER_NUMBER, command_nr::TOGGLE, self.number, 0)?;
         Ok(())
     }
