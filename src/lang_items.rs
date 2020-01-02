@@ -19,7 +19,7 @@
 //! crate.
 
 use crate::timer::Duration;
-use crate::Hardware;
+use crate::Drivers;
 use core::alloc::Layout;
 use core::executor;
 use core::panic::PanicInfo;
@@ -46,11 +46,11 @@ unsafe fn panic_handler(_info: &PanicInfo) -> ! {
 
     // Flash all LEDs (if available).
     executor::block_on(async {
-        let Hardware {
+        let Drivers {
             led_driver,
             timer_context,
             ..
-        } = crate::retrieve_hardware_unsafe();
+        } = crate::retrieve_drivers_unsafe();
         let mut driver = timer_context.create_timer_driver();
         let timer_driver = driver.activate().ok();
 
@@ -76,11 +76,11 @@ unsafe fn panic_handler(_info: &PanicInfo) -> ! {
 #[alloc_error_handler]
 unsafe fn cycle_leds(_: Layout) -> ! {
     executor::block_on(async {
-        let Hardware {
+        let Drivers {
             led_driver,
             timer_context,
             ..
-        } = crate::retrieve_hardware_unsafe();
+        } = crate::retrieve_drivers_unsafe();
         let mut driver = timer_context.create_timer_driver();
         let timer_driver = driver.activate().ok();
 

@@ -5,7 +5,7 @@ use libtock::led::Led;
 use libtock::result::TockResult;
 use libtock::timer::Duration;
 use libtock::timer::ParallelSleepDriver;
-use libtock::Hardware;
+use libtock::Drivers;
 
 async fn blink<'a>(
     timer_driver: &'a ParallelSleepDriver<'a>,
@@ -21,11 +21,11 @@ async fn blink<'a>(
 
 #[libtock::main]
 async fn main() -> TockResult<()> {
-    let Hardware {
+    let Drivers {
         led_driver,
         timer_context,
         ..
-    } = libtock::retrieve_hardware()?;
+    } = libtock::retrieve_drivers()?;
     let mut led_iter = led_driver.all();
     let mut led_1 = led_iter.next().unwrap();
     let mut led_2 = led_iter.next().unwrap();

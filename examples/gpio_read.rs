@@ -4,17 +4,17 @@ use core::fmt::Write;
 use libtock::gpio::InputMode;
 use libtock::result::TockResult;
 use libtock::timer::Duration;
-use libtock::Hardware;
+use libtock::Drivers;
 
 // example works on p0.03
 #[libtock::main]
 async fn main() -> TockResult<()> {
-    let Hardware {
+    let Drivers {
         console_driver,
         timer_context,
         gpio_driver,
         ..
-    } = libtock::retrieve_hardware()?;
+    } = libtock::retrieve_drivers()?;
     let mut console = console_driver.create_console();
     let pin = gpio_driver.pin(0)?;
     let pin = pin.open_for_read(None, InputMode::PullDown)?;

@@ -4,16 +4,16 @@ use core::fmt::Write;
 use libtock::buttons::ButtonState;
 use libtock::result::TockResult;
 use libtock::timer::Duration;
-use libtock::Hardware;
+use libtock::Drivers;
 
 #[libtock::main]
 async fn main() -> TockResult<()> {
-    let Hardware {
+    let Drivers {
         console_driver,
         timer_context,
         button_driver,
         ..
-    } = libtock::retrieve_hardware()?;
+    } = libtock::retrieve_drivers()?;
     let mut console = console_driver.create_console();
     let mut with_callback = button_driver.with_callback(|_, _| {});
     let mut buttons = with_callback.init()?;

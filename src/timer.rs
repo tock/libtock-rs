@@ -288,10 +288,10 @@ pub(crate) struct ActiveTimer {
 /// ```no_run
 /// # use libtock::timer::DriverContext;
 /// # use libtock::result::TockResult;
-/// # use libtock::Hardware;
+/// # use libtock::Drivers;
 /// # #[libtock::main]
 /// # async fn main() -> TockResult<()> {
-///  let Hardware {  timer_context, .. } = libtock::retrieve_hardware()?;
+///  let Drivers {  timer_context, .. } = libtock::retrieve_drivers()?;
 /// # Ok(())
 /// # }
 /// ```
@@ -321,10 +321,10 @@ impl DriverContext {
 /// ```no_run
 /// # use libtock::timer::DriverContext;
 /// # use libtock::result::TockResult;
-/// # use libtock::Hardware;
+/// # use libtock::Drivers;
 /// # #[libtock::main]
 /// # async fn main() -> TockResult<()> {
-/// # let Hardware {  timer_context,.. } = libtock::retrieve_hardware()?;
+/// # let Drivers {  timer_context,.. } = libtock::retrieve_drivers()?;
 /// # let mut driver = timer_context.create_timer_driver();
 /// let timer_driver = driver.activate()?;
 /// # Ok(())
@@ -348,10 +348,10 @@ impl SubscribableCallback for Callback {
 /// # use libtock::timer::DriverContext;
 /// # use libtock::result::TockResult;
 /// # use libtock::timer::Duration;
-/// # use libtock::Hardware;
+/// # use libtock::Drivers;
 /// # #[libtock::main]
 /// # async fn main() -> TockResult<()> {
-/// # let Hardware {  timer_context,.. } = libtock::retrieve_hardware()?;
+/// # let Drivers {  timer_context,.. } = libtock::retrieve_drivers()?;
 /// # let mut driver = timer_context.create_timer_driver();
 /// let timer_driver = driver.activate()?;
 /// timer_driver.sleep(Duration::from_ms(1000)).await?;

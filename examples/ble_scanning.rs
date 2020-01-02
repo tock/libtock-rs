@@ -6,7 +6,7 @@ use libtock::result::TockResult;
 use libtock::simple_ble;
 use libtock::simple_ble::BleCallback;
 use libtock::simple_ble::BleScanningDriver;
-use libtock::Hardware;
+use libtock::Drivers;
 use serde::Deserialize;
 
 #[derive(Deserialize)]
@@ -17,11 +17,11 @@ struct LedCommand {
 
 #[libtock::main]
 async fn main() -> TockResult<()> {
-    let Hardware {
+    let Drivers {
         led_driver,
         mut ble_scanning_driver,
         ..
-    } = libtock::retrieve_hardware()?;
+    } = libtock::retrieve_drivers()?;
 
     let mut shared_buffer = BleScanningDriver::create_scan_buffer();
     let mut my_buffer = BleScanningDriver::create_scan_buffer();
