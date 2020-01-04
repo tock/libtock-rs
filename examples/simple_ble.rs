@@ -17,11 +17,13 @@ struct LedCommand {
 #[libtock::main]
 async fn main() -> TockResult<()> {
     let Drivers {
-        led_driver,
+        led_driver_factory,
         timer_context,
         mut ble_advertising_driver,
         ..
     } = libtock::retrieve_drivers()?;
+
+    let led_driver = led_driver_factory.create_driver()?;
 
     let led = led_driver.get(0).unwrap();
 

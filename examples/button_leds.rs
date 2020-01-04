@@ -8,10 +8,12 @@ use libtock::Drivers;
 #[libtock::main]
 async fn main() -> TockResult<()> {
     let Drivers {
-        led_driver,
+        led_driver_factory,
         button_driver,
         ..
     } = libtock::retrieve_drivers()?;
+
+    let led_driver = led_driver_factory.create_driver()?;
 
     let mut with_callback = button_driver.with_callback(|button_num: usize, state| {
         match state {

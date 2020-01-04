@@ -2,7 +2,7 @@ use crate::adc::AdcDriver;
 use crate::buttons::ButtonDriver;
 use crate::console::ConsoleDriver;
 use crate::gpio::GpioDriver;
-use crate::led::LedDriver;
+use crate::led::LedDriverFactory;
 use crate::result::OtherError;
 use crate::result::TockError;
 use crate::result::TockResult;
@@ -21,7 +21,7 @@ use core::cell::Cell;
 #[non_exhaustive]
 pub struct Drivers {
     pub console_driver: ConsoleDriver,
-    pub led_driver: LedDriver,
+    pub led_driver_factory: LedDriverFactory,
     pub timer_context: DriverContext,
     pub gpio_driver: GpioDriver,
     pub temperature_driver: TemperatureDriver,
@@ -61,7 +61,7 @@ const DRIVERS: Drivers = Drivers {
     ble_scanning_driver: BleScanningDriver,
     button_driver: ButtonDriver,
     console_driver: ConsoleDriver,
-    led_driver: LedDriver,
+    led_driver_factory: LedDriverFactory,
     timer_context: DriverContext {
         active_timer: Cell::new(None),
     },

@@ -10,9 +10,11 @@ async fn main() -> TockResult<()> {
     let Drivers {
         timer_context,
         mut rng_driver,
-        led_driver,
+        led_driver_factory,
         ..
     } = libtock::retrieve_drivers()?;
+
+    let led_driver = led_driver_factory.create_driver()?;
 
     let mut driver = timer_context.create_timer_driver();
     let timer_driver = driver.activate()?;

@@ -7,13 +7,14 @@ use libtock::Drivers;
 #[libtock::main]
 async fn main() -> TockResult<()> {
     let Drivers {
-        led_driver,
+        led_driver_factory,
         timer_context,
         ..
     } = libtock::retrieve_drivers()?;
 
     let mut driver = timer_context.create_timer_driver();
     let timer_driver = driver.activate()?;
+    let led_driver = led_driver_factory.create_driver()?;
 
     // Blink the LEDs in a binary count pattern and scale
     // to the number of LEDs on the board.

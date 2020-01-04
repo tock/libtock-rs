@@ -12,6 +12,16 @@ mod command_nr {
 }
 
 #[non_exhaustive]
+pub struct LedDriverFactory;
+
+impl LedDriverFactory {
+    pub fn create_driver(self) -> TockResult<LedDriver> {
+        command(DRIVER_NUMBER, command_nr::COUNT, 0, 0)?;
+        Ok(LedDriver)
+    }
+}
+
+#[non_exhaustive]
 pub struct LedDriver;
 
 pub struct Led<'a> {

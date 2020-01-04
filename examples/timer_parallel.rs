@@ -22,10 +22,12 @@ async fn blink<'a>(
 #[libtock::main]
 async fn main() -> TockResult<()> {
     let Drivers {
-        led_driver,
+        led_driver_factory,
         timer_context,
         ..
     } = libtock::retrieve_drivers()?;
+    let led_driver = led_driver_factory.create_driver()?;
+
     let mut led_iter = led_driver.all();
     let mut led_1 = led_iter.next().unwrap();
     let mut led_2 = led_iter.next().unwrap();

@@ -18,10 +18,12 @@ struct LedCommand {
 #[libtock::main]
 async fn main() -> TockResult<()> {
     let Drivers {
-        led_driver,
+        led_driver_factory,
         mut ble_scanning_driver,
         ..
     } = libtock::retrieve_drivers()?;
+
+    let led_driver = led_driver_factory.create_driver()?;
 
     let mut shared_buffer = BleScanningDriver::create_scan_buffer();
     let mut my_buffer = BleScanningDriver::create_scan_buffer();
