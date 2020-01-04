@@ -7,13 +7,15 @@ use crate::console::Console;
 
 pub fn println() {
     let buffer = [b'\n'];
-    let _ = Console::new().write(&buffer);
+    let mut console = Console::default();
+    let _ = console.write(&buffer);
 }
 
 pub fn print_as_hex(value: usize) {
     let mut buffer = [b'\n'; 11];
     write_as_hex(&mut buffer, value);
-    let _ = Console::new().write(buffer);
+    let mut console = Console::default();
+    let _ = console.write(buffer);
 }
 
 #[cfg(target_arch = "arm")]
@@ -24,34 +26,42 @@ pub fn print_stack_pointer() {
     let mut buffer = [b'\n'; 15];
     buffer[0..4].clone_from_slice(b"SP: ");
     write_as_hex(&mut buffer[4..15], stack_pointer);
-    let _ = Console::new().write(buffer);
+    let mut console = Console::default();
+    let _ = console.write(buffer);
 }
 
 #[cfg(target_arch = "riscv32")]
 pub fn print_stack_pointer() {}
 
-#[inline(always)] // Initial stack size is too small (128 bytes currently)
-pub fn dump_address(address: *const usize) {
+#[inline(always)]
+/// Dumps address
+/// # Safety
+/// dereferences pointer without check - may lead to access violation.
+pub unsafe fn dump_address(address: *const usize) {
     let mut buffer = [b' '; 28];
     write_as_hex(&mut buffer[0..10], address as usize);
     buffer[10] = b':';
-    write_as_hex(&mut buffer[12..22], unsafe { *address });
+    write_as_hex(&mut buffer[12..22], *address);
     for index in 0..4 {
-        let byte = unsafe { *(address as *const u8).offset(index) };
+        let byte = *(address as *const u8).offset(index);
         let byte_is_printable_char = byte >= 0x20 && byte < 0x80;
         if byte_is_printable_char {
             buffer[23 + index as usize] = byte;
         }
     }
     buffer[27] = b'\n';
-    let _ = Console::new().write(&buffer);
+    let mut console = Console::default();
+    let _ = console.write(&buffer);
 }
 
-pub fn dump_memory(start_address: *const usize, count: isize) {
+/// Dumps arbitrary memory regions.
+/// # Safety
+/// dereferences pointer without check - may lead to access violation.
+pub unsafe fn dump_memory(start_address: *const usize, count: isize) {
     let range = if count < 0 { count..0 } else { 0..count };
 
     for offset in range {
-        dump_address(unsafe { start_address.offset(offset) });
+        dump_address(start_address.offset(offset));
     }
 }
 

@@ -11,7 +11,7 @@ use libtock::timer::Duration;
 // example works on p0.03
 #[libtock::main]
 async fn main() -> TockResult<()> {
-    let mut console = Console::new();
+    let mut console = Console::default();
     let pin = GpioPinUnitialized::new(0);
     let pin = pin.open_for_read(None, InputMode::PullDown)?;
     let context = timer::DriverContext::create()?;

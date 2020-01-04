@@ -89,7 +89,7 @@ pub fn command(
     arg1: usize,
     arg2: usize,
 ) -> Result<usize, CommandError> {
-    let return_code = unsafe { raw::command(driver_number, command_number, arg1, arg2) };
+    let return_code = raw::command(driver_number, command_number, arg1, arg2);
     if return_code >= 0 {
         Ok(return_code as usize)
     } else {

@@ -334,7 +334,11 @@ impl DriverContext {
         }
     }
 
-    pub unsafe fn create_timer_driver_unsafe<'a>(&'a self) -> TimerDriver<'a> {
+    /// Create a timer driver instance without checking for running instance
+    /// # Safety
+    /// May lead to undefined behavior at the previous consumer of the timer driver.
+    /// Only safe if no other consumer is still running (e.g. on unwind)
+    pub unsafe fn create_timer_driver_unsafe(&self) -> TimerDriver<'_> {
         TimerDriver {
             callback: Callback {
                 now: &self.current_time,
@@ -431,11 +435,11 @@ impl<'a> ParallelSleepDriver<'a> {
         Ok(())
     }
 
-    fn activate_timer(&self, timer: &ActiveTimer) -> TockResult<()> {
+    fn activate_timer(&self, timer: ActiveTimer) -> TockResult<()> {
         set_alarm_at(timer.instant as usize)?;
         let now = get_current_ticks()?;
-        if !is_over(*timer, now as u32) {
-            self.context.active_timer.set(Some(*timer));
+        if !is_over(timer, now as u32) {
+            self.context.active_timer.set(Some(timer));
         } else {
             self.wakeup_soon()?;
         }
@@ -457,10 +461,7 @@ impl<'a> ParallelSleepDriver<'a> {
             if !is_over(next_timer, now as u32) {
                 break;
             } else {
-                match stop_alarm_at(next_timer.instant as usize) {
-                    Ok(_) => (),
-                    Err(_) => (),
-                }
+                stop_alarm_at(next_timer.instant as usize)?;
             }
         }
         Ok(())
@@ -507,14 +508,14 @@ impl<'a> ParallelSleepDriver<'a> {
         if let Some(active) = self.context.active_timer.get() {
             if left_is_later(active, this_alarm) {
                 suspended_timer.set(Some(active));
-                self.activate_timer(&this_alarm)?;
+                self.activate_timer(this_alarm)?;
             }
         } else {
-            self.activate_timer(&this_alarm)?;
+            self.activate_timer(this_alarm)?;
         }
         if is_over(this_alarm, now as u32) {
             if let Some(paused) = suspended_timer.get() {
-                self.activate_timer(&paused)?;
+                self.activate_timer(paused)?;
             } else {
                 self.context.active_timer.set(None);
             }

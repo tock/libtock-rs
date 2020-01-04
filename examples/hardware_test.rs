@@ -21,20 +21,20 @@ trait MyTrait {
 
 impl MyTrait for usize {
     fn do_something_with_a_console(&self, console: &mut Console) {
-        write!(console, "trait_obj_value_usize = {}\n", &self).unwrap();
+        writeln!(console, "trait_obj_value_usize = {}", &self).unwrap();
     }
 }
 
 impl MyTrait for String {
     fn do_something_with_a_console(&self, console: &mut Console) {
-        write!(console, "trait_obj_value_string = {}\n", &self).unwrap();
+        writeln!(console, "trait_obj_value_string = {}", &self).unwrap();
     }
 }
 
 #[libtock::main]
 async fn main() -> TockResult<()> {
-    let mut console = Console::new();
-    write!(console, "[test-results]\n")?;
+    let mut console = Console::default();
+    writeln!(console, "[test-results]")?;
 
     test_heap(&mut console);
     test_formatting(&mut console);
@@ -49,12 +49,12 @@ async fn main() -> TockResult<()> {
 
 fn test_heap(console: &mut Console) {
     let mut string = String::from("heap_test = \"Heap ");
-    string.push_str("works.\"\n");
-    write!(console, "{}", string).unwrap();
+    string.push_str("works.\"");
+    writeln!(console, "{}", string).unwrap();
 }
 
 fn test_formatting(console: &mut Console) {
-    write!(console, "formatting =  {}\n", String::from("works")).unwrap();
+    writeln!(console, "formatting =  {}", String::from("works")).unwrap();
 }
 
 /// needs P0.03 and P0.04 to be connected
@@ -91,7 +91,7 @@ fn test_trait_objects(console: &mut Console) -> TockResult<()> {
 fn test_static_mut(console: &mut Console) {
     increment_static_mut();
 
-    write!(console, "should_be_one = {}\n", unsafe { STATIC }).unwrap();
+    writeln!(console, "should_be_one = {}", unsafe { STATIC }).unwrap();
 }
 
 /// needs P0.03 and P0.04 to be connected
@@ -106,13 +106,13 @@ fn test_gpio(console: &mut Console) {
     let pin_out = pin_out.open_for_write().ok().unwrap();
     pin_out.set_high().ok().unwrap();
 
-    write!(console, "gpio_works = {}\n", pin_in.read()).unwrap();
+    writeln!(console, "gpio_works = {}", pin_in.read()).unwrap();
 }
 
 async fn test_callbacks_and_wait_forever(console: &mut Console) -> TockResult<()> {
     let mut with_callback = timer::with_callback(|_, _| {
-        write!(console, "callbacks_work = true\n").unwrap();
-        write!(console, "all_tests_run = true").unwrap();
+        writeln!(console, "callbacks_work = true").unwrap();
+        writeln!(console, "all_tests_run = true").unwrap();
     });
 
     let mut timer = with_callback.init()?;

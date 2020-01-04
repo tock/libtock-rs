@@ -3,17 +3,18 @@
 use core::fmt::Write;
 use libtock::console::Console;
 use libtock::result::TockResult;
+use libtock::sensors::Ninedof;
 use libtock::sensors::*;
 use libtock::timer;
 use libtock::timer::Duration;
 
 #[libtock::main]
 async fn main() -> TockResult<()> {
-    let mut console = Console::new();
+    let mut console = Console::default();
     let mut humidity = HumiditySensor;
     let mut temperature = TemperatureSensor;
     let mut light = AmbientLightSensor;
-    let mut ninedof = unsafe { Ninedof::new() };
+    let mut ninedof = Ninedof::default();
     let context = timer::DriverContext::create()?;
     let mut driver = context.create_timer_driver()?;
     let timer_driver = driver.activate()?;

@@ -9,6 +9,7 @@ use syn;
 use syn::Error;
 use syn::ItemFn;
 
+#[allow(clippy::needless_doctest_main)]
 /// Procedural attribute macro. This is meant to be applied to a binary's async
 /// `main()`, transforming into a function that returns a type acceptable for
 /// `main()`. In other words, this will not compile with libtock-rs:
@@ -30,7 +31,7 @@ pub fn main(_: TokenStream, input: TokenStream) -> TokenStream {
 }
 
 fn generate_main_wrapped(input: proc_macro2::TokenStream) -> proc_macro2::TokenStream {
-    try_generate_main_wrapped(input).unwrap_or_else(|err| err.to_compile_error().into())
+    try_generate_main_wrapped(input).unwrap_or_else(|err| err.to_compile_error())
 }
 
 fn try_generate_main_wrapped(
@@ -63,11 +64,8 @@ mod tests {
             async fn main() -> ::libtock::result::TockResult<()>{
                 method_call().await;
             }
-        }
-        .into();
-        let actual: ItemFn = syn::parse2::<ItemFn>(generate_main_wrapped(method_def.into()))
-            .unwrap()
-            .into();
+        };
+        let actual: ItemFn = syn::parse2::<ItemFn>(generate_main_wrapped(method_def)).unwrap();
         let expected: ItemFn = syn::parse2::<ItemFn>(quote!(
             fn main() -> ::libtock::result::TockResult<()> {
                 static mut MAIN_INVOKED: bool = false;
@@ -83,8 +81,7 @@ mod tests {
                 unsafe { ::core::executor::block_on(_block) }
             }
         ))
-        .unwrap()
-        .into();
+        .unwrap();
         assert_eq!(actual, expected);
     }
 }

@@ -24,7 +24,7 @@ async fn main() -> TockResult<()> {
     let payload = corepack::to_bytes(LedCommand { nr: 2, st: true }).unwrap();
 
     let mut buffer = BleAdvertisingDriver::create_advertising_buffer();
-    let mut gap_payload = BlePayload::new();
+    let mut gap_payload = BlePayload::default();
     gap_payload
         .add_flag(ble_composer::flags::LE_GENERAL_DISCOVERABLE)
         .unwrap();
@@ -34,10 +34,7 @@ async fn main() -> TockResult<()> {
         .unwrap();
 
     gap_payload
-        .add(
-            ble_composer::gap_types::COMPLETE_LOCAL_NAME,
-            "Tock!".as_bytes(),
-        )
+        .add(ble_composer::gap_types::COMPLETE_LOCAL_NAME, b"Tock!")
         .unwrap();
     gap_payload.add_service_payload([91, 79], &payload).unwrap();
 
