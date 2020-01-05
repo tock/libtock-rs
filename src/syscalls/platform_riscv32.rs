@@ -33,17 +33,17 @@ pub unsafe fn subscribe(
 }
 
 #[inline(always)]
-pub fn command(major: usize, minor: usize, arg1: usize, arg2: usize) -> isize {
-    unsafe {
-        let res;
-        asm!("li    a0, 2
+// Justification: documentation is generated from mocks
+#[allow(clippy::missing_safety_doc)]
+pub unsafe fn command(major: usize, minor: usize, arg1: usize, arg2: usize) -> isize {
+    let res;
+    asm!("li    a0, 2
           ecall"
          : "={x10}" (res)
          : "{x11}" (major), "{x12}" (minor), "{x13}" (arg1), "{x14}" (arg2)
          : "memory"
          : "volatile");
-        res
-    }
+    res
 }
 
 #[inline(always)]

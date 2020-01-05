@@ -48,15 +48,15 @@ pub unsafe fn subscribe(
 }
 
 #[inline(always)]
-pub fn command(major: usize, minor: usize, arg1: usize, arg2: usize) -> isize {
-    unsafe {
-        let res;
-        asm!("svc 2" : "={r0}"(res)
+// Justification: documentation is generated from mocks
+#[allow(clippy::missing_safety_doc)]
+pub unsafe fn command(major: usize, minor: usize, arg1: usize, arg2: usize) -> isize {
+    let res;
+    asm!("svc 2" : "={r0}"(res)
                      : "{r0}"(major) "{r1}"(minor) "{r2}"(arg1) "{r3}"(arg2)
                      : "memory"
                      : "volatile");
-        res
-    }
+    res
 }
 
 #[inline(always)]

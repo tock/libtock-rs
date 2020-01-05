@@ -16,7 +16,10 @@ pub unsafe fn subscribe(
     unimplemented()
 }
 
-pub fn command(_: usize, _: usize, _: usize, _: usize) -> isize {
+/// Send a command to the tock kernel
+/// # Safety
+/// This function usually involves assembly calls which are unsafe.
+pub unsafe fn command(_: usize, _: usize, _: usize, _: usize) -> isize {
     unimplemented()
 }
 
