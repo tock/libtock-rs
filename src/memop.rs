@@ -75,7 +75,7 @@ pub fn get_flash_region(i: usize) -> Option<&'static [u8]> {
         let start_ptr = start_addr as *const u8;
         let end_addr = unsafe { syscalls::raw::memop(9, i) } as usize;
         // This assumes that the kernel sends consistent results, i.e. start <= end.
-        let len = end_addr - start_addr + 1;
+        let len = end_addr - start_addr;
         Some(unsafe { slice::from_raw_parts(start_ptr, len) })
     } else {
         None
