@@ -1,6 +1,5 @@
 use crate::memop;
 use crate::syscalls;
-use core::intrinsics;
 use core::ptr;
 
 // _start and rust_start are the first two procedures executed when a Tock
@@ -99,7 +98,7 @@ pub unsafe extern "C" fn rust_start(app_start: usize, stacktop: usize, app_heap_
 
     let data_flash_start_addr = app_start + layout_header.data_sym_start;
 
-    intrinsics::copy_nonoverlapping(
+    ptr::copy_nonoverlapping(
         data_flash_start_addr as *const u8,
         stacktop as *mut u8,
         layout_header.data_size,

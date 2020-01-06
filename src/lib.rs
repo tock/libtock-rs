@@ -1,11 +1,4 @@
-#![feature(
-    asm,
-    alloc_error_handler,
-    core_intrinsics,
-    lang_items,
-    naked_functions,
-    ptr_offset_from
-)]
+#![feature(asm, alloc_error_handler, lang_items, naked_functions, ptr_offset_from)]
 #![cfg_attr(any(target_arch = "arm", target_arch = "riscv32"), no_std)]
 
 mod callback;

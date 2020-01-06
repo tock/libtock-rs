@@ -1,4 +1,4 @@
-use core::intrinsics;
+use core::hint;
 
 /// Tock programs' entry point. Called by the kernel at program start. Sets up
 /// the stack then calls rust_start() for the remainder of setup.
@@ -97,7 +97,7 @@ pub unsafe extern "C" fn _start() -> ! {
       "t0", "t1", "t2", "t3", "t4", "t5", "t6", "ra"               // Clobbers
     : "volatile"                                                   // Options
     );
-    intrinsics::unreachable();
+    hint::unreachable_unchecked();
 }
 
 /// Ensure an abort symbol exists.
