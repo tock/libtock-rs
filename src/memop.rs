@@ -71,11 +71,12 @@ pub fn get_flash_region_end(i: usize) -> Option<*const u8> {
 /// flash regions during the application's lifetime.
 pub fn get_flash_region(i: usize) -> Option<&'static [u8]> {
     if i < get_flash_regions_count() {
-        let start = unsafe { syscalls::raw::memop(8, i) as *const u8 };
-        let end = unsafe { syscalls::raw::memop(9, i) as *const u8 };
+        let start_addr = unsafe { syscalls::raw::memop(8, i) } as usize;
+        let start_ptr = start_addr as *const u8;
+        let end_addr = unsafe { syscalls::raw::memop(9, i) } as usize;
         // This assumes that the kernel sends consistent results, i.e. start <= end.
-        let len = unsafe { end.offset_from(start) } as usize;
-        Some(unsafe { slice::from_raw_parts(start, len) })
+        let len = end_addr - start_addr + 1;
+        Some(unsafe { slice::from_raw_parts(start_ptr, len) })
     } else {
         None
     }
