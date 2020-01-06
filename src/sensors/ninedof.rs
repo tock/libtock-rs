@@ -30,10 +30,6 @@ struct CbData {
 }
 
 impl Ninedof {
-    pub unsafe fn new() -> Ninedof {
-        Ninedof
-    }
-
     pub fn read_acceleration(&mut self) -> TockResult<NinedofReading> {
         let res: CbData = Default::default();
         subscribe(Self::cb, unsafe { mem::transmute(&res) })?;
@@ -58,6 +54,12 @@ impl Ninedof {
             z: z as i32,
         });
         res.ready.set(true);
+    }
+}
+
+impl Default for Ninedof {
+    fn default() -> Self {
+        Ninedof
     }
 }
 

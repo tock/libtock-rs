@@ -9,7 +9,7 @@ use libtock::timer::Duration;
 
 #[libtock::main]
 async fn main() -> TockResult<()> {
-    let mut console = Console::new();
+    let mut console = Console::default();
 
     let mut with_callback = timer::with_callback(|_, _| {
         writeln!(

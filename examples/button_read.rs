@@ -10,7 +10,7 @@ use libtock::timer::Duration;
 
 #[libtock::main]
 async fn main() -> TockResult<()> {
-    let mut console = Console::new();
+    let mut console = Console::default();
     let mut with_callback = buttons::with_callback(|_, _| {});
     let mut buttons = with_callback.init()?;
     let mut button = buttons.iter_mut().next().unwrap();

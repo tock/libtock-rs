@@ -31,6 +31,8 @@ pub unsafe fn yieldk() {
 }
 
 #[inline(always)]
+// Justification: documentation is generated from mocks
+#[allow(clippy::missing_safety_doc)]
 pub unsafe fn subscribe(
     major: usize,
     minor: usize,
@@ -46,16 +48,20 @@ pub unsafe fn subscribe(
 }
 
 #[inline(always)]
+// Justification: documentation is generated from mocks
+#[allow(clippy::missing_safety_doc)]
 pub unsafe fn command(major: usize, minor: usize, arg1: usize, arg2: usize) -> isize {
     let res;
     asm!("svc 2" : "={r0}"(res)
-                 : "{r0}"(major) "{r1}"(minor) "{r2}"(arg1) "{r3}"(arg2)
-                 : "memory"
-                 : "volatile");
+                     : "{r0}"(major) "{r1}"(minor) "{r2}"(arg1) "{r3}"(arg2)
+                     : "memory"
+                     : "volatile");
     res
 }
 
 #[inline(always)]
+// Justification: documentation is generated from mocks
+#[allow(clippy::missing_safety_doc)]
 pub unsafe fn command1(major: usize, minor: usize, arg: usize) -> isize {
     let res;
     asm!("svc 2" : "={r0}"(res)
@@ -66,6 +72,8 @@ pub unsafe fn command1(major: usize, minor: usize, arg: usize) -> isize {
 }
 
 #[inline(always)]
+// Justification: documentation is generated from mocks
+#[allow(clippy::missing_safety_doc)]
 pub unsafe fn allow(major: usize, minor: usize, slice: *mut u8, len: usize) -> isize {
     let res;
     asm!("svc 3" : "={r0}"(res)
@@ -76,6 +84,8 @@ pub unsafe fn allow(major: usize, minor: usize, slice: *mut u8, len: usize) -> i
 }
 
 #[inline(always)]
+// Justification: documentation is generated from mocks
+#[allow(clippy::missing_safety_doc)]
 pub unsafe fn memop(major: u32, arg1: usize) -> isize {
     let res;
     asm!("svc 4" : "={r0}"(res)

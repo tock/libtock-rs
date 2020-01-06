@@ -48,21 +48,22 @@ This project is nascent and still under heavy development, but first steps:
 1.  Use the `run_example` script to compile and run the example app you want
     to use:
 
-        ```bash
-        ./run_example.sh blink
-        ```
+    ```bash
+    ./run_example.sh blink
+    ```
 
-        Due to bug #28 this will currently only work if you are using the nRF52-DK platform.
+    Due to bug #28 this will currently only work if you are using the nRF52-DK platform.
 
-        If you have a nRF52840-DK you must change `link-arg=-Tnrf52_layout.ld` in
-        `.cargo/config` to `link-arg=-Tnrf52840_layout.ld`
+    If you have a nRF52840-DK you must change `link-arg=-Tnrf52_layout.ld` in
+    `.cargo/config` to `link-arg=-Tnrf52840_layout.ld`
 
-        If you have a hail board you can flash your device as follows:
-         - set the environment variable `hail` to `1`
-         - change `link-arg=-Tnrf52_layout.ld` in `.cargo/config` to `link-arg=-Thail_layout.ld`
-         - run `run_example.sh` as above.
+    If you have a hail board you can flash your device as follows:
 
-        For other platforms, you may have to create your own memory layout definition.
+    - set the environment variable `hail` to `1`
+    - change `link-arg=-Tnrf52_layout.ld` in `.cargo/config` to `link-arg=-Thail_layout.ld`
+    - run `run_example.sh` as above.
+
+    For other platforms, you may have to create your own memory layout definition.
 
 ## Using libtock-rs
 

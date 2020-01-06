@@ -8,7 +8,7 @@ use libtock::timer::Duration;
 
 #[libtock::main]
 async fn main() -> TockResult<()> {
-    let mut console = Console::new();
+    let mut console = Console::default();
     let context = timer::DriverContext::create()?;
     let mut driver = context.create_timer_driver()?;
     let timer_driver = driver.activate()?;

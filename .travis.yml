@@ -19,8 +19,10 @@ install:
   - rustup target add thumbv7em-none-eabi
   - rustup target add riscv32imc-unknown-none-elf
   - rustup component add rustfmt-preview
+  - rustup component add clippy
 
 script:
   - cargo fmt --all -- --check
   - cargo test --workspace
+  - cargo clippy --workspace --all-targets
   - ./build_examples.sh

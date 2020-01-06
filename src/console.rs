@@ -25,12 +25,6 @@ pub struct Console {
 }
 
 impl Console {
-    pub fn new() -> Console {
-        Console {
-            allow_buffer: [0; 64],
-        }
-    }
-
     pub fn write<S: AsRef<[u8]>>(&mut self, text: S) -> TockResult<()> {
         let mut not_written_yet = text.as_ref();
         while !not_written_yet.is_empty() {
@@ -66,6 +60,14 @@ impl Console {
         mem::drop(shared_memory);
 
         Ok(())
+    }
+}
+
+impl Default for Console {
+    fn default() -> Self {
+        Console {
+            allow_buffer: [0; 64],
+        }
     }
 }
 

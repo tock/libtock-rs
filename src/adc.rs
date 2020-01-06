@@ -29,8 +29,8 @@ pub struct AdcBuffer {
     buffer: [u8; BUFFER_SIZE],
 }
 
-impl AdcBuffer {
-    pub fn new() -> AdcBuffer {
+impl Default for AdcBuffer {
+    fn default() -> Self {
         AdcBuffer {
             buffer: [0; BUFFER_SIZE],
         }

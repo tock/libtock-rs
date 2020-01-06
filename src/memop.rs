@@ -3,16 +3,19 @@
 use crate::syscalls;
 use core::slice;
 
-// Setting the break is marked as unsafe as it should only be called by the entry point to setup
-// the allocator. Updating the break afterwards can lead to allocated memory becoming unaccessible.
-//
-// Alternate allocator implementations may still find this useful in the future.
+/// Set the memory break
+/// # Safety
+/// Setting the break is marked as unsafe as it should only be called by the entry point to setup
+/// the allocator. Updating the break afterwards can lead to allocated memory becoming unaccessible.
+///
+/// Alternate allocator implementations may still find this useful in the future.
 pub unsafe fn set_brk(ptr: *const u8) -> bool {
     syscalls::raw::memop(0, ptr as usize) == 0
 }
 
-pub unsafe fn increment_brk(increment: usize) -> Option<*const u8> {
-    let result = syscalls::raw::memop(1, increment);
+/// Increment the memory break
+pub fn increment_brk(increment: usize) -> Option<*const u8> {
+    let result = unsafe { syscalls::raw::memop(1, increment) };
     if result >= 0 {
         Some(result as *const u8)
     } else {
@@ -64,8 +67,8 @@ pub fn get_flash_region_end(i: usize) -> Option<*const u8> {
     }
 }
 
-// It is safe to return a 'static immutable slice, as the Tock kernel doesn't change the layout of
-// flash regions during the application's lifetime.
+/// It is safe to return a 'static immutable slice, as the Tock kernel doesn't change the layout of
+/// flash regions during the application's lifetime.
 pub fn get_flash_region(i: usize) -> Option<&'static [u8]> {
     if i < get_flash_regions_count() {
         let start = unsafe { syscalls::raw::memop(8, i) as *const u8 };
@@ -78,15 +81,22 @@ pub fn get_flash_region(i: usize) -> Option<&'static [u8]> {
     }
 }
 
-// Setting the stack_top and heap_start addresses are marked as unsafe as they should only be called
-// by the entry point to setup the allocator. Updating these values afterwards can lead to incorrect
-// debug output from the kernel.
-//
-// Alternate allocator implementations may still find this useful in the future.
+/// Set the top of the stack
+/// # Safety
+/// Setting the stack_top and heap_start addresses are marked as unsafe as they should only be called
+/// by the entry point to setup the allocator. Updating these values afterwards can lead to incorrect
+/// debug output from the kernel.
+///
+/// Alternate allocator implementations may still find this useful in the future.
 pub unsafe fn set_stack_top(ptr: *const u8) {
     let _ = syscalls::raw::memop(10, ptr as usize);
 }
 
+/// Set the top of the heap
+/// # Safety
+/// Setting the stack_top and heap_start addresses are marked as unsafe as they should only be called
+/// by the entry point to setup the allocator. Updating these values afterwards can lead to incorrect
+/// debug output from the kernel.
 pub unsafe fn set_heap_start(ptr: *const u8) {
     let _ = syscalls::raw::memop(11, ptr as usize);
 }

@@ -13,7 +13,7 @@ async fn main() -> TockResult<()> {
     let mut driver = context.create_timer_driver()?;
     let timer_driver = driver.activate()?;
 
-    let mut console = Console::new();
+    let mut console = Console::default();
     let mut with_callback = adc::with_callback(|channel: usize, value: usize| {
         writeln!(console, "channel: {}, value: {}", channel, value).unwrap();
     });

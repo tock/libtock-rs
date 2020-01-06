@@ -10,8 +10,8 @@ use libtock::syscalls;
 #[libtock::main]
 /// Reads a 128 byte sample into a buffer and prints the first value to the console.
 async fn main() -> TockResult<()> {
-    let mut console = Console::new();
-    let mut adc_buffer = AdcBuffer::new();
+    let mut console = Console::default();
+    let mut adc_buffer = AdcBuffer::default();
     let mut temp_buffer = [0; libtock::adc::BUFFER_SIZE];
 
     let adc_buffer = libtock::adc::Adc::init_buffer(&mut adc_buffer)?;

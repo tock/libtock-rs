@@ -36,13 +36,6 @@ impl BlePayload {
         Ok(())
     }
 
-    pub fn new() -> Self {
-        BlePayload {
-            bytes: [0; 39],
-            occupied: 0,
-        }
-    }
-
     pub fn add_service_payload(&mut self, uuid: [u8; 2], content: &[u8]) -> Result<(), ()> {
         self.check_can_write_num_bytes(4 + content.len())?;
         self.bytes[self.occupied] = (content.len() + 3) as u8;
@@ -65,6 +58,14 @@ impl BlePayload {
     }
 }
 
+impl Default for BlePayload {
+    fn default() -> Self {
+        BlePayload {
+            bytes: [0; 39],
+            occupied: 0,
+        }
+    }
+}
 impl AsRef<[u8]> for BlePayload {
     fn as_ref(&self) -> &[u8] {
         &self.bytes[0..self.occupied]
@@ -77,7 +78,7 @@ mod test {
 
     #[test]
     fn test_add() {
-        let mut pld = BlePayload::new();
+        let mut pld = BlePayload::default();
         pld.add(1, &[2]).unwrap();
         assert_eq!(pld.as_ref().len(), 3);
         assert_eq!(pld.as_ref(), &mut [2, 1, 2])
@@ -85,14 +86,14 @@ mod test {
 
     #[test]
     fn test_add_service_payload() {
-        let mut pld = BlePayload::new();
+        let mut pld = BlePayload::default();
         pld.add_service_payload([1, 2], &[2]).unwrap();
         assert_eq!(pld.as_ref(), &[4, 0x16, 1, 2, 2])
     }
 
     #[test]
     fn test_add_service_payload_two_times() {
-        let mut pld = BlePayload::new();
+        let mut pld = BlePayload::default();
         pld.add_service_payload([1, 2], &[2]).unwrap();
         pld.add_service_payload([1, 2], &[2, 3]).unwrap();
 
@@ -101,13 +102,13 @@ mod test {
 
     #[test]
     fn big_data_causes_error() {
-        let mut pld = BlePayload::new();
+        let mut pld = BlePayload::default();
         assert!(pld.add_service_payload([1, 2], &[0; 36]).is_err());
     }
 
     #[test]
     fn initial_size_is_zero() {
-        let pld = BlePayload::new();
+        let pld = BlePayload::default();
         assert_eq!(pld.as_ref().len(), 0);
     }
 }
