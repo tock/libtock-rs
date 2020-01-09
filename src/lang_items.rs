@@ -56,15 +56,10 @@ unsafe fn panic_handler(_info: &PanicInfo) -> ! {
         let mut driver = timer_context.create_timer_driver();
         let timer_driver = driver.activate().ok();
         let led_driver = led_driver_factory.create_driver().ok();
-        if let Some(led_driver) = led_driver {
-            if let Some(timer_driver) = timer_driver {
-                blink_all_leds(&timer_driver, &led_driver).await;
-            } else {
-                loop {}
-            }
-        } else {
-            loop {}
+        if let (Some(ref led_driver), Some(ref timer_driver)) = (led_driver, timer_driver) {
+            blink_all_leds(timer_driver, led_driver).await;
         }
+        loop {}
     });
     // Never type is not supported for T in Future
     unreachable!()
@@ -95,15 +90,10 @@ unsafe fn alloc_error_handler(_: Layout) -> ! {
         let timer_driver = driver.activate().ok();
         let led_driver = led_driver_factory.create_driver().ok();
 
-        if let Some(led_driver) = led_driver {
-            if let Some(timer_driver) = timer_driver {
-                cycle_all_leds(&timer_driver, &led_driver).await;
-            } else {
-                loop {}
-            }
-        } else {
-            loop {}
+        if let (Some(led_driver), Some(timer_driver)) = (led_driver, timer_driver) {
+            cycle_all_leds(&timer_driver, &led_driver).await;
         }
+        loop {}
     });
     // Never type is not supported for T in Future
     unreachable!()
