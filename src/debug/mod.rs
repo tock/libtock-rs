@@ -1,20 +1,23 @@
 //! Heapless debugging functions for Tock troubleshooting
 
 mod low_level_debug;
+use crate::drivers::Drivers;
 pub use low_level_debug::*;
 
-use crate::console::Console;
+use crate::retrieve_drivers_unsafe;
 
 pub fn println() {
     let buffer = [b'\n'];
-    let mut console = Console::default();
+    let Drivers { console_driver, .. } = unsafe { retrieve_drivers_unsafe() };
+    let mut console = console_driver.create_console();
     let _ = console.write(&buffer);
 }
 
 pub fn print_as_hex(value: usize) {
     let mut buffer = [b'\n'; 11];
     write_as_hex(&mut buffer, value);
-    let mut console = Console::default();
+    let Drivers { console_driver, .. } = unsafe { retrieve_drivers_unsafe() };
+    let mut console = console_driver.create_console();
     let _ = console.write(buffer);
 }
 
@@ -26,7 +29,8 @@ pub fn print_stack_pointer() {
     let mut buffer = [b'\n'; 15];
     buffer[0..4].clone_from_slice(b"SP: ");
     write_as_hex(&mut buffer[4..15], stack_pointer);
-    let mut console = Console::default();
+    let Drivers { console_driver, .. } = unsafe { retrieve_drivers_unsafe() };
+    let mut console = console_driver.create_console();
     let _ = console.write(buffer);
 }
 
@@ -50,7 +54,8 @@ pub unsafe fn dump_address(address: *const usize) {
         }
     }
     buffer[27] = b'\n';
-    let mut console = Console::default();
+    let Drivers { console_driver, .. } = retrieve_drivers_unsafe();
+    let mut console = console_driver.create_console();
     let _ = console.write(&buffer);
 }
 

@@ -74,14 +74,6 @@ impl Console {
     }
 }
 
-impl Default for Console {
-    fn default() -> Self {
-        Console {
-            allow_buffer: [0; 64],
-        }
-    }
-}
-
 impl fmt::Write for Console {
     fn write_str(&mut self, string: &str) -> Result<(), fmt::Error> {
         self.write(string).map_err(|_| fmt::Error)
