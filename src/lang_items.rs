@@ -103,11 +103,8 @@ async fn cycle_all_leds(timer_driver: &ParallelSleepDriver<'_>, led_driver: &Led
     loop {
         for led in led_driver.all() {
             let _ = led.on();
-        }
-        let _ = timer_driver.sleep(Duration::from_ms(100)).await;
-        for led in led_driver.all() {
+            let _ = timer_driver.sleep(Duration::from_ms(100)).await;
             let _ = led.off();
         }
-        let _ = timer_driver.sleep(Duration::from_ms(100)).await;
     }
 }
