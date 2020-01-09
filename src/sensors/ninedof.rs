@@ -58,12 +58,6 @@ impl NinedofDriver {
     }
 }
 
-impl Default for NinedofDriver {
-    fn default() -> Self {
-        NinedofDriver
-    }
-}
-
 pub fn subscribe(cb: extern "C" fn(usize, usize, usize, usize), ud: usize) -> TockResult<()> {
     syscalls::subscribe_fn(DRIVER_NUM, 0, cb, ud)?;
     Ok(())
