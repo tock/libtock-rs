@@ -17,7 +17,7 @@
   - `syscalls::allow_ptr` becomes `syscalls::raw::allow`
 - Targets without support for atomics can be built
 - Most API functions, including `main()`, return a `Result<T, TockError>`
-- The timer now supports to be used simultaneously
+- The library now supports parallel timers
 - all drivers can exclusively be retrieved by `retrieve_drivers` which returns a `Drivers`-singleton. Drivers can be shared between different tasks only if it is safe to do so.
 
 ## a8bb4fa9be504517d5533511fd8e607ea61f1750 (0.1.0)
