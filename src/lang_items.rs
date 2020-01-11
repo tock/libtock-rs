@@ -18,9 +18,10 @@
 //! `rustc_main`. That's covered by the `_start` function in the root of this
 //! crate.
 
-use crate::led;
-use crate::timer;
+use crate::led::LedDriver;
 use crate::timer::Duration;
+use crate::timer::ParallelSleepDriver;
+use crate::Drivers;
 use core::alloc::Layout;
 use core::executor;
 use core::panic::PanicInfo;
@@ -47,49 +48,63 @@ unsafe fn panic_handler(_info: &PanicInfo) -> ! {
 
     // Flash all LEDs (if available).
     executor::block_on(async {
-        let context = timer::DriverContext::create().ok();
-        let mut driver = context.as_ref().map(|c| c.create_timer_driver_unsafe());
-        let timer_driver = driver.as_mut().and_then(|d| d.activate().ok());
-        loop {
-            for led in led::all() {
-                let _ = led.on();
-            }
-            if let Some(ref timer_driver) = timer_driver {
-                let _ = timer_driver.sleep(Duration::from_ms(100)).await;
-            }
-            for led in led::all() {
-                let _ = led.off();
-            }
-            if let Some(ref timer_driver) = timer_driver {
-                let _ = timer_driver.sleep(Duration::from_ms(100)).await;
-            }
+        let Drivers {
+            led_driver_factory,
+            timer_context,
+            ..
+        } = crate::retrieve_drivers_unsafe();
+        let mut driver = timer_context.create_timer_driver();
+        let timer_driver = driver.activate().ok();
+        let led_driver = led_driver_factory.create_driver().ok();
+        if let (Some(ref led_driver), Some(ref timer_driver)) = (led_driver, timer_driver) {
+            blink_all_leds(timer_driver, led_driver).await;
         }
+        loop {}
     });
     // Never type is not supported for T in Future
     unreachable!()
 }
 
-#[alloc_error_handler]
-unsafe fn cycle_leds(_: Layout) -> ! {
-    executor::block_on(async {
-        let context = timer::DriverContext::create().ok();
-        let mut driver = context.as_ref().map(|c| c.create_timer_driver_unsafe());
-        let timer_driver = driver.as_mut().and_then(|d| d.activate().ok());
-        loop {
-            for led in led::all() {
-                let _ = led.on();
-            }
-            if let Some(ref timer_driver) = timer_driver {
-                let _ = timer_driver.sleep(Duration::from_ms(100)).await;
-            }
-            for led in led::all() {
-                let _ = led.off();
-            }
-            if let Some(ref timer_driver) = timer_driver {
-                let _ = timer_driver.sleep(Duration::from_ms(100)).await;
-            }
+async fn blink_all_leds(timer_driver: &ParallelSleepDriver<'_>, led_driver: &LedDriver) {
+    loop {
+        for led in led_driver.all() {
+            let _ = led.on();
         }
+        let _ = timer_driver.sleep(Duration::from_ms(100)).await;
+        for led in led_driver.all() {
+            let _ = led.off();
+        }
+        let _ = timer_driver.sleep(Duration::from_ms(100)).await;
+    }
+}
+
+#[alloc_error_handler]
+unsafe fn alloc_error_handler(_: Layout) -> ! {
+    executor::block_on(async {
+        let Drivers {
+            led_driver_factory,
+            timer_context,
+            ..
+        } = crate::retrieve_drivers_unsafe();
+        let mut driver = timer_context.create_timer_driver();
+        let timer_driver = driver.activate().ok();
+        let led_driver = led_driver_factory.create_driver().ok();
+
+        if let (Some(led_driver), Some(timer_driver)) = (led_driver, timer_driver) {
+            cycle_all_leds(&timer_driver, &led_driver).await;
+        }
+        loop {}
     });
     // Never type is not supported for T in Future
     unreachable!()
+}
+
+async fn cycle_all_leds(timer_driver: &ParallelSleepDriver<'_>, led_driver: &LedDriver) {
+    loop {
+        for led in led_driver.all() {
+            let _ = led.on();
+            let _ = timer_driver.sleep(Duration::from_ms(100)).await;
+            let _ = led.off();
+        }
+    }
 }

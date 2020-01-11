@@ -7,9 +7,7 @@ use core::executor;
 use core::fmt;
 use core::mem;
 
-mod ninedof;
-
-pub use self::ninedof::*;
+pub mod ninedof;
 
 extern "C" fn cb<Reading>(x: usize, y: usize, z: usize, ptr: usize)
 where
@@ -36,20 +34,25 @@ pub trait Sensor<Reading: Copy + From<(usize, usize, usize)>> {
 macro_rules! single_value_sensor {
     ($sensor_name:ident, $type_name:ident, $driver_num:expr) => {
         #[derive(Copy, Clone, Eq, PartialEq, Debug)]
-        pub struct $type_name(i32);
+        pub struct $type_name {
+            value: i32,
+        }
 
         impl From<(usize, usize, usize)> for $type_name {
             fn from(tuple: (usize, usize, usize)) -> $type_name {
-                $type_name(tuple.0 as i32)
+                $type_name {
+                    value: (tuple.0 as i32),
+                }
             }
         }
 
         impl Into<i32> for $type_name {
             fn into(self) -> i32 {
-                self.0
+                self.value
             }
         }
 
+        #[non_exhaustive]
         pub struct $sensor_name;
 
         impl Sensor<$type_name> for $sensor_name {
@@ -66,18 +69,18 @@ single_value_sensor!(HumiditySensor, Humidity, 0x60001);
 
 impl fmt::Display for AmbientLight {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        write!(f, "{} lx", self.0)
+        write!(f, "{} lx", self.value)
     }
 }
 
 impl fmt::Display for Humidity {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        write!(f, "{}.{}%", self.0 / 100, self.0 % 100)
+        write!(f, "{}.{}%", self.value / 100, self.value % 100)
     }
 }
 
 impl fmt::Display for Temperature {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        write!(f, "{}.{}\u{00B0}C", self.0 / 100, self.0 % 100)
+        write!(f, "{}.{}\u{00B0}C", self.value / 100, self.value % 100)
     }
 }

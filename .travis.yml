@@ -13,7 +13,7 @@ os:
   - linux
   - osx
 
-cache: rust
+cache: cargo
 
 install:
   - rustup target add thumbv7em-none-eabi
@@ -22,7 +22,4 @@ install:
   - rustup component add clippy
 
 script:
-  - cargo fmt --all -- --check
-  - cargo test --workspace
-  - cargo clippy --workspace --all-targets
-  - ./build_examples.sh
+  - ./run_all_checks.sh

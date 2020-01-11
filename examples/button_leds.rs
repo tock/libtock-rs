@@ -1,16 +1,23 @@
 #![no_std]
 
 use futures::future;
-use libtock::buttons;
 use libtock::buttons::ButtonState;
-use libtock::led;
 use libtock::result::TockResult;
+use libtock::Drivers;
 
 #[libtock::main]
 async fn main() -> TockResult<()> {
-    let mut with_callback = buttons::with_callback(|button_num: usize, state| {
+    let Drivers {
+        led_driver_factory,
+        button_driver,
+        ..
+    } = libtock::retrieve_drivers()?;
+
+    let led_driver = led_driver_factory.create_driver()?;
+
+    let mut with_callback = button_driver.with_callback(|button_num: usize, state| {
         match state {
-            ButtonState::Pressed => led::get(button_num).unwrap().toggle().ok().unwrap(),
+            ButtonState::Pressed => led_driver.get(button_num).unwrap().toggle().ok().unwrap(),
             ButtonState::Released => (),
         };
     });

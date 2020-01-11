@@ -10,6 +10,7 @@ use crate::result::EALREADY;
 use crate::syscalls;
 use core::cell::Cell;
 use core::isize;
+use core::marker::PhantomData;
 use core::ops::{Add, AddAssign, Sub};
 
 const DRIVER_NUMBER: usize = 0x00000;
@@ -26,19 +27,13 @@ mod subscribe_nr {
     pub const SUBSCRIBE_CALLBACK: usize = 0;
 }
 
-pub fn with_callback<CB>(callback: CB) -> WithCallback<CB> {
-    WithCallback {
-        callback,
-        clock_frequency: ClockFrequency { hz: 0 },
-    }
-}
-
-pub struct WithCallback<CB> {
+pub struct WithCallback<'a, CB> {
     callback: CB,
     clock_frequency: ClockFrequency,
+    phantom: PhantomData<&'a mut ()>,
 }
 
-impl<CB: FnMut(ClockValue, Alarm)> SubscribableCallback for WithCallback<CB> {
+impl<CB: FnMut(ClockValue, Alarm)> SubscribableCallback for WithCallback<'_, CB> {
     fn call_rust(&mut self, clock_value: usize, alarm_id: usize, _: usize) {
         (self.callback)(
             ClockValue {
@@ -50,11 +45,11 @@ impl<CB: FnMut(ClockValue, Alarm)> SubscribableCallback for WithCallback<CB> {
     }
 }
 
-impl<CB> WithCallback<CB>
+impl<'a, CB> WithCallback<'a, CB>
 where
     Self: SubscribableCallback,
 {
-    pub fn init(&mut self) -> TockResult<Timer> {
+    pub fn init(&'a mut self) -> TockResult<Timer<'a>> {
         let num_notifications =
             syscalls::command(DRIVER_NUMBER, command_nr::IS_DRIVER_AVAILABLE, 0, 0)?;
 
@@ -282,10 +277,8 @@ where
     }
 }
 
-static mut TIMER_DRIVER_AVAILABLE: bool = true;
-
 #[derive(Copy, Clone, Default, PartialEq, Eq)]
-struct ActiveTimer {
+pub(crate) struct ActiveTimer {
     instant: u32,
     set_at: u32,
 }
@@ -295,55 +288,32 @@ struct ActiveTimer {
 /// ```no_run
 /// # use libtock::timer::DriverContext;
 /// # use libtock::result::TockResult;
+/// # use libtock::Drivers;
 /// # #[libtock::main]
 /// # async fn main() -> TockResult<()> {
-/// let context = DriverContext::create();
+///  let Drivers {  timer_context, .. } = libtock::retrieve_drivers()?;
 /// # Ok(())
 /// # }
 /// ```
+#[non_exhaustive]
 pub struct DriverContext {
-    active_timer: Cell<Option<ActiveTimer>>,
-    current_time: Cell<usize>,
+    pub(crate) active_timer: Cell<Option<ActiveTimer>>,
 }
 
 impl DriverContext {
-    /// Create a driver context
-    pub fn create() -> TockResult<Self> {
-        let num_ticks = get_current_ticks()?;
-        Ok(DriverContext {
-            active_timer: Default::default(),
-            current_time: Cell::new(num_ticks),
-        })
-    }
-    /// Create a driver timer from a context. As the driver is a singleton
-    /// from the app perspective this function will return None
-    /// if called more than once.
-    pub fn create_timer_driver<'a>(&'a self) -> TockResult<TimerDriver<'a>> {
-        if unsafe { TIMER_DRIVER_AVAILABLE } {
-            unsafe {
-                TIMER_DRIVER_AVAILABLE = false;
-            }
-            Ok(TimerDriver {
-                callback: Callback {
-                    now: &self.current_time,
-                },
-                context: &self,
-            })
-        } else {
-            Err(TockError::Other(OtherError::DriverAlreadyTaken))
+    /// Create a driver timer from a context.
+    pub fn create_timer_driver(&self) -> TimerDriver<'_> {
+        TimerDriver {
+            callback: Callback,
+            context: &self,
         }
     }
 
-    /// Create a timer driver instance without checking for running instance
-    /// # Safety
-    /// May lead to undefined behavior at the previous consumer of the timer driver.
-    /// Only safe if no other consumer is still running (e.g. on unwind)
-    pub unsafe fn create_timer_driver_unsafe(&self) -> TimerDriver<'_> {
-        TimerDriver {
-            callback: Callback {
-                now: &self.current_time,
-            },
-            context: &self,
+    pub fn with_callback<CB>(&mut self, callback: CB) -> WithCallback<CB> {
+        WithCallback {
+            callback,
+            clock_frequency: ClockFrequency { hz: 0 },
+            phantom: PhantomData,
         }
     }
 }
@@ -352,26 +322,24 @@ impl DriverContext {
 /// ```no_run
 /// # use libtock::timer::DriverContext;
 /// # use libtock::result::TockResult;
+/// # use libtock::Drivers;
 /// # #[libtock::main]
 /// # async fn main() -> TockResult<()> {
-/// let context = DriverContext::create()?;
-/// context.create_timer_driver().expect("The timer driver is a singleton and can only created once.");
+/// # let Drivers {  timer_context,.. } = libtock::retrieve_drivers()?;
+/// # let mut driver = timer_context.create_timer_driver();
+/// let timer_driver = driver.activate()?;
 /// # Ok(())
 /// # }
 /// ```
 pub struct TimerDriver<'a> {
-    callback: Callback<'a>,
+    callback: Callback,
     context: &'a DriverContext,
 }
 
-struct Callback<'a> {
-    now: &'a Cell<usize>,
-}
+struct Callback;
 
-impl<'a> SubscribableCallback for Callback<'a> {
-    fn call_rust(&mut self, now: usize, _: usize, _: usize) {
-        self.now.set(now);
-    }
+impl SubscribableCallback for Callback {
+    fn call_rust(&mut self, _: usize, _: usize, _: usize) {}
 }
 
 /// Activated time driver. Updates current time in the context and manages
@@ -381,10 +349,11 @@ impl<'a> SubscribableCallback for Callback<'a> {
 /// # use libtock::timer::DriverContext;
 /// # use libtock::result::TockResult;
 /// # use libtock::timer::Duration;
+/// # use libtock::Drivers;
 /// # #[libtock::main]
 /// # async fn main() -> TockResult<()> {
-/// let context = DriverContext::create()?;
-/// let mut driver = context.create_timer_driver().unwrap();
+/// # let Drivers {  timer_context,.. } = libtock::retrieve_drivers()?;
+/// # let mut driver = timer_context.create_timer_driver();
 /// let timer_driver = driver.activate()?;
 /// timer_driver.sleep(Duration::from_ms(1000)).await?;
 /// # Ok(())
@@ -416,7 +385,6 @@ impl<'a> ParallelSleepDriver<'a> {
     /// Sleep for the given duration
     pub async fn sleep(&self, duration: Duration<usize>) -> TockResult<()> {
         let now = get_current_ticks()?;
-        self.context.current_time.set(now);
         let freq = get_clock_frequency()?;
         let alarm_instant = Self::compute_alarm_instant(duration.ms, now, freq)?;
         let this_alarm = ActiveTimer {

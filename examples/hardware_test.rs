@@ -8,10 +8,13 @@ use alloc::string::String;
 use core::fmt::Write;
 use futures::future;
 use libtock::console::Console;
-use libtock::gpio::{GpioPinUnitialized, InputMode};
+use libtock::gpio::GpioPinRead;
+use libtock::gpio::GpioPinWrite;
+use libtock::gpio::InputMode;
 use libtock::result::TockResult;
-use libtock::timer;
+use libtock::timer::DriverContext;
 use libtock::timer::Duration;
+use libtock::Drivers;
 
 static mut STATIC: usize = 0;
 
@@ -33,18 +36,30 @@ impl MyTrait for String {
 
 #[libtock::main]
 async fn main() -> TockResult<()> {
-    let mut console = Console::default();
+    let Drivers {
+        console_driver,
+        gpio_driver,
+        mut timer_context,
+        ..
+    } = libtock::retrieve_drivers()?;
+    let mut gpio_iter = gpio_driver.all_pins()?;
+    let mut console = console_driver.create_console();
+    let pin_in = gpio_iter.next().unwrap();
+    let pin_out = gpio_iter.next().unwrap();
+    let pin_in = pin_in.open_for_read(None, InputMode::PullDown)?;
+    let mut pin_out = pin_out.open_for_write()?;
+
     writeln!(console, "[test-results]")?;
 
     test_heap(&mut console);
     test_formatting(&mut console);
     test_static_mut(&mut console);
 
-    test_gpio(&mut console);
+    test_gpio(&mut console, &pin_in, &mut pin_out);
 
-    test_trait_objects(&mut console)?;
+    test_trait_objects(&mut console, &pin_in, &mut pin_out)?;
 
-    test_callbacks_and_wait_forever(&mut console).await
+    test_callbacks_and_wait_forever(&mut console, &mut timer_context).await
 }
 
 fn test_heap(console: &mut Console) {
@@ -61,12 +76,11 @@ fn test_formatting(console: &mut Console) {
 /// Output order should be:
 /// trait_obj_value_usize = 1
 /// trait_obj_value_string = string
-fn test_trait_objects(console: &mut Console) -> TockResult<()> {
-    let pin_in = GpioPinUnitialized::new(0);
-    let pin_in = pin_in.open_for_read(None, InputMode::PullDown)?;
-
-    let pin_out = GpioPinUnitialized::new(1);
-    let pin_out = pin_out.open_for_write()?;
+fn test_trait_objects(
+    console: &mut Console,
+    pin_in: &GpioPinRead,
+    pin_out: &mut GpioPinWrite,
+) -> TockResult<()> {
     pin_out.set_high()?;
 
     let string = String::from("string");
@@ -95,22 +109,17 @@ fn test_static_mut(console: &mut Console) {
 }
 
 /// needs P0.03 and P0.04 to be connected
-fn test_gpio(console: &mut Console) {
-    let pin_in = GpioPinUnitialized::new(0);
-    let pin_in = pin_in
-        .open_for_read(None, InputMode::PullDown)
-        .ok()
-        .unwrap();
-
-    let pin_out = GpioPinUnitialized::new(1);
-    let pin_out = pin_out.open_for_write().ok().unwrap();
+fn test_gpio(console: &mut Console, pin_in: &GpioPinRead, pin_out: &mut GpioPinWrite) {
     pin_out.set_high().ok().unwrap();
 
     writeln!(console, "gpio_works = {}", pin_in.read()).unwrap();
 }
 
-async fn test_callbacks_and_wait_forever(console: &mut Console) -> TockResult<()> {
-    let mut with_callback = timer::with_callback(|_, _| {
+async fn test_callbacks_and_wait_forever(
+    console: &mut Console,
+    timer_context: &mut DriverContext,
+) -> TockResult<()> {
+    let mut with_callback = timer_context.with_callback(|_, _| {
         writeln!(console, "callbacks_work = true").unwrap();
         writeln!(console, "all_tests_run = true").unwrap();
     });

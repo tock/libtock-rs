@@ -20,6 +20,17 @@ mod allow_nr {
     pub const SHARE_BUFFER: usize = 1;
 }
 
+#[non_exhaustive]
+pub struct ConsoleDriver;
+
+impl ConsoleDriver {
+    pub fn create_console(self) -> Console {
+        Console {
+            allow_buffer: [0; 64],
+        }
+    }
+}
+
 pub struct Console {
     allow_buffer: [u8; 64],
 }
@@ -60,14 +71,6 @@ impl Console {
         mem::drop(shared_memory);
 
         Ok(())
-    }
-}
-
-impl Default for Console {
-    fn default() -> Self {
-        Console {
-            allow_buffer: [0; 64],
-        }
     }
 }
 
