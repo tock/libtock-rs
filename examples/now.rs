@@ -6,19 +6,29 @@
 use core::fmt::Write;
 use libtock::console::Console;
 use libtock::result::TockResult;
-use libtock::timer;
+use libtock::timer::DriverContext;
 use libtock::timer::Duration;
+use libtock::Drivers;
 
 const DELAY_MS: usize = 500;
 
 #[libtock::main]
 async fn main() -> TockResult<()> {
-    let mut console = Console::new();
+    let Drivers {
+        mut timer_context,
+        console_driver,
+        ..
+    } = libtock::retrieve_drivers()?;
+    let mut console = console_driver.create_console();
+
     let mut previous_ticks = None;
 
     for i in 0.. {
-        print_now(&mut console, &mut previous_ticks, i)?;
-        timer::sleep(Duration::from_ms(DELAY_MS as isize)).await?;
+        print_now(&mut console, &mut timer_context, &mut previous_ticks, i)?;
+        let mut driver = timer_context.create_timer_driver();
+        let timer_driver = driver.activate()?;
+
+        timer_driver.sleep(Duration::from_ms(DELAY_MS)).await?;
     }
 
     Ok(())
@@ -26,24 +36,25 @@ async fn main() -> TockResult<()> {
 
 fn print_now(
     console: &mut Console,
+    timer_context: &mut DriverContext,
     previous_ticks: &mut Option<isize>,
     i: usize,
 ) -> TockResult<()> {
-    let mut timer_with_callback = timer::with_callback(|_, _| {});
+    let mut timer_with_callback = timer_context.with_callback(|_, _| {});
     let timer = timer_with_callback.init()?;
     let current_clock = timer.get_current_clock()?;
     let ticks = current_clock.num_ticks();
     let frequency = timer.clock_frequency().hz();
     writeln!(
-            console,
-            "[{}] Waited roughly {:?}. Now is {:?} = {:#010x} ticks ({:?} ticks since last time at {} Hz)",
-            i,
-            PrettyTime::from_ms(i * DELAY_MS),
-            PrettyTime::from_ms(current_clock.ms_f64() as usize),
-            ticks,
-            previous_ticks.map(|previous| ticks - previous),
-            frequency
-        )?;
+        console,
+        "[{}] Waited roughly {}. Now is {} = {:#010x} ticks ({:?} ticks since last time at {} Hz)",
+        i,
+        PrettyTime::from_ms(i * DELAY_MS),
+        PrettyTime::from_ms(current_clock.ms_f64() as usize),
+        ticks,
+        previous_ticks.map(|previous| ticks - previous),
+        frequency
+    )?;
     *previous_ticks = Some(ticks);
     Ok(())
 }
@@ -64,7 +75,7 @@ impl PrettyTime {
     }
 }
 
-impl core::fmt::Debug for PrettyTime {
+impl core::fmt::Display for PrettyTime {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         if self.mins != 0 {
             write!(f, "{}m", self.mins)?
