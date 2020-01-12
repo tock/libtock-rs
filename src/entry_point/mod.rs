@@ -85,7 +85,7 @@ struct LayoutHeader {
 /// into the rustc-generated main(). This cannot use mutable global variables or
 /// global references to globals until it is done setting up the data segment.
 #[no_mangle]
-pub unsafe extern "C" fn rust_start(app_start: usize, stacktop: usize, app_heap_break: usize) -> ! {
+unsafe extern "C" fn rust_start(app_start: usize, stacktop: usize, app_heap_break: usize) -> ! {
     extern "C" {
         // This function is created internally by `rustc`. See
         // `src/lang_items.rs` for more details.
@@ -146,12 +146,9 @@ use core::alloc::Layout;
 use core::ptr::NonNull;
 use linked_list_allocator::Heap;
 
-#[global_allocator]
-static ALLOCATOR: TockAllocator = TockAllocator;
-
 static mut HEAP: Heap = Heap::empty();
 
-struct TockAllocator;
+pub struct TockAllocator;
 
 unsafe impl GlobalAlloc for TockAllocator {
     unsafe fn alloc(&self, layout: Layout) -> *mut u8 {

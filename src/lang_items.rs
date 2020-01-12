@@ -18,6 +18,7 @@
 //! `rustc_main`. That's covered by the `_start` function in the root of this
 //! crate.
 
+use crate::entry_point::TockAllocator;
 use crate::leds::LedsDriver;
 use crate::result::TockResult;
 use crate::timer::Duration;
@@ -81,6 +82,9 @@ async fn blink_all_leds(
         timer_driver.sleep(Duration::from_ms(100)).await?;
     }
 }
+
+#[global_allocator]
+static ALLOCATOR: TockAllocator = TockAllocator;
 
 #[alloc_error_handler]
 unsafe fn alloc_error_handler(_: Layout) -> ! {

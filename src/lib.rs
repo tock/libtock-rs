@@ -1,6 +1,11 @@
 #![feature(asm, alloc_error_handler, lang_items, naked_functions)]
 #![cfg_attr(any(target_arch = "arm", target_arch = "riscv32"), no_std)]
 
+mod drivers;
+mod entry_point;
+#[cfg(any(target_arch = "arm", target_arch = "riscv32"))]
+mod lang_items;
+
 pub mod adc;
 pub mod ble_composer;
 pub mod ble_parser;
@@ -18,19 +23,10 @@ pub mod rng;
 pub mod sensors;
 pub mod shared_memory;
 pub mod simple_ble;
+pub mod syscalls;
 pub mod temperature;
 pub mod timer;
 pub mod unwind_symbols;
 
-#[cfg(any(target_arch = "arm", target_arch = "riscv32"))]
-pub mod entry_point;
-
-#[cfg(any(target_arch = "arm", target_arch = "riscv32"))]
-mod lang_items;
-
-pub mod syscalls;
-
-pub use libtock_codegen::main;
-
-pub(crate) mod drivers;
 pub use drivers::*;
+pub use libtock_codegen::main;
