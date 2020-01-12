@@ -34,7 +34,3 @@ pub use libtock_codegen::main;
 
 pub(crate) mod drivers;
 pub use drivers::*;
-
-/// Dummy structure to force importing the panic_handler and other no_std elements when nothing else
-/// is imported.
-pub struct LibTock;
