@@ -10,25 +10,28 @@ use libtock::Drivers;
 /// Reads a 128 byte sample into a buffer and prints the first value to the console.
 async fn main() -> TockResult<()> {
     let Drivers {
+        mut adc_driver_factory,
         console_driver,
-        adc_driver,
         ..
     } = libtock::retrieve_drivers()?;
+
+    let adc_driver = adc_driver_factory.init_driver()?;
     let mut console = console_driver.create_console();
+
     let mut adc_buffer = AdcBuffer::default();
     let mut temp_buffer = [0; libtock::adc::BUFFER_SIZE];
 
-    let adc_buffer = libtock::adc::Adc::init_buffer(&mut adc_buffer)?;
+    let adc_buffer = adc_driver.init_buffer(&mut adc_buffer)?;
 
-    let mut with_callback = adc_driver.with_callback(|_, _| {
+    let mut callback = |_, _| {
         adc_buffer.read_bytes(&mut temp_buffer[..]);
         writeln!(console, "First sample in buffer: {}", temp_buffer[0]).unwrap();
-    });
+    };
 
-    let adc = with_callback.init()?;
+    let _subscription = adc_driver.subscribe(&mut callback)?;
 
     loop {
-        adc.sample_continuous_buffered(0, 128)?;
+        adc_driver.sample_continuous_buffered(0, 128)?;
         unsafe { syscalls::raw::yieldk() };
     }
 }

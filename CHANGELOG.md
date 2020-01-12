@@ -20,6 +20,7 @@
   - Buttons
   - GPIO
   - Temperature
+  - ADC (partially)
 - The timer API now supports concurrent sleep operations
 
 ### Syscalls

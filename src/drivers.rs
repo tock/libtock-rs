@@ -1,4 +1,4 @@
-use crate::adc::AdcDriver;
+use crate::adc::AdcDriverFactory;
 use crate::buttons::ButtonsDriverFactory;
 use crate::console::ConsoleDriver;
 use crate::gpio::GpioDriverFactory;
@@ -26,7 +26,7 @@ pub struct Drivers {
     pub gpio_driver_factory: GpioDriverFactory,
     pub temperature_driver_factory: TemperatureDriverFactory,
     pub buttons_driver_factory: ButtonsDriverFactory,
-    pub adc_driver: AdcDriver,
+    pub adc_driver_factory: AdcDriverFactory,
     pub rng_driver: RngDriver,
     pub ble_advertising_driver: BleAdvertisingDriver,
     pub ble_scanning_driver: BleScanningDriver,
@@ -56,7 +56,7 @@ pub unsafe fn retrieve_drivers_unsafe() -> Drivers {
 
 #[allow(clippy::declare_interior_mutable_const)]
 const DRIVERS: Drivers = Drivers {
-    adc_driver: AdcDriver,
+    adc_driver_factory: AdcDriverFactory,
     ble_advertising_driver: BleAdvertisingDriver,
     ble_scanning_driver: BleScanningDriver,
     buttons_driver_factory: ButtonsDriverFactory,

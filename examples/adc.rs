@@ -8,23 +8,25 @@ use libtock::Drivers;
 #[libtock::main]
 async fn main() -> TockResult<()> {
     let Drivers {
-        console_driver,
+        mut adc_driver_factory,
         timer_context,
-        adc_driver,
+        console_driver,
         ..
     } = libtock::retrieve_drivers()?;
 
+    let adc_driver = adc_driver_factory.init_driver()?;
     let mut driver = timer_context.create_timer_driver();
     let timer_driver = driver.activate()?;
     let mut console = console_driver.create_console();
-    let mut with_callback = adc_driver.with_callback(|channel: usize, value: usize| {
-        writeln!(console, "channel: {}, value: {}", channel, value).unwrap();
-    });
 
-    let adc = with_callback.init()?;
+    let mut callback = |channel, value| {
+        writeln!(console, "channel: {}, value: {}", channel, value).unwrap();
+    };
+
+    let _subscription = adc_driver.subscribe(&mut callback)?;
 
     loop {
-        adc.sample(0)?;
+        adc_driver.sample(0)?;
         timer_driver.sleep(Duration::from_ms(2000)).await?;
     }
 }
