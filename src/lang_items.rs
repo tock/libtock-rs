@@ -18,12 +18,12 @@
 //! `rustc_main`. That's covered by the `_start` function in the root of this
 //! crate.
 
+use crate::drivers;
 use crate::entry_point::TockAllocator;
 use crate::leds::LedsDriver;
 use crate::result::TockResult;
 use crate::timer::Duration;
 use crate::timer::ParallelSleepDriver;
-use crate::Drivers;
 use core::alloc::Layout;
 use core::executor;
 use core::panic::PanicInfo;
@@ -50,14 +50,10 @@ unsafe fn panic_handler(_info: &PanicInfo) -> ! {
 
     // Flash all LEDs (if available).
     executor::block_on(async {
-        let Drivers {
-            mut leds_driver_factory,
-            timer_context,
-            ..
-        } = crate::retrieve_drivers_unsafe();
+        let mut drivers = drivers::retrieve_drivers_unsafe();
 
-        let leds_driver = leds_driver_factory.init_driver();
-        let mut timer_driver = timer_context.create_timer_driver();
+        let leds_driver = drivers.leds.init_driver();
+        let mut timer_driver = drivers.timer.create_timer_driver();
         let timer_driver = timer_driver.activate();
 
         if let (Ok(leds_driver), Ok(timer_driver)) = (leds_driver, timer_driver) {
@@ -89,14 +85,10 @@ static ALLOCATOR: TockAllocator = TockAllocator;
 #[alloc_error_handler]
 unsafe fn alloc_error_handler(_: Layout) -> ! {
     executor::block_on(async {
-        let Drivers {
-            mut leds_driver_factory,
-            timer_context,
-            ..
-        } = crate::retrieve_drivers_unsafe();
+        let mut drivers = drivers::retrieve_drivers_unsafe();
 
-        let leds_driver = leds_driver_factory.init_driver();
-        let mut timer_driver = timer_context.create_timer_driver();
+        let leds_driver = drivers.leds.init_driver();
+        let mut timer_driver = drivers.timer.create_timer_driver();
         let timer_driver = timer_driver.activate();
 
         if let (Ok(leds_driver), Ok(timer_driver)) = (leds_driver, timer_driver) {

@@ -283,12 +283,10 @@ pub(crate) struct ActiveTimer {
 /// Context for the time driver.
 /// You can create a context as follows:
 /// ```no_run
-/// # use libtock::timer::DriverContext;
 /// # use libtock::result::TockResult;
-/// # use libtock::Drivers;
-/// # #[libtock::main]
-/// # async fn main() -> TockResult<()> {
-///  let Drivers {  timer_context, .. } = libtock::retrieve_drivers()?;
+/// # async fn doc() -> TockResult<()> {
+/// let mut drivers = libtock::retrieve_drivers()?;
+/// let mut timer_context = drivers.timer;
 /// # Ok(())
 /// # }
 /// ```
@@ -317,14 +315,12 @@ impl DriverContext {
 
 /// Timer driver instance. You can create a TimerDriver from a DriverContext as follows:
 /// ```no_run
-/// # use libtock::timer::DriverContext;
 /// # use libtock::result::TockResult;
-/// # use libtock::Drivers;
-/// # #[libtock::main]
-/// # async fn main() -> TockResult<()> {
-/// # let Drivers {  timer_context,.. } = libtock::retrieve_drivers()?;
-/// # let mut driver = timer_context.create_timer_driver();
-/// let timer_driver = driver.activate()?;
+/// # async fn doc() -> TockResult<()> {
+/// # let mut drivers = libtock::retrieve_drivers()?;
+/// # let mut timer_context = drivers.timer;
+/// let mut timer_driver = timer_context.create_timer_driver();
+/// let timer_driver = timer_driver.activate()?;
 /// # Ok(())
 /// # }
 /// ```
@@ -343,15 +339,12 @@ impl SubscribableCallback for Callback {
 /// active alarms.
 /// Example usage (sleep for 1 second):
 /// ```no_run
-/// # use libtock::timer::DriverContext;
 /// # use libtock::result::TockResult;
 /// # use libtock::timer::Duration;
-/// # use libtock::Drivers;
-/// # #[libtock::main]
-/// # async fn main() -> TockResult<()> {
-/// # let Drivers {  timer_context,.. } = libtock::retrieve_drivers()?;
-/// # let mut driver = timer_context.create_timer_driver();
-/// let timer_driver = driver.activate()?;
+/// # async fn doc() -> TockResult<()> {
+/// # let mut drivers = libtock::retrieve_drivers()?;
+/// # let mut timer_driver = drivers.timer.create_timer_driver();
+/// let timer_driver = timer_driver.activate()?;
 /// timer_driver.sleep(Duration::from_ms(1000)).await?;
 /// # Ok(())
 /// # }

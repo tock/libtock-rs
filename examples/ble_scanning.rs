@@ -6,7 +6,6 @@ use libtock::result::TockResult;
 use libtock::simple_ble;
 use libtock::simple_ble::BleCallback;
 use libtock::simple_ble::BleScanningDriver;
-use libtock::Drivers;
 use serde::Deserialize;
 
 #[derive(Deserialize)]
@@ -17,17 +16,13 @@ struct LedCommand {
 
 #[libtock::main]
 async fn main() -> TockResult<()> {
-    let Drivers {
-        mut ble_scanning_driver,
-        mut leds_driver_factory,
-        ..
-    } = libtock::retrieve_drivers()?;
+    let mut drivers = libtock::retrieve_drivers()?;
 
-    let leds_driver = leds_driver_factory.init_driver()?;
+    let leds_driver = drivers.leds.init_driver()?;
 
     let mut shared_buffer = BleScanningDriver::create_scan_buffer();
     let mut my_buffer = BleScanningDriver::create_scan_buffer();
-    let shared_memory = ble_scanning_driver.share_memory(&mut shared_buffer)?;
+    let shared_memory = drivers.ble_scanning.share_memory(&mut shared_buffer)?;
 
     let mut callback = BleCallback::new(|_: usize, _: usize| {
         shared_memory.read_bytes(&mut my_buffer[..]);
@@ -37,7 +32,7 @@ async fn main() -> TockResult<()> {
             .and_then(|msg| leds_driver.get(msg.nr as usize).map(|led| led.set(msg.st)));
     });
 
-    let _subscription = ble_scanning_driver.start(&mut callback)?;
+    let _subscription = drivers.ble_scanning.start(&mut callback)?;
 
     future::pending().await
 }

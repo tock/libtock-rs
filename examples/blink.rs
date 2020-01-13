@@ -2,18 +2,13 @@
 
 use libtock::result::TockResult;
 use libtock::timer::Duration;
-use libtock::Drivers;
 
 #[libtock::main]
 async fn main() -> TockResult<()> {
-    let Drivers {
-        mut leds_driver_factory,
-        mut timer_context,
-        ..
-    } = libtock::retrieve_drivers()?;
+    let mut drivers = libtock::retrieve_drivers()?;
 
-    let leds_driver = leds_driver_factory.init_driver()?;
-    let mut timer_driver = timer_context.create_timer_driver();
+    let leds_driver = drivers.leds.init_driver()?;
+    let mut timer_driver = drivers.timer.create_timer_driver();
     let timer_driver = timer_driver.activate()?;
 
     // Blink the LEDs in a binary count pattern and scale

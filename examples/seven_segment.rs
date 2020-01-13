@@ -3,7 +3,6 @@
 use libtock::electronics::ShiftRegister;
 use libtock::result::TockResult;
 use libtock::timer::Duration;
-use libtock::Drivers;
 
 fn number_to_bits(n: u8) -> [bool; 8] {
     match n {
@@ -24,13 +23,9 @@ fn number_to_bits(n: u8) -> [bool; 8] {
 // Example works on a shift register on P0.03, P0.04, P0.28
 #[libtock::main]
 async fn main() -> TockResult<()> {
-    let Drivers {
-        mut gpio_driver_factory,
-        mut timer_context,
-        ..
-    } = libtock::retrieve_drivers()?;
+    let mut drivers = libtock::retrieve_drivers()?;
 
-    let mut gpio_driver = gpio_driver_factory.init_driver()?;
+    let mut gpio_driver = drivers.gpio.init_driver()?;
     let mut gpios = gpio_driver.gpios();
     let mut gpio0 = gpios.next().unwrap();
     let gpio0 = gpio0.enable_output()?;
@@ -40,7 +35,7 @@ async fn main() -> TockResult<()> {
     let gpio2 = gpio2.enable_output()?;
     let mut shift_register = ShiftRegister::new(&gpio0, &gpio1, &gpio2);
 
-    let mut driver = timer_context.create_timer_driver();
+    let mut driver = drivers.timer.create_timer_driver();
     let timer_driver = driver.activate()?;
 
     let mut i = 0;

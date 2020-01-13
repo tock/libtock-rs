@@ -1,7 +1,6 @@
 #![feature(asm, alloc_error_handler, lang_items, naked_functions)]
 #![cfg_attr(any(target_arch = "arm", target_arch = "riscv32"), no_std)]
 
-mod drivers;
 mod entry_point;
 #[cfg(any(target_arch = "arm", target_arch = "riscv32"))]
 mod lang_items;
@@ -13,6 +12,7 @@ pub mod buttons;
 pub mod callback;
 pub mod console;
 pub mod debug;
+pub mod drivers;
 pub mod electronics;
 pub mod futures;
 pub mod gpio;
@@ -28,5 +28,5 @@ pub mod temperature;
 pub mod timer;
 pub mod unwind_symbols;
 
-pub use drivers::*;
+pub use drivers::retrieve_drivers;
 pub use libtock_codegen::main;

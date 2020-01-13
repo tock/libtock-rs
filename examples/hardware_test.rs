@@ -15,7 +15,6 @@ use libtock::gpio::ResistorMode;
 use libtock::result::TockResult;
 use libtock::timer::DriverContext;
 use libtock::timer::Duration;
-use libtock::Drivers;
 
 static mut STATIC: usize = 0;
 
@@ -37,15 +36,10 @@ impl MyTrait for String {
 
 #[libtock::main]
 async fn main() -> TockResult<()> {
-    let Drivers {
-        mut gpio_driver_factory,
-        mut timer_context,
-        console_driver,
-        ..
-    } = libtock::retrieve_drivers()?;
+    let mut drivers = libtock::retrieve_drivers()?;
 
-    let mut gpio_driver = gpio_driver_factory.init_driver()?;
-    let mut console = console_driver.create_console();
+    let mut gpio_driver = drivers.gpio.init_driver()?;
+    let mut console = drivers.console.create_console();
 
     let mut gpios = gpio_driver.gpios();
     let mut pin_in = gpios.next().unwrap();
@@ -63,7 +57,7 @@ async fn main() -> TockResult<()> {
 
     test_trait_objects(&mut console, &pin_in, &mut pin_out)?;
 
-    test_callbacks_and_wait_forever(&mut console, &mut timer_context).await
+    test_callbacks_and_wait_forever(&mut console, &mut drivers.timer).await
 }
 
 fn test_heap(console: &mut Console) {

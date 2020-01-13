@@ -4,19 +4,14 @@ use core::fmt::Write;
 use libtock::adc::AdcBuffer;
 use libtock::result::TockResult;
 use libtock::syscalls;
-use libtock::Drivers;
 
 #[libtock::main]
 /// Reads a 128 byte sample into a buffer and prints the first value to the console.
 async fn main() -> TockResult<()> {
-    let Drivers {
-        mut adc_driver_factory,
-        console_driver,
-        ..
-    } = libtock::retrieve_drivers()?;
+    let mut drivers = libtock::retrieve_drivers()?;
 
-    let adc_driver = adc_driver_factory.init_driver()?;
-    let mut console = console_driver.create_console();
+    let adc_driver = drivers.adc.init_driver()?;
+    let mut console = drivers.console.create_console();
 
     let mut adc_buffer = AdcBuffer::default();
     let mut temp_buffer = [0; libtock::adc::BUFFER_SIZE];

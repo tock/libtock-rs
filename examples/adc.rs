@@ -3,21 +3,15 @@
 use core::fmt::Write;
 use libtock::result::TockResult;
 use libtock::timer::Duration;
-use libtock::Drivers;
 
 #[libtock::main]
 async fn main() -> TockResult<()> {
-    let Drivers {
-        mut adc_driver_factory,
-        mut timer_context,
-        console_driver,
-        ..
-    } = libtock::retrieve_drivers()?;
+    let mut drivers = libtock::retrieve_drivers()?;
 
-    let adc_driver = adc_driver_factory.init_driver()?;
-    let mut driver = timer_context.create_timer_driver();
-    let timer_driver = driver.activate()?;
-    let mut console = console_driver.create_console();
+    let adc_driver = drivers.adc.init_driver()?;
+    let mut timer_driver = drivers.timer.create_timer_driver();
+    let timer_driver = timer_driver.activate()?;
+    let mut console = drivers.console.create_console();
 
     let mut callback = |channel, value| {
         writeln!(console, "channel: {}, value: {}", channel, value).unwrap();
