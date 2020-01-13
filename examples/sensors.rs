@@ -9,17 +9,18 @@ use libtock::Drivers;
 #[libtock::main]
 async fn main() -> TockResult<()> {
     let Drivers {
-        console_driver,
-        timer_context,
         mut temperature_sensor,
         mut humidity_sensor,
         mut ambient_light_sensor,
         mut ninedof_driver,
+        mut timer_context,
+        console_driver,
         ..
     } = libtock::retrieve_drivers()?;
+
+    let mut timer_driver = timer_context.create_timer_driver();
+    let timer_driver = timer_driver.activate()?;
     let mut console = console_driver.create_console();
-    let mut driver = timer_context.create_timer_driver();
-    let timer_driver = driver.activate()?;
 
     loop {
         writeln!(console, "Humidity:    {}\n", humidity_sensor.read()?)?;

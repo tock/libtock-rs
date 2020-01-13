@@ -19,6 +19,7 @@ async fn main() -> TockResult<()> {
         console_driver,
         ..
     } = libtock::retrieve_drivers()?;
+
     let mut console = console_driver.create_console();
 
     let mut previous_ticks = None;

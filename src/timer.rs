@@ -299,10 +299,10 @@ pub struct DriverContext {
 
 impl DriverContext {
     /// Create a driver timer from a context.
-    pub fn create_timer_driver(&self) -> TimerDriver<'_> {
+    pub fn create_timer_driver(&mut self) -> TimerDriver {
         TimerDriver {
             callback: Callback,
-            context: &self,
+            context: self,
         }
     }
 

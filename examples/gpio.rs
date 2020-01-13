@@ -9,7 +9,7 @@ use libtock::Drivers;
 async fn main() -> TockResult<()> {
     let Drivers {
         mut gpio_driver_factory,
-        timer_context,
+        mut timer_context,
         ..
     } = libtock::retrieve_drivers()?;
 

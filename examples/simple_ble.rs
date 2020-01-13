@@ -19,7 +19,7 @@ async fn main() -> TockResult<()> {
     let Drivers {
         mut leds_driver_factory,
         mut ble_advertising_driver,
-        timer_context,
+        mut timer_context,
         ..
     } = libtock::retrieve_drivers()?;
 

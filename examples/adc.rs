@@ -9,7 +9,7 @@ use libtock::Drivers;
 async fn main() -> TockResult<()> {
     let Drivers {
         mut adc_driver_factory,
-        timer_context,
+        mut timer_context,
         console_driver,
         ..
     } = libtock::retrieve_drivers()?;
