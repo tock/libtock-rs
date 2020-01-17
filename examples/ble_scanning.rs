@@ -29,7 +29,12 @@ async fn main() -> TockResult<()> {
         ble_parser::find(&my_buffer, simple_ble::gap_data::SERVICE_DATA as u8)
             .and_then(|service_data| ble_parser::extract_for_service([91, 79], service_data))
             .and_then(|payload| corepack::from_bytes::<LedCommand>(&payload).ok())
-            .and_then(|msg| leds_driver.get(msg.nr as usize).map(|led| led.set(msg.st)));
+            .and_then(|msg| {
+                leds_driver
+                    .get(msg.nr as usize)
+                    .map(|led| led.set(msg.st))
+                    .into()
+            });
     });
 
     let _subscription = drivers.ble_scanning.start(&mut callback)?;

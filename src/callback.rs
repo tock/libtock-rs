@@ -46,7 +46,7 @@ pub struct CallbackSubscription<'a> {
 }
 
 impl<'a> CallbackSubscription<'a> {
-    pub fn new(driver_number: usize, subscribe_number: usize) -> CallbackSubscription<'a> {
+    pub(crate) fn new(driver_number: usize, subscribe_number: usize) -> CallbackSubscription<'a> {
         CallbackSubscription {
             driver_number,
             subscribe_number,

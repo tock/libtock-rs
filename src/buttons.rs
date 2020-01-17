@@ -1,6 +1,7 @@
 use crate::callback::CallbackSubscription;
 use crate::callback::Consumer;
 use crate::result::OtherError;
+use crate::result::OutOfRangeError;
 use crate::result::TockResult;
 use crate::syscalls;
 use core::marker::PhantomData;
@@ -41,14 +42,15 @@ impl<'a> ButtonsDriver<'a> {
         self.num_buttons
     }
 
-    pub fn get(&self, button_num: usize) -> Option<Button> {
+    /// Returns the button at 0-based index `button_num`
+    pub fn get(&self, button_num: usize) -> Result<Button, OutOfRangeError> {
         if button_num < self.num_buttons {
-            Some(Button {
+            Ok(Button {
                 button_num,
                 lifetime: PhantomData,
             })
         } else {
-            None
+            Err(OutOfRangeError)
         }
     }
 

@@ -12,7 +12,7 @@ async fn main() -> TockResult<()> {
     let leds_driver = drivers.leds.init_driver()?;
 
     let mut callback = |button_num, state| {
-        if let (ButtonState::Pressed, Some(led)) = (state, leds_driver.get(button_num)) {
+        if let (ButtonState::Pressed, Ok(led)) = (state, leds_driver.get(button_num)) {
             led.toggle().ok().unwrap();
         }
     };

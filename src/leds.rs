@@ -1,3 +1,4 @@
+use crate::result::OutOfRangeError;
 use crate::result::TockResult;
 use crate::syscalls::command;
 use core::marker::PhantomData;
@@ -42,14 +43,15 @@ impl<'a> LedsDriver<'a> {
         }
     }
 
-    pub fn get(&self, led_num: usize) -> Option<Led> {
+    /// Returns the led at 0-based index `led_num`
+    pub fn get(&self, led_num: usize) -> Result<Led, OutOfRangeError> {
         if led_num < self.num_leds {
-            Some(Led {
+            Ok(Led {
                 led_num,
                 lifetime: PhantomData,
             })
         } else {
-            None
+            Err(OutOfRangeError)
         }
     }
 }

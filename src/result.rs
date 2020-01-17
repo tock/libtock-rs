@@ -72,11 +72,20 @@ pub enum OtherError {
     TimerDriverDurationOutOfRange,
     TimerDriverErroneousClockFrequency,
     DriverAlreadyTaken,
+    OutOfRangeError,
 }
 
 impl From<OtherError> for TockError {
     fn from(other: OtherError) -> Self {
         TockError::Other(other)
+    }
+}
+
+pub struct OutOfRangeError;
+
+impl From<OutOfRangeError> for TockError {
+    fn from(_other: OutOfRangeError) -> Self {
+        TockError::Other(OtherError::OutOfRangeError)
     }
 }
 
