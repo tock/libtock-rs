@@ -5,7 +5,6 @@ use crate::gpio::GpioDriverFactory;
 use crate::leds::LedsDriverFactory;
 use crate::result::OtherError;
 use crate::result::TockError;
-use crate::result::TockResult;
 use crate::rng::RngDriver;
 use crate::sensors::ninedof::NinedofDriver;
 use crate::sensors::AmbientLightSensor;
@@ -37,12 +36,12 @@ pub struct Drivers {
 }
 
 /// Retrieve [Drivers] struct. Returns struct only once.
-pub fn retrieve_drivers() -> TockResult<Drivers> {
+pub fn retrieve_drivers() -> Result<Drivers, DriversAlreadyTakenError> {
     static mut DRIVER_TAKEN: bool = false;
 
     unsafe {
         if DRIVER_TAKEN {
-            Err(TockError::Other(OtherError::DriverAlreadyTaken))
+            Err(DriversAlreadyTakenError)
         } else {
             DRIVER_TAKEN = true;
             Ok(retrieve_drivers_unsafe())
@@ -79,3 +78,11 @@ const DRIVERS: Drivers = Drivers {
     humidity_sensor: HumiditySensor,
     ninedof: NinedofDriver,
 };
+
+pub struct DriversAlreadyTakenError;
+
+impl From<DriversAlreadyTakenError> for TockError {
+    fn from(_: DriversAlreadyTakenError) -> Self {
+        TockError::Other(OtherError::DriversAlreadyTaken)
+    }
+}
