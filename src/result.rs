@@ -67,15 +67,25 @@ impl From<fmt::Error> for TockError {
 
 #[derive(Copy, Clone)]
 pub enum OtherError {
+    ButtonsDriverInvalidState,
+    GpioDriverInvalidState,
     TimerDriverDurationOutOfRange,
     TimerDriverErroneousClockFrequency,
     DriverAlreadyTaken,
-    NotEnoughGpioPins,
+    OutOfRangeError,
 }
 
 impl From<OtherError> for TockError {
     fn from(other: OtherError) -> Self {
         TockError::Other(other)
+    }
+}
+
+pub struct OutOfRangeError;
+
+impl From<OutOfRangeError> for TockError {
+    fn from(_other: OutOfRangeError) -> Self {
+        TockError::Other(OtherError::OutOfRangeError)
     }
 }
 

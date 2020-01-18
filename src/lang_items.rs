@@ -18,10 +18,12 @@
 //! `rustc_main`. That's covered by the `_start` function in the root of this
 //! crate.
 
-use crate::led::LedDriver;
+use crate::drivers;
+use crate::entry_point::TockAllocator;
+use crate::leds::LedsDriver;
+use crate::result::TockResult;
 use crate::timer::Duration;
 use crate::timer::ParallelSleepDriver;
-use crate::Drivers;
 use core::alloc::Layout;
 use core::executor;
 use core::panic::PanicInfo;
@@ -48,63 +50,63 @@ unsafe fn panic_handler(_info: &PanicInfo) -> ! {
 
     // Flash all LEDs (if available).
     executor::block_on(async {
-        let Drivers {
-            led_driver_factory,
-            timer_context,
-            ..
-        } = crate::retrieve_drivers_unsafe();
-        let mut driver = timer_context.create_timer_driver();
-        let timer_driver = driver.activate().ok();
-        let led_driver = led_driver_factory.create_driver().ok();
-        if let (Some(ref led_driver), Some(ref timer_driver)) = (led_driver, timer_driver) {
-            blink_all_leds(timer_driver, led_driver).await;
+        let mut drivers = drivers::retrieve_drivers_unsafe();
+
+        let leds_driver = drivers.leds.init_driver();
+        let mut timer_driver = drivers.timer.create_timer_driver();
+        let timer_driver = timer_driver.activate();
+
+        if let (Ok(leds_driver), Ok(timer_driver)) = (leds_driver, timer_driver) {
+            let _ = blink_all_leds(&leds_driver, &timer_driver).await;
         }
         loop {}
-    });
-    // Never type is not supported for T in Future
-    unreachable!()
+    })
 }
 
-async fn blink_all_leds(timer_driver: &ParallelSleepDriver<'_>, led_driver: &LedDriver) {
+async fn blink_all_leds(
+    leds_driver: &LedsDriver<'_>,
+    timer_driver: &ParallelSleepDriver<'_>,
+) -> TockResult<()> {
     loop {
-        for led in led_driver.all() {
-            let _ = led.on();
+        for led in leds_driver.leds() {
+            led.on()?;
         }
-        let _ = timer_driver.sleep(Duration::from_ms(100)).await;
-        for led in led_driver.all() {
-            let _ = led.off();
+        timer_driver.sleep(Duration::from_ms(100)).await?;
+        for led in leds_driver.leds() {
+            led.off()?;
         }
-        let _ = timer_driver.sleep(Duration::from_ms(100)).await;
+        timer_driver.sleep(Duration::from_ms(100)).await?;
     }
 }
+
+#[global_allocator]
+static ALLOCATOR: TockAllocator = TockAllocator;
 
 #[alloc_error_handler]
 unsafe fn alloc_error_handler(_: Layout) -> ! {
     executor::block_on(async {
-        let Drivers {
-            led_driver_factory,
-            timer_context,
-            ..
-        } = crate::retrieve_drivers_unsafe();
-        let mut driver = timer_context.create_timer_driver();
-        let timer_driver = driver.activate().ok();
-        let led_driver = led_driver_factory.create_driver().ok();
+        let mut drivers = drivers::retrieve_drivers_unsafe();
 
-        if let (Some(led_driver), Some(timer_driver)) = (led_driver, timer_driver) {
-            cycle_all_leds(&timer_driver, &led_driver).await;
+        let leds_driver = drivers.leds.init_driver();
+        let mut timer_driver = drivers.timer.create_timer_driver();
+        let timer_driver = timer_driver.activate();
+
+        if let (Ok(leds_driver), Ok(timer_driver)) = (leds_driver, timer_driver) {
+            let _ = cycle_all_leds(&leds_driver, &timer_driver).await;
         }
         loop {}
-    });
-    // Never type is not supported for T in Future
-    unreachable!()
+    })
 }
 
-async fn cycle_all_leds(timer_driver: &ParallelSleepDriver<'_>, led_driver: &LedDriver) {
+async fn cycle_all_leds(
+    leds_driver: &LedsDriver<'_>,
+    timer_driver: &ParallelSleepDriver<'_>,
+) -> TockResult<()> {
     loop {
-        for led in led_driver.all() {
-            let _ = led.on();
-            let _ = timer_driver.sleep(Duration::from_ms(100)).await;
-            let _ = led.off();
+        for led in leds_driver.leds() {
+            led.on()?;
+            timer_driver.sleep(Duration::from_ms(100)).await?;
+            led.off()?;
         }
     }
 }

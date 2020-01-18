@@ -7,7 +7,7 @@
 mod platform;
 
 use crate::callback::CallbackSubscription;
-use crate::callback::SubscribableCallback;
+use crate::callback::Consumer;
 use crate::result::AllowError;
 use crate::result::CommandError;
 use crate::result::SubscribeError;
@@ -33,26 +33,26 @@ pub mod raw {
     }
 }
 
-pub fn subscribe<CB: SubscribableCallback>(
+pub fn subscribe<C: Consumer<T>, T>(
     driver_number: usize,
     subscribe_number: usize,
-    callback: &mut CB,
+    payload: &mut T,
 ) -> Result<CallbackSubscription, SubscribeError> {
-    extern "C" fn c_callback<CB: SubscribableCallback>(
+    extern "C" fn c_callback<T, C: Consumer<T>>(
         arg1: usize,
         arg2: usize,
         arg3: usize,
         data: usize,
     ) {
-        let callback = unsafe { &mut *(data as *mut CB) };
-        callback.call_rust(arg1, arg2, arg3);
+        let payload = unsafe { &mut *(data as *mut T) };
+        C::consume(payload, arg1, arg2, arg3);
     }
 
     subscribe_fn(
         driver_number,
         subscribe_number,
-        c_callback::<CB>,
-        callback as *mut CB as usize,
+        c_callback::<T, C>,
+        payload as *mut _ as usize,
     )
     .map(|_| CallbackSubscription::new(driver_number, subscribe_number))
 }

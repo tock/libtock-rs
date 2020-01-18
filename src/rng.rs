@@ -1,3 +1,4 @@
+use crate::callback::Identity0Consumer;
 use crate::futures;
 use crate::result::TockResult;
 use crate::syscalls;
@@ -26,8 +27,8 @@ impl RngDriver {
         let buf_len = buf.len();
         let shared_memory = syscalls::allow(DRIVER_NUMBER, allow_nr::SHARE_BUFFER, buf)?;
         let is_filled = Cell::new(false);
-        let mut is_filled_alarm = |_, _, _| is_filled.set(true);
-        let subscription = syscalls::subscribe(
+        let mut is_filled_alarm = || is_filled.set(true);
+        let subscription = syscalls::subscribe::<Identity0Consumer, _>(
             DRIVER_NUMBER,
             subscribe_nr::BUFFER_FILLED,
             &mut is_filled_alarm,

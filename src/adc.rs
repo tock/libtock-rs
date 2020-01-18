@@ -1,9 +1,11 @@
-use crate::callback::{CallbackSubscription, SubscribableCallback};
+use crate::callback::CallbackSubscription;
+use crate::callback::Consumer;
 use crate::result::TockResult;
 use crate::shared_memory::SharedMemory;
 use crate::syscalls;
+use core::marker::PhantomData;
 
-pub const DRIVER_NUM: usize = 0x0005;
+pub const DRIVER_NUMBER: usize = 0x0005;
 pub const BUFFER_SIZE: usize = 128;
 
 mod command_nr {
@@ -25,11 +27,16 @@ mod allow_nr {
 }
 
 #[non_exhaustive]
-pub struct AdcDriver;
+pub struct AdcDriverFactory;
 
-impl AdcDriver {
-    pub fn with_callback<CB>(self, callback: CB) -> WithCallback<CB> {
-        WithCallback { callback }
+impl AdcDriverFactory {
+    pub fn init_driver(&mut self) -> TockResult<Adc> {
+        let adc = Adc {
+            // num_channels
+            num_channels: syscalls::command(DRIVER_NUMBER, command_nr::COUNT, 0, 0)?,
+            lifetime: PhantomData,
+        };
+        Ok(adc)
     }
 }
 
@@ -47,65 +54,61 @@ impl Default for AdcBuffer {
 }
 
 pub struct Adc<'a> {
-    count: usize,
-    #[allow(dead_code)] // Used in drop
-    subscription: CallbackSubscription<'a>,
+    num_channels: usize,
+    lifetime: PhantomData<&'a ()>,
 }
 
-pub struct WithCallback<CB> {
-    callback: CB,
-}
+struct AdcEventConsumer;
 
-impl<CB: FnMut(usize, usize)> SubscribableCallback for WithCallback<CB> {
-    fn call_rust(&mut self, _: usize, channel: usize, value: usize) {
-        (self.callback)(channel, value);
-    }
-}
-
-impl<'a, CB> WithCallback<CB>
-where
-    Self: SubscribableCallback,
-{
-    pub fn init(&mut self) -> TockResult<Adc> {
-        let adc = Adc {
-            count: syscalls::command(DRIVER_NUM, command_nr::COUNT, 0, 0)?,
-            subscription: syscalls::subscribe(DRIVER_NUM, subscribe_nr::SUBSCRIBE_CALLBACK, self)?,
-        };
-        Ok(adc)
+impl<CB: FnMut(usize, usize)> Consumer<CB> for AdcEventConsumer {
+    fn consume(data: &mut CB, _: usize, channel: usize, value: usize) {
+        data(channel, value);
     }
 }
 
 impl<'a> Adc<'a> {
-    pub fn init_buffer(buffer: &'a mut AdcBuffer) -> TockResult<SharedMemory> {
-        syscalls::allow(DRIVER_NUM, allow_nr::BUFFER, &mut buffer.buffer).map_err(Into::into)
+    pub fn init_buffer(&self, buffer: &'a mut AdcBuffer) -> TockResult<SharedMemory> {
+        syscalls::allow(DRIVER_NUMBER, allow_nr::BUFFER, &mut buffer.buffer).map_err(Into::into)
     }
 
-    pub fn init_alt_buffer(alt_buffer: &'a mut AdcBuffer) -> TockResult<SharedMemory> {
-        syscalls::allow(DRIVER_NUM, allow_nr::BUFFER_ALT, &mut alt_buffer.buffer)
+    pub fn init_alt_buffer(&self, alt_buffer: &'a mut AdcBuffer) -> TockResult<SharedMemory> {
+        syscalls::allow(DRIVER_NUMBER, allow_nr::BUFFER_ALT, &mut alt_buffer.buffer)
             .map_err(Into::into)
     }
 
     /// Return the number of available channels
     pub fn count(&self) -> usize {
-        self.count
+        self.num_channels
+    }
+
+    pub fn subscribe<CB: FnMut(usize, usize)>(
+        &self,
+        callback: &'a mut CB,
+    ) -> TockResult<CallbackSubscription> {
+        syscalls::subscribe::<AdcEventConsumer, _>(
+            DRIVER_NUMBER,
+            subscribe_nr::SUBSCRIBE_CALLBACK,
+            callback,
+        )
+        .map_err(Into::into)
     }
 
     /// Start a single sample of channel
     pub fn sample(&self, channel: usize) -> TockResult<()> {
-        syscalls::command(DRIVER_NUM, command_nr::START, channel, 0)?;
+        syscalls::command(DRIVER_NUMBER, command_nr::START, channel, 0)?;
         Ok(())
     }
 
     /// Start continuous sampling of channel
     pub fn sample_continuous(&self, channel: usize) -> TockResult<()> {
-        syscalls::command(DRIVER_NUM, command_nr::START_REPEAT, channel, 0)?;
+        syscalls::command(DRIVER_NUMBER, command_nr::START_REPEAT, channel, 0)?;
         Ok(())
     }
 
     /// Start continuous sampling to first buffer
     pub fn sample_continuous_buffered(&self, channel: usize, frequency: usize) -> TockResult<()> {
         syscalls::command(
-            DRIVER_NUM,
+            DRIVER_NUMBER,
             command_nr::START_REPEAT_BUFFER,
             channel,
             frequency,
@@ -120,7 +123,7 @@ impl<'a> Adc<'a> {
         frequency: usize,
     ) -> TockResult<()> {
         syscalls::command(
-            DRIVER_NUM,
+            DRIVER_NUMBER,
             command_nr::START_REPEAT_BUFFER_ALT,
             channel,
             frequency,
@@ -130,7 +133,7 @@ impl<'a> Adc<'a> {
 
     /// Stop any started sampling operation
     pub fn stop(&self) -> TockResult<()> {
-        syscalls::command(DRIVER_NUM, command_nr::STOP, 0, 0)?;
+        syscalls::command(DRIVER_NUMBER, command_nr::STOP, 0, 0)?;
         Ok(())
     }
 }

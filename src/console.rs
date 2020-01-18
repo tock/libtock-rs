@@ -1,3 +1,4 @@
+use crate::callback::Identity0Consumer;
 use crate::futures;
 use crate::result::TockResult;
 use crate::syscalls;
@@ -56,8 +57,8 @@ impl Console {
         )?;
 
         let is_written = Cell::new(false);
-        let mut is_written_alarm = |_, _, _| is_written.set(true);
-        let subscription = syscalls::subscribe(
+        let mut is_written_alarm = || is_written.set(true);
+        let subscription = syscalls::subscribe::<Identity0Consumer, _>(
             DRIVER_NUMBER,
             subscribe_nr::SET_ALARM,
             &mut is_written_alarm,

@@ -1,7 +1,7 @@
 //! Async timer driver. Can be used for (non-busy)  sleeping.
 
 use crate::callback::CallbackSubscription;
-use crate::callback::SubscribableCallback;
+use crate::callback::Consumer;
 use crate::futures;
 use crate::result::OtherError;
 use crate::result::TockError;
@@ -33,22 +33,21 @@ pub struct WithCallback<'a, CB> {
     phantom: PhantomData<&'a mut ()>,
 }
 
-impl<CB: FnMut(ClockValue, Alarm)> SubscribableCallback for WithCallback<'_, CB> {
-    fn call_rust(&mut self, clock_value: usize, alarm_id: usize, _: usize) {
-        (self.callback)(
+struct TimerEventConsumer;
+
+impl<CB: FnMut(ClockValue, Alarm)> Consumer<WithCallback<'_, CB>> for TimerEventConsumer {
+    fn consume(data: &mut WithCallback<CB>, clock_value: usize, alarm_id: usize, _: usize) {
+        (data.callback)(
             ClockValue {
                 num_ticks: clock_value as isize,
-                clock_frequency: self.clock_frequency,
+                clock_frequency: data.clock_frequency,
             },
             Alarm { alarm_id },
         );
     }
 }
 
-impl<'a, CB> WithCallback<'a, CB>
-where
-    Self: SubscribableCallback,
-{
+impl<'a, CB: FnMut(ClockValue, Alarm)> WithCallback<'a, CB> {
     pub fn init(&'a mut self) -> TockResult<Timer<'a>> {
         let num_notifications =
             syscalls::command(DRIVER_NUMBER, command_nr::IS_DRIVER_AVAILABLE, 0, 0)?;
@@ -64,8 +63,11 @@ where
             hz: clock_frequency,
         };
 
-        let subscription =
-            syscalls::subscribe(DRIVER_NUMBER, subscribe_nr::SUBSCRIBE_CALLBACK, self)?;
+        let subscription = syscalls::subscribe::<TimerEventConsumer, _>(
+            DRIVER_NUMBER,
+            subscribe_nr::SUBSCRIBE_CALLBACK,
+            self,
+        )?;
 
         Ok(Timer {
             num_notifications,
@@ -286,12 +288,10 @@ pub(crate) struct ActiveTimer {
 /// Context for the time driver.
 /// You can create a context as follows:
 /// ```no_run
-/// # use libtock::timer::DriverContext;
 /// # use libtock::result::TockResult;
-/// # use libtock::Drivers;
-/// # #[libtock::main]
-/// # async fn main() -> TockResult<()> {
-///  let Drivers {  timer_context, .. } = libtock::retrieve_drivers()?;
+/// # async fn doc() -> TockResult<()> {
+/// let mut drivers = libtock::retrieve_drivers()?;
+/// let mut timer_context = drivers.timer;
 /// # Ok(())
 /// # }
 /// ```
@@ -302,10 +302,10 @@ pub struct DriverContext {
 
 impl DriverContext {
     /// Create a driver timer from a context.
-    pub fn create_timer_driver(&self) -> TimerDriver<'_> {
+    pub fn create_timer_driver(&mut self) -> TimerDriver {
         TimerDriver {
             callback: Callback,
-            context: &self,
+            context: self,
         }
     }
 
@@ -320,14 +320,12 @@ impl DriverContext {
 
 /// Timer driver instance. You can create a TimerDriver from a DriverContext as follows:
 /// ```no_run
-/// # use libtock::timer::DriverContext;
 /// # use libtock::result::TockResult;
-/// # use libtock::Drivers;
-/// # #[libtock::main]
-/// # async fn main() -> TockResult<()> {
-/// # let Drivers {  timer_context,.. } = libtock::retrieve_drivers()?;
-/// # let mut driver = timer_context.create_timer_driver();
-/// let timer_driver = driver.activate()?;
+/// # async fn doc() -> TockResult<()> {
+/// # let mut drivers = libtock::retrieve_drivers()?;
+/// # let mut timer_context = drivers.timer;
+/// let mut timer_driver = timer_context.create_timer_driver();
+/// let timer_driver = timer_driver.activate()?;
 /// # Ok(())
 /// # }
 /// ```
@@ -338,23 +336,22 @@ pub struct TimerDriver<'a> {
 
 struct Callback;
 
-impl SubscribableCallback for Callback {
-    fn call_rust(&mut self, _: usize, _: usize, _: usize) {}
+struct ParallelTimerConsumer;
+
+impl<'a> Consumer<Callback> for ParallelTimerConsumer {
+    fn consume(_: &mut Callback, _: usize, _: usize, _: usize) {}
 }
 
 /// Activated time driver. Updates current time in the context and manages
 /// active alarms.
 /// Example usage (sleep for 1 second):
 /// ```no_run
-/// # use libtock::timer::DriverContext;
 /// # use libtock::result::TockResult;
 /// # use libtock::timer::Duration;
-/// # use libtock::Drivers;
-/// # #[libtock::main]
-/// # async fn main() -> TockResult<()> {
-/// # let Drivers {  timer_context,.. } = libtock::retrieve_drivers()?;
-/// # let mut driver = timer_context.create_timer_driver();
-/// let timer_driver = driver.activate()?;
+/// # async fn doc() -> TockResult<()> {
+/// # let mut drivers = libtock::retrieve_drivers()?;
+/// # let mut timer_driver = drivers.timer.create_timer_driver();
+/// let timer_driver = timer_driver.activate()?;
 /// timer_driver.sleep(Duration::from_ms(1000)).await?;
 /// # Ok(())
 /// # }
@@ -368,7 +365,7 @@ impl<'a> TimerDriver<'a> {
     /// Activate the timer driver, will return a ParallelSleepDriver which
     /// can used to sleep.
     pub fn activate(&'a mut self) -> TockResult<ParallelSleepDriver<'a>> {
-        let subscription = syscalls::subscribe(
+        let subscription = syscalls::subscribe::<ParallelTimerConsumer, _>(
             DRIVER_NUMBER,
             subscribe_nr::SUBSCRIBE_CALLBACK,
             &mut self.callback,

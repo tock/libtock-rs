@@ -2,25 +2,22 @@
 
 use libtock::result::TockResult;
 use libtock::timer::Duration;
-use libtock::Drivers;
 
 // Example works on P0.03
 #[libtock::main]
 async fn main() -> TockResult<()> {
-    let Drivers {
-        timer_context,
-        gpio_driver,
-        ..
-    } = libtock::retrieve_drivers()?;
-    let pin = gpio_driver.pin(0)?;
-    let pin = pin.open_for_write()?;
-    let mut driver = timer_context.create_timer_driver();
-    let timer_driver = driver.activate()?;
+    let mut drivers = libtock::retrieve_drivers()?;
 
+    let mut gpio_driver = drivers.gpio.init_driver()?;
+    let mut timer_driver = drivers.timer.create_timer_driver();
+    let timer_driver = timer_driver.activate()?;
+
+    let mut gpio = gpio_driver.gpios().next().unwrap();
+    let gpio_out = gpio.enable_output()?;
     loop {
-        pin.set_high()?;
+        gpio_out.set_high()?;
         timer_driver.sleep(Duration::from_ms(500)).await?;
-        pin.set_low()?;
+        gpio_out.set_low()?;
         timer_driver.sleep(Duration::from_ms(500)).await?;
     }
 }

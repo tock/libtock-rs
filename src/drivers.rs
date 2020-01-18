@@ -1,8 +1,8 @@
-use crate::adc::AdcDriver;
-use crate::buttons::ButtonDriver;
+use crate::adc::AdcDriverFactory;
+use crate::buttons::ButtonsDriverFactory;
 use crate::console::ConsoleDriver;
-use crate::gpio::GpioDriver;
-use crate::led::LedDriverFactory;
+use crate::gpio::GpioDriverFactory;
+use crate::leds::LedsDriverFactory;
 use crate::result::OtherError;
 use crate::result::TockError;
 use crate::result::TockResult;
@@ -13,27 +13,27 @@ use crate::sensors::HumiditySensor;
 use crate::sensors::TemperatureSensor;
 use crate::simple_ble::BleAdvertisingDriver;
 use crate::simple_ble::BleScanningDriver;
-use crate::temperature::TemperatureDriver;
+use crate::temperature::TemperatureDriverFactory;
 use crate::timer::DriverContext;
 use core::cell::Cell;
 
 /// Struct containing all drivers constructible through [retrieve_drivers()]
 #[non_exhaustive]
 pub struct Drivers {
-    pub console_driver: ConsoleDriver,
-    pub led_driver_factory: LedDriverFactory,
-    pub timer_context: DriverContext,
-    pub gpio_driver: GpioDriver,
-    pub temperature_driver: TemperatureDriver,
-    pub button_driver: ButtonDriver,
-    pub adc_driver: AdcDriver,
-    pub rng_driver: RngDriver,
-    pub ble_advertising_driver: BleAdvertisingDriver,
-    pub ble_scanning_driver: BleScanningDriver,
+    pub console: ConsoleDriver,
+    pub leds: LedsDriverFactory,
+    pub timer: DriverContext,
+    pub gpio: GpioDriverFactory,
+    pub temperature: TemperatureDriverFactory,
+    pub buttons: ButtonsDriverFactory,
+    pub adc: AdcDriverFactory,
+    pub rng: RngDriver,
+    pub ble_advertising: BleAdvertisingDriver,
+    pub ble_scanning: BleScanningDriver,
     pub ambient_light_sensor: AmbientLightSensor,
     pub temperature_sensor: TemperatureSensor,
     pub humidity_sensor: HumiditySensor,
-    pub ninedof_driver: NinedofDriver,
+    pub ninedof: NinedofDriver,
 }
 
 /// Retrieve [Drivers] struct. Returns struct only once.
@@ -56,31 +56,30 @@ pub unsafe fn retrieve_drivers_unsafe() -> Drivers {
 
 #[allow(clippy::declare_interior_mutable_const)]
 const DRIVERS: Drivers = Drivers {
-    adc_driver: AdcDriver,
-    ble_advertising_driver: BleAdvertisingDriver,
-    ble_scanning_driver: BleScanningDriver,
-    button_driver: ButtonDriver,
-    console_driver: ConsoleDriver,
-    led_driver_factory: LedDriverFactory,
-    timer_context: DriverContext {
+    adc: AdcDriverFactory,
+    ble_advertising: BleAdvertisingDriver,
+    ble_scanning: BleScanningDriver,
+    buttons: ButtonsDriverFactory,
+    console: ConsoleDriver,
+    leds: LedsDriverFactory,
+    timer: DriverContext {
         active_timer: Cell::new(None),
     },
-    gpio_driver: GpioDriver,
-    temperature_driver: TemperatureDriver,
-    rng_driver: RngDriver,
+    gpio: GpioDriverFactory,
+    temperature: TemperatureDriverFactory,
+    rng: RngDriver,
     ambient_light_sensor: AmbientLightSensor,
     temperature_sensor: TemperatureSensor,
     humidity_sensor: HumiditySensor,
-    ninedof_driver: NinedofDriver,
+    ninedof: NinedofDriver,
 };
 
 static mut DRIVERS_SINGLETON: Option<Drivers> = Some(DRIVERS);
 
 #[cfg(test)]
 mod test {
-    use super::DRIVERS;
-    use super::DRIVERS_SINGLETON;
-    use crate::retrieve_drivers;
+    use super::*;
+
     #[test]
     pub fn can_be_retrieved_once() {
         reset_drivers_singleton();

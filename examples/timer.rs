@@ -8,25 +8,21 @@ use libtock::console::Console;
 use libtock::result::TockResult;
 use libtock::timer::DriverContext;
 use libtock::timer::Duration;
-use libtock::Drivers;
 
 const DELAY_MS: usize = 500;
 
 #[libtock::main]
 async fn main() -> TockResult<()> {
-    let Drivers {
-        mut timer_context,
-        console_driver,
-        ..
-    } = libtock::retrieve_drivers()?;
-    let mut console = console_driver.create_console();
+    let mut drivers = libtock::retrieve_drivers()?;
+
+    let mut console = drivers.console.create_console();
 
     let mut previous_ticks = None;
 
     for i in 0.. {
-        print_now(&mut console, &mut timer_context, &mut previous_ticks, i)?;
-        let mut driver = timer_context.create_timer_driver();
-        let timer_driver = driver.activate()?;
+        print_now(&mut console, &mut drivers.timer, &mut previous_ticks, i)?;
+        let mut timer_driver = drivers.timer.create_timer_driver();
+        let timer_driver = timer_driver.activate()?;
 
         timer_driver.sleep(Duration::from_ms(DELAY_MS)).await?;
     }

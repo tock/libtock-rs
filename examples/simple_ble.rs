@@ -5,7 +5,6 @@ use libtock::ble_composer::BlePayload;
 use libtock::result::TockResult;
 use libtock::simple_ble::BleAdvertisingDriver;
 use libtock::timer::Duration;
-use libtock::Drivers;
 use serde::Serialize;
 
 #[derive(Serialize)]
@@ -16,16 +15,13 @@ struct LedCommand {
 
 #[libtock::main]
 async fn main() -> TockResult<()> {
-    let Drivers {
-        led_driver_factory,
-        timer_context,
-        mut ble_advertising_driver,
-        ..
-    } = libtock::retrieve_drivers()?;
+    let mut drivers = libtock::retrieve_drivers()?;
 
-    let led_driver = led_driver_factory.create_driver()?;
+    let leds_driver = drivers.leds.init_driver()?;
+    let mut timer_driver = drivers.timer.create_timer_driver();
+    let timer_driver = timer_driver.activate()?;
 
-    let led = led_driver.get(0).unwrap();
+    let led = leds_driver.leds().next().unwrap();
 
     let uuid: [u8; 2] = [0x00, 0x18];
 
@@ -33,6 +29,7 @@ async fn main() -> TockResult<()> {
 
     let mut buffer = BleAdvertisingDriver::create_advertising_buffer();
     let mut gap_payload = BlePayload::default();
+
     gap_payload
         .add_flag(ble_composer::flags::LE_GENERAL_DISCOVERABLE)
         .unwrap();
@@ -44,12 +41,12 @@ async fn main() -> TockResult<()> {
     gap_payload
         .add(ble_composer::gap_types::COMPLETE_LOCAL_NAME, b"Tock!")
         .unwrap();
+
     gap_payload.add_service_payload([91, 79], &payload).unwrap();
 
-    let _handle = ble_advertising_driver.initialize(100, &gap_payload, &mut buffer);
-
-    let mut driver = timer_context.create_timer_driver();
-    let timer_driver = driver.activate()?;
+    let _handle = drivers
+        .ble_advertising
+        .initialize(100, &gap_payload, &mut buffer);
 
     loop {
         led.on()?;
