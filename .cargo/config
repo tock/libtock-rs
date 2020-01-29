@@ -1,33 +1,19 @@
-# Target configuration for the example apps on the nRF52-DK
-[target.thumbv7em-none-eabi]
-rustflags = [
-  "-C", "link-arg=-Tnrf52_layout.ld",
-  "-C", "relocation-model=static",
-  "-D", "warnings",
-]
+[alias]
+rriscv32iamc = "run --release --target=riscv32iamc-unknown-none-elf --example"
+rrv32iamc = "rriscv32iamc"
+rriscv32imc = "run --release --target=riscv32imc-unknown-none-elf --example"
+rrv32imc = "rriscv32imc"
+rthumbv7em = "run --release --target=thumbv7em-none-eabi --example"
+rtv7em = "rthumbv7em"
 
-[target.riscv32imac-unknown-none-elf]
-rustflags = [
-  "-C", "link-arg=-Triscv32_layout.ld",
-  "-C", "relocation-model=static",
-  "-D", "warnings",
-]
+# Deny warnings on all architectures. build.rustflags cannot be used here as the lower section would override its effect.
+[target.'cfg(all())']
+rustflags = ["-D", "warnings"]
 
-[target.riscv32imc-unknown-none-elf]
+# Common settings for all embedded targets
+[target.'cfg(any(target_arch = "arm", target_arch = "riscv32"))']
 rustflags = [
-  "-C", "link-arg=-Topentitan_layout.ld",
-  "-C", "relocation-model=static",
-  "-D", "warnings",
+    "-C", "relocation-model=static",
+    "-C", "link-arg=-Tlayout.ld",
 ]
-
-# Target configuration for the travis CI Linux build
-[target.x86_64-unknown-linux-gnu]
-rustflags = [
-  "-D", "warnings",
-]
-
-# Target configuration for the travis CI OS-X build
-[target.x86_64-apple-darwin]
-rustflags = [
-  "-D", "warnings",
-]
+runner = "./flash.sh"
