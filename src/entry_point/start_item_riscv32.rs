@@ -93,8 +93,8 @@ pub unsafe extern "C" fn _start() -> ! {
     jal  rust_start"
     :                                                              // No output operands
     :
-    : "memory", "a0", "a1", "a2", "a3", "a4", "a5", "a6", "a7",
-      "t0", "t1", "t2", "t3", "t4", "t5", "t6", "ra"               // Clobbers
+    : "memory", "x10", "x11", "x12", "x13", "x14", "x15", "x16", "x17",
+      "x5", "x6", "x7", "x28", "x29", "x30", "x31", "x1"           // Clobbers
     : "volatile"                                                   // Options
     );
     hint::unreachable_unchecked();
