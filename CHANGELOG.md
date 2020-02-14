@@ -36,6 +36,9 @@
 
 ### Miscellaneous
 
+- Flashing examples is no longer restricted to the nRF52 DK board
+  - `./run_example.sh` has been deleted
+  - Instead, use `PLATFORM=<platform> cargo r<arch> <your_app>`. This will build the app for your CPU architecture and platform-specific memory layout and flash it via J-Link to your board
 - Targets without support for atomics can be built
 
 ## a8bb4fa9be504517d5533511fd8e607ea61f1750 (0.1.0)

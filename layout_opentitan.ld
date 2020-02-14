@@ -2,8 +2,8 @@
 
 MEMORY {
   /* The TBF header region is 32 bytes (0x20) */
-  FLASH (rx) : ORIGIN = 0x20430020, LENGTH = 32M
-  SRAM (rwx) : ORIGIN = 0x80000000, LENGTH = 512K
+  FLASH (rx) : ORIGIN = 0x20030020, LENGTH = 32M
+  SRAM (rwx) : ORIGIN = 0x10000000, LENGTH = 512K
 }
 
 /*
@@ -14,4 +14,4 @@ STACK_SIZE = 2048;
 
 MPU_MIN_ALIGN = 1K;
 
-INCLUDE layout.ld
+INCLUDE layout_generic.ld

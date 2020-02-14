@@ -15,9 +15,13 @@ have to be run manually.
 
 ## Compilation
 
-`libtock-rs` currently has two compilation targets: `riscv32imac-unknown-none-elf`
-and `thumbv7em-none-eabi`. You can build the library and the examples
-using the script `build_examples.sh`.
+`libtock-rs` currently has the following compilation targets
+
+- `riscv32imac-unknown-none-elf`
+- `riscv32imc-unknown-none-elf`
+- `thumbv7em-none-eabi`
+
+You can trigger a test build of the library and the examples using the script `build_examples.sh`.
 
 ## Unit Testing and Linting
 
@@ -26,14 +30,12 @@ using `cargo test --workspace`.
 
 ## Integration tests
 
-If you have a `nRF52-dk` you can run the integration tests as follows.
-The pins P0.03 and P0.04 need to be connected (on a nRF52-DK). Then do the following:
+If you have an nRF52 DK you can run the integration tests as follows.
+The pins P0.03 and P0.04 need to be connected (on an nRF52 DK). Then do the following:
 
 - connect your device to your computer
 - open a console, e.g. `tockloader listen`
-- run the tests `./run_hardware_test.sh
-
-The desired test output is:
+- run the tests: `PLATFORM=nrf52 cargo rtv7em hardware_test`
 
 The expected output on the UART console will be as follows.
 
