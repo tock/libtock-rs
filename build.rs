@@ -10,20 +10,20 @@ fn main() {
     static ENV_VAR: &str = "PLATFORM";
     static FILE_NAME: &str = "platform";
 
-    let platform_name = read_board_name_from_env_var(ENV_VAR)
-        .or_else(|| read_board_name_from_file(FILE_NAME))
-        .unwrap_or_else(|| {
-            println!(
-                "No platform specified. Either set the environment \
-                 variable {} or create a file named `{}`",
-                ENV_VAR, FILE_NAME
-            );
-            process::exit(1);
-        });
+    println!("cargo:rerun-if-env-changed={}", ENV_VAR);
+    println!("cargo:rerun-if-changed={}", FILE_NAME);
 
-    println!("cargo:rustc-env={}={}", ENV_VAR, platform_name);
-
-    copy_linker_file(&platform_name.trim());
+    let platform_name =
+        read_board_name_from_env_var(ENV_VAR).or_else(|| read_board_name_from_file(FILE_NAME));
+    if let Some(platform_name) = platform_name {
+        println!("cargo:rustc-env={}={}", ENV_VAR, platform_name);
+        copy_linker_file(&platform_name.trim());
+    } else {
+        println!(
+            "cargo:warning=No platform specified. \
+             Remember to manually specify a linker file.",
+        );
+    }
 }
 
 fn read_board_name_from_env_var(env_var: &str) -> Option<String> {
