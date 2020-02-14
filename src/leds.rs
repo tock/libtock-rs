@@ -127,3 +127,35 @@ impl From<bool> for LedState {
         }
     }
 }
+
+#[cfg(test)]
+mod test {
+    use super::command_nr;
+    use super::DRIVER_NUMBER;
+    use crate::result::TockResult;
+    use crate::syscalls;
+    use crate::syscalls::raw::Event;
+
+    #[test]
+    pub fn single_led_can_be_enabled() {
+        let events = syscalls::raw::run_recording_events::<TockResult<()>, _>(|next_return| {
+            let mut drivers = unsafe { crate::drivers::retrieve_drivers_unsafe() };
+
+            next_return.set(1);
+
+            let leds_driver = drivers.leds.init_driver()?;
+            next_return.set(0);
+
+            let led = leds_driver.get(0)?;
+            led.on()?;
+            Ok(())
+        });
+        assert_eq!(
+            events,
+            vec![
+                Event::Command(DRIVER_NUMBER, command_nr::COUNT, 0, 0),
+                Event::Command(DRIVER_NUMBER, command_nr::ON, 0, 0),
+            ]
+        );
+    }
+}
