@@ -105,7 +105,7 @@ pub unsafe extern "C" fn _start(
         bl rust_start"
         :                                                              // No output operands
         : "{r0}"(app_start), "{r1}"(mem_start), "{r3}"(app_heap_break) // Input operands
-        : "r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8", "r12",
+        : "r0", "r1", "r2", "r3", "r4", "r5", "r6", "r8", "r12",
           "cc", "memory"                                               // Clobbers
         : "volatile"                                                   // Options
     );

@@ -100,7 +100,7 @@ pub mod executor {
             let pinned_generator =
                 unsafe { self.map_unchecked_mut(|future| &mut future.generator) };
 
-            match pinned_generator.resume() {
+            match pinned_generator.resume(()) {
                 GeneratorState::Yielded(()) => Poll::Pending,
                 GeneratorState::Complete(out) => Poll::Ready(out),
             }
