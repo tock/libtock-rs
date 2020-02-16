@@ -31,8 +31,8 @@ path = "examples-alloc/ble_scanning.rs"
 required-features = ["alloc"]
 
 [[example]]
-name = "hardware_test"
-path = "examples-alloc/hardware_test.rs"
+name = "libtock_test"
+path = "examples-alloc/libtock_test.rs"
 required-features = ["alloc"]
 
 [[example]]

@@ -35,11 +35,19 @@ where
 }
 
 #[lang = "termination"]
-pub trait Termination {}
+pub trait Termination {
+    fn check_result(self);
+}
 
-impl Termination for () {}
+impl Termination for () {
+    fn check_result(self) {}
+}
 
-impl Termination for crate::result::TockResult<()> {}
+impl Termination for TockResult<()> {
+    fn check_result(self) {
+        self.ok().unwrap()
+    }
+}
 
 #[panic_handler]
 unsafe fn panic_handler(_info: &PanicInfo) -> ! {
