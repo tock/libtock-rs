@@ -5,7 +5,6 @@ extern crate proc_macro2;
 use proc_macro::TokenStream;
 
 use quote::quote;
-use syn;
 use syn::Error;
 use syn::ItemFn;
 
