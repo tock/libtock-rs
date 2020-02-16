@@ -46,6 +46,7 @@ async fn libtock_test(
     test.dynamic_dispatch()?;
     test.formatting()?;
     test.heap()?;
+    test.drivers_only_instantiable_once()?;
     test.callbacks(timer).await?;
     test.gpio(gpio)?;
     Ok(())
@@ -98,6 +99,13 @@ impl LibtockTest {
         string.push_str("bar");
 
         self.check_if_true(string == "foobar", "Heap")
+    }
+
+    fn drivers_only_instantiable_once(&mut self) -> TockResult<()> {
+        self.check_if_true(
+            libtock::retrieve_drivers().is_err(),
+            "Drivers only instantiable once",
+        )
     }
 
     async fn callbacks(&mut self, timer_context: &mut DriverContext) -> TockResult<()> {

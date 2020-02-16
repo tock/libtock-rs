@@ -38,9 +38,15 @@ pub struct Drivers {
 
 /// Retrieve [Drivers] struct. Returns struct only once.
 pub fn retrieve_drivers() -> TockResult<Drivers> {
-    match unsafe { DRIVERS_SINGLETON.take() } {
-        Some(drivers) => Ok(drivers),
-        None => Err(TockError::Other(OtherError::DriverAlreadyTaken)),
+    static mut DRIVER_TAKEN: bool = false;
+
+    unsafe {
+        if DRIVER_TAKEN {
+            Err(TockError::Other(OtherError::DriverAlreadyTaken))
+        } else {
+            DRIVER_TAKEN = true;
+            Ok(retrieve_drivers_unsafe())
+        }
     }
 }
 
@@ -73,24 +79,3 @@ const DRIVERS: Drivers = Drivers {
     humidity_sensor: HumiditySensor,
     ninedof: NinedofDriver,
 };
-
-static mut DRIVERS_SINGLETON: Option<Drivers> = Some(DRIVERS);
-
-#[cfg(test)]
-mod test {
-    use super::*;
-
-    #[test]
-    pub fn can_be_retrieved_once() {
-        reset_drivers_singleton();
-
-        assert!(retrieve_drivers().is_ok());
-        assert!(retrieve_drivers().is_err());
-    }
-
-    fn reset_drivers_singleton() {
-        unsafe {
-            DRIVERS_SINGLETON = Some(DRIVERS);
-        };
-    }
-}

@@ -45,6 +45,7 @@ The expected output on the UART console will be as follows.
 [      OK ] Dynamic dispatch
 [      OK ] Formatting
 [      OK ] Heap
+[      OK ] Drivers only instantiable once
 [      OK ] Callbacks
 [      OK ] GPIO initialization
 [      OK ] GPIO activation
