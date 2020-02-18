@@ -14,7 +14,7 @@ usually means that they must be compiled especially for your board
 and that there can only be one application written in rust at a time
 and it must be installed as the first application on the board, unless
 you want to play games with linker scripts.
-There are some `*_layout.ld` files provided that allow to run the
+There are some `layout_*.ld` files provided that allow to run the
 examples on common boards.
 Due to MPU region alignment issues they may not work for applications
 that use a lot of RAM, in that case you may have to change the SRAM
@@ -83,12 +83,12 @@ If you want to use heap based allocation you will have to add
 extern crate alloc;
 ```
 
-to the preamble.
+to the preamble and store your example in the `examples-alloc` folder.
 
 To run on the code on your board you can use
 
 ```bash
-PLATFORM=<platform> cargo r<arch> <your_app>
+PLATFORM=<platform> cargo r<arch> <your_app> [--features=alloc]
 ```
 
 This script does the following steps for you:
