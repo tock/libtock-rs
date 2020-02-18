@@ -5,10 +5,13 @@ authors = ["Tock Project Developers <tock-dev@googlegroups.com>"]
 license = "MIT/Apache-2.0"
 edition = "2018"
 
+[features]
+alloc = [ "linked_list_allocator" ]
+
 [dependencies]
 core = { package = "async-support", path = "async-support" }
-linked_list_allocator = { version = "=0.6.5", default-features = false }
 libtock_codegen = { path = "codegen" }
+linked_list_allocator = { optional = true, version = "=0.6.5", default-features = false }
 
 [dev-dependencies]
 corepack = { version = "0.4.0", default-features = false, features = ["alloc"] }
@@ -16,6 +19,26 @@ corepack = { version = "0.4.0", default-features = false, features = ["alloc"] }
 # with the nightly toolchain used by libtock-rs.
 serde = { version = "=1.0.84", default-features = false, features = ["derive"] }
 futures = { version = "0.3.1", default-features = false, features = ["unstable", "cfg-target-has-atomic"] }
+
+[[example]]
+name = "alloc_error"
+path = "examples-alloc/alloc_error.rs"
+required-features = ["alloc"]
+
+[[example]]
+name = "ble_scanning"
+path = "examples-alloc/ble_scanning.rs"
+required-features = ["alloc"]
+
+[[example]]
+name = "hardware_test"
+path = "examples-alloc/hardware_test.rs"
+required-features = ["alloc"]
+
+[[example]]
+name = "simple_ble"
+path = "examples-alloc/simple_ble.rs"
+required-features = ["alloc"]
 
 [profile.dev]
 panic = "abort"

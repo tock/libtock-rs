@@ -1,6 +1,9 @@
-#![feature(asm, alloc_error_handler, lang_items, naked_functions)]
+#![feature(asm, lang_items, naked_functions)]
+#![cfg_attr(feature = "alloc", feature(alloc_error_handler))]
 #![cfg_attr(any(target_arch = "arm", target_arch = "riscv32"), no_std)]
 
+#[cfg(feature = "alloc")]
+mod alloc;
 mod entry_point;
 #[cfg(any(target_arch = "arm", target_arch = "riscv32"))]
 mod lang_items;

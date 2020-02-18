@@ -19,12 +19,10 @@
 //! crate.
 
 use crate::drivers;
-use crate::entry_point::TockAllocator;
 use crate::leds::LedsDriver;
 use crate::result::TockResult;
 use crate::timer::Duration;
 use crate::timer::ParallelSleepDriver;
-use core::alloc::Layout;
 use core::executor;
 use core::panic::PanicInfo;
 
@@ -76,37 +74,5 @@ async fn blink_all_leds(
             led.off()?;
         }
         timer_driver.sleep(Duration::from_ms(100)).await?;
-    }
-}
-
-#[global_allocator]
-static ALLOCATOR: TockAllocator = TockAllocator;
-
-#[alloc_error_handler]
-unsafe fn alloc_error_handler(_: Layout) -> ! {
-    executor::block_on(async {
-        let mut drivers = drivers::retrieve_drivers_unsafe();
-
-        let leds_driver = drivers.leds.init_driver();
-        let mut timer_driver = drivers.timer.create_timer_driver();
-        let timer_driver = timer_driver.activate();
-
-        if let (Ok(leds_driver), Ok(timer_driver)) = (leds_driver, timer_driver) {
-            let _ = cycle_all_leds(&leds_driver, &timer_driver).await;
-        }
-        loop {}
-    })
-}
-
-async fn cycle_all_leds(
-    leds_driver: &LedsDriver<'_>,
-    timer_driver: &ParallelSleepDriver<'_>,
-) -> TockResult<()> {
-    loop {
-        for led in leds_driver.leds() {
-            led.on()?;
-            timer_driver.sleep(Duration::from_ms(100)).await?;
-            led.off()?;
-        }
     }
 }
