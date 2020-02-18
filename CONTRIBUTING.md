@@ -35,7 +35,7 @@ The pins P0.03 and P0.04 need to be connected (on an nRF52 DK). Then do the foll
 
 - connect your device to your computer
 - open a console, e.g. `tockloader listen`
-- run the tests: `PLATFORM=nrf52 cargo rtv7em hardware_test`
+- run the tests: `PLATFORM=nrf52 cargo rtv7em hardware_test --features=alloc`
 
 The expected output on the UART console will be as follows.
 

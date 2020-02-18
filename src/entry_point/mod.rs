@@ -127,37 +127,17 @@ unsafe extern "C" fn rust_start(app_start: usize, stacktop: usize, app_heap_brea
 
     // we could have also bss_end for app_heap_start
     let app_heap_start = app_heap_break;
-    let app_heap_end = app_heap_break + HEAP_SIZE;
+    let app_heap_end = app_heap_start + HEAP_SIZE;
 
     // Tell the kernel the new app heap break.
     memop::set_brk(app_heap_end as *const u8);
 
-    HEAP.init(app_heap_start, HEAP_SIZE);
+    #[cfg(feature = "alloc")]
+    crate::alloc::HEAP.init(app_heap_start, HEAP_SIZE);
 
     main(0, ptr::null());
 
     loop {
         syscalls::raw::yieldk();
-    }
-}
-
-use core::alloc::GlobalAlloc;
-use core::alloc::Layout;
-use core::ptr::NonNull;
-use linked_list_allocator::Heap;
-
-static mut HEAP: Heap = Heap::empty();
-
-pub struct TockAllocator;
-
-unsafe impl GlobalAlloc for TockAllocator {
-    unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
-        HEAP.allocate_first_fit(layout)
-            .ok()
-            .map_or(ptr::null_mut(), NonNull::as_ptr)
-    }
-
-    unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
-        HEAP.deallocate(NonNull::new_unchecked(ptr), layout)
     }
 }
