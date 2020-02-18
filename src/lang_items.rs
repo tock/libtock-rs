@@ -31,7 +31,7 @@ extern "C" fn start<T>(main: fn() -> T, _argc: isize, _argv: *const *const u8)
 where
     T: Termination,
 {
-    main();
+    main().check_result();
 }
 
 #[lang = "termination"]
@@ -45,12 +45,18 @@ impl Termination for () {
 
 impl Termination for TockResult<()> {
     fn check_result(self) {
-        self.ok().unwrap()
+        if self.is_err() {
+            unsafe { report_panic() };
+        }
     }
 }
 
 #[panic_handler]
 unsafe fn panic_handler(_info: &PanicInfo) -> ! {
+    report_panic()
+}
+
+unsafe fn report_panic() -> ! {
     // Signal a panic using the LowLevelDebug capsule (if available).
     super::debug::low_level_status_code(1);
 
