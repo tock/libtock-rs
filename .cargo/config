@@ -1,6 +1,6 @@
 [alias]
-rriscv32iamc = "run --release --target=riscv32iamc-unknown-none-elf --example"
-rrv32iamc = "rriscv32iamc"
+rriscv32imac = "run --release --target=riscv32imac-unknown-none-elf --example"
+rrv32imac = "rriscv32imac"
 rriscv32imc = "run --release --target=riscv32imc-unknown-none-elf --example"
 rrv32imc = "rriscv32imc"
 rthumbv7em = "run --release --target=thumbv7em-none-eabi --example"
