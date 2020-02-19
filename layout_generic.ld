@@ -86,7 +86,7 @@ SECTIONS {
     } > FLASH =0xFF
 
     /* Application stack */
-    .stack :
+    .stack (NOLOAD) :
     {
         . = . + STACK_SIZE;
 
