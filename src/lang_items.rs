@@ -31,18 +31,32 @@ extern "C" fn start<T>(main: fn() -> T, _argc: isize, _argv: *const *const u8)
 where
     T: Termination,
 {
-    main();
+    main().check_result();
 }
 
 #[lang = "termination"]
-pub trait Termination {}
+pub trait Termination {
+    fn check_result(self);
+}
 
-impl Termination for () {}
+impl Termination for () {
+    fn check_result(self) {}
+}
 
-impl Termination for crate::result::TockResult<()> {}
+impl Termination for TockResult<()> {
+    fn check_result(self) {
+        if self.is_err() {
+            unsafe { report_panic() };
+        }
+    }
+}
 
 #[panic_handler]
 unsafe fn panic_handler(_info: &PanicInfo) -> ! {
+    report_panic()
+}
+
+unsafe fn report_panic() -> ! {
     // Signal a panic using the LowLevelDebug capsule (if available).
     super::debug::low_level_status_code(1);
 

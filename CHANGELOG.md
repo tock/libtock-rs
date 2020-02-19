@@ -40,6 +40,8 @@
   - `./run_example.sh` has been deleted
   - Instead, use `PLATFORM=<platform> cargo r<arch> <your_app>`. This will build the app for your CPU architecture and platform-specific memory layout and flash it via J-Link to your board
 - Targets without support for atomics can be built
+- The `TockAllocator` is no longer included by default and needs to to be opted-in via `--features=alloc`
+- `hardware_test.rs` is now called `libtock_test.rs` to make clear that the intent is to test the correctness of `libtock-rs`, not the hardware or the kernel
 
 ## a8bb4fa9be504517d5533511fd8e607ea61f1750 (0.1.0)
 

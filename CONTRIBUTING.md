@@ -35,18 +35,19 @@ The pins P0.03 and P0.04 need to be connected (on an nRF52 DK). Then do the foll
 
 - connect your device to your computer
 - open a console, e.g. `tockloader listen`
-- run the tests: `PLATFORM=nrf52 cargo rtv7em hardware_test --features=alloc`
+- run the tests: `PLATFORM=nrf52 cargo rtv7em libtock_test --features=alloc`
 
 The expected output on the UART console will be as follows.
 
 ```
-[test-results]
-heap_test = "Heap works."
-formatting =  works
-should_be_one = 1
-gpio_works = true
-trait_obj_value_usize = 1
-trait_obj_value_string = string
-callbacks_work = true
-all_tests_run = true
+[      OK ] Console
+[      OK ] static mut
+[      OK ] Dynamic dispatch
+[      OK ] Formatting
+[      OK ] Heap
+[      OK ] Callbacks
+[      OK ] GPIO initialization
+[      OK ] GPIO activation
+[      OK ] GPIO read/write
+[      OK ] Test suite finished with state SUCCESS
 ```
