@@ -27,11 +27,12 @@ use core::executor;
 use core::panic::PanicInfo;
 
 #[lang = "start"]
-extern "C" fn start<T>(main: fn() -> T, _argc: isize, _argv: *const *const u8)
+extern "C" fn start<T>(main: fn() -> T, _argc: isize, _argv: *const *const u8) -> bool
 where
     T: Termination,
 {
     main().check_result();
+    true // Need to return anything sized. Otherwise, a linker error pops up. (See https://github.com/tock/libtock-rs/issues/138)
 }
 
 #[lang = "termination"]

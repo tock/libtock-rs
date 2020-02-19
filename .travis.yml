@@ -7,7 +7,7 @@ branches:
 
 language: rust
 rust:
-  - nightly-2019-11-06
+  - nightly-2020-01-16
 
 os:
   - linux
