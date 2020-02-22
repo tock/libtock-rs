@@ -25,6 +25,7 @@ use crate::timer::Duration;
 use crate::timer::ParallelSleepDriver;
 use core::executor;
 use core::panic::PanicInfo;
+use futures::future;
 
 #[lang = "start"]
 extern "C" fn start<T>(main: fn() -> T, _argc: isize, _argv: *const *const u8) -> bool
@@ -71,6 +72,8 @@ unsafe fn report_panic() -> ! {
 
         if let (Ok(leds_driver), Ok(timer_driver)) = (leds_driver, timer_driver) {
             let _ = blink_all_leds(&leds_driver, &timer_driver).await;
+        } else {
+            future::pending::<()>().await
         }
         loop {}
     })
