@@ -16,12 +16,12 @@ struct LedCommand {
 #[libtock::main]
 async fn main() -> TockResult<()> {
     let mut drivers = libtock::retrieve_drivers()?;
-    let led_driver = drivers.leds.init_driver()?;
+    let leds_driver = drivers.leds.init_driver()?;
     let mut timer_driver = drivers.timer.create_timer_driver();
     let timer_driver = timer_driver.activate()?;
     let mut ble_advertising_driver = drivers.ble_advertising.create_driver();
 
-    let led = led_driver.leds().next().unwrap();
+    let led = leds_driver.leds().next().unwrap();
 
     let uuid: [u8; 2] = [0x00, 0x18];
 
