@@ -1,14 +1,19 @@
+//! Module to provide simple ble functions as scanning and advertising
+
 use crate::ble_composer::BlePayload;
 use crate::callback::CallbackSubscription;
 use crate::callback::Consumer;
+use crate::result::TockError;
 use crate::result::TockResult;
 use crate::shared_memory::SharedMemory;
 use crate::syscalls;
+use core::cell::Cell;
+use core::future::Future;
 
 const DRIVER_NUMBER: usize = 0x30000;
 pub const MAX_PAYLOAD_SIZE: usize = 9;
 pub const BUFFER_SIZE_ADVERTISE: usize = 39;
-pub const BUFFER_SIZE_SCAN: usize = 39;
+pub(crate) const BUFFER_SIZE_SCAN: usize = 39;
 
 mod command_nr {
     pub const START_ADVERTISING: usize = 0;
@@ -33,6 +38,16 @@ pub mod gap_data {
     pub const COMPLETE_LOCAL_NAME: usize = 0x09;
     pub const SET_FLAGS: usize = 1;
     pub const SERVICE_DATA: usize = 0x16;
+}
+
+#[non_exhaustive]
+pub struct BleAdvertisingDriverFactory;
+
+impl BleAdvertisingDriverFactory {
+    pub fn create_driver(self) -> BleAdvertisingDriver {
+        // Unfortunately, there is no way to check the availability of the ble advertising driver
+        BleAdvertisingDriver
+    }
 }
 
 #[non_exhaustive]
@@ -69,47 +84,118 @@ impl BleAdvertisingDriver {
     }
 }
 
-pub struct BleCallback<CB> {
-    callback: CB,
+struct BleCallback<'a> {
+    read_value: &'a Cell<Option<ScanBuffer>>,
+    shared_buffer: SharedMemory<'a>,
 }
 
-impl<CB> BleCallback<CB> {
-    pub fn new(callback: CB) -> Self {
-        BleCallback { callback }
-    }
-}
+pub(crate) type ScanBuffer = [u8; BUFFER_SIZE_SCAN];
 
-impl<CB: FnMut(usize, usize)> Consumer<BleCallback<CB>> for BleCallback<CB> {
-    fn consume(data: &mut BleCallback<CB>, arg1: usize, arg2: usize, _: usize) {
-        (data.callback)(arg1, arg2);
-    }
-}
+const EMPTY_SCAN_BUFFER: ScanBuffer = [0; BUFFER_SIZE_SCAN];
 
 #[non_exhaustive]
-pub struct BleScanningDriver;
+pub struct BleScanningDriverFactory;
+
+impl BleScanningDriverFactory {
+    pub fn create_driver(self) -> BleScanningDriver {
+        BleScanningDriver {
+            shared_buffer: EMPTY_SCAN_BUFFER,
+            read_value: Cell::new(None),
+        }
+    }
+}
+
+/// Uninitialized Ble Scanning Driver
+///
+/// Usage:
+/// ```no_run
+/// # use futures::stream::StreamExt;
+/// # use libtock::ble_parser;
+/// # use libtock::result::TockResult;
+/// # use libtock::simple_ble;
+/// # async fn doc() -> TockResult<()> {
+/// let mut drivers = libtock::retrieve_drivers()?;
+/// let led_driver = drivers.leds.init_driver()?;
+/// let ble_scanning_driver_factory = drivers.ble_scanning;
+/// let mut ble_scanning_driver = ble_scanning_driver_factory.create_driver();
+/// let mut ble_scanning_driver_sharing = ble_scanning_driver.share_memory()?;
+/// let ble_scanning_driver_scanning = ble_scanning_driver_sharing.start()?;
+///
+/// let value = ble_scanning_driver_scanning.stream_values().await;
+/// # Ok(())
+/// # }
+/// ```
+pub struct BleScanningDriver {
+    shared_buffer: ScanBuffer,
+    read_value: Cell<Option<ScanBuffer>>,
+}
 
 impl BleScanningDriver {
-    pub fn create_scan_buffer() -> [u8; BUFFER_SIZE_SCAN] {
-        [0; BUFFER_SIZE_SCAN]
+    /// Prepare Ble Scanning Driver to share memory with the ble capsule
+    pub fn share_memory(&mut self) -> TockResult<BleScanningDriverShared> {
+        let shared_buffer: SharedMemory = syscalls::allow(
+            DRIVER_NUMBER,
+            allow_nr::ALLOW_SCAN_BUFFER,
+            &mut self.shared_buffer,
+        )
+        .map_err(Into::<TockError>::into)?;
+        Ok(BleScanningDriverShared {
+            read_value: &self.read_value,
+            callback: BleCallback {
+                read_value: &self.read_value,
+                shared_buffer,
+            },
+        })
     }
+}
 
-    pub fn share_memory<'a, 'b>(
-        &'a mut self,
-        scan_buffer: &'b mut [u8; BUFFER_SIZE_SCAN],
-    ) -> TockResult<SharedMemory<'b>> {
-        syscalls::allow(DRIVER_NUMBER, allow_nr::ALLOW_SCAN_BUFFER, scan_buffer).map_err(Into::into)
-    }
+/// Ble Scanning Driver in "shared buffer" state
+pub struct BleScanningDriverShared<'a> {
+    callback: BleCallback<'a>,
+    read_value: &'a Cell<Option<ScanBuffer>>,
+}
 
-    pub fn start<'a, CB: FnMut(usize, usize)>(
-        &'a mut self,
-        callback: &'a mut BleCallback<CB>,
-    ) -> TockResult<CallbackSubscription> {
-        let subscription = syscalls::subscribe::<BleCallback<CB>, _>(
+impl<'a> BleScanningDriverShared<'a> {
+    /// Start scanning for ble advertising events
+    pub fn start(&mut self) -> TockResult<BleScanningDriverScanning> {
+        let subscription = syscalls::subscribe::<BleCallback<'a>, BleCallback<'a>>(
             DRIVER_NUMBER,
             subscribe_nr::BLE_PASSIVE_SCAN_SUB,
-            callback,
+            &mut self.callback,
         )?;
         syscalls::command(DRIVER_NUMBER, command_nr::PASSIVE_SCAN, 1, 0)?;
-        Ok(subscription)
+        Ok(BleScanningDriverScanning {
+            _subscription: subscription,
+            read_value: self.read_value,
+        })
+    }
+}
+
+/// Ble Scanning Driver in "scanning" state
+pub struct BleScanningDriverScanning<'a> {
+    _subscription: CallbackSubscription<'a>,
+    read_value: &'a Cell<Option<ScanBuffer>>,
+}
+
+impl<'a> BleScanningDriverScanning<'a> {
+    /// Create stream of ble scanning packets
+    pub fn stream_values(&'a self) -> impl Future<Output = ScanBuffer> + 'a {
+        crate::futures::wait_for_value(move || {
+            if let Some(temp_buffer) = self.read_value.get() {
+                self.read_value.set(None);
+                Some(temp_buffer)
+            } else {
+                None
+            }
+        })
+    }
+}
+
+impl<'a> Consumer<Self> for BleCallback<'a> {
+    fn consume(callback: &mut Self, _: usize, _: usize, _: usize) {
+        let mut temporary_buffer: ScanBuffer = EMPTY_SCAN_BUFFER;
+
+        callback.shared_buffer.read_bytes(&mut temporary_buffer[..]);
+        callback.read_value.set(Some(temporary_buffer));
     }
 }
