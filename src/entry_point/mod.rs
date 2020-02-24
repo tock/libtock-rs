@@ -85,7 +85,7 @@ struct LayoutHeader {
 /// into the rustc-generated main(). This cannot use mutable global variables or
 /// global references to globals until it is done setting up the data segment.
 #[no_mangle]
-unsafe extern "C" fn rust_start(app_start: usize, stacktop: usize, app_heap_break: usize) -> ! {
+unsafe extern "C" fn rust_start(app_start: usize, stacktop: usize, _app_heap_break: usize) -> ! {
     extern "C" {
         // This function is created internally by `rustc`. See
         // `src/lang_items.rs` for more details.
@@ -125,8 +125,9 @@ unsafe extern "C" fn rust_start(app_start: usize, stacktop: usize, app_heap_brea
     // make the corresponding change here.
     const HEAP_SIZE: usize = 1024;
 
-    // we could have also bss_end for app_heap_start
-    let app_heap_start = app_heap_break;
+    // Make the heap start exactly at bss_end. The suggested _app_heap_break
+    // is almost always going to be too big and leads to us wasting memory.
+    let app_heap_start = bss_end;
     let app_heap_end = app_heap_start + HEAP_SIZE;
 
     // Tell the kernel the new app heap break.
