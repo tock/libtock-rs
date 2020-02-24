@@ -4,6 +4,10 @@ set -eux
 
 artifact="$(basename $1)"
 rust_target_folder="$(readlink -f $(dirname $1)/../..)"
+if [ -z $APP_HEAP_SIZE ]; then
+	echo "Set APP_HEAP_SIZE to a value"
+	exit 1
+fi
 
 case "${PLATFORM}" in
     "nrf52"|"nrf52840")
@@ -39,7 +43,7 @@ tab_file_name="${libtock_target_path}.tab"
 mkdir -p "${libtock_target_path}"
 cp "$1" "${elf_file_name}"
 
-elf2tab -n "${artifact}" -o "${tab_file_name}" "${elf_file_name}" --stack 2048 --app-heap 1024 --kernel-heap 1024 --protected-region-size=64
+elf2tab -n "${artifact}" -o "${tab_file_name}" "${elf_file_name}" --stack 2048 --app-heap $APP_HEAP_SIZE --kernel-heap 1024 --protected-region-size=64
 
 if [ $tockload == "n" ]; then
 	echo "Skipping flashing for platform \"${PLATFORM}\""

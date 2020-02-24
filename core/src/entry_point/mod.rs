@@ -75,6 +75,9 @@ struct LayoutHeader {
     stack_size: usize,
 }
 
+//Procedural macro to generate a function to read APP_HEAP_SIZE
+libtock_codegen::make_read_env_var!("APP_HEAP_SIZE");
+
 /// Rust setup, called by _start. Uses the extern "C" calling convention so that
 /// the assembly in _start knows how to call it (the Rust ABI is not defined).
 /// Sets up the data segment (including relocations) and the heap, then calls
@@ -116,21 +119,19 @@ unsafe extern "C" fn rust_start(app_start: usize, stacktop: usize, _app_heap_bre
     // `sbrk` system call to dynamically request heap memory from the kernel, we
     // need to tell `linked_list_allocator` where the heap starts and ends.
     //
-    // Heap size is set using `elf2tab` with `--app-heap` option, which is
-    // currently at 1024. If you change the `elf2tab` heap size, make sure to
-    // make the corresponding change here.
-    const HEAP_SIZE: usize = 1024;
+    // We get this from the environment to make it easy to set per compile.
+    let app_heap_size: usize = read_APP_HEAP_SIZE();
 
     // Make the heap start exactly at bss_end. The suggested _app_heap_break
     // is almost always going to be too big and leads to us wasting memory.
     let app_heap_start = bss_end;
-    let app_heap_end = app_heap_start + HEAP_SIZE;
+    let app_heap_end = app_heap_start + app_heap_size;
 
     // Tell the kernel the new app heap break.
     memop::set_brk(app_heap_end as *const u8);
 
     #[cfg(feature = "alloc")]
-    crate::alloc::HEAP.init(app_heap_start, HEAP_SIZE);
+    crate::alloc::HEAP.init(app_heap_start, app_heap_size);
 
     main(0, ptr::null());
 
