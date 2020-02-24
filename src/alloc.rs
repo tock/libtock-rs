@@ -8,6 +8,7 @@ use core::alloc::Layout;
 use core::executor;
 use core::ptr;
 use core::ptr::NonNull;
+use futures::future;
 use linked_list_allocator::Heap;
 
 pub static mut HEAP: Heap = Heap::empty();
@@ -40,6 +41,8 @@ unsafe fn alloc_error_handler(_: Layout) -> ! {
 
         if let (Ok(leds_driver), Ok(timer_driver)) = (leds_driver, timer_driver) {
             let _ = cycle_all_leds(&leds_driver, &timer_driver).await;
+        } else {
+            future::pending::<()>().await
         }
         loop {}
     })
