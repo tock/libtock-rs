@@ -10,9 +10,11 @@ fn main() {
     static ENV_VAR: &str = "PLATFORM";
     static FILE_NAME: &str = "platform";
     static APP_HEAP_SIZE: &str = "APP_HEAP_SIZE";
+    static KERNEL_HEAP_SIZE: &str = "KERNEL_HEAP_SIZE";
 
     println!("cargo:rerun-if-env-changed={}", ENV_VAR);
     println!("cargo:rerun-if-env-changed={}", APP_HEAP_SIZE);
+    println!("cargo:rerun-if-env-changed={}", KERNEL_HEAP_SIZE);
     println!("cargo:rerun-if-changed={}", FILE_NAME);
 
     let platform_name = read_env_var(ENV_VAR).or_else(|| read_board_name_from_file(FILE_NAME));
@@ -26,11 +28,16 @@ fn main() {
         );
     }
 
-    if let Some(s) = read_env_var(APP_HEAP_SIZE) {
-        println!("cargo:rustc-env=APP_HEAP_SIZE={}", s);
+    set_default_env(APP_HEAP_SIZE, "1024");
+    set_default_env(KERNEL_HEAP_SIZE, "1024");
+}
+
+fn set_default_env(env_var: &str, default: &str) {
+    if let Some(s) = read_env_var(env_var) {
+        println!("cargo:rustc-env={}={}", env_var, s);
     } else {
         // Just use a default of 1024 if nothing is passed in
-        println!("cargo:rustc-env=APP_HEAP_SIZE=1024");
+        println!("cargo:rustc-env={}={}", env_var, default);
     }
 }
 
