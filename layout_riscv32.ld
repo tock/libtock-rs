@@ -10,7 +10,7 @@ MEMORY {
    * the kernel binary, check for the actual address of APP_MEMORY!
    */
   FLASH (rx) : ORIGIN = 0x20430040, LENGTH = 32M
-  SRAM (rwx) : ORIGIN = 0x80002400, LENGTH = 512K
+  SRAM (rwx) : ORIGIN = 0x80002400, LENGTH = 0x1C00
 }
 
 /*
