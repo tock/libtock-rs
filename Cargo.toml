@@ -12,13 +12,13 @@ alloc = [ "linked_list_allocator" ]
 core = { package = "async-support", path = "async-support" }
 libtock_codegen = { path = "codegen" }
 linked_list_allocator = { optional = true, version = "=0.6.5", default-features = false }
+futures = { version = "0.3.1", default-features = false, features = ["unstable", "cfg-target-has-atomic"] }
 
 [dev-dependencies]
 corepack = { version = "0.4.0", default-features = false, features = ["alloc"] }
 # We pin the serde version because newer serde versions may not be compatible
 # with the nightly toolchain used by libtock-rs.
 serde = { version = "=1.0.84", default-features = false, features = ["derive"] }
-futures = { version = "0.3.1", default-features = false, features = ["unstable", "cfg-target-has-atomic"] }
 
 [[example]]
 name = "alloc_error"
