@@ -11,15 +11,42 @@ rust:
 
 os:
   - linux
-  - osx
 
 cache: cargo
+
+# Once Travis supports a version of Ubuntu Disco or newer we can apt install QEMU for RISC-V
+# Until then we need to build it ourselves
+before_install:
+#   - sudo apt-get -y install qemu-system-misc
+# addons:
+#   apt:
+#     update: true
+  - wget https://download.qemu.org/qemu-4.2.0.tar.xz
+  - tar xJf qemu-4.2.0.tar.xz
+  - pushd qemu-4.2.0
+  - ./configure --target-list=riscv32-softmmu
+  - make -j8
+  - sudo ln -s $PWD/riscv32-softmmu/qemu-system-riscv32 /usr/bin/
+  - popd
 
 install:
   - rustup target add thumbv7em-none-eabi
   - rustup target add riscv32imc-unknown-none-elf
   - rustup component add rustfmt
   - rustup component add clippy
+  - cargo install elf2tab --version 0.4.0
+  # Build Tock, it needs to be outside of the libtock-rs source
+  - pushd ../
+  - git clone https://github.com/tock/tock.git
+  - cd tock/boards/hifive1
+  # Use a known working version of Tock
+  - git checkout c94059d3e25dc635e682facff4894ef43b9aca0e
+  - make
+  - popd
 
 script:
   - ./run_all_checks.sh
+  # Run a QEMU instance of the HiFive1 app
+  - PLATFORM=riscv32 cargo rrv32imac --example hello_world
+  - timeout --foreground 10s qemu-system-riscv32 -M sifive_e -kernel ../tock/boards/hifive1/target/riscv32imac-unknown-none-elf/release/hifive1 -device loader,file=./target/riscv32imac-unknown-none-elf/tab/riscv32/hello_world/rv32imac.tbf,addr=0x20430000 -nographic | tee serial
+  - grep "Hello Tock World" serial
