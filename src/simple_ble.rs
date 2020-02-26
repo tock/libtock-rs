@@ -44,7 +44,7 @@ pub mod gap_data {
 pub struct BleAdvertisingDriverFactory;
 
 impl BleAdvertisingDriverFactory {
-    pub fn create_driver(self) -> BleAdvertisingDriver {
+    pub fn create_driver(&mut self) -> BleAdvertisingDriver {
         // Unfortunately, there is no way to check the availability of the ble advertising driver
         BleAdvertisingDriver
     }
@@ -97,7 +97,7 @@ const EMPTY_SCAN_BUFFER: ScanBuffer = [0; BUFFER_SIZE_SCAN];
 pub struct BleScanningDriverFactory;
 
 impl BleScanningDriverFactory {
-    pub fn create_driver(self) -> BleScanningDriver {
+    pub fn create_driver(&mut self) -> BleScanningDriver {
         BleScanningDriver {
             shared_buffer: EMPTY_SCAN_BUFFER,
             read_value: Cell::new(None),
@@ -116,7 +116,7 @@ impl BleScanningDriverFactory {
 /// # async fn doc() -> TockResult<()> {
 /// let mut drivers = libtock::retrieve_drivers()?;
 /// let led_driver = drivers.leds.init_driver()?;
-/// let ble_scanning_driver_factory = drivers.ble_scanning;
+/// let mut ble_scanning_driver_factory = drivers.ble_scanning;
 /// let mut ble_scanning_driver = ble_scanning_driver_factory.create_driver();
 /// let mut ble_scanning_driver_sharing = ble_scanning_driver.share_memory()?;
 /// let ble_scanning_driver_scanning = ble_scanning_driver_sharing.start()?;

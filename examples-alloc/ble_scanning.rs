@@ -16,7 +16,7 @@ async fn main() -> TockResult<()> {
     let mut drivers = libtock::retrieve_drivers()?;
     let leds_driver = drivers.leds.init_driver()?;
 
-    let ble_scanning_driver_factory = drivers.ble_scanning;
+    let mut ble_scanning_driver_factory = drivers.ble_scanning;
     let mut ble_scanning_driver = ble_scanning_driver_factory.create_driver();
     let mut ble_scanning_driver_sharing = ble_scanning_driver.share_memory()?;
     let ble_scanning_driver_scanning = ble_scanning_driver_sharing.start()?;
