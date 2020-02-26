@@ -16,10 +16,10 @@ struct LedCommand {
 #[libtock::main]
 async fn main() -> TockResult<()> {
     let mut drivers = libtock::retrieve_drivers()?;
-
     let leds_driver = drivers.leds.init_driver()?;
     let mut timer_driver = drivers.timer.create_timer_driver();
     let timer_driver = timer_driver.activate()?;
+    let mut ble_advertising_driver = drivers.ble_advertising.create_driver();
 
     let led = leds_driver.leds().next().unwrap();
 
@@ -44,9 +44,7 @@ async fn main() -> TockResult<()> {
 
     gap_payload.add_service_payload([91, 79], &payload).unwrap();
 
-    let _handle = drivers
-        .ble_advertising
-        .initialize(100, &gap_payload, &mut buffer);
+    let _handle = ble_advertising_driver.initialize(100, &gap_payload, &mut buffer);
 
     loop {
         led.on()?;

@@ -11,8 +11,8 @@ use crate::sensors::ninedof::NinedofDriver;
 use crate::sensors::AmbientLightSensor;
 use crate::sensors::HumiditySensor;
 use crate::sensors::TemperatureSensor;
-use crate::simple_ble::BleAdvertisingDriver;
-use crate::simple_ble::BleScanningDriver;
+use crate::simple_ble::BleAdvertisingDriverFactory;
+use crate::simple_ble::BleScanningDriverFactory;
 use crate::temperature::TemperatureDriverFactory;
 use crate::timer::DriverContext;
 use core::cell::Cell;
@@ -28,8 +28,8 @@ pub struct Drivers {
     pub buttons: ButtonsDriverFactory,
     pub adc: AdcDriverFactory,
     pub rng: RngDriver,
-    pub ble_advertising: BleAdvertisingDriver,
-    pub ble_scanning: BleScanningDriver,
+    pub ble_advertising: BleAdvertisingDriverFactory,
+    pub ble_scanning: BleScanningDriverFactory,
     pub ambient_light_sensor: AmbientLightSensor,
     pub temperature_sensor: TemperatureSensor,
     pub humidity_sensor: HumiditySensor,
@@ -63,8 +63,8 @@ pub unsafe fn retrieve_drivers_unsafe() -> Drivers {
 #[allow(clippy::declare_interior_mutable_const)]
 const DRIVERS: Drivers = Drivers {
     adc: AdcDriverFactory,
-    ble_advertising: BleAdvertisingDriver,
-    ble_scanning: BleScanningDriver,
+    ble_advertising: BleAdvertisingDriverFactory,
+    ble_scanning: BleScanningDriverFactory,
     buttons: ButtonsDriverFactory,
     console: ConsoleDriver,
     leds: LedsDriverFactory,
