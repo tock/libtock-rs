@@ -59,5 +59,6 @@ lto = true
 members = [
     "async-support",
     "codegen",
-    "core"
+    "core",
+    "test-runner"
 ]
