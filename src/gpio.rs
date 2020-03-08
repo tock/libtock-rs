@@ -18,6 +18,7 @@ mod command_nr {
     pub const ENABLE_INTERRUPT: usize = 7;
     pub const DISABLE_INTERRUPT: usize = 8;
     pub const DISABLE: usize = 9;
+    pub const GET_PIN_BY_PINID: usize = 10;
 }
 
 mod subscribe_nr {
@@ -53,6 +54,15 @@ impl<'a> GpioDriver<'a> {
             curr_gpio: 0,
             lifetime: PhantomData,
         }
+    }
+
+    pub fn gpio_by_id(pinid:usize) -> TockResult<Gpio<'a>> {
+        let gpio_num = syscalls::command(DRIVER_NUMBER, command_nr::GET_PIN_BY_PINID, pinid, 0)?;
+        let gpio_write = Gpio {
+            gpio_num: gpio_num,
+            lifetime: PhantomData,
+        };
+        Ok(gpio_write)
     }
 
     pub fn subscribe<CB: Fn(usize, GpioState)>(
