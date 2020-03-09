@@ -13,16 +13,16 @@ async fn main() -> TockResult<()> {
 
     // search for pin PE09 (nucleo f429zi)
     // msb 4 bits, port E (4th port, staring from 0) - 0100
-    // lsb 4 bits, pin 9 - 1001 
-    if let Some (gpio) = gpio.gpio_by_id (0b01001001) {
-        gpio.set_output ();
+    // lsb 4 bits, pin 9 - 1001
+    if let Some(gpio) = gpio.gpio_by_id(0b01001001) {
+        gpio.set_output();
         loop {
-            gpio.set ();
+            gpio.set();
             timer_driver.sleep(Duration::from_ms(1000)).await?;
-            gpio.clear ();
+            gpio.clear();
             timer_driver.sleep(Duration::from_ms(1000)).await?;
         }
     }
-    
+
     loop {}
 }
