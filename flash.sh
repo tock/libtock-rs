@@ -16,7 +16,7 @@ case "${PLATFORM}" in
         binary_name=cortex-m4.elf
         tockload=y
         ;;
-    "riscv32")
+    "hifive1")
         tockloader_flags=""
         binary_name=rv32imac.elf
         tockload=n

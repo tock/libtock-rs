@@ -47,6 +47,6 @@ install:
 script:
   - ./run_all_checks.sh
   # Run a QEMU instance of the HiFive1 app
-  - PLATFORM=riscv32 cargo rrv32imac --example hello_world
-  - timeout --foreground 10s qemu-system-riscv32 -M sifive_e -kernel ../tock/boards/hifive1/target/riscv32imac-unknown-none-elf/release/hifive1 -device loader,file=./target/riscv32imac-unknown-none-elf/tab/riscv32/hello_world/rv32imac.tbf,addr=0x20430000 -nographic | tee serial
+  - PLATFORM=hifive1 cargo rrv32imac --example hello_world
+  - timeout --foreground 10s qemu-system-riscv32 -M sifive_e -kernel ../tock/boards/hifive1/target/riscv32imac-unknown-none-elf/release/hifive1 -device loader,file=./target/riscv32imac-unknown-none-elf/tab/hifive1/hello_world/rv32imac.tbf,addr=0x20430000 -nographic | tee serial
   - grep "Hello Tock World" serial
