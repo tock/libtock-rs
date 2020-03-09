@@ -6,6 +6,7 @@ use crate::syscalls;
 use core::marker::PhantomData;
 
 const DRIVER_NUMBER: usize = 0x00004;
+const MAX_NUM_PINS_DIV_8: usize = 20;
 
 mod command_nr {
     pub const COUNT: usize = 0;
@@ -52,11 +53,12 @@ impl<'a> GpioDriver<'a> {
         Gpios {
             num_gpios: self.num_gpios(),
             curr_gpio: 0,
+            used_pins: [0; MAX_NUM_PINS_DIV_8],
             lifetime: PhantomData,
         }
     }
 
-    pub fn gpio_by_id(pinid: usize) -> TockResult<Gpio<'a>> {
+    pub fn gpio_by_id(&self, pinid: usize) -> TockResult<Gpio<'a>> {
         let gpio_num = syscalls::command(DRIVER_NUMBER, command_nr::GET_PIN_BY_PINID, pinid, 0)?;
         let gpio_write = Gpio {
             gpio_num,
@@ -119,18 +121,57 @@ impl From<bool> for GpioState {
 pub struct Gpios<'a> {
     num_gpios: usize,
     curr_gpio: usize,
+    used_pins: [u8; MAX_NUM_PINS_DIV_8],
     lifetime: PhantomData<&'a ()>,
+}
+
+impl<'a> Gpios<'a> {
+    fn pin_used(&self, pin_number: usize) -> bool {
+        self.used_pins[pin_number / 8] & 1 << (pin_number % 8) != 0
+    }
+
+    fn set_pin_used(&mut self, pin_number: usize) {
+        self.used_pins[pin_number / 8] |= 1 << (pin_number % 8);
+    }
+
+    pub fn next_at(&mut self, pinid: usize) -> Option<Gpio<'a>> {
+        if let Ok(gpio_num) =
+            syscalls::command(DRIVER_NUMBER, command_nr::GET_PIN_BY_PINID, pinid, 0)
+        {
+            if !self.pin_used(gpio_num) && gpio_num < self.num_gpios {
+                let item = Gpio {
+                    gpio_num: self.curr_gpio,
+                    lifetime: PhantomData,
+                };
+                self.set_pin_used(gpio_num);
+                self.curr_gpio = gpio_num + 1;
+                Some(item)
+            } else {
+                None
+            }
+        } else {
+            None
+        }
+    }
+
+    pub fn reset(&mut self) {
+        self.curr_gpio = 0;
+    }
 }
 
 impl<'a> Iterator for Gpios<'a> {
     type Item = Gpio<'a>;
 
     fn next(&mut self) -> Option<Self::Item> {
+        while self.curr_gpio < self.num_gpios && self.pin_used(self.curr_gpio) {
+            self.curr_gpio += 1;
+        }
         if self.curr_gpio < self.num_gpios {
             let item = Gpio {
                 gpio_num: self.curr_gpio,
                 lifetime: PhantomData,
             };
+            self.set_pin_used(self.curr_gpio);
             self.curr_gpio += 1;
             Some(item)
         } else {
