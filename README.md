@@ -14,7 +14,7 @@ usually means that they must be compiled especially for your board
 and that there can only be one application written in rust at a time
 and it must be installed as the first application on the board, unless
 you want to play games with linker scripts.
-There are some `layout_*.ld` files provided that allow to run the
+There are some `boards/layout_*.ld` files provided that allow to run the
 examples on common boards.
 Due to MPU region alignment issues they may not work for applications
 that use a lot of RAM, in that case you may have to change the SRAM
@@ -59,7 +59,7 @@ This project is nascent and still under heavy development, but first steps:
     PLATFORM=opentitan cargo rriscv32imc blink # For an OpenTitan board
     ```
 
-    For an unknown platform, you may have to create your own memory layout definition. Place the layout definition file at `layout_<platform>.ld` and do not forget to enhance the `tockloader_flags` dispatching section in `flash.sh`. You are welcome to create a PR, s.t. the number of supported platforms grows.
+    For an unknown platform, you may have to create your own memory layout definition. Place the layout definition file at `boards/layout_<platform>.ld` and do not forget to enhance the `tockloader_flags` dispatching section in `flash.sh`. You are welcome to create a PR, s.t. the number of supported platforms grows.
 
 ## Using libtock-rs
 

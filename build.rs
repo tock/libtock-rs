@@ -45,7 +45,7 @@ fn read_board_name_from_file(file_name: &str) -> Option<String> {
 }
 
 fn copy_linker_file(platform_name: &str) {
-    let linker_file_name = format!("layout_{}.ld", platform_name);
+    let linker_file_name = format!("boards/layout_{}.ld", platform_name);
     let path = Path::new(&linker_file_name);
     if !path.exists() {
         println!("Cannot find layout file {:?}", path);
