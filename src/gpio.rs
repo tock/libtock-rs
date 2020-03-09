@@ -58,15 +58,6 @@ impl<'a> GpioDriver<'a> {
         }
     }
 
-    pub fn gpio_by_id(&self, pinid: usize) -> TockResult<Gpio<'a>> {
-        let gpio_num = syscalls::command(DRIVER_NUMBER, command_nr::GET_PIN_BY_PINID, pinid, 0)?;
-        let gpio_write = Gpio {
-            gpio_num,
-            lifetime: PhantomData,
-        };
-        Ok(gpio_write)
-    }
-
     pub fn subscribe<CB: Fn(usize, GpioState)>(
         &self,
         callback: &'a mut CB,
