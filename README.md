@@ -63,7 +63,7 @@ This project is nascent and still under heavy development, but first steps:
     make opentitan FEATURES=alloc # Builds all examples for the OpenTitan platform, with alloc feature enabled
     ```
 
-    For an unknown platform, you may have to create your own memory layout definition. Place the layout definition file at `boards/layout_<platform>.ld` and do not forget to enhance the `tockloader_flags` dispatching section in `flash.sh`. You are welcome to create a PR, s.t. the number of supported platforms grows.
+    For an unknown platform, you may have to create your own memory layout definition. Place the layout definition file at `boards/layout_<platform>.ld` and do not forget to enhance the `tockloader_flags` dispatching section in `tools/flash.sh`. You are welcome to create a PR, s.t. the number of supported platforms grows.
 
 ## Using libtock-rs
 
