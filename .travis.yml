@@ -29,11 +29,7 @@ before_install:
   - popd
 
 install:
-  - rustup target add thumbv7em-none-eabi
-  - rustup target add riscv32imc-unknown-none-elf
-  - rustup component add rustfmt
-  - rustup component add clippy
-  - cargo install elf2tab --version 0.4.0
+  - make setup
   # Build Tock, it needs to be outside of the libtock-rs source
   - pushd ../
   - git clone https://github.com/tock/tock.git

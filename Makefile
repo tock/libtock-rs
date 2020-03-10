@@ -15,8 +15,17 @@ usage:
 	@echo " - hifive1"
 	@echo " - nrf52"
 	@echo
+	@echo "Run 'make setup' to setup Rust to build libtock-rs."
 	@echo "Run 'make <board>' to build libtock-rs for that board"
 	@echo "Run 'make test' to test any local changes you have made"
+
+.PHONY: setup
+setup:
+	rustup target add thumbv7em-none-eabi
+	rustup target add riscv32imc-unknown-none-elf
+	rustup component add rustfmt
+	rustup component add clippy
+	cargo install elf2tab --version 0.4.0
 
 .PHONY: examples
 examples:
