@@ -17,7 +17,19 @@ usage:
 	@echo
 	@echo "Run 'make setup' to setup Rust to build libtock-rs."
 	@echo "Run 'make <board>' to build libtock-rs for that board"
+	@echo "    Set the FEATURES flag to enable features"
 	@echo "Run 'make test' to test any local changes you have made"
+
+check_defined = \
+    $(strip $(foreach 1,$1, \
+        $(call __check_defined,$1,$(strip $(value 2)))))
+__check_defined = \
+    $(if $(value $1),, \
+      $(error Undefined $1$(if $2, $2)))
+
+ifdef FEATURES
+	features=--features=$(FEATURES)
+endif
 
 .PHONY: setup
 setup:
@@ -42,23 +54,23 @@ test:
 
 .PHONY: hail
 hail:
-	PLATFORM=hail cargo build --release --target=thumbv7em-none-eabi --examples
+	PLATFORM=hail cargo build --release --target=thumbv7em-none-eabi --examples $(features)
 
 .PHONY: nrf52840
 nrf52840:
-	PLATFORM=nrf52840 cargo build --release --target=thumbv7em-none-eabi --examples
+	PLATFORM=nrf52840 cargo build --release --target=thumbv7em-none-eabi --examples $(features)
 
 .PHONY: opentitan
 opentitan:
-	PLATFORM=opentitan cargo build --release --target=riscv32imc-unknown-none-elf --examples
+	PLATFORM=opentitan cargo build --release --target=riscv32imc-unknown-none-elf --examples $(features)
 
 .PHONY: hifive1
 hifive1:
-	PLATFORM=hifive1 cargo build --release --target=riscv32imac-unknown-none-elf --examples
+	PLATFORM=hifive1 cargo build --release --target=riscv32imac-unknown-none-elf --examples $(features)
 
 .PHONY: nrf52
 nrf52:
-	PLATFORM=nrf52 cargo build --release --target=thumbv7em-none-eabi --examples
+	PLATFORM=nrf52 cargo build --release --target=thumbv7em-none-eabi --examples $(features)
 
 .PHONY: clean
 clean:
