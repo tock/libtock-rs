@@ -1,8 +1,4 @@
-#![cfg_attr(feature = "alloc", feature(alloc_error_handler))]
 #![cfg_attr(any(target_arch = "arm", target_arch = "riscv32"), no_std)]
-
-#[cfg(feature = "alloc")]
-mod alloc;
 
 pub mod adc;
 pub mod ble_composer;

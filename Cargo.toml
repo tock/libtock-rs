@@ -6,13 +6,12 @@ license = "MIT/Apache-2.0"
 edition = "2018"
 
 [features]
-alloc = [ "linked_list_allocator" ]
+alloc = ["libtock-core/alloc"]
 
 [dependencies]
 core = { package = "async-support", path = "async-support" }
 libtock-core = { path = "core" }
 libtock_codegen = { path = "codegen" }
-linked_list_allocator = { optional = true, version = "=0.6.5", default-features = false }
 futures = { version = "0.3.1", default-features = false, features = ["unstable", "cfg-target-has-atomic"] }
 
 [dev-dependencies]
