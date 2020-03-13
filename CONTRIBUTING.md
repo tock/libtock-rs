@@ -21,12 +21,12 @@ have to be run manually.
 - `riscv32imc-unknown-none-elf`
 - `thumbv7em-none-eabi`
 
-You can trigger a test build of the library and the examples using the script `build_examples.sh`.
+You can trigger a test build of the library and the examples using `make test`.
 
 ## Unit Testing and Linting
 
 There a a number of tests which run in our travis-ci environment. You can run them
-using `cargo test --workspace`.
+using `make test`.
 
 ## Integration tests
 
@@ -35,7 +35,7 @@ The pins P0.03 and P0.04 need to be connected (on an nRF52 DK). Then do the foll
 
 - connect your device to your computer
 - open a console, e.g. `tockloader listen`
-- run the tests: `PLATFORM=nrf52 cargo rtv7em libtock_test --features=alloc`
+- run the tests: `make flash-nrf52 EXAMPLE=libtock_test FEATURES=alloc`
 
 The expected output on the UART console will be as follows.
 
