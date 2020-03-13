@@ -15,6 +15,7 @@ pub mod electronics;
 pub mod futures;
 pub mod gpio;
 pub mod leds;
+pub mod result;
 pub mod rng;
 pub mod sensors;
 pub mod simple_ble;

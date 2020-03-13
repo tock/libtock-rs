@@ -18,7 +18,6 @@
 //! `rustc_main`. That's covered by the `_start` function in the root of this
 //! crate.
 
-use crate::result::TockResult;
 use crate::syscalls;
 use core::panic::PanicInfo;
 
@@ -40,7 +39,7 @@ impl Termination for () {
     fn check_result(self) {}
 }
 
-impl Termination for TockResult<()> {
+impl<S, T> Termination for Result<S, T> {
     fn check_result(self) {
         if self.is_err() {
             unsafe { report_panic() };
