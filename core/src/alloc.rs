@@ -1,4 +1,3 @@
-use crate::syscalls;
 use core::alloc::GlobalAlloc;
 use core::alloc::Layout;
 use core::ptr;
@@ -24,8 +23,17 @@ unsafe impl GlobalAlloc for TockAllocator {
 #[global_allocator]
 static ALLOCATOR: TockAllocator = TockAllocator;
 
+#[cfg(not(feature = "custom_alloc_error_handler"))]
 #[alloc_error_handler]
 unsafe fn alloc_error_handler(_: Layout) -> ! {
+    use crate::syscalls;
+
+    // Print 0x01 using the LowLevelDebug capsule (if available).
+    let _ = syscalls::command1_insecure(8, 2, 0x01);
+
+    // Signal a panic using the LowLevelDebug capsule (if available).
+    let _ = syscalls::command1_insecure(8, 1, 0x01);
+
     loop {
         syscalls::raw::yieldk();
     }

@@ -19,7 +19,6 @@
 //! crate.
 
 use crate::syscalls;
-use core::panic::PanicInfo;
 
 #[lang = "start"]
 extern "C" fn start<T>(main: fn() -> T, _argc: isize, _argv: *const *const u8) -> bool
@@ -47,8 +46,9 @@ impl<S, T> Termination for Result<S, T> {
     }
 }
 
+#[cfg(not(feature = "custom_panic_handler"))]
 #[panic_handler]
-unsafe fn panic_handler(_info: &PanicInfo) -> ! {
+unsafe fn panic_handler(_info: &core::panic::PanicInfo) -> ! {
     report_panic()
 }
 
