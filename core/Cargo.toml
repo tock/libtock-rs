@@ -1,10 +1,8 @@
 [package]
 name = "libtock-core"
 version = "0.1.0"
-authors = ["torfmaster <briefe@kebes.de>", "Woyten <woyten.tielesch@online.de>"]
+authors = ["Tock Project Developers <tock-dev@googlegroups.com>"]
 edition = "2018"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
 alloc = [ "linked_list_allocator" ]
