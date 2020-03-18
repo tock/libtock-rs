@@ -43,6 +43,7 @@ examples:
 	PLATFORM=nrf52 cargo build --release --target=thumbv7em-none-eabi --examples
 	PLATFORM=nrf52 cargo build --release --target=thumbv7em-none-eabi --examples --features=alloc
 	PLATFORM=opentitan cargo build --release --target=riscv32imc-unknown-none-elf --examples
+	cd core && cargo build --release --target=thumbv7em-none-eabi --examples --features=custom_panic_handler && cd ..
 
 .PHONY: test
 test:
