@@ -1,4 +1,4 @@
-#![cfg_attr(any(target_arch = "arm", target_arch = "riscv32"), no_std)]
+#![cfg_attr(not(test), no_std)]
 
 pub mod adc;
 pub mod ble_composer;
