@@ -3,6 +3,7 @@
 mod low_level_debug;
 
 use crate::drivers;
+use libtock_core::debug as core_debug;
 
 pub use low_level_debug::*;
 
@@ -21,21 +22,14 @@ pub fn print_as_hex(value: usize) {
     let _ = console.write(buffer);
 }
 
-#[cfg(target_arch = "arm")]
 pub fn print_stack_pointer() {
-    let stack_pointer;
-    unsafe { asm!("mov $0, sp" : "=r"(stack_pointer) : : : "volatile") };
-
     let mut buffer = [b'\n'; 15];
     buffer[0..4].clone_from_slice(b"SP: ");
-    write_as_hex(&mut buffer[4..15], stack_pointer);
+    write_as_hex(&mut buffer[4..15], core_debug::get_stack_pointer());
     let drivers = unsafe { drivers::retrieve_drivers_unsafe() };
     let mut console = drivers.console.create_console();
     let _ = console.write(buffer);
 }
-
-#[cfg(target_arch = "riscv32")]
-pub fn print_stack_pointer() {}
 
 #[inline(always)]
 /// Dumps address

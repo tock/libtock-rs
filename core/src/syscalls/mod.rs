@@ -1,9 +1,5 @@
 #[cfg_attr(target_arch = "riscv32", path = "platform_riscv32.rs")]
 #[cfg_attr(target_arch = "arm", path = "platform_arm.rs")]
-#[cfg_attr(
-    not(any(target_arch = "arm", target_arch = "riscv32")),
-    path = "platform_mock.rs"
-)]
 mod platform;
 
 use crate::callback::CallbackSubscription;

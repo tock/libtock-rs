@@ -6,12 +6,14 @@ license = "MIT/Apache-2.0"
 edition = "2018"
 
 [features]
-alloc = [ "linked_list_allocator" ]
+alloc = ["libtock-core/alloc"]
+custom_panic_handler = ["libtock-core/custom_panic_handler"]
+custom_alloc_error_handler = ["libtock-core/custom_alloc_error_handler"]
 
 [dependencies]
 core = { package = "async-support", path = "async-support" }
+libtock-core = { path = "core" }
 libtock_codegen = { path = "codegen" }
-linked_list_allocator = { optional = true, version = "=0.6.5", default-features = false }
 futures = { version = "0.3.1", default-features = false, features = ["unstable", "cfg-target-has-atomic"] }
 
 [dev-dependencies]
@@ -22,22 +24,27 @@ serde = { version = "=1.0.84", default-features = false, features = ["derive"] }
 
 [[example]]
 name = "alloc_error"
-path = "examples-alloc/alloc_error.rs"
-required-features = ["alloc"]
+path = "examples-features/alloc_error.rs"
+required-features = ["alloc", "custom_alloc_error_handler"]
 
 [[example]]
 name = "ble_scanning"
-path = "examples-alloc/ble_scanning.rs"
+path = "examples-features/ble_scanning.rs"
 required-features = ["alloc"]
 
 [[example]]
 name = "libtock_test"
-path = "examples-alloc/libtock_test.rs"
+path = "examples-features/libtock_test.rs"
 required-features = ["alloc"]
 
 [[example]]
+name = "panic"
+path = "examples-features/panic.rs"
+required-features = ["custom_panic_handler"]
+
+[[example]]
 name = "simple_ble"
-path = "examples-alloc/simple_ble.rs"
+path = "examples-features/simple_ble.rs"
 required-features = ["alloc"]
 
 [profile.dev]
@@ -52,4 +59,5 @@ lto = true
 members = [
     "async-support",
     "codegen",
+    "core"
 ]
