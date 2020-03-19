@@ -45,7 +45,6 @@ examples:
 	PLATFORM=nrf52 cargo build --release --target=thumbv7em-none-eabi --example panic --features=custom_panic_handler,custom_alloc_error_handler
 	PLATFORM=nrf52 cargo build --release --target=thumbv7em-none-eabi --example alloc_error --features=alloc,custom_alloc_error_handler
 	PLATFORM=opentitan cargo build --release --target=riscv32imc-unknown-none-elf --examples # Important: This is testing a platform without atomics support
-	cd core && cargo build --release --target=thumbv7em-none-eabi --examples --features=custom_panic_handler && cd ..
 
 .PHONY: test
 test:
