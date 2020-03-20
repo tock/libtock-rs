@@ -73,7 +73,7 @@ opentitan:
 
 .PHONY: flash-opentitan
 flash-opentitan:
-	PLATFORM=opentitan cargo run $(release) --target=riscv32imac-unknown-none-elf --example $(EXAMPLE) $(features)
+	PLATFORM=opentitan cargo run $(release) --target=riscv32imc-unknown-none-elf --example $(EXAMPLE) $(features)
 
 .PHONY: hifive1
 hifive1:
