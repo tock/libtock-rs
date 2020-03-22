@@ -1,18 +1,10 @@
-use std::collections::HashMap;
+use std::fmt;
 use std::process::Stdio;
 use std::time::Duration;
-use structopt::StructOpt;
 use tokio::io::AsyncBufReadExt;
 use tokio::io::BufReader;
 use tokio::process::Command;
 use tokio::time::timeout;
-
-#[derive(Debug, StructOpt)]
-#[structopt(name = "libtock test runner", about = "run libtock tests")]
-struct Arguments {
-    #[structopt(short, long)]
-    timeout_ms: usize,
-}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -20,6 +12,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 async fn perform_tests() -> Result<(), Box<dyn std::error::Error>> {
+    let mut failed_tests = Vec::new();
+
     let  tests = Command::new("qemu-system-riscv32")
         .arg("-M")
         .arg("sifive_e")
@@ -36,70 +30,100 @@ async fn perform_tests() -> Result<(), Box<dyn std::error::Error>> {
 
     let stdout_reader = BufReader::new(stdout);
     let mut stdout_lines = stdout_reader.lines();
-    let mut result_map = HashMap::<TockTest, bool>::new();
 
     while let Some(line) = stdout_lines.next_line().await? {
         println!("UART: {}", line);
-        if let Some(entry) = parse_line(line) {
-            result_map.insert(entry.0, entry.1);
+        let test_result = test_succeeded(line, &mut failed_tests);
+        if let Some(true) = test_result {
+            return Ok(());
         }
-        if result_map.keys().len() >= NUMBER_OF_TESTS {
-            if result_map.values().all(|x| *x) {
-                return Ok(());
-            } else {
-                panic!();
-            }
+        if let Some(false) = test_result {
+            return Err(Box::new(TestError::TestFailure(failed_tests)));
         }
     }
-    panic!("qemu exited unexpectedly")
+    Err(Box::new(TestError::QemuExit))
 }
 
-fn parse_line(input: String) -> Option<(TockTest, bool)> {
-    let result = input.find("[      OK ]").is_some();
+fn test_succeeded(input: String, failed_tests: &mut Vec<String>) -> Option<bool> {
+    let success = input.find("[      OK ]").is_some();
+    let failure = input.find("[ FAILURE ]").is_some();
     let input = input.replace("[      OK ]", "");
     let input = input.replace("[ FAILURE ]", "");
     let input = input.trim();
-    let tock_test = label_to_tocktest(input.to_string());
-    tock_test.map(|test| (test, result))
+    if input == "Test suite finished with state SUCCESS" && success {
+        return Some(true);
+    } else if input == "Test suite finished with state FAILURE" && !success {
+        return Some(false);
+    } else if failure {
+        failed_tests.push(input.to_string());
+    }
+    None
 }
 
-const NUMBER_OF_TESTS: usize = 6;
-#[derive(PartialEq, Debug, Hash, Eq)]
-enum TockTest {
-    Console,
-    StaticMut,
-    DynamicDispatch,
-    Formatting,
-    Heap,
-    DriversOnlyInstantiableOnce,
+#[derive(Debug)]
+enum TestError {
+    TestFailure(Vec<String>),
+    QemuExit,
 }
 
-fn label_to_tocktest(label: String) -> Option<TockTest> {
-    match label.as_str() {
-        "Console" => Some(TockTest::Console),
-        "static mut" => Some(TockTest::StaticMut),
-        "Dynamic dispatch" => Some(TockTest::DynamicDispatch),
-        "Formatting" => Some(TockTest::Formatting),
-        "Heap" => Some(TockTest::Heap),
-        "Drivers only instantiable once" => Some(TockTest::DriversOnlyInstantiableOnce),
-        _ => None,
+impl fmt::Display for TestError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            TestError::TestFailure(failures) => {
+                writeln!(f, "A test failure occured. Failed Tests")?;
+                for test in failures {
+                    writeln!(f, "Test failed\"{}\"", test)?;
+                }
+                Ok(())
+            }
+            TestError::QemuExit => write!(f, "Qemu exited unexpectedly."),
+        }
     }
 }
+
+impl std::error::Error for TestError {}
 
 #[cfg(test)]
 mod test {
     use super::*;
 
     #[test]
-    pub fn works() {
+    pub fn detects_success_of_test_suite() {
+        let mut test_results = Vec::new();
         assert_eq!(
-            parse_line("[      OK ] Console".into()),
-            Some((TockTest::Console, true))
+            test_succeeded(
+                "[      OK ] Test suite finished with state SUCCESS".into(),
+                &mut test_results
+            ),
+            Some(true)
         );
     }
 
     #[test]
-    pub fn fails() {
-        assert_eq!(parse_line("[      OK ]  No Console".into()), None);
+    pub fn detects_failure_of_test_suite() {
+        let mut test_results = Vec::new();
+        assert_eq!(
+            test_succeeded(
+                "[ FAILURE ] Test suite finished with state FAILURE".into(),
+                &mut test_results
+            ),
+            Some(false)
+        );
+    }
+
+    #[test]
+    pub fn detects_test_failures() {
+        let mut test_results = Vec::new();
+        test_succeeded("[ FAILURE ]  Another test".into(), &mut test_results);
+        assert_eq!(test_results, vec!["Another test"]);
+    }
+
+    #[test]
+    pub fn ignores_other_tests() {
+        let mut test_results = Vec::new();
+        assert_eq!(
+            test_succeeded("[ SUCCESS ]  Another test".into(), &mut test_results),
+            None
+        );
     }
 }

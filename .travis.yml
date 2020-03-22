@@ -42,7 +42,7 @@ install:
 script:
   - make test
   # Run a QEMU instance of the HiFive1 app
-  - PLATFORM=hifive1 cargo rrv32imac --example libtock_test --features=alloc
+  - PLATFORM=hifive1 cargo rrv32imac --example libtock_test --features=alloc --features=__internal_disable_gpio_in_integration_test
   - pushd test-runner
   - cargo run
   - popd
