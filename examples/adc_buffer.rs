@@ -13,10 +13,10 @@ async fn main() -> TockResult<()> {
     let adc_driver = drivers.adc.init_driver()?;
     let mut console = drivers.console.create_console();
 
-    let mut adc_buffer = AdcBuffer::default();
+    let adc_buffer = AdcBuffer::default();
     let mut temp_buffer = [0; libtock::adc::BUFFER_SIZE];
 
-    let adc_buffer = adc_driver.init_buffer(&mut adc_buffer)?;
+    let adc_buffer = adc_driver.init_buffer(adc_buffer)?;
 
     let mut callback = |_, _| {
         adc_buffer.read_bytes(&mut temp_buffer[..]);

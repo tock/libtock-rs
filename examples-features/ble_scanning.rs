@@ -23,7 +23,7 @@ async fn main() -> TockResult<()> {
 
     loop {
         let value = ble_scanning_driver_scanning.stream_values().await;
-        ble_parser::find(&value, simple_ble::gap_data::SERVICE_DATA as u8)
+        ble_parser::find(value.as_ref(), simple_ble::gap_data::SERVICE_DATA as u8)
             .and_then(|service_data| ble_parser::extract_for_service([91, 79], service_data))
             .and_then(|payload| corepack::from_bytes::<LedCommand>(&payload).ok())
             .and_then(|msg| leds_driver.get(msg.nr as usize).ok())

@@ -27,7 +27,7 @@ async fn main() -> TockResult<()> {
 
     let payload = corepack::to_bytes(LedCommand { nr: 2, st: true }).unwrap();
 
-    let mut buffer = BleAdvertisingDriver::create_advertising_buffer();
+    let buffer = BleAdvertisingDriver::create_advertising_buffer();
     let mut gap_payload = BlePayload::default();
 
     gap_payload
@@ -44,7 +44,7 @@ async fn main() -> TockResult<()> {
 
     gap_payload.add_service_payload([91, 79], &payload).unwrap();
 
-    let _handle = ble_advertising_driver.initialize(100, &gap_payload, &mut buffer);
+    let _handle = ble_advertising_driver.initialize(100, &gap_payload, buffer);
 
     loop {
         led.on()?;
