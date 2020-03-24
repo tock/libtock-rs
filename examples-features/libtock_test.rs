@@ -2,7 +2,6 @@
 // Requires P0.03 and P0.04 to be connected (on a nRF52 DK).
 
 #![no_std]
-
 extern crate alloc;
 
 use alloc::string::String;
@@ -36,6 +35,10 @@ async fn main() -> TockResult<()> {
     }
 }
 
+#[cfg_attr(
+    feature = "__internal_disable_gpio_in_integration_test",
+    allow(unused_variables)
+)]
 async fn libtock_test(
     test: &mut LibtockTest,
     timer: &mut DriverContext,
@@ -48,6 +51,7 @@ async fn libtock_test(
     test.heap()?;
     test.drivers_only_instantiable_once()?;
     test.callbacks(timer).await?;
+    #[cfg(not(feature = "__internal_disable_gpio_in_integration_test"))]
     test.gpio(gpio)?;
     Ok(())
 }
@@ -113,7 +117,7 @@ impl LibtockTest {
         let mut with_callback = timer_context.with_callback(|_, _| callback_hit = true);
         let mut timer = with_callback.init()?;
 
-        timer.set_alarm(Duration::from_ms(50))?;
+        timer.set_alarm(Duration::from_ms(1000))?;
 
         AlternatingFuture { yielded: false }.await;
 
@@ -122,6 +126,10 @@ impl LibtockTest {
         self.check_if_true(callback_hit, "Callbacks")
     }
 
+    #[cfg_attr(
+        feature = "__internal_disable_gpio_in_integration_test",
+        allow(dead_code)
+    )]
     fn gpio(&mut self, gpio: &mut GpioDriverFactory) -> TockResult<()> {
         let mut gpio_driver = gpio.init_driver().ok().unwrap();
 

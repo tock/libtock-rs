@@ -9,6 +9,7 @@ edition = "2018"
 alloc = ["libtock-core/alloc"]
 custom_panic_handler = ["libtock-core/custom_panic_handler"]
 custom_alloc_error_handler = ["libtock-core/custom_alloc_error_handler"]
+__internal_disable_gpio_in_integration_test = []
 
 [dependencies]
 core = { package = "async-support", path = "async-support" }
@@ -59,5 +60,6 @@ lto = true
 members = [
     "async-support",
     "codegen",
-    "core"
+    "core",
+    "test-runner"
 ]

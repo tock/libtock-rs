@@ -16,10 +16,10 @@ cache: cargo
 # Once Travis supports a version of Ubuntu Disco or newer we can apt install QEMU for RISC-V
 # Until then we need to build it ourselves
 before_install:
-#   - sudo apt-get -y install qemu-system-misc
-# addons:
-#   apt:
-#     update: true
+  #   - sudo apt-get -y install qemu-system-misc
+  # addons:
+  #   apt:
+  #     update: true
   - wget https://download.qemu.org/qemu-4.2.0.tar.xz
   - tar xJf qemu-4.2.0.tar.xz
   - pushd qemu-4.2.0
@@ -42,6 +42,7 @@ install:
 script:
   - make test
   # Run a QEMU instance of the HiFive1 app
-  - make flash-hifive1 EXAMPLE=hello_world
-  - timeout --foreground 10s qemu-system-riscv32 -M sifive_e -kernel ../tock/boards/hifive1/target/riscv32imac-unknown-none-elf/release/hifive1 -device loader,file=./target/riscv32imac-unknown-none-elf/tab/hifive1/hello_world/rv32imac.tbf,addr=0x20430000 -nographic | tee serial
-  - grep "Hello Tock World" serial
+  - PLATFORM=hifive1 cargo rrv32imac --example libtock_test --features=alloc --features=__internal_disable_gpio_in_integration_test
+  - pushd test-runner
+  - cargo run
+  - popd
