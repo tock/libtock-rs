@@ -11,6 +11,7 @@ pub mod electronics;
 pub mod executor;
 pub mod futures;
 pub mod gpio;
+pub mod hmac;
 pub mod leds;
 pub mod result;
 pub mod rng;
