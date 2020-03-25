@@ -84,7 +84,7 @@ libtock_codegen::make_read_env_var!("APP_HEAP_SIZE");
 /// into the rustc-generated main(). This cannot use mutable global variables or
 /// global references to globals until it is done setting up the data segment.
 #[no_mangle]
-unsafe extern "C" fn rust_start(app_start: usize, stacktop: usize, _app_heap_break: usize) -> ! {
+unsafe extern "C" fn rust_start(app_start: usize, stacktop: usize, app_heap_start: usize) -> ! {
     extern "C" {
         // This function is created internally by `rustc`. See
         // `src/lang_items.rs` for more details.
@@ -122,9 +122,6 @@ unsafe extern "C" fn rust_start(app_start: usize, stacktop: usize, _app_heap_bre
     // We get this from the environment to make it easy to set per compile.
     let app_heap_size: usize = read_APP_HEAP_SIZE();
 
-    // Make the heap start exactly at bss_end. The suggested _app_heap_break
-    // is almost always going to be too big and leads to us wasting memory.
-    let app_heap_start = bss_end;
     let app_heap_end = app_heap_start + app_heap_size;
 
     // Tell the kernel the new app heap break.
