@@ -37,6 +37,7 @@ setup:
 	rustup component add rustfmt
 	rustup component add clippy
 	cargo install elf2tab --version 0.4.0
+	cargo install stack-sizes
 
 .PHONY: examples
 examples:
@@ -52,6 +53,10 @@ test:
 	PLATFORM=nrf52 cargo clippy --workspace --all-targets
 	PLATFORM=nrf52 cargo test --workspace
 	make examples
+
+.PHONY: analyse-stack-sizes
+analyse-stack-sizes:
+	cargo stack-sizes $(release) --example $(EXAMPLE) $(features) -- -Z emit-stack-sizes
 
 .PHONY: hail
 hail:
