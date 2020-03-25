@@ -23,11 +23,11 @@ usage:
 	@echo "Run 'make test' to test any local changes you have made"
 
 ifdef FEATURES
-	features=--features=$(FEATURES)
+features=--features=$(FEATURES)
 endif
 
 ifndef DEBUG
-	release=--release
+release=--release
 endif
 
 .PHONY: setup
