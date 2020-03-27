@@ -78,7 +78,7 @@ pub unsafe extern "C" fn _start() -> ! {
     //
     // memop(11, stacktop + appdata_size);
     li  a0, 4               // a0 = 4   // memop syscall
-    li  a1, 11              // a1 = 10
+    li  a1, 11              // a1 = 11
     mv  a2, t1              // a2 = appdata_size
     ecall                   // memop
     //
