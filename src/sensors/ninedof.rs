@@ -1,8 +1,8 @@
+use crate::executor;
 use crate::futures;
 use crate::result::TockResult;
 use crate::syscalls;
 use core::cell::Cell;
-use core::executor;
 use core::fmt;
 use core::mem;
 

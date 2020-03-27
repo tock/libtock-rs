@@ -12,7 +12,6 @@ custom_alloc_error_handler = ["libtock-core/custom_alloc_error_handler"]
 __internal_disable_gpio_in_integration_test = []
 
 [dependencies]
-core = { package = "async-support", path = "async-support" }
 libtock-core = { path = "core" }
 libtock_codegen = { path = "codegen" }
 futures = { version = "0.3.1", default-features = false, features = ["unstable", "cfg-target-has-atomic"] }
@@ -58,7 +57,6 @@ lto = true
 
 [workspace]
 members = [
-    "async-support",
     "codegen",
     "core",
     "test-runner"

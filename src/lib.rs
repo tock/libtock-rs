@@ -8,6 +8,7 @@ pub mod console;
 pub mod debug;
 pub mod drivers;
 pub mod electronics;
+pub mod executor;
 pub mod futures;
 pub mod gpio;
 pub mod leds;
