@@ -51,10 +51,12 @@ required-features = ["alloc"]
 [profile.dev]
 panic = "abort"
 lto = true
+debug = true
 
 [profile.release]
 panic = "abort"
 lto = true
+debug = true
 
 [workspace]
 members = [
