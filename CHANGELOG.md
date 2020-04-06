@@ -9,9 +9,10 @@
   - To retrieve the value of an asynchronous `value`, use `value.await`
   - This is only possible within an `async fn`, so either
     - Make the caller `fn` of `.await` an `async fn`
-    - Not recommended: Use `core::executor::block_on(value)` to retrieve the `value`
+    - Not recommended: Use `libtock::executor::block_on(value)` to retrieve the `value`
 - Most API functions, including `main()`, return a `Result<T, TockError>`
 - All drivers can exclusively be retrieved by `retrieve_drivers` which returns a `Drivers` singleton. Drivers can be shared between different tasks only if it is safe to do so.
+- The low-level functions have been moved to a new crate called `libtock-core`. This crate is intended to be less experimental and more stable.
 
 ### Changed APIs
 
@@ -42,6 +43,8 @@
 - Targets without support for atomics can be built
 - The `TockAllocator` is no longer included by default and needs to to be opted-in via `--features=alloc`
 - `hardware_test.rs` is now called `libtock_test.rs` to make clear that the intent is to test the correctness of `libtock-rs`, not the hardware or the kernel
+- The panic handler can now be customized using the `custom_panic_handler` feature
+- The error alloc handler can now be customized using the `custom_alloc_error_handler` feature
 
 ## a8bb4fa9be504517d5533511fd8e607ea61f1750 (0.1.0)
 
