@@ -78,7 +78,7 @@ pub unsafe extern "C" fn _start() -> ! {
     //
     // memop(11, stacktop + appdata_size);
     li  a0, 4               // a0 = 4   // memop syscall
-    li  a1, 11              // a1 = 10
+    li  a1, 11              // a1 = 11
     mv  a2, t1              // a2 = appdata_size
     ecall                   // memop
     //
@@ -88,7 +88,7 @@ pub unsafe extern "C" fn _start() -> ! {
     mv   a0, s0             // first arg is app_start
     mv   s0, sp             // Set the frame pointer to sp.
     mv   a1, s1             // second arg is stacktop
-    mv   a2, s2             // third arg is app_heap_break
+    mv   a2, t1             // third arg is app_heap_break that we told the kernel
     jal  rust_start"
     :                                                              // No output operands
     :
