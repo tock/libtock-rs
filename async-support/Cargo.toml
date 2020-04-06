@@ -1,8 +1,0 @@
-[package]
-name = "async-support"
-version = "0.1.0"
-authors = ["Woyten <woyten.tielesch@online.de>"]
-edition = "2018"
-description = "`libtock` specific patch of `core` for `async`-`await` syntax in a `#![no_std]` environment. It implements the methods `core::future::poll_with_tls_context` and `core::future::from_generator` which are currently missing in `core`."
-
-[dependencies]

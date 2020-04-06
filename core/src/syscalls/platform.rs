@@ -3,9 +3,15 @@ use core::cell::RefCell;
 use std::vec::Vec;
 
 /// yield for a callback fired by the kernel
+///
 /// # Safety
-/// Yielding inside a callback conflicts with Rust's safety guarantees. For example,
-/// a FnMut closure could be triggered multiple times making a &mut a shared reference.
+///
+/// Yielding in the main function should be safe. Nevertheless, yielding manually
+/// is not required as this is already achieved by the `async` runtime.
+///
+/// When yielding in callbacks, two problems can arise:
+/// - The guarantees of `FnMut` are violated. In this case, make sure your callback has `Fn` behavior.
+/// - Callbacks can get executed in a nested manner and overflow the stack quickly.
 pub unsafe fn yieldk() {
     EVENTS.with(|e| e.borrow_mut().push(Event::YieldK));
 }

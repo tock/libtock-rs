@@ -6,21 +6,25 @@ use std::io::BufReader;
 use std::path::Path;
 use std::process;
 
+static LAYOUT_FILE_NAME: &str = "layout.ld";
+
 fn main() {
-    static ENV_VAR: &str = "PLATFORM";
-    static FILE_NAME: &str = "platform";
+    static PLATFORM_ENV_VAR: &str = "PLATFORM";
+    static PLATFORM_FILE_NAME: &str = "platform";
     static APP_HEAP_SIZE: &str = "APP_HEAP_SIZE";
     static KERNEL_HEAP_SIZE: &str = "KERNEL_HEAP_SIZE";
 
-    println!("cargo:rerun-if-env-changed={}", ENV_VAR);
+    println!("cargo:rerun-if-env-changed={}", PLATFORM_ENV_VAR);
     println!("cargo:rerun-if-env-changed={}", APP_HEAP_SIZE);
     println!("cargo:rerun-if-env-changed={}", KERNEL_HEAP_SIZE);
-    println!("cargo:rerun-if-changed={}", FILE_NAME);
+    println!("cargo:rerun-if-changed={}", PLATFORM_FILE_NAME);
+    println!("cargo:rerun-if-changed={}", LAYOUT_FILE_NAME);
 
-    let platform_name = read_env_var(ENV_VAR).or_else(|| read_board_name_from_file(FILE_NAME));
+    let platform_name =
+        read_env_var(PLATFORM_ENV_VAR).or_else(|| read_board_name_from_file(PLATFORM_FILE_NAME));
     if let Some(platform_name) = platform_name {
-        println!("cargo:rustc-env={}={}", ENV_VAR, platform_name);
-        copy_linker_file(&platform_name.trim());
+        println!("cargo:rustc-env={}={}", PLATFORM_ENV_VAR, platform_name);
+        copy_linker_file(platform_name.trim());
     } else {
         println!(
             "cargo:warning=No platform specified. \
@@ -66,5 +70,5 @@ fn copy_linker_file(platform_name: &str) {
         println!("Cannot find layout file {:?}", path);
         process::exit(1);
     }
-    fs::copy(linker_file_name, "layout.ld").unwrap();
+    fs::copy(linker_file_name, LAYOUT_FILE_NAME).unwrap();
 }

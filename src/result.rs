@@ -50,8 +50,8 @@ pub enum OtherError {
     GpioDriverInvalidState,
     TimerDriverDurationOutOfRange,
     TimerDriverErroneousClockFrequency,
-    DriverAlreadyTaken,
-    OutOfRangeError,
+    DriversAlreadyTaken,
+    OutOfRange,
 }
 
 impl From<OtherError> for TockError {
@@ -63,7 +63,7 @@ impl From<OtherError> for TockError {
 pub struct OutOfRangeError;
 
 impl From<OutOfRangeError> for TockError {
-    fn from(_other: OutOfRangeError) -> Self {
-        TockError::Other(OtherError::OutOfRangeError)
+    fn from(_: OutOfRangeError) -> Self {
+        TockError::Other(OtherError::OutOfRange)
     }
 }
