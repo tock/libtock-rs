@@ -33,6 +33,7 @@ endif
 .PHONY: setup
 setup:
 	rustup target add thumbv7em-none-eabi
+	rustup target add riscv32imac-unknown-none-elf
 	rustup target add riscv32imc-unknown-none-elf
 	rustup component add rustfmt
 	rustup component add clippy
