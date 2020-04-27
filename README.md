@@ -26,20 +26,20 @@ This project is nascent and still under heavy development, but first steps:
 
 1.  Ensure you have [rustup](https://www.rustup.rs/) installed.
 
-2.  Clone the repository:
+1.  Clone the repository:
 
     ```shell
     git clone https://github.com/tock/libtock-rs
     cd libtock-rs
     ```
 
-3.  Install the dependencies:
+1.  Install the dependencies:
 
     ```shell
     make setup
     ```
 
-4.  Use `make` to build examples
+1.  Use `make` to build examples
 
     ```shell
     make nrf52 # Builds all examples for the nrf52 platform
