@@ -89,7 +89,7 @@ To build the examples for your board you can use
 make <platform> [FEATURES=alloc]
 ```
 
-A program can be flashed to your board after the build process by running:
+An example can be flashed to your board after the build process by running:
 
 ```shell
 make flash-<platform> EXAMPLE=<example>
