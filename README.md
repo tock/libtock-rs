@@ -39,7 +39,7 @@ This project is nascent and still under heavy development, but first steps:
     make setup
     ```
 
-1.  Use `make` to compile and run an example app.
+1.  Use `make` to build examples
 
     ```shell
     make nrf52 # Builds all examples for the nrf52 platform
@@ -51,6 +51,10 @@ This project is nascent and still under heavy development, but first steps:
 
     ```bash
     make opentitan FEATURES=alloc # Builds all examples for the OpenTitan platform, with alloc feature enabled
+    ```
+
+    ```bash
+    make flash-hail EXAMPLE=blink # Flash the example 'blink' program to the hail platform
     ```
 
     For an unknown platform, you may have to create your own memory layout definition. Place the layout definition file at `boards/layout_<platform>.ld` and do not forget to enhance the `tockloader_flags` dispatching section in `tools/flash.sh`. You are welcome to create a PR, s.t. the number of supported platforms grows.
@@ -79,13 +83,13 @@ extern crate alloc;
 
 to the preamble and store your example in the `examples-alloc` folder.
 
-To run on the code on your board you can use
+To build the examples for your board you can use
 
 ```shell
 make <platform> [FEATURES=alloc]
 ```
 
-The example can also be flashed to the board by running:
+An example can be flashed to your board after the build process by running:
 
 ```shell
 make flash-<platform> EXAMPLE=<example>
