@@ -3,6 +3,11 @@
 use libtock::result::TockResult;
 use libtock::timer::Duration;
 
+/// Dummy buffer that causes the linker to reserve enough space for the stack.
+#[no_mangle]
+#[link_section = ".stack_buffer"]
+pub static mut STACK_MEMORY: [u8; 0x800] = [0; 0x800];
+
 // Example works on P0.03
 #[libtock::main]
 async fn main() -> TockResult<()> {

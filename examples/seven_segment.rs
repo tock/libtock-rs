@@ -4,6 +4,11 @@ use libtock::electronics::ShiftRegister;
 use libtock::result::TockResult;
 use libtock::timer::Duration;
 
+/// Dummy buffer that causes the linker to reserve enough space for the stack.
+#[no_mangle]
+#[link_section = ".stack_buffer"]
+pub static mut STACK_MEMORY: [u8; 0x800] = [0; 0x800];
+
 fn number_to_bits(n: u8) -> [bool; 8] {
     match n {
         1 => [false, false, false, true, false, true, false, false],
