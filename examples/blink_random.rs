@@ -4,6 +4,11 @@ use libtock::leds::LedsDriver;
 use libtock::result::TockResult;
 use libtock::timer::Duration;
 
+/// Dummy buffer that causes the linker to reserve enough space for the stack.
+#[no_mangle]
+#[link_section = ".stack_buffer"]
+pub static mut STACK_MEMORY: [u8; 0x400] = [0; 0x400];
+
 #[libtock::main]
 async fn main() -> TockResult<()> {
     let mut drivers = libtock::retrieve_drivers()?;
