@@ -13,16 +13,16 @@ os:
 
 cache: cargo
 
-# Once Travis supports a version of Ubuntu Disco or newer we can apt install QEMU for RISC-V
+# Once Travis supports a version of Ubuntu that inlcudes QEMU 5.1+
+#    we can apt install QEMU for RISC-V.
 # Until then we need to build it ourselves
 before_install:
   #   - sudo apt-get -y install qemu-system-misc
   # addons:
   #   apt:
   #     update: true
-  - wget https://download.qemu.org/qemu-4.2.0.tar.xz
-  - tar xJf qemu-4.2.0.tar.xz
-  - pushd qemu-4.2.0
+  - git clone https://github.com/alistair23/qemu.git -b riscv-tock.next
+  - pushd qemu
   - ./configure --target-list=riscv32-softmmu
   - make -j8
   - sudo ln -s $PWD/riscv32-softmmu/qemu-system-riscv32 /usr/bin/
@@ -35,7 +35,7 @@ install:
   - git clone https://github.com/tock/tock.git
   - cd tock/boards/hifive1
   # Use a known working version of Tock
-  - git checkout c94059d3e25dc635e682facff4894ef43b9aca0e
+  - git checkout 152189fe077aea955332ee3c28ccbee519d8b072
   - make
   - popd
 
