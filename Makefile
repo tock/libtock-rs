@@ -59,6 +59,14 @@ test:
 analyse-stack-sizes:
 	cargo stack-sizes $(release) --example $(EXAMPLE) $(features) -- -Z emit-stack-sizes
 
+.PHONY: apollo3
+apollo3:
+	PLATFORM=apollo3 cargo build $(release) --target=thumbv7em-none-eabi --examples $(features)
+
+.PHONY: flash-apollo3
+flash-apollo3:
+	PLATFORM=apollo3 cargo run $(release) --target=thumbv7em-none-eabi --example $(EXAMPLE) $(features)
+
 .PHONY: hail
 hail:
 	PLATFORM=hail cargo build $(release) --target=thumbv7em-none-eabi --examples $(features)
