@@ -101,6 +101,14 @@ This script does the following steps for you:
 - create a TAB (tock application bundle)
 - if you have a J-Link compatible board connected: flash this TAB to your board (using tockloader)
 
+## Configuration of Memory Sizes
+
+The configuration of different memory parameters can be configured using
+environment variables:
+
+- `APP_HEAP_SIZE` sets the size of the app heap and defaults to 1024.
+- `APP_STACK_SIZE` sets the size of the app stack and default to 2048.
+- `KERNEL_HEAP_SIZE` sets the size of the kernel heap and default to 1024.
 
 ## License
 
