@@ -23,16 +23,14 @@ impl<'a> SharedMemory<'a> {
     }
 
     pub fn read_bytes<D: AsMut<[u8]>>(&self, mut destination: D) {
-        let buf = unsafe { &mut *self.buffer_to_share.get() };
-        safe_copy(buf, destination.as_mut());
+        self.operate_on_mut(|buf| safe_copy(buf, destination.as_mut()));
     }
 
     pub fn write_bytes<S: AsRef<[u8]>>(&mut self, source: S) {
-        let buf = unsafe { &mut *self.buffer_to_share.get() };
-        safe_copy(source.as_ref(), buf);
+        self.operate_on_mut(|buf| safe_copy(source.as_ref(), buf));
     }
 
-    pub(crate) fn operate_on_mut_ptr<R, F: FnOnce(&mut [u8]) -> R>(&self, func: F) -> R {
+    pub(crate) fn operate_on_mut<R, F: FnOnce(&mut [u8]) -> R>(&self, func: F) -> R {
         unsafe { func(&mut *self.buffer_to_share.get()) }
     }
 }

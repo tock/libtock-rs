@@ -120,7 +120,7 @@ pub fn allow(
     let len = buffer_to_share.as_mut().len();
     let shared_memory = SharedMemory::new(driver_number, allow_number, buffer_to_share);
     let return_code = unsafe {
-        shared_memory.operate_on_mut_ptr(|buffer| {
+        shared_memory.operate_on_mut(|buffer| {
             raw::allow(driver_number, allow_number, buffer.as_mut_ptr(), len)
         })
     };
