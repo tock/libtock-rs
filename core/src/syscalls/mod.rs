@@ -112,16 +112,17 @@ pub fn command1_insecure(
     }
 }
 
-pub fn allow<'a>(
+pub fn allow(
     driver_number: usize,
     allow_number: usize,
-    buffer_to_share: &'a mut [u8],
-) -> Result<SharedMemory<'a>, AllowError> {
+    buffer_to_share: &mut [u8],
+) -> Result<SharedMemory<'_>, AllowError> {
     let len = buffer_to_share.as_mut().len();
     let shared_memory = SharedMemory::new(driver_number, allow_number, buffer_to_share);
     let return_code = unsafe {
-        shared_memory
-            .operate_on_mut_ptr(|pointer| raw::allow(driver_number, allow_number, pointer, len))
+        shared_memory.operate_on_mut_ptr(|buffer| {
+            raw::allow(driver_number, allow_number, buffer.as_mut_ptr(), len)
+        })
     };
 
     if return_code == 0 {
