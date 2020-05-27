@@ -73,12 +73,13 @@ impl<CB: FnMut(usize, usize)> Consumer<CB> for AdcEventConsumer {
 }
 
 impl<'a> Adc<'a> {
-    pub fn init_buffer(&self, buffer: AdcBuffer) -> TockResult<SharedMemory<AdcBuffer>> {
-        syscalls::allow(DRIVER_NUMBER, allow_nr::BUFFER, buffer).map_err(Into::into)
+    pub fn init_buffer(&self, buffer: &'a mut AdcBuffer) -> TockResult<SharedMemory<'a>> {
+        syscalls::allow(DRIVER_NUMBER, allow_nr::BUFFER, &mut buffer.buffer).map_err(Into::into)
     }
 
-    pub fn init_alt_buffer(&self, alt_buffer: AdcBuffer) -> TockResult<SharedMemory<AdcBuffer>> {
-        syscalls::allow(DRIVER_NUMBER, allow_nr::BUFFER_ALT, alt_buffer).map_err(Into::into)
+    pub fn init_alt_buffer(&self, alt_buffer: &'a mut AdcBuffer) -> TockResult<SharedMemory<'a>> {
+        syscalls::allow(DRIVER_NUMBER, allow_nr::BUFFER_ALT, &mut alt_buffer.buffer)
+            .map_err(Into::into)
     }
 
     /// Return the number of available channels

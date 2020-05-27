@@ -3,17 +3,18 @@ use core::cell::UnsafeCell;
 use core::ptr;
 
 #[must_use = "Shared memory risks being dropped too early. Drop it manually."]
-pub struct SharedMemory<T> {
+pub struct SharedMemory<'a> {
     driver_number: usize,
     allow_number: usize,
-    buffer_to_share: UnsafeCell<T>,
+    buffer_to_share: UnsafeCell<&'a mut [u8]>,
 }
 
-impl<T> SharedMemory<T>
-where
-    T: AsMut<[u8]>,
-{
-    pub fn new(driver_number: usize, allow_number: usize, buffer_to_share: T) -> SharedMemory<T> {
+impl<'a> SharedMemory<'a> {
+    pub fn new(
+        driver_number: usize,
+        allow_number: usize,
+        buffer_to_share: &'a mut [u8],
+    ) -> SharedMemory<'a> {
         SharedMemory {
             driver_number,
             allow_number,
@@ -39,7 +40,7 @@ where
     }
 }
 
-impl<T> Drop for SharedMemory<T> {
+impl Drop for SharedMemory<'_> {
     fn drop(&mut self) {
         unsafe {
             syscalls::raw::allow(self.driver_number, self.allow_number, ptr::null_mut(), 0);

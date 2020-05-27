@@ -13,8 +13,8 @@ async fn main() -> TockResult<()> {
     let hmac_driver = drivers.hmac.init_driver()?;
 
     writeln!(console, "Loading in 0 key")?;
-    let key_buffer = HmacKeyBuffer::default();
-    let _key_buffer = hmac_driver.init_key_buffer(key_buffer)?;
+    let mut key_buffer = HmacKeyBuffer::default();
+    let _key_buffer = hmac_driver.init_key_buffer(&mut key_buffer)?;
     writeln!(console, "  done")?;
 
     writeln!(console, "Creating data buffer")?;
@@ -25,12 +25,12 @@ async fn main() -> TockResult<()> {
     for (i, d) in data.iter().enumerate() {
         data_buffer.buffer[i] = *d;
     }
-    let _data_buffer = hmac_driver.init_data_buffer(data_buffer)?;
+    let _data_buffer = hmac_driver.init_data_buffer(&mut data_buffer)?;
     writeln!(console, "  done")?;
 
     writeln!(console, "Creating dest buffer")?;
-    let dest_buffer = HmacDestBuffer::default();
-    let dest_buffer = hmac_driver.init_dest_buffer(dest_buffer)?;
+    let mut dest_buffer = HmacDestBuffer::default();
+    let dest_buffer = hmac_driver.init_dest_buffer(&mut dest_buffer)?;
     writeln!(console, "  done")?;
 
     let mut temp_buffer = [0; libtock::hmac::DEST_BUFFER_SIZE];

@@ -65,16 +65,16 @@ impl BleAdvertisingDriver {
     pub fn create_advertising_buffer() -> BleAdvertisingBuffer {
         BleAdvertisingBuffer([0; BUFFER_SIZE_ADVERTISE])
     }
-    pub fn initialize<'a>(
+    pub fn initialize<'a, 'b>(
         &'a mut self,
         interval: usize,
         service_payload: &BlePayload,
-        advertising_buffer: BleAdvertisingBuffer,
-    ) -> TockResult<SharedMemory<BleAdvertisingBuffer>> {
+        advertising_buffer: &'b mut BleAdvertisingBuffer,
+    ) -> TockResult<SharedMemory<'b>> {
         let mut shared_memory = syscalls::allow(
             DRIVER_NUMBER,
             allow_nr::ALLOW_ADVERTISMENT_BUFFER,
-            advertising_buffer,
+            &mut advertising_buffer.0,
         )?;
         shared_memory.write_bytes(service_payload);
         Self::start_advertising(gap_flags::BLE_DISCOVERABLE, interval)?;
@@ -94,7 +94,7 @@ impl BleAdvertisingDriver {
 
 struct BleCallback<'a> {
     read_value: &'a Cell<Option<ScanBuffer>>,
-    shared_buffer: SharedMemory<ScanBuffer>,
+    shared_buffer: SharedMemory<'a>,
 }
 
 #[derive(Clone, Copy)]
@@ -157,7 +157,7 @@ impl BleScanningDriver {
         let shared_buffer = syscalls::allow(
             DRIVER_NUMBER,
             allow_nr::ALLOW_SCAN_BUFFER,
-            self.shared_buffer,
+            &mut self.shared_buffer.0,
         )
         .map_err(Into::<TockError>::into)?;
         Ok(BleScanningDriverShared {

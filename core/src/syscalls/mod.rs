@@ -112,11 +112,11 @@ pub fn command1_insecure(
     }
 }
 
-pub fn allow<T: AsMut<[u8]>>(
+pub fn allow<'a>(
     driver_number: usize,
     allow_number: usize,
-    mut buffer_to_share: T,
-) -> Result<SharedMemory<T>, AllowError> {
+    buffer_to_share: &'a mut [u8],
+) -> Result<SharedMemory<'a>, AllowError> {
     let len = buffer_to_share.as_mut().len();
     let shared_memory = SharedMemory::new(driver_number, allow_number, buffer_to_share);
     let return_code = unsafe {
