@@ -42,5 +42,5 @@ fn safe_copy(origin: &[u8], destination: &mut [u8]) {
     let amount = origin.len().min(destination.len());
     let origin = &origin[0..amount];
     let destination = &mut destination[0..amount];
-    destination.clone_from_slice(origin);
+    destination.copy_from_slice(origin);
 }
