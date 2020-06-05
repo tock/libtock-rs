@@ -1,14 +1,21 @@
 Third Party Dependencies
 ========================
 
+This document is about dependencies that are required to build applications
+using `libtock-rs`. Dependencies required to run `libtock-rs`' tests (such as
+`make`) are outside the scope of this document.
+
 ## Unaudited Required Dependencies
 
-`libtock-rs` has the following required dependencies, none of which are
+`libtock-rs` has the following required build dependencies, none of which are
 currently audited:
 
-* [`libcore`](https://github.com/rust-lang/rust/tree/master/src/libcore),
-  included as part of the Rust toolchain and implicitly added by the Rust
-  compiler.
+* The Rust toolchain, including
+  [`cargo`](https://github.com/rust-lang/cargo),
+  [`rustc`](https://github.com/rust-lang/rust/tree/master/src/rustc), and
+  [`libcore`](https://github.com/rust-lang/rust/tree/master/src/libcore). The
+  specific toolchain version used is specified by the `rust-toolchain` file at
+  the root of the repository.
 * [`syn`](https://crates.io/crates/syn), pulled in by `libtock_codegen`.
 * [`quote`](https://crates.io/crates/quote), pulled in by `libtock_codegen`.
 * [`proc-macro2`](https://crates.io/crates/proc-macro2), pulled in by
