@@ -1,4 +1,4 @@
-/* Layout for the NucleoF429zi, used by the examples in this repository. */
+/* Layout for the NucleoF446re, used by the examples in this repository. */
 
 MEMORY {
   /* The application region is 64 bytes (0x40) */
