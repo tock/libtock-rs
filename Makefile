@@ -14,6 +14,7 @@ usage:
 	@echo " - opentitan"
 	@echo " - hifive1"
 	@echo " - nrf52"
+	@echo " - imxrt1050"
 	@echo
 	@echo "Run 'make setup' to setup Rust to build libtock-rs."
 	@echo "Run 'make <board>' to build libtock-rs for that board"
@@ -47,6 +48,7 @@ examples:
 	PLATFORM=nrf52 cargo build --release --target=thumbv7em-none-eabi --example panic --features=custom_panic_handler,custom_alloc_error_handler
 	PLATFORM=nrf52 cargo build --release --target=thumbv7em-none-eabi --example alloc_error --features=alloc,custom_alloc_error_handler
 	PLATFORM=opentitan cargo build --release --target=riscv32imc-unknown-none-elf --examples # Important: This is testing a platform without atomics support
+	PLATFORM=imxrt1050 cargo build --release --target=thumbv7em-none-eabi --examples --features=alloc
 
 .PHONY: test
 test:
@@ -106,6 +108,15 @@ nrf52:
 .PHONY: flash-nrf52
 flash-nrf52:
 	PLATFORM=nrf52 cargo run $(release) --target=thumbv7em-none-eabi --example $(EXAMPLE) $(features)
+
+.PHONY: imxrt1050
+imxrt1050:
+	PLATFORM=imxrt1050 cargo build $(release) --target=thumbv7em-none-eabi --examples $(features)
+
+.PHONY: flash-imxrt1050
+flash-imxrt1050:
+	PLATFORM=imxrt1050 cargo run $(release) --target=thumbv7em-none-eabi --example $(EXAMPLE) $(features)
+
 
 .PHONY: clean
 clean:
