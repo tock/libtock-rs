@@ -23,8 +23,7 @@ pub unsafe extern "C" fn _start(
         // the Program Counter) will match the intended location of .start. We
         // don't have an easy way to signal an error, so for now we just yield
         // if the location is wrong.
-        mov r4, pc
-        sub r4, r4, #4    // r4 = pc
+        sub r4, pc, #4    // r4 = pc
         ldr r5, =.start   // r5 = address of .start
         cmp r4, r5
         beq .Lstack_init  // Jump to stack initialization if pc was correct
