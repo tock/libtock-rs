@@ -3,7 +3,7 @@
 set -eux
 
 artifact="$(basename $1)"
-rust_target_folder="$(readlink -f $(dirname $1)/../..)"
+rust_target_folder="$(greadlink -f $(dirname $1)/../..)"
 if [ -z $APP_HEAP_SIZE ]; then
 	echo "Set APP_HEAP_SIZE to a value"
 	exit 1
