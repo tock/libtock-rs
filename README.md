@@ -4,7 +4,11 @@
 
 Rust userland library for Tock (WIP)
 
-Tested with tock [Release 1.4.1](https://github.com/tock/tock/commit/7e37bf67761d83fd585cace4fb201e2864d300b1).
+Generally this library was tested with tock [Release 1.5](https://github.com/tock/tock/releases/tag/release-1.5).
+Since then changes have been made that might not work with the Tock
+release 1.5, but instead target Tock master. For example this library
+might support newer boards (Apollo3), changed boards (HiFive1 revB) or
+new drivers (HMAC).
 
 The library works in principle on most boards, but there is currently the [showstopper
 bug #28](https://github.com/tock/libtock-rs/issues/28) that prevents
