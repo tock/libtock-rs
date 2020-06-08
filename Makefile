@@ -14,6 +14,7 @@ usage:
 	@echo " - opentitan"
 	@echo " - hifive1"
 	@echo " - nrf52"
+	@echo " - apollo3"
 	@echo
 	@echo "Run 'make setup' to setup Rust to build libtock-rs."
 	@echo "Run 'make <board>' to build libtock-rs for that board"
