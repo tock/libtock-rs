@@ -1,4 +1,7 @@
-/Cargo.lock
+# Files ignored repository-wide.
+Cargo.lock
+
+# Files ignored only in this directory.
 /layout.ld
 /platform
 /target

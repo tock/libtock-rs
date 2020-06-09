@@ -58,8 +58,8 @@ lto = true
 debug = true
 
 [workspace]
+exclude = [ "core" ]
 members = [
     "codegen",
-    "core",
     "test-runner"
 ]
