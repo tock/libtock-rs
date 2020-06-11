@@ -41,6 +41,8 @@ setup: setup-qemu
 	cargo install elf2tab --version 0.4.0
 	cargo install stack-sizes
 
+# Downloads a version of QEMU with patches needed to support Tock on HiFive.
+# Builds QEMU and installs it into build/.
 .PHONY: setup-qemu
 setup-qemu:
 	mkdir -p build
@@ -52,6 +54,19 @@ setup-qemu:
 	            --target-list=arm-softmmu,riscv32-softmmu && \
 	$(MAKE) install
 
+# Builds a Tock kernel for the HiFive board for use by QEMU tests.
+.PHONY: kernel-hifive
+kernel-hifive:
+	$(MAKE) -C tock/boards/hifive1 \
+		$(CURDIR)/tock/target/riscv32imac-unknown-none-elf/release/hifive1.elf
+
+# Runs the libtock_test tests in QEMU on a simulated HiFive board.
+.PHONY: test-qemu-hifive
+test-qemu-hifive: kernel-hifive
+	PLATFORM=hifive1 cargo rrv32imac --example libtock_test --features=alloc \
+		--features=__internal_disable_gpio_in_integration_test
+	cargo run -p test-runner
+
 .PHONY: examples
 examples:
 	PLATFORM=nrf52 cargo build --release --target=thumbv7em-none-eabi --examples
@@ -61,11 +76,11 @@ examples:
 	PLATFORM=opentitan cargo build --release --target=riscv32imc-unknown-none-elf --examples # Important: This is testing a platform without atomics support
 
 .PHONY: test
-test:
+test: examples test-qemu-hifive
 	PLATFORM=nrf52 cargo fmt --all -- --check
 	PLATFORM=nrf52 cargo clippy --workspace --all-targets
 	PLATFORM=nrf52 cargo test --workspace
-	make examples
+	echo '[ SUCCESS ] libtock-rs tests pass'
 
 .PHONY: analyse-stack-sizes
 analyse-stack-sizes:
