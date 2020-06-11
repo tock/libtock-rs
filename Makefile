@@ -32,7 +32,7 @@ release=--release
 endif
 
 .PHONY: setup
-setup:
+setup: setup-qemu
 	rustup target add thumbv7em-none-eabi
 	rustup target add riscv32imac-unknown-none-elf
 	rustup target add riscv32imc-unknown-none-elf
@@ -40,6 +40,17 @@ setup:
 	rustup component add clippy
 	cargo install elf2tab --version 0.4.0
 	cargo install stack-sizes
+
+.PHONY: setup-qemu
+setup-qemu:
+	mkdir -p build
+	cd build                                              && \
+	git clone https://github.com/alistair23/qemu.git         \
+	          -b riscv-tock.next --depth 1                && \
+	cd qemu                                               && \
+	./configure --prefix=$(CURDIR)/build                     \
+	            --target-list=arm-softmmu,riscv32-softmmu && \
+	$(MAKE) install
 
 .PHONY: examples
 examples:
