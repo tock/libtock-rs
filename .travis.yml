@@ -14,7 +14,7 @@ os:
 cache: cargo
 
 install:
-  - make setup
+  - make -j8 setup
 
 script:
   - make test
