@@ -58,6 +58,7 @@ lto = true
 debug = true
 
 [workspace]
+exclude = [ "tock" ]
 members = [
     "codegen",
     "core",

@@ -41,18 +41,11 @@ setup: setup-qemu
 	cargo install elf2tab --version 0.4.0
 	cargo install stack-sizes
 
-# Downloads a version of QEMU with patches needed to support Tock on HiFive.
-# Builds QEMU and installs it into build/.
+# Sets up QEMU in the tock/ directory. We use Tock's QEMU which may contain
+# patches to better support boards that Tock supports.
 .PHONY: setup-qemu
 setup-qemu:
-	mkdir -p build
-	cd build                                              && \
-	git clone https://github.com/alistair23/qemu.git         \
-	          -b riscv-tock.next --depth 1                && \
-	cd qemu                                               && \
-	./configure --prefix=$(CURDIR)/build                     \
-	            --target-list=arm-softmmu,riscv32-softmmu && \
-	$(MAKE) install
+	$(MAKE) -C tock emulation-setup
 
 # Builds a Tock kernel for the HiFive board for use by QEMU tests.
 .PHONY: kernel-hifive
@@ -62,7 +55,7 @@ kernel-hifive:
 
 # Runs the libtock_test tests in QEMU on a simulated HiFive board.
 .PHONY: test-qemu-hifive
-test-qemu-hifive: kernel-hifive
+test-qemu-hifive: kernel-hifive setup-qemu
 	PLATFORM=hifive1 cargo rrv32imac --example libtock_test --features=alloc \
 		--features=__internal_disable_gpio_in_integration_test
 	cargo run -p test-runner
@@ -136,5 +129,5 @@ flash-nrf52:
 
 .PHONY: clean
 clean:
-	rm -rf target
-	rm Cargo.lock
+	cargo clean
+	$(MAKE) -C tock clean

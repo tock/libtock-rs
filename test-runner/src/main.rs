@@ -14,7 +14,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 async fn perform_tests() -> Result<(), Box<dyn std::error::Error>> {
     let mut failed_tests = Vec::new();
 
-    let  tests = Command::new("build/bin/qemu-system-riscv32")
+    let tests = Command::new("tock/tools/qemu/riscv32-softmmu/qemu-system-riscv32")
         .arg("-M")
         .arg("sifive_e,revb=true")
         .arg("-kernel")
