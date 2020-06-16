@@ -2,7 +2,9 @@ Third Party Dependencies
 ========================
 
 This document is about dependencies that are required to build applications
-using `libtock-rs`. Dependencies required to run `libtock-rs`' tests (such as
+using `libtock-rs`. These dependencies are not contained in the libtock-rs
+repository, but are used by libtock-rs when libtock-rs is used as a dependency
+of an application. Dependencies required to run `libtock-rs`' tests (such as
 `make`) are outside the scope of this document.
 
 ## Unaudited Required Dependencies
