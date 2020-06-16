@@ -62,5 +62,6 @@ exclude = [ "tock" ]
 members = [
     "codegen",
     "core",
-    "test-runner"
+    "test-runner",
+    "tools/print-sizes",
 ]
