@@ -1,0 +1,55 @@
+# Calculates the size diffs for the each example binary. Runs when a pull
+# request is created or modified.
+
+name: size-diff
+on: pull_request
+
+jobs:
+  size-diff:
+    # Using ubuntu-latest can cause breakage when ubuntu-latest is updated to
+    # point at a new Ubuntu version. Instead, explicitly specify the version, so
+    # we can update when we need to. This *could* break if we don't update it
+    # until support for 18.04 is dropped, but it is likely we'll have a reason
+    # to update to a newer Ubuntu before then anyway.
+    runs-on: ubuntu-18.04
+
+    steps:
+      # Clones a single commit from the libtock-rs repository. The commit cloned
+      # is a merge commit between the PR's target branch and the PR's source.
+      # We'll later add another commit (the pre-merge target branch) to the
+      # repository.
+      - name: Clone repository
+        uses: actions/checkout@v2.3.0
+
+      # Install a Rust toolchain with the components necessary to run
+      # `print-sizes`. This action doesn't seem to be able to install toolchains
+      # for multiple targets, so I add the targets later in the "size report"
+      # step.
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1.0.6
+        with:
+          profile: minimal
+
+      # The main diff script. Stores the sizes of the example binaries for both
+      # the merge commit and the target branch. We display the diff in a
+      # separate step to make it easy to navigate to in the GitHub Actions UI.
+      - name: Compute sizes
+        run: |
+          UPSTREAM_REMOTE_NAME="${UPSTREAM_REMOTE_NAME:-origin}"
+          GITHUB_BASE_REF="${GITHUB_BASE_REF:-master}"
+          cd "${GITHUB_WORKSPACE}"
+          rustup target add riscv32imc-unknown-none-elf thumbv7em-none-eabi
+          make -j2 examples  # The VM this runs on has 2 logical cores.
+          cargo run --release -p print-sizes >'${{runner.temp}}/merge-sizes'
+          git remote set-branches "${UPSTREAM_REMOTE_NAME}" "${GITHUB_BASE_REF}"
+          git fetch --depth=1 "${UPSTREAM_REMOTE_NAME}" "${GITHUB_BASE_REF}"
+          git checkout "${UPSTREAM_REMOTE_NAME}/${GITHUB_BASE_REF}"
+          make -j2 examples
+          cargo run --release -p print-sizes >'${{runner.temp}}/base-sizes'
+
+      # Computes and displays the size diff. diff returns a nonzero status code
+      # if the files differ, and GitHub interprets a nonzero status code as an
+      # error. To avoid GitHub interpreting a difference as an error, we add
+      # || exit 0 to the command.
+      - name: Size diff
+        run: diff '${{runner.temp}}/base-sizes' '${{runner.temp}}/merge-sizes' || exit 0
