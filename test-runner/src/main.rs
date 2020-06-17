@@ -14,14 +14,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 async fn perform_tests() -> Result<(), Box<dyn std::error::Error>> {
     let mut failed_tests = Vec::new();
 
-    let  tests = Command::new("qemu-system-riscv32")
+    let tests = Command::new("tock/tools/qemu/riscv32-softmmu/qemu-system-riscv32")
         .arg("-M")
         .arg("sifive_e,revb=true")
         .arg("-kernel")
-        .arg("../../tock/target/riscv32imac-unknown-none-elf/release/hifive1")
+        .arg("tock/target/riscv32imac-unknown-none-elf/release/hifive1")
         .arg("-device")
-        .arg("loader,file=./../target/riscv32imac-unknown-none-elf/tab/hifive1/libtock_test/rv32imac.tbf,addr=0x20040000")
+        .arg("loader,file=target/riscv32imac-unknown-none-elf/tab/hifive1/libtock_test/rv32imac.tbf,addr=0x20040000")
         .arg("-nographic")
+        .stdin(Stdio::null())
         .stdout(Stdio::piped())
         .kill_on_drop(true)
         .spawn()?;
