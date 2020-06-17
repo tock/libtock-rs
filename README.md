@@ -29,7 +29,7 @@ This project is nascent and still under heavy development, but first steps:
 1.  Clone the repository:
 
     ```shell
-    git clone https://github.com/tock/libtock-rs
+    git clone --recursive https://github.com/tock/libtock-rs
     cd libtock-rs
     ```
 
