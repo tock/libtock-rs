@@ -22,6 +22,7 @@ usage:
 	@echo "    Set the FEATURES flag to enable features"
 	@echo "Run 'make flash-<board> EXAMPLE=<>' to flash EXAMPLE to that board"
 	@echo "Run 'make test' to test any local changes you have made"
+	@echo "Run 'make print-sizes' to print size data for the example binaries"
 
 ifdef FEATURES
 features=--features=$(FEATURES)
@@ -53,6 +54,11 @@ kernel-hifive:
 	$(MAKE) -C tock/boards/hifive1 \
 		$(CURDIR)/tock/target/riscv32imac-unknown-none-elf/release/hifive1.elf
 
+# Prints out the sizes of the example binaries.
+.PHONY: print-sizes
+print-sizes: examples
+	cargo run --release -p print-sizes
+
 # Runs the libtock_test tests in QEMU on a simulated HiFive board.
 .PHONY: test-qemu-hifive
 test-qemu-hifive: kernel-hifive setup-qemu
@@ -62,11 +68,12 @@ test-qemu-hifive: kernel-hifive setup-qemu
 
 .PHONY: examples
 examples:
-	PLATFORM=nrf52 cargo build --release --target=thumbv7em-none-eabi --examples
+	PLATFORM=nrf52 cargo build --release --target=thumbv7em-none-eabi --examples -p libtock -p libtock-core
 	PLATFORM=nrf52 cargo build --release --target=thumbv7em-none-eabi --examples --features=alloc
 	PLATFORM=nrf52 cargo build --release --target=thumbv7em-none-eabi --example panic --features=custom_panic_handler,custom_alloc_error_handler
 	PLATFORM=nrf52 cargo build --release --target=thumbv7em-none-eabi --example alloc_error --features=alloc,custom_alloc_error_handler
-	PLATFORM=opentitan cargo build --release --target=riscv32imc-unknown-none-elf --examples # Important: This is testing a platform without atomics support
+	# Important: This tests a platform without atomic instructions.
+	PLATFORM=opentitan cargo build --release --target=riscv32imc-unknown-none-elf --examples -p libtock -p libtock-core
 
 .PHONY: test
 test: examples test-qemu-hifive
