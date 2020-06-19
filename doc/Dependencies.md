@@ -25,5 +25,5 @@ currently audited:
 
 ## Avoiding Optional Dependencies
 
-To avoid pulling in optional dependencies, users should use `libtock-core`
-instead of `libtock`. `libtock-core` is in the `core/` directory.
+To avoid pulling in optional dependencies, users should use `libtock_core`
+instead of `libtock`. `libtock_core` is in the `core/` directory.

@@ -59,23 +59,23 @@ kernel-hifive:
 # Prints out the sizes of the example binaries.
 .PHONY: print-sizes
 print-sizes: examples
-	cargo run --release -p print-sizes
+	cargo run --release -p print_sizes
 
 # Runs the libtock_test tests in QEMU on a simulated HiFive board.
 .PHONY: test-qemu-hifive
 test-qemu-hifive: kernel-hifive setup-qemu
 	PLATFORM=hifive1 cargo rrv32imac --example libtock_test --features=alloc \
 		--features=__internal_disable_gpio_in_integration_test
-	cargo run -p test-runner
+	cargo run -p test_runner
 
 .PHONY: examples
 examples:
-	PLATFORM=nrf52 cargo build --release --target=thumbv7em-none-eabi --examples -p libtock -p libtock-core
+	PLATFORM=nrf52 cargo build --release --target=thumbv7em-none-eabi --examples -p libtock -p libtock_core
 	PLATFORM=nrf52 cargo build --release --target=thumbv7em-none-eabi --examples --features=alloc
 	PLATFORM=nrf52 cargo build --release --target=thumbv7em-none-eabi --example panic --features=custom_panic_handler,custom_alloc_error_handler
 	PLATFORM=nrf52 cargo build --release --target=thumbv7em-none-eabi --example alloc_error --features=alloc,custom_alloc_error_handler
 	# Important: This tests a platform without atomic instructions.
-	PLATFORM=opentitan cargo build --release --target=riscv32imc-unknown-none-elf --examples -p libtock -p libtock-core
+	PLATFORM=opentitan cargo build --release --target=riscv32imc-unknown-none-elf --examples -p libtock -p libtock_core
 
 .PHONY: test
 test: examples test-qemu-hifive
