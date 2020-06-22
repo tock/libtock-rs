@@ -11,6 +11,8 @@ usage:
 	@echo "libtock-rs currently includes support for the following platforms:"
 	@echo " - hail"
 	@echo " - nrf52840"
+	@echo " - nucleo_f429zi"
+	@echo " - nucleo_f446re"
 	@echo " - opentitan"
 	@echo " - hifive1"
 	@echo " - nrf52"
@@ -101,6 +103,22 @@ hail:
 .PHONY: flash-hail
 flash-hail:
 	PLATFORM=hail cargo run $(release) --target=thumbv7em-none-eabi --example $(EXAMPLE) $(features)
+
+.PHONY: nucleo_f429zi
+nucleo_f429zi:
+	PLATFORM=nucleo_f429zi cargo build $(release) --target=thumbv7em-none-eabi --examples $(features)
+
+.PHONY: flash-nucleo_f429zi
+flash-nucleo_f429zi:
+	PLATFORM=nucleo_f429zi cargo run $(release) --target=thumbv7em-none-eabi --example $(EXAMPLE) $(features)
+
+.PHONY: nucleo_f446re
+nucleo_f446re:
+	PLATFORM=nucleo_f446re cargo build $(release) --target=thumbv7em-none-eabi --examples $(features)
+
+.PHONY: flash-nucleo_f446re
+flash-nucleo_f446re:
+	PLATFORM=nucleo_f446re cargo run $(release) --target=thumbv7em-none-eabi --example $(EXAMPLE) $(features)
 
 .PHONY: nrf52840
 nrf52840:

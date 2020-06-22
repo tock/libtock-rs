@@ -20,6 +20,11 @@ case "${PLATFORM}" in
         binary_name=cortex-m4.elf
         tockload=n
         ;;
+    "nucleo_f429zi"|"nucleo_f446re")
+        tockloader_flags=""
+        binary_name=cortex-m4.elf
+        tockload=n
+        ;;
     "nrf52"|"nrf52840")
         tockloader_flags="--jlink --arch cortex-m4 --board nrf52dk --jtag-device nrf52"
         binary_name=cortex-m4.elf
