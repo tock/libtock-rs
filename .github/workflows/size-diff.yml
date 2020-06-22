@@ -40,12 +40,12 @@ jobs:
           cd "${GITHUB_WORKSPACE}"
           rustup target add riscv32imc-unknown-none-elf thumbv7em-none-eabi
           make -j2 examples  # The VM this runs on has 2 logical cores.
-          cargo run --release -p print-sizes >'${{runner.temp}}/merge-sizes'
+          cargo run --release -p print_sizes >'${{runner.temp}}/merge-sizes'
           git remote set-branches "${UPSTREAM_REMOTE_NAME}" "${GITHUB_BASE_REF}"
           git fetch --depth=1 "${UPSTREAM_REMOTE_NAME}" "${GITHUB_BASE_REF}"
           git checkout "${UPSTREAM_REMOTE_NAME}/${GITHUB_BASE_REF}"
           make -j2 examples
-          cargo run --release -p print-sizes >'${{runner.temp}}/base-sizes'
+          cargo run --release -p print_sizes >'${{runner.temp}}/base-sizes'
 
       # Computes and displays the size diff. diff returns a nonzero status code
       # if the files differ, and GitHub interprets a nonzero status code as an
