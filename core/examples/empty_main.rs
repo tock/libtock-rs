@@ -1,13 +1,13 @@
-// The most minimal libtock-core example possible. This file primarily exists
+// The most minimal libtock_core example possible. This file primarily exists
 // for code size measurement, as this should create the smallest-possible
-// libtock-core app.
+// libtock_core app.
 
 #![no_std]
 
-// If you don't *use* anything from libtock-core directly, cargo will not link
+// If you don't *use* anything from libtock_core directly, cargo will not link
 // it into the executable. However, we still need the runtime and lang items.
-// Therefore a libtock-core app that doesn't directly mention anything in
-// libtock-core needs to explicitly declare its dependency on libtock-core as
+// Therefore a libtock_core app that doesn't directly mention anything in
+// libtock_core needs to explicitly declare its dependency on libtock_core as
 // follows.
 extern crate libtock_core;
 

@@ -6,13 +6,13 @@ license = "MIT/Apache-2.0"
 edition = "2018"
 
 [features]
-alloc = ["libtock-core/alloc"]
-custom_panic_handler = ["libtock-core/custom_panic_handler"]
-custom_alloc_error_handler = ["libtock-core/custom_alloc_error_handler"]
+alloc = ["libtock_core/alloc"]
+custom_panic_handler = ["libtock_core/custom_panic_handler"]
+custom_alloc_error_handler = ["libtock_core/custom_alloc_error_handler"]
 __internal_disable_gpio_in_integration_test = []
 
 [dependencies]
-libtock-core = { path = "core" }
+libtock_core = { path = "core" }
 libtock_codegen = { path = "codegen" }
 futures = { version = "0.3.1", default-features = false, features = ["unstable", "cfg-target-has-atomic"] }
 
@@ -62,6 +62,6 @@ exclude = [ "tock" ]
 members = [
     "codegen",
     "core",
-    "test-runner",
-    "tools/print-sizes",
+    "test_runner",
+    "tools/print_sizes",
 ]
