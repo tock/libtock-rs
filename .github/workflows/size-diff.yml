@@ -44,6 +44,7 @@ jobs:
           git remote set-branches "${UPSTREAM_REMOTE_NAME}" "${GITHUB_BASE_REF}"
           git fetch --depth=1 "${UPSTREAM_REMOTE_NAME}" "${GITHUB_BASE_REF}"
           git checkout "${UPSTREAM_REMOTE_NAME}/${GITHUB_BASE_REF}"
+          rustup target add riscv32imc-unknown-none-elf thumbv7em-none-eabi
           make -j2 examples
           cargo run --release -p print_sizes >'${{runner.temp}}/base-sizes'
 
