@@ -88,6 +88,15 @@ SECTIONS {
     /* Application stack */
     .stack (NOLOAD) :
     {
+        /* elf2tab requires that the `_SRAM_ORIGIN` symbol be present to
+         * mark the first address in the SRAM memory. Since ELF files do
+         * not really need to specify this address as they only care about
+         * loading into flash, we need to manually mark this address for
+         * elf2tab. elf2tab will use it to add a fixed address header in the
+         * TBF header if needed.
+         */
+        _SRAM_ORIGIN = .;
+
         . = . + STACK_SIZE;
 
 	_stack_top_unaligned = .;
