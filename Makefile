@@ -48,7 +48,7 @@ setup: setup-qemu
 # patches to better support boards that Tock supports.
 .PHONY: setup-qemu
 setup-qemu:
-	$(MAKE) -C tock emulation-setup
+	$(MAKE) -C tock ci-job-qemu
 
 # Builds a Tock kernel for the HiFive board for use by QEMU tests.
 .PHONY: kernel-hifive
