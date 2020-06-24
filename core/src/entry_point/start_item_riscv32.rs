@@ -14,7 +14,7 @@ use core::hint;
 // Due to Rust issue: https://github.com/rust-lang/rust/issues/42779 we can't have
 // args to the function
 pub unsafe extern "C" fn _start() -> ! {
-    asm!(
+    llvm_asm!(
     // Compute the stack top.
     //
     // struct hdr* myhdr = (struct hdr*) app_start;
@@ -105,7 +105,7 @@ pub unsafe extern "C" fn _start() -> ! {
 #[export_name = "abort"]
 pub extern "C" fn abort() {
     unsafe {
-        asm! ("
+        llvm_asm! ("
             // Simply go back to the start as if we had just booted.
             j    _start
         "
