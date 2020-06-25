@@ -1,0 +1,13 @@
+# Finds all the libtock_core and libtock examples and prints the sizes of
+# several of their sections. Searches the target/$ARCH/release directory. Note
+# that print_sizes will not build the examples; that is done by the
+# `print-sizes` Makefile action.
+
+[package]
+authors = ["Tock Project Developers <tock-dev@googlegroups.com>"]
+edition = "2018"
+name = "print_sizes"
+version = "0.1.0"
+
+[dependencies]
+elf = "0.0.10"

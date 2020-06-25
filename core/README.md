@@ -1,4 +1,4 @@
-# libtock-core
+# libtock\_core
 
 Core crate of `libtock-rs`. It contains the architecture specific code of `libtock-rs`. In particular:
 

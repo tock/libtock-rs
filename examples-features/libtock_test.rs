@@ -1,5 +1,6 @@
 // Libtock regression tests to be used with real hardware.
-// Requires P0.03 and P0.04 to be connected (on a nRF52 DK).
+// Requires P0.03 and P0.04 to be connected (on a nRF52 DK) and
+// P0.01 and P0.03 to be connected (on a nRF52840dk).
 
 #![no_std]
 extern crate alloc;

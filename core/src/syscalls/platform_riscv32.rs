@@ -3,7 +3,7 @@
 #[allow(clippy::missing_safety_doc)]
 pub unsafe fn yieldk() {
     /* TODO: Stop yielding */
-    asm! (
+    llvm_asm! (
             "li    a0, 0
             ecall"
             :
@@ -23,7 +23,7 @@ pub unsafe fn subscribe(
     ud: usize,
 ) -> isize {
     let res;
-    asm!("li    a0, 1
+    llvm_asm!("li    a0, 1
           ecall"
          : "={x10}" (res)
          : "{x11}" (major), "{x12}" (minor), "{x13}" (cb), "{x14}" (ud)
@@ -37,7 +37,7 @@ pub unsafe fn subscribe(
 #[allow(clippy::missing_safety_doc)]
 pub unsafe fn command(major: usize, minor: usize, arg1: usize, arg2: usize) -> isize {
     let res;
-    asm!("li    a0, 2
+    llvm_asm!("li    a0, 2
           ecall"
          : "={x10}" (res)
          : "{x11}" (major), "{x12}" (minor), "{x13}" (arg1), "{x14}" (arg2)
@@ -51,7 +51,7 @@ pub unsafe fn command(major: usize, minor: usize, arg1: usize, arg2: usize) -> i
 #[allow(clippy::missing_safety_doc)]
 pub unsafe fn command1(major: usize, minor: usize, arg: usize) -> isize {
     let res;
-    asm!("li    a0, 2
+    llvm_asm!("li    a0, 2
           ecall"
          : "={x10}" (res)
          : "{x11}" (major), "{x12}" (minor), "{x13}" (arg)
@@ -65,7 +65,7 @@ pub unsafe fn command1(major: usize, minor: usize, arg: usize) -> isize {
 #[allow(clippy::missing_safety_doc)]
 pub unsafe fn allow(major: usize, minor: usize, slice: *mut u8, len: usize) -> isize {
     let res;
-    asm!("li    a0, 3
+    llvm_asm!("li    a0, 3
           ecall"
          : "={x10}" (res)
          : "{x11}" (major), "{x12}" (minor), "{x13}" (slice), "{x14}" (len)
@@ -79,7 +79,7 @@ pub unsafe fn allow(major: usize, minor: usize, slice: *mut u8, len: usize) -> i
 #[allow(clippy::missing_safety_doc)]
 pub unsafe fn memop(major: u32, arg1: usize) -> isize {
     let res;
-    asm!("li    a0, 4
+    llvm_asm!("li    a0, 4
           ecall"
          : "={x10}" (res)
          : "{x11}" (major), "{x12}" (arg1)

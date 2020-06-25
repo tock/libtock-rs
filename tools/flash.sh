@@ -3,7 +3,7 @@
 set -eux
 
 artifact="$(basename $1)"
-rust_target_folder="$(readlink -f $(dirname $1)/../..)"
+rust_target_folder="$(cd $(dirname $1)/../.. && pwd -P)"
 if [ -z $APP_HEAP_SIZE ]; then
 	echo "Set APP_HEAP_SIZE to a value"
 	exit 1
@@ -16,6 +16,11 @@ fi
 
 case "${PLATFORM}" in
     "apollo3")
+        tockloader_flags=""
+        binary_name=cortex-m4.elf
+        tockload=n
+        ;;
+    "nucleo_f429zi"|"nucleo_f446re")
         tockloader_flags=""
         binary_name=cortex-m4.elf
         tockload=n

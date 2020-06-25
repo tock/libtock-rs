@@ -4,7 +4,11 @@
 
 Rust userland library for Tock (WIP)
 
-Tested with tock [Release 1.4.1](https://github.com/tock/tock/commit/7e37bf67761d83fd585cace4fb201e2864d300b1).
+Generally this library was tested with tock [Release 1.5](https://github.com/tock/tock/releases/tag/release-1.5).
+Since then changes have been made that might not work with the Tock
+release 1.5, but instead target Tock master. For example this library
+might support newer boards (Apollo3), changed boards (HiFive1 revB) or
+new drivers (HMAC).
 
 The library works in principle on most boards, but there is currently the [showstopper
 bug #28](https://github.com/tock/libtock-rs/issues/28) that prevents
@@ -29,7 +33,7 @@ This project is nascent and still under heavy development, but first steps:
 1.  Clone the repository:
 
     ```shell
-    git clone https://github.com/tock/libtock-rs
+    git clone --recursive https://github.com/tock/libtock-rs
     cd libtock-rs
     ```
 
@@ -104,7 +108,7 @@ This script does the following steps for you:
 
 ## License
 
-Licensed under either of
+libtock-rs is licensed under either of
 
 - Apache License, Version 2.0
   ([LICENSE-APACHE](LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
@@ -112,6 +116,8 @@ Licensed under either of
   ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
 
 at your option.
+
+Submodules have their own licenses.
 
 ### Contribution
 
