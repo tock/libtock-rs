@@ -15,4 +15,3 @@ STACK_SIZE = 2048;
 MPU_MIN_ALIGN = 8K;
 
 INCLUDE layout_generic.ld
-
