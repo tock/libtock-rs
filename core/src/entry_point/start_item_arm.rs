@@ -12,7 +12,7 @@ pub unsafe extern "C" fn _start(
     _memory_len: usize,
     app_heap_break: usize,
 ) -> ! {
-    asm!("
+    llvm_asm!("
         // Because ROPI-RWPI support in LLVM/rustc is incomplete, Rust
         // applications must be statically linked. An offset between the
         // location the program is linked at and its actual location in flash

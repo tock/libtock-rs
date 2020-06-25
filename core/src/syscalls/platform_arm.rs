@@ -22,7 +22,7 @@ pub unsafe fn yieldk() {
     // registers r4-r8, r10, r11 and SP (and r9 in PCS variants that designate
     // r9 as v6) As our compilation flags mark r9 as the PIC base register, it
     // does not need to be saved. Thus we must clobber r0-3, r12, and LR
-    asm!(
+    llvm_asm!(
             "svc 0"
             :
             :
@@ -40,7 +40,7 @@ pub unsafe fn subscribe(
     ud: usize,
 ) -> isize {
     let res;
-    asm!("svc 1" : "={r0}"(res)
+    llvm_asm!("svc 1" : "={r0}"(res)
                  : "{r0}"(major) "{r1}"(minor) "{r2}"(cb) "{r3}"(ud)
                  : "memory"
                  : "volatile");
@@ -52,7 +52,7 @@ pub unsafe fn subscribe(
 #[allow(clippy::missing_safety_doc)]
 pub unsafe fn command(major: usize, minor: usize, arg1: usize, arg2: usize) -> isize {
     let res;
-    asm!("svc 2" : "={r0}"(res)
+    llvm_asm!("svc 2" : "={r0}"(res)
                      : "{r0}"(major) "{r1}"(minor) "{r2}"(arg1) "{r3}"(arg2)
                      : "memory"
                      : "volatile");
@@ -64,7 +64,7 @@ pub unsafe fn command(major: usize, minor: usize, arg1: usize, arg2: usize) -> i
 #[allow(clippy::missing_safety_doc)]
 pub unsafe fn command1(major: usize, minor: usize, arg: usize) -> isize {
     let res;
-    asm!("svc 2" : "={r0}"(res)
+    llvm_asm!("svc 2" : "={r0}"(res)
                  : "{r0}"(major) "{r1}"(minor) "{r2}"(arg)
                  : "memory"
                  : "volatile");
@@ -76,7 +76,7 @@ pub unsafe fn command1(major: usize, minor: usize, arg: usize) -> isize {
 #[allow(clippy::missing_safety_doc)]
 pub unsafe fn allow(major: usize, minor: usize, slice: *mut u8, len: usize) -> isize {
     let res;
-    asm!("svc 3" : "={r0}"(res)
+    llvm_asm!("svc 3" : "={r0}"(res)
                  : "{r0}"(major) "{r1}"(minor) "{r2}"(slice) "{r3}"(len)
                  : "memory"
                  : "volatile");
@@ -88,7 +88,7 @@ pub unsafe fn allow(major: usize, minor: usize, slice: *mut u8, len: usize) -> i
 #[allow(clippy::missing_safety_doc)]
 pub unsafe fn memop(major: u32, arg1: usize) -> isize {
     let res;
-    asm!("svc 4" : "={r0}"(res)
+    llvm_asm!("svc 4" : "={r0}"(res)
                  : "{r0}"(major) "{r1}"(arg1)
                  : "memory"
                  : "volatile");

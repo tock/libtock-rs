@@ -99,7 +99,7 @@ impl<'a> HmacDriver<'a> {
         syscalls::allow(DRIVER_NUMBER, allow_nr::DEST, &mut buffer.buffer).map_err(Into::into)
     }
 
-    pub fn subscribe<CB: FnMut(usize, usize) -> () + FnMut(usize, usize)>(
+    pub fn subscribe<CB: FnMut(usize, usize)>(
         &self,
         callback: &'a mut CB,
     ) -> TockResult<CallbackSubscription> {
