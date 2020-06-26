@@ -128,7 +128,7 @@ unsafe extern "C" fn rust_start(app_start: usize, stacktop: usize, app_heap_star
     memop::set_brk(app_heap_end as *const u8);
 
     #[cfg(feature = "alloc_init")]
-    crate::alloc_init(app_heap_start, app_heap_size);
+    crate::libtock_alloc_init(app_heap_start, app_heap_size);
 
     main(0, ptr::null());
 

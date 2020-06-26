@@ -7,7 +7,7 @@ use linked_list_allocator::Heap;
 static mut HEAP: Heap = Heap::empty();
 
 #[no_mangle]
-unsafe fn alloc_init(app_heap_start: usize, app_heap_size: usize) {
+unsafe fn libtock_alloc_init(app_heap_start: usize, app_heap_size: usize) {
     HEAP.init(app_heap_start, app_heap_size);
 }
 

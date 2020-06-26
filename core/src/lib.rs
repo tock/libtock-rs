@@ -10,7 +10,7 @@ mod lang_items;
 
 #[cfg(feature = "alloc_init")]
 extern "Rust" {
-    fn alloc_init(app_heap_start: usize, app_heap_size: usize);
+    fn libtock_alloc_init(app_heap_start: usize, app_heap_size: usize);
 }
 
 pub mod callback;
