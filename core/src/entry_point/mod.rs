@@ -127,8 +127,8 @@ unsafe extern "C" fn rust_start(app_start: usize, stacktop: usize, app_heap_star
     // Tell the kernel the new app heap break.
     memop::set_brk(app_heap_end as *const u8);
 
-    #[cfg(feature = "alloc")]
-    crate::alloc::HEAP.init(app_heap_start, app_heap_size);
+    #[cfg(feature = "alloc_init")]
+    crate::alloc_init(app_heap_start, app_heap_size);
 
     main(0, ptr::null());
 

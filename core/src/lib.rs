@@ -8,6 +8,11 @@ mod entry_point;
 #[cfg(any(target_arch = "arm", target_arch = "riscv32"))]
 mod lang_items;
 
+#[cfg(feature = "alloc_init")]
+extern "Rust" {
+    fn alloc_init(app_heap_start: usize, app_heap_size: usize);
+}
+
 pub mod callback;
 pub mod debug;
 pub mod memop;
