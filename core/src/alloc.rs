@@ -4,7 +4,12 @@ use core::ptr;
 use core::ptr::NonNull;
 use linked_list_allocator::Heap;
 
-pub static mut HEAP: Heap = Heap::empty();
+static mut HEAP: Heap = Heap::empty();
+
+#[no_mangle]
+unsafe fn libtock_alloc_init(app_heap_start: usize, app_heap_size: usize) {
+    HEAP.init(app_heap_start, app_heap_size);
+}
 
 struct TockAllocator;
 
