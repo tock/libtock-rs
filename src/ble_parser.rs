@@ -53,7 +53,7 @@ mod test {
                 0x02, 0x02, 0x01, 0x02, 0x01, 0x03, 0x03, 0x16, 0x01, 0x02, 0x04, 0xFF, 0x01, 0x02,
                 0x03,
             ];
-            slice.clone_from_slice(data);
+            slice.copy_from_slice(data);
         }
         assert_eq!(find(&buf, 0x02), Some(&[0x01][0..1]));
         assert_eq!(find(&buf, 0x01), Some(&[0x03][0..1]));
@@ -67,7 +67,7 @@ mod test {
         {
             let slice = &mut buf[8..18];
             let data = &[0x02, 0x02, 0x00, 0x00, 0x00, 0x00, 0x0, 0x16, 0x01, 0x02];
-            slice.clone_from_slice(data);
+            slice.copy_from_slice(data);
         }
     }
 
@@ -77,7 +77,7 @@ mod test {
         {
             let slice = &mut buf[8..10];
             let data = &[0x04, 0x02];
-            slice.clone_from_slice(data);
+            slice.copy_from_slice(data);
         }
         assert_eq!(find(&buf, 0xF2), None);
     }
