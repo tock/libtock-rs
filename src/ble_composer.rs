@@ -21,7 +21,7 @@ impl BlePayload {
         self.bytes[self.occupied] = (content.len() + 1) as u8;
         self.bytes[self.occupied + 1] = kind;
         let write = &mut self.bytes[self.occupied + 2..(self.occupied + content.len() + 2)];
-        write.clone_from_slice(content);
+        write.copy_from_slice(content);
         self.occupied += 2 + content.len();
         Ok(())
     }
@@ -44,7 +44,7 @@ impl BlePayload {
         self.bytes[self.occupied + 3] = uuid[1];
 
         let write = &mut self.bytes[self.occupied + 4..(self.occupied + content.len() + 4)];
-        write.clone_from_slice(content);
+        write.copy_from_slice(content);
         self.occupied += 4 + content.len();
         Ok(())
     }
