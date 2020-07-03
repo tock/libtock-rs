@@ -104,10 +104,8 @@ unsafe extern "C" fn rust_start(app_start: usize, stacktop: usize, app_heap_star
     );
 
     // Zero .bss (specified by the linker script).
-    let bss_end = layout_header.bss_start + layout_header.bss_size; // 1 past the end of .bss
-    for i in layout_header.bss_start..bss_end {
-        core::ptr::write(i as *mut u8, 0);
-    }
+    let bss_start = layout_header.bss_start as *mut u8;
+    core::ptr::write_bytes(bss_start, 0u8, layout_header.bss_size);
 
     // TODO: Wait for rustc to have working ROPI-RWPI relocation support, then
     // implement dynamic relocations here. At the moment, rustc does not have
