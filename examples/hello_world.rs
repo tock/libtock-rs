@@ -1,4 +1,5 @@
 // This example just prints "Hello Tock World" to the terminal.
+// Run `tockloader listen` to view the message.
 
 #![no_std]
 
