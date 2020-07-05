@@ -1,5 +1,6 @@
 // This example just prints "Hello Tock World" to the terminal.
-// Run `tockloader listen` to view the message.
+// Run `tockloader listen`, or use any serial program of your choice
+//  (e.g. `screen`, `minicom`) to view the message.
 
 #![no_std]
 
