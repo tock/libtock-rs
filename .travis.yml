@@ -14,7 +14,8 @@ os:
 cache: cargo
 
 install:
-  - make -j8 setup
+  - CI=y make -j8 setup
+  - rm -rf ~/opentitan* # Make sure this isn't left over, see https://github.com/tock/tock/pull/1978
 
 script:
   - make test
