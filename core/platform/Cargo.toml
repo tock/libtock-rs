@@ -1,0 +1,13 @@
+[package]
+authors = ["Tock Project Developers <tock-dev@googlegroups.com>"]
+categories = ["embedded", "no-std", "os"]
+description = """libtock-rs platform layer. Provides the Platform abstraction,
+                 an abstraction that extends Tock's system calls to form the
+                 basis for libtock-rs' asynchronous APIs. libtock_platform is
+                 intended for use in both TBF binaries and unit tests that run
+                 on Linux."""
+edition = "2018"
+license = "Apache-2.0 OR MIT"
+name = "libtock_platform"
+repository = "https://www.github.com/tock/libtock/rs"
+version = "0.1.0"
