@@ -49,7 +49,7 @@ setup: setup-qemu
 # patches to better support boards that Tock supports.
 .PHONY: setup-qemu
 setup-qemu:
-	$(MAKE) -C tock ci-job-qemu
+	CI=true $(MAKE) -C tock ci-setup-qemu
 
 # Builds a Tock kernel for the HiFive board for use by QEMU tests.
 .PHONY: kernel-hifive
@@ -64,7 +64,7 @@ print-sizes: examples
 
 # Runs the libtock_test tests in QEMU on a simulated HiFive board.
 .PHONY: test-qemu-hifive
-test-qemu-hifive: kernel-hifive setup-qemu
+test-qemu-hifive: kernel-hifive
 	PLATFORM=hifive1 cargo rrv32imac --example libtock_test --features=alloc \
 		--features=__internal_disable_gpio_in_integration_test
 	cargo run -p test_runner
