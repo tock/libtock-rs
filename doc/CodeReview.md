@@ -16,7 +16,9 @@ PR to `libtock-rs` can be divided into two categories:
 The owners of `libtock-rs` (listed [below](#owners)) determine whether a PR is
 an upkeep PR or a significant PR. PRs should be merged by the `libtock-rs`
 owners rather than the PR's author. PRs authored by `libtock-rs` owners should
-be merged by a reviewer rather than their author.
+be merged by a reviewer rather than their author. In general, PRs should be
+merged using a `bors r+` command rather than the GitHub UI (see the [bors
+documentation](https://bors.tech/documentation/) for more information on bors).
 
 A PR may only be merged when all of the following are true:
 
@@ -24,6 +26,11 @@ A PR may only be merged when all of the following are true:
 1. All outstanding review discussions have been resolved.
 1. If the pull request is significant, a 7 day waiting period has passed since
    the PR was opened.
+
+We recommend that authors of significant PRs comment on the PR when they believe
+the above criteria have been satisfied (including the waiting period). This is
+primarily to remind the owners to merge the PR. Secondarily, it should help
+identify confusion about a PR review's status.
 
 ## Owners
 
