@@ -7,3 +7,7 @@
 //   2. The PlatformApi trait and Platform implementation.
 //   3. A system call trait so that Platform works in both real Tock apps and
 //      unit test environments.
+
+mod allows;
+
+pub use allows::{AllowReadable, Allowed};
