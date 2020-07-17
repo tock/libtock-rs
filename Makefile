@@ -40,10 +40,12 @@ setup: setup-qemu
 	rustup target add thumbv7em-none-eabi
 	rustup target add riscv32imac-unknown-none-elf
 	rustup target add riscv32imc-unknown-none-elf
-	rustup component add rustfmt
 	rustup component add clippy
+	rustup component add rustfmt
+	rustup component add miri
 	cargo install elf2tab --version 0.4.0
 	cargo install stack-sizes
+	cargo miri setup
 
 # Sets up QEMU in the tock/ directory. We use Tock's QEMU which may contain
 # patches to better support boards that Tock supports.
@@ -82,7 +84,7 @@ examples:
 test: examples test-qemu-hifive
 	PLATFORM=nrf52 cargo fmt --all -- --check
 	PLATFORM=nrf52 cargo clippy --workspace --all-targets
-	PLATFORM=nrf52 cargo test --workspace
+	PLATFORM=nrf52 cargo miri test --workspace
 	echo '[ SUCCESS ] libtock-rs tests pass'
 
 .PHONY: analyse-stack-sizes

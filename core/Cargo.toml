@@ -13,3 +13,4 @@ custom_alloc_error_handler = []
 [dependencies]
 linked_list_allocator = { optional = true, version = "=0.8.1", default-features = false }
 libtock_codegen = { path = "../codegen" }
+libtock_platform = { path = "platform" }
