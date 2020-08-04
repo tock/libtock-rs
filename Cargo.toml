@@ -9,7 +9,11 @@ edition = "2018"
 alloc = ["libtock_core/alloc"]
 custom_panic_handler = ["libtock_core/custom_panic_handler"]
 custom_alloc_error_handler = ["libtock_core/custom_alloc_error_handler"]
+# In the QEMU-emulated HiFive1 target, we do not have connected GPIO pins or a
+# working timer interface. These features allow the test's user to disable these
+# tests in environments where they will not pass.
 __internal_disable_gpio_in_integration_test = []
+__internal_disable_timer_in_integration_test = []
 
 [dependencies]
 libtock_core = { path = "core" }

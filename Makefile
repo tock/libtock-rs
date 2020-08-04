@@ -68,7 +68,8 @@ print-sizes: examples
 .PHONY: test-qemu-hifive
 test-qemu-hifive: kernel-hifive
 	PLATFORM=hifive1 cargo rrv32imac --example libtock_test --features=alloc \
-		--features=__internal_disable_gpio_in_integration_test
+		--features=__internal_disable_gpio_in_integration_test \
+		--features=__internal_disable_timer_in_integration_test
 	cargo run -p test_runner
 
 .PHONY: examples

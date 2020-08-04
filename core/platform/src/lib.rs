@@ -9,5 +9,7 @@
 //      unit test environments.
 
 mod allows;
+mod error_code;
 
 pub use allows::{AllowReadable, Allowed};
+pub use error_code::ErrorCode;
