@@ -1,0 +1,53 @@
+name: Artifacts
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1.0.6
+        with:
+          profile: minimal
+
+      - name: Install dependencies
+        run: |
+          rustup target add thumbv7em-none-eabi
+          rustup target add riscv32imac-unknown-none-elf
+          rustup target add riscv32imc-unknown-none-elf
+          cargo install elf2tab --version 0.4.0
+
+      - name: Build Hello World
+        run: |
+          FEATURES="alloc" make flash-apollo3  EXAMPLE=hello_world -j2
+          FEATURES="alloc" make flash-hail  EXAMPLE=hello_world -j2
+          FEATURES="alloc" make flash-nucleo_f429zi  EXAMPLE=hello_world -j2
+          FEATURES="alloc" make flash-nucleo_f446re  EXAMPLE=hello_world -j2
+          FEATURES="alloc" make flash-nrf52840  EXAMPLE=hello_world -j2
+          FEATURES="alloc" make flash-opentitan  EXAMPLE=hello_world -j2
+          FEATURES="alloc" make flash-hifive1  EXAMPLE=hello_world -j2
+          FEATURES="alloc" make flash-nrf52  EXAMPLE=hello_world -j2
+
+      - name: Build libtock-test
+        run: |
+          FEATURES="alloc" make flash-apollo3  EXAMPLE=libtock_test -j2
+          FEATURES="alloc" make flash-hail  EXAMPLE=libtock_test -j2
+          FEATURES="alloc" make flash-nucleo_f429zi  EXAMPLE=libtock_test -j2
+          FEATURES="alloc" make flash-nucleo_f446re  EXAMPLE=libtock_test -j2
+          FEATURES="alloc" make flash-nrf52840  EXAMPLE=libtock_test -j2
+          FEATURES="alloc" make flash-opentitan  EXAMPLE=libtock_test -j2
+          FEATURES="alloc" make flash-hifive1  EXAMPLE=libtock_test -j2
+          FEATURES="alloc" make flash-nrf52  EXAMPLE=libtock_test -j2
+
+      - name: Build extra tests
+        run: |
+          FEATURES="alloc" make flash-opentitan  EXAMPLE=hmac -j2
+
+      - name: Archive artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: libtock-rs examples
+          path: target/*/tab/*/*/*.tbf

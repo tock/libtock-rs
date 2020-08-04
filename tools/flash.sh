@@ -70,5 +70,10 @@ if [ $tockload == "n" ]; then
 	exit 0
 fi
 
+if ! [ -x "$(command -v tockloader)" ]; then
+    echo "Skipping flashing as tockloader isn't installed"
+    exit 0
+fi
+
 tockloader uninstall ${tockloader_flags} || true
 tockloader install ${tockloader_flags} "${tab_file_name}"

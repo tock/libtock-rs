@@ -51,6 +51,7 @@ async fn libtock_test(
     test.formatting()?;
     test.heap()?;
     test.drivers_only_instantiable_once()?;
+    #[cfg(not(feature = "__internal_disable_timer_in_integration_test"))]
     test.callbacks(timer).await?;
     #[cfg(not(feature = "__internal_disable_gpio_in_integration_test"))]
     test.gpio(gpio)?;
@@ -113,6 +114,10 @@ impl LibtockTest {
         )
     }
 
+    #[cfg_attr(
+        feature = "__internal_disable_timer_in_integration_test",
+        allow(dead_code)
+    )]
     async fn callbacks(&mut self, timer_context: &mut DriverContext) -> TockResult<()> {
         let mut callback_hit = false;
         let mut with_callback = timer_context.with_callback(|_, _| callback_hit = true);
