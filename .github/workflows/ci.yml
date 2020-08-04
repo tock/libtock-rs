@@ -1,0 +1,44 @@
+# This workflow provides automated testing. It builds and runs tests on each PR.
+
+name: ci
+on: pull_request
+
+jobs:
+  ci:
+    # Using ubuntu-latest can cause breakage when ubuntu-latest is updated to
+    # point at a new Ubuntu version. Instead, explicitly specify the version, so
+    # we can update when we need to. This *could* break if we don't update it
+    # until support for 18.04 is dropped, but it is likely we'll have a reason
+    # to update to a newer Ubuntu before then anyway.
+    runs-on: ubuntu-18.04
+
+    steps:
+      # Clones a single commit from the libtock-rs repository. The commit cloned
+      # is a merge commit between the PR's target branch and the PR's source.
+      # Note that we checkout submodules so that we can invoke Tock's CI setup
+      # scripts, but we do not recursively checkout submodules as we need Tock's
+      # makefile to set up the qemu submodule itself.
+      - name: Clone repository
+        uses: actions/checkout@v2.3.0
+        with:
+          submodules: true
+
+      # Install a Rust toolchain with the components necessary to build
+      # libtock-rs and its examples. This action doesn't seem to be able to
+      # install toolchains for multiple targets, so I add the targets later in
+      # the "Build and Test" step.
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1.0.6
+        with:
+          profile: minimal
+
+      # The main test step. We let the makefile do most of the work because the
+      # makefile can be tested locally. We experimentally determined that -j2 is
+      # optimal for the Azure Standard_DS2_v2 VM, which is the VM type used by
+      # GitHub Actions at the time of this writing.
+      - name: Build and Test
+        run: |
+          cd "${GITHUB_WORKSPACE}"
+          rustup target add riscv32imc-unknown-none-elf thumbv7em-none-eabi
+          make -j2 setup
+          make -j2 test
