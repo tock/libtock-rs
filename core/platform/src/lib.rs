@@ -8,8 +8,10 @@
 //   3. A system call trait so that Platform works in both real Tock apps and
 //      unit test environments. [DONE]
 
+mod allows;
 mod error_code;
 mod syscalls;
 
+pub use allows::{AllowReadable, Allowed};
 pub use error_code::ErrorCode;
 pub use syscalls::{MemopNoArg, MemopWithArg, Syscalls};
