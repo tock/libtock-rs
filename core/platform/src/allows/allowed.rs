@@ -1,9 +1,13 @@
 /// An individual value that has been shared with the kernel using the `allow`
 /// system call.
-// Design note: Allowed's implementation does not directly use the 'b lifetime.
-// Platform uses 'b to prevent the Allowed from accessing the buffer after the
-// buffer becomes invalid.
-pub struct Allowed<'b, T: 'b> {
+// Allowed's implementation does not directly use the 'b lifetime. Platform uses
+// 'b to prevent the Allowed from accessing the buffer after the buffer becomes
+// invalid.
+// Allowed requires T to be Copy due to concerns about the semantics of
+// non-copyable types in shared memory as well as concerns about unexpected
+// behavior with Drop types. See the following PR discussion for more
+// information: https://github.com/tock/libtock-rs/pull/222
+pub struct Allowed<'b, T: Copy + 'b> {
     // Safety properties:
     //   1. `buffer` remains valid and usable for the lifetime of this Allowed
     //      instance.
@@ -37,7 +41,7 @@ pub struct Allowed<'b, T: 'b> {
 // need to be able to deconflict races between the kernel (which will never
 // interrupt an instruction's execution) and this process. Therefore volatile
 // accesses are sufficient to deconflict races.
-impl<'b, T: 'b> Allowed<'b, T> {
+impl<'b, T: Copy + 'b> Allowed<'b, T> {
     // Allowed can only be constructed by the Platform. It is constructed after
     // the `allow` system call, and as such must accept a raw pointer rather
     // than a reference. The caller must make sure the following are true:
@@ -52,9 +56,7 @@ impl<'b, T: 'b> Allowed<'b, T> {
         }
     }
 
-    // Sets the value in the buffer. Note that unlike `core::cell::Cell::set`,
-    // `Allowed::set` will not drop the existing value. To drop the existing
-    // value, use `replace` and drop the return value.
+    // Sets the value in the buffer.
     pub fn set(&self, value: T) {
         unsafe {
             core::ptr::write_volatile(self.buffer.as_ptr(), value);
@@ -62,7 +64,7 @@ impl<'b, T: 'b> Allowed<'b, T> {
     }
 }
 
-impl<'b, T: crate::AllowReadable + 'b> Allowed<'b, T> {
+impl<'b, T: crate::AllowReadable + Copy + 'b> Allowed<'b, T> {
     pub fn replace(&self, value: T) -> T {
         let current = unsafe { core::ptr::read_volatile(self.buffer.as_ptr()) };
         unsafe {
@@ -70,15 +72,13 @@ impl<'b, T: crate::AllowReadable + 'b> Allowed<'b, T> {
         }
         current
     }
-}
 
-impl<'b, T: crate::AllowReadable + Copy + 'b> Allowed<'b, T> {
     pub fn get(&self) -> T {
         unsafe { core::ptr::read_volatile(self.buffer.as_ptr()) }
     }
 }
 
-impl<'b, T: crate::AllowReadable + Default + 'b> Allowed<'b, T> {
+impl<'b, T: crate::AllowReadable + Copy + Default + 'b> Allowed<'b, T> {
     pub fn take(&self) -> T {
         self.replace(T::default())
     }

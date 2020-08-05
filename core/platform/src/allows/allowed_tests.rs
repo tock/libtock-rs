@@ -1,4 +1,3 @@
-use crate::allows::test_util::DropCheck;
 use crate::Allowed;
 use core::marker::PhantomData;
 use core::ptr::NonNull;
@@ -32,7 +31,7 @@ use core::ptr::NonNull;
 // interacting with a real Tock kernel.
 //
 // [1] https://plv.mpi-sws.org/rustbelt/stacked-borrows/paper.pdf
-struct KernelPtr<'b, T: 'b> {
+struct KernelPtr<'b, T: Copy + 'b> {
     ptr: NonNull<T>,
 
     // We need to consume the 'b lifetime. This is very similar to Allowed's
@@ -40,7 +39,7 @@ struct KernelPtr<'b, T: 'b> {
     _phantom: PhantomData<&'b mut T>,
 }
 
-impl<'b, T: 'b> KernelPtr<'b, T> {
+impl<'b, T: Copy + 'b> KernelPtr<'b, T> {
     // The constructor for KernelPtr; simulates allow(). Returns both the
     // Allowed instance the Platform would return and a KernelPtr the test can
     // use to simulate a kernel.
@@ -59,98 +58,53 @@ impl<'b, T: 'b> KernelPtr<'b, T> {
         (allowed, kernel_ptr)
     }
 
-    // Replaces the value in the buffer with a new one. Does not drop the
-    // existing value.
+    // Replaces the value in the buffer with a new one.
     pub fn set(&self, value: T) {
         unsafe {
             core::ptr::write(self.ptr.as_ptr(), value);
         }
     }
-}
 
-impl<'b, T: Copy + 'b> KernelPtr<'b, T> {
     // Copies the contained value out of the buffer.
     pub fn get(&self) -> T {
         unsafe { core::ptr::read(self.ptr.as_ptr()) }
     }
 }
 
-impl<'b, 'f: 'b> KernelPtr<'b, DropCheck<'f>> {
-    // Retrieves the value of the contained DropCheck.
-    pub fn value(&self) -> usize {
-        let drop_check = unsafe { core::ptr::read(self.ptr.as_ptr()) };
-        let value = drop_check.value;
-        core::mem::forget(drop_check);
-        value
-    }
-}
-
 #[test]
 fn set() {
-    let dropped1 = core::cell::Cell::new(false);
-    let dropped2 = core::cell::Cell::new(false);
-    let dropped3 = core::cell::Cell::new(false);
-    let mut buffer = DropCheck {
-        flag: Some(&dropped1),
-        value: 1,
-    };
+    let mut buffer = 1;
     let (allowed, kernel_ptr) = KernelPtr::allow(&mut buffer);
-    assert_eq!(kernel_ptr.value(), 1);
-    assert_eq!(dropped1.get(), false);
+    assert_eq!(kernel_ptr.get(), 1);
 
-    // Simulate the kernel replacing the value in buffer. We don't drop the
-    // existing value.
-    kernel_ptr.set(DropCheck {
-        flag: Some(&dropped2),
-        value: 2,
-    });
-    allowed.set(DropCheck {
-        flag: Some(&dropped3),
-        value: 3,
-    });
-    assert_eq!(kernel_ptr.value(), 3);
-    assert_eq!(dropped1.get(), false);
-    assert_eq!(dropped2.get(), false);
-    assert_eq!(dropped3.get(), false);
+    // Simulate the kernel replacing the value in buffer.
+    kernel_ptr.set(2);
+    allowed.set(3);
+    assert_eq!(kernel_ptr.get(), 3);
 }
 
 #[test]
 fn replace() {
-    let dropped1 = core::cell::Cell::new(false);
-    let dropped2 = core::cell::Cell::new(false);
-    let dropped3 = core::cell::Cell::new(false);
-    let mut buffer = DropCheck {
-        flag: Some(&dropped1),
-        value: 1,
-    };
+    let mut buffer = 1;
     let (allowed, kernel_ptr) = KernelPtr::allow(&mut buffer);
-    assert_eq!(kernel_ptr.value(), 1);
-    assert_eq!(dropped1.get(), false);
+    assert_eq!(kernel_ptr.get(), 1);
 
-    // Simulate the kernel replacing the value in buffer. We don't drop the
-    // existing value.
-    kernel_ptr.set(DropCheck {
-        flag: Some(&dropped2),
-        value: 2,
-    });
-    let returned = allowed.replace(DropCheck {
-        flag: Some(&dropped3),
-        value: 3,
-    });
-    assert_eq!(returned.value, 2);
-    assert_eq!(kernel_ptr.value(), 3);
-    assert_eq!(dropped1.get(), false);
-    assert_eq!(dropped2.get(), false);
-    assert_eq!(dropped3.get(), false);
+    // Simulate the kernel replacing the value in buffer.
+    kernel_ptr.set(2);
+    let returned = allowed.replace(3);
+    assert_eq!(returned, 2);
+    assert_eq!(kernel_ptr.get(), 3);
 }
 
 #[test]
 fn get() {
-    // We can't use DropCheck because Drop and Copy cannot both be implemented
-    // on a single type.
     let mut buffer = 1;
     let (allowed, kernel_ptr) = KernelPtr::allow(&mut buffer);
     assert_eq!(kernel_ptr.get(), 1);
+
+    assert_eq!(allowed.get(), 1);
+    assert_eq!(kernel_ptr.get(), 1);
+
     kernel_ptr.set(2);
     assert_eq!(allowed.get(), 2);
     assert_eq!(kernel_ptr.get(), 2);
@@ -158,27 +112,13 @@ fn get() {
 
 #[test]
 fn take() {
-    let dropped1 = core::cell::Cell::new(false);
-    let dropped2 = core::cell::Cell::new(false);
-    let dropped3 = core::cell::Cell::new(false);
-    let mut buffer = DropCheck {
-        flag: Some(&dropped1),
-        value: 1,
-    };
+    let mut buffer = 1;
     let (allowed, kernel_ptr) = KernelPtr::allow(&mut buffer);
-    assert_eq!(kernel_ptr.value(), 1);
-    assert_eq!(dropped1.get(), false);
+    assert_eq!(kernel_ptr.get(), 1);
 
-    // Simulate the kernel replacing the value in buffer. We don't drop the
-    // existing value.
-    kernel_ptr.set(DropCheck {
-        flag: Some(&dropped2),
-        value: 2,
-    });
+    // Simulate the kernel replacing the value in buffer.
+    kernel_ptr.set(2);
     let returned = allowed.take();
-    assert_eq!(returned.value, 2);
-    assert_eq!(kernel_ptr.value(), 0);
-    assert_eq!(dropped1.get(), false);
-    assert_eq!(dropped2.get(), false);
-    assert_eq!(dropped3.get(), false);
+    assert_eq!(returned, 2);
+    assert_eq!(kernel_ptr.get(), 0);
 }

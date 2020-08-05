@@ -6,5 +6,3 @@ pub use allowed::Allowed;
 
 #[cfg(test)]
 mod allowed_tests;
-#[cfg(test)]
-mod test_util;
