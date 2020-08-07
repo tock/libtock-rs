@@ -1,0 +1,11 @@
+[package]
+authors = ["Tock Project Developers <tock-dev@googlegroups.com>"]
+categories = ["embedded", "no-std", "os"]
+edition = "2018"
+license = "Apache-2.0 OR MIT"
+name = "libtock_sync"
+repository = "https://www.github.com/tock/libtock-rs"
+version = "0.1.0"
+
+[dependencies]
+libtock_platform = { path = "../platform" }
