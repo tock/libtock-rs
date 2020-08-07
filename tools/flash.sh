@@ -45,6 +45,11 @@ case "${PLATFORM}" in
         binary_name=cortex-m7.elf
         tockload=n
         ;;
+    "msp432")
+        tockloader_flags=""
+        binary_name=cortex-m4.elf
+        tockload=n
+        ;;
     "opentitan")
         tockloader_flags=""
         binary_name=rv32imc.elf

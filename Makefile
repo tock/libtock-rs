@@ -164,6 +164,13 @@ imxrt1050:
 flash-imxrt1050:
 	PLATFORM=imxrt1050 cargo run $(release) --target=thumbv7em-none-eabi --example $(EXAMPLE) $(features)
 
+.PHONY: msp432
+msp432:
+	PLATFORM=msp432 cargo build $(release) --target=thumbv7em-none-eabi --examples $(features)
+
+.PHONY: msp432
+flash-msp432:
+	PLATFORM=msp432 cargo run $(release) --target=thumbv7em-none-eabi --example $(EXAMPLE) $(features)
 
 .PHONY: clean
 clean:
