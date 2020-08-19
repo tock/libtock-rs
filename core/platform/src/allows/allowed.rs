@@ -65,21 +65,7 @@ impl<'b, T: Copy + 'b> Allowed<'b, T> {
 }
 
 impl<'b, T: crate::AllowReadable + Copy + 'b> Allowed<'b, T> {
-    pub fn replace(&self, value: T) -> T {
-        let current = unsafe { core::ptr::read_volatile(self.buffer.as_ptr()) };
-        unsafe {
-            core::ptr::write_volatile(self.buffer.as_ptr(), value);
-        }
-        current
-    }
-
     pub fn get(&self) -> T {
         unsafe { core::ptr::read_volatile(self.buffer.as_ptr()) }
-    }
-}
-
-impl<'b, T: crate::AllowReadable + Copy + Default + 'b> Allowed<'b, T> {
-    pub fn take(&self) -> T {
-        self.replace(T::default())
     }
 }

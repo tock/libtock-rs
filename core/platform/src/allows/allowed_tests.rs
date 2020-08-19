@@ -84,19 +84,6 @@ fn set() {
 }
 
 #[test]
-fn replace() {
-    let mut buffer = 1;
-    let (allowed, kernel_ptr) = KernelPtr::allow(&mut buffer);
-    assert_eq!(kernel_ptr.get(), 1);
-
-    // Simulate the kernel replacing the value in buffer.
-    kernel_ptr.set(2);
-    let returned = allowed.replace(3);
-    assert_eq!(returned, 2);
-    assert_eq!(kernel_ptr.get(), 3);
-}
-
-#[test]
 fn get() {
     let mut buffer = 1;
     let (allowed, kernel_ptr) = KernelPtr::allow(&mut buffer);
@@ -108,17 +95,4 @@ fn get() {
     kernel_ptr.set(2);
     assert_eq!(allowed.get(), 2);
     assert_eq!(kernel_ptr.get(), 2);
-}
-
-#[test]
-fn take() {
-    let mut buffer = 1;
-    let (allowed, kernel_ptr) = KernelPtr::allow(&mut buffer);
-    assert_eq!(kernel_ptr.get(), 1);
-
-    // Simulate the kernel replacing the value in buffer.
-    kernel_ptr.set(2);
-    let returned = allowed.take();
-    assert_eq!(returned, 2);
-    assert_eq!(kernel_ptr.get(), 0);
 }
