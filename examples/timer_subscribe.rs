@@ -1,7 +1,7 @@
 #![no_std]
 
-use core::fmt::Write;
 use futures::future;
+use libtock::println;
 use libtock::result::TockResult;
 use libtock::timer::Duration;
 
@@ -9,14 +9,10 @@ use libtock::timer::Duration;
 async fn main() -> TockResult<()> {
     let mut drivers = libtock::retrieve_drivers()?;
 
-    let mut console = drivers.console.create_console();
+    drivers.console.create_console();
 
     let mut with_callback = drivers.timer.with_callback(|_, _| {
-        writeln!(
-            console,
-            "This line is printed 2 seconds after the start of the program.",
-        )
-        .unwrap();
+        println!("This line is printed 2 seconds after the start of the program.");
     });
 
     let mut timer = with_callback.init()?;

@@ -7,6 +7,9 @@ use core::cell::Cell;
 use core::fmt;
 use core::mem;
 
+// Global console
+static mut CONSOLE: Option<Console> = None;
+
 const DRIVER_NUMBER: usize = 1;
 
 mod command_nr {
@@ -25,15 +28,21 @@ mod allow_nr {
 pub struct ConsoleDriver;
 
 impl ConsoleDriver {
-    pub fn create_console(self) -> Console {
-        Console {
+    pub fn create_console(self) {
+        let console = Console {
             allow_buffer: [0; 64],
-        }
+        };
+
+        console.set_global_console();
     }
 }
 
 pub struct Console {
     allow_buffer: [u8; 64],
+}
+
+pub fn get_global_console() -> Option<&'static mut Console> {
+    unsafe { CONSOLE.as_mut() }
 }
 
 impl Console {
@@ -73,10 +82,56 @@ impl Console {
 
         Ok(())
     }
+
+    fn set_global_console(self) {
+        unsafe {
+            CONSOLE = Some(self);
+        }
+    }
 }
 
 impl fmt::Write for Console {
     fn write_str(&mut self, string: &str) -> Result<(), fmt::Error> {
         self.write(string).map_err(|_| fmt::Error)
     }
+}
+
+#[macro_export]
+macro_rules! println {
+    () => ({
+        // Allow an empty println!() to print the location when hit
+        println!("")
+    });
+    ($msg:expr) => ({
+        if let Some(console) = $crate::console::get_global_console() {
+            use core::fmt::Write;
+            let _ = writeln!(console, $msg);
+        }
+    });
+    ($fmt:expr, $($arg:tt)+) => ({
+        if let Some(console) = $crate::console::get_global_console() {
+            use core::fmt::Write;
+            let _ = writeln!(console, "{}", format_args!($fmt, $($arg)+));
+        }
+    });
+}
+
+#[macro_export]
+macro_rules! print {
+    () => ({
+        // Allow an empty print!() to print the location when hit
+        print!("")
+    });
+    ($msg:expr) => ({
+        if let Some(console) = $crate::console::get_global_console() {
+            use core::fmt::Write;
+            let _ =  write!(console, $msg);
+        }
+    });
+    ($fmt:expr, $($arg:tt)+) => ({
+        if let Some(console) = $crate::console::get_global_console() {
+            use core::fmt::Write;
+            let _ = write!(console, "{}", format_args!($fmt, $($arg)+));
+        }
+    });
 }

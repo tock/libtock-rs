@@ -1,6 +1,6 @@
 #![no_std]
 
-use core::fmt::Write;
+use libtock::println;
 use libtock::result::TockResult;
 use libtock::timer::Duration;
 
@@ -11,10 +11,10 @@ async fn main() -> TockResult<()> {
     let adc_driver = drivers.adc.init_driver()?;
     let mut timer_driver = drivers.timer.create_timer_driver();
     let timer_driver = timer_driver.activate()?;
-    let mut console = drivers.console.create_console();
+    drivers.console.create_console();
 
     let mut callback = |channel, value| {
-        writeln!(console, "channel: {}, value: {}", channel, value).unwrap();
+        println!("channel: {}, value: {}", channel, value);
     };
 
     let _subscription = adc_driver.subscribe(&mut callback)?;

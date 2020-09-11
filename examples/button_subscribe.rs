@@ -1,8 +1,8 @@
 #![no_std]
 
 use core::cell::Cell;
-use core::fmt::Write;
 use libtock::buttons::ButtonState;
+use libtock::println;
 use libtock::result::TockResult;
 use libtock::timer::Duration;
 
@@ -13,7 +13,7 @@ async fn main() -> TockResult<()> {
     let buttons_driver = drivers.buttons.init_driver()?;
     let mut timer_driver = drivers.timer.create_timer_driver();
     let timer_driver = timer_driver.activate()?;
-    let mut console = drivers.console.create_console();
+    drivers.console.create_console();
 
     let pressed_count = Cell::new(0usize);
     let released_count = Cell::new(0usize);
@@ -30,12 +30,11 @@ async fn main() -> TockResult<()> {
     }
 
     loop {
-        writeln!(
-            console,
+        println!(
             "pressed: {}, released: {}",
             pressed_count.get(),
             released_count.get()
-        )?;
+        );
         timer_driver.sleep(Duration::from_ms(500)).await?;
     }
 }
