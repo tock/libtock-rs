@@ -25,10 +25,16 @@ corepack = { version = "0.4.0", default-features = false, features = ["alloc"] }
 # We pin the serde version because newer serde versions may not be compatible
 # with the nightly toolchain used by libtock-rs.
 serde = { version = "=1.0.114", default-features = false, features = ["derive"] }
+ctap2-authenticator = { git = "https://gitlab.com/ctap2-authenticator/ctap2-authenticator.git" }
 
 [[example]]
 name = "alloc_error"
 path = "examples-features/alloc_error.rs"
+required-features = ["alloc", "custom_alloc_error_handler"]
+
+[[example]]
+name = "ctap_features"
+path = "examples-features/ctap.rs"
 required-features = ["alloc", "custom_alloc_error_handler"]
 
 [[example]]
