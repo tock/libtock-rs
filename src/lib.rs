@@ -5,6 +5,7 @@ pub mod ble_composer;
 pub mod ble_parser;
 pub mod buttons;
 pub mod console;
+pub mod ctap;
 pub mod debug;
 pub mod drivers;
 pub mod electronics;
