@@ -5,7 +5,7 @@ extern crate alloc;
 
 use core::alloc::Layout;
 use core::cell::Cell;
-use core::fmt::{Debug, Error, Formatter};
+use core::fmt::{self, Debug, Error, Formatter};
 use core::time::Duration;
 use ctap2_authenticator::credentials::{RpCredential, UserCredential};
 use ctap2_authenticator::usbhid::{
@@ -16,6 +16,7 @@ use ctap2_authenticator::{
     AuthenticatorPlatform, CredentialDescriptorList, CtapOptions, PublicKey, Signature,
 };
 use libtock::ctap::{CtapRecvBuffer, CtapSendBuffer};
+use libtock::hmac::HmacDriverFactory;
 use libtock::println;
 use libtock::result::TockResult;
 use libtock::syscalls;
@@ -150,8 +151,22 @@ impl Iterator for HmacCredentialQueue {
     }
 }
 
-#[derive(Debug)]
-pub(crate) struct CtapPlatform;
+pub(crate) struct CtapPlatform {
+    hmac: HmacDriverFactory,
+}
+
+impl CtapPlatform {
+    fn new(hmac: HmacDriverFactory) -> Self {
+        Self { hmac }
+    }
+}
+
+impl fmt::Debug for CtapPlatform {
+    fn fmt(&self, _f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        Ok(())
+    }
+}
+
 impl AuthenticatorPlatform for CtapPlatform {
     const AAGUID: [u8; 16] = [
         0xf8, 0xa0, 0x11, 0xf3, 0x8c, 0x0a, 0x4d, 0x15, 0x80, 0x06, 0x17, 0x11, 0x1f, 0x9e, 0xdc,
@@ -259,7 +274,7 @@ async fn main() -> TockResult<()> {
         tp = Cell::new(TransactionProcessor::new(BUFFER, UsbKeyHidPlatform::new()));
     }
 
-    let mut authenticator = Authenticator::create(CtapPlatform);
+    let mut authenticator = Authenticator::create(CtapPlatform::new(drivers.hmac));
 
     let mut callback = |sent, _| {
         let mut looping = true;
