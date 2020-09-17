@@ -234,6 +234,32 @@ impl CtapPlatform {
         seed_buffer.read_bytes(&mut temp_buffer[..]);
         temp_buffer
     }
+
+    /// Generates a Credential from a CredentialId and checks that the Id is valid
+    fn checked_generate_hmac_cred(
+        &mut self,
+        rp_id: &str,
+        credential_id: &[u8],
+    ) -> Option<HmacKeyCredential> {
+        if credential_id.len() != 40 {
+            return None;
+        }
+
+        let received_mac = &credential_id[..32];
+
+        let seed_buffer = self.generate_key_seed(rp_id, &credential_id[32..40].try_into().unwrap());
+
+        let credential =
+            HmacKeyCredential::new(&seed_buffer, credential_id[32..].try_into().unwrap());
+
+        let generated_mac = &credential.0[..32];
+
+        if generated_mac == received_mac {
+            Some(credential)
+        } else {
+            None
+        }
+    }
 }
 
 impl AuthenticatorPlatform for CtapPlatform {
@@ -265,15 +291,27 @@ impl AuthenticatorPlatform for CtapPlatform {
 
     fn locate_credentials(
         &mut self,
-        _rp_id: &str,
+        rp_id: &str,
         list: Option<CredentialDescriptorList>,
     ) -> (u16, Self::CredentialIterator) {
         match list {
             None => (0, HmacCredentialQueue::new()),
-            Some(_list) => {
-                let result = HmacCredentialQueue::new();
+            Some(list) => {
+                let mut result = HmacCredentialQueue::new();
 
-                // TODO Add location
+                for descriptor in list {
+                    match self.checked_generate_hmac_cred(rp_id, descriptor.get_id()) {
+                        None => (),
+                        Some(credential) => {
+                            match result.push(credential, 0) {
+                                Ok(()) => (),
+                                // NOTE: We just truncate if we don't have enough space to store all
+                                // fitting credentials
+                                Err(()) => break,
+                            }
+                        }
+                    }
+                }
 
                 (result.len() as u16, result)
             }
