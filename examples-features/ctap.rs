@@ -312,10 +312,12 @@ impl AuthenticatorPlatform for CtapPlatform {
     type CredentialIterator = HmacCredentialQueue;
 
     fn reset(&mut self) -> Result<(), ()> {
+        println!("reset");
         unimplemented!()
     }
 
     fn check_exclude_list(&mut self, _rp_id: &str, _list: CredentialDescriptorList) -> bool {
+        println!("check_exclude_list");
         unimplemented!()
     }
 
@@ -424,10 +426,12 @@ impl AuthenticatorPlatform for CtapPlatform {
     }
 
     fn start_timeout(&mut self) {
+        println!("start_timeout");
         unimplemented!()
     }
 
     fn has_timed_out(&mut self, _time: Duration) -> bool {
+        println!("has_timed_out");
         unimplemented!()
     }
 }
