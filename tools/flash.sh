@@ -68,7 +68,7 @@ tab_file_name="${libtock_target_path}.tab"
 mkdir -p "${libtock_target_path}"
 cp "$1" "${elf_file_name}"
 
-elf2tab -n "${artifact}" -o "${tab_file_name}" "${elf_file_name}" --stack 2048 --app-heap $APP_HEAP_SIZE --kernel-heap $KERNEL_HEAP_SIZE --protected-region-size=64
+elf2tab -n "${artifact}" -o "${tab_file_name}" "${elf_file_name}" --stack 20480 --app-heap $APP_HEAP_SIZE --kernel-heap $KERNEL_HEAP_SIZE --protected-region-size=64
 
 if [ $tockload == "n" ]; then
 	echo "Skipping flashing for platform \"${PLATFORM}\""
