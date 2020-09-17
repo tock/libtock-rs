@@ -43,24 +43,42 @@ impl CtapHidPlatform for UsbKeyHidPlatform {
     fn wink(&mut self) {}
 
     fn cancel(&mut self) {
+        println!("cancel");
         unimplemented!()
     }
 
     fn keepalive_needed(&mut self) -> KeepaliveResponse {
+        println!("keepalive_needed");
         unimplemented!()
     }
 
     fn start_timer(&mut self) {
-        unimplemented!()
+        println!("start_timer");
     }
 
     fn has_timed_out(&mut self) -> bool {
-        unimplemented!()
+        println!("has_timed_out");
+        false
     }
 }
 
 #[derive(Clone, Copy)]
 pub struct HmacKeyCredential(pub(crate) [u8; 40]);
+
+impl HmacKeyCredential {
+    fn new(mac: &[u8; 32], nonce: [u8; 8]) -> Self {
+        let mut new = [0; 40];
+        new[..32].copy_from_slice(&mac[..]);
+        new[32..].copy_from_slice(&nonce[..]);
+        Self(new)
+    }
+
+    fn get_mac(&self) -> [u8; 32] {
+        let mut mac = [0; 32];
+        mac.copy_from_slice(&self.0[..32]);
+        mac
+    }
+}
 
 impl AsRef<[u8]> for HmacKeyCredential {
     fn as_ref(&self) -> &[u8] {
@@ -101,6 +119,16 @@ impl HmacCredentialQueue {
             index: 0,
             length: 0,
             list: [None; ITERATOR_MAX_LENGTH],
+        }
+    }
+
+    pub(crate) fn push(&mut self, credential: HmacKeyCredential, counter: u32) -> Result<(), ()> {
+        if self.length < ITERATOR_MAX_LENGTH {
+            self.list[self.length] = Some((credential, counter));
+            self.length += 1;
+            Ok(())
+        } else {
+            Err(())
         }
     }
 
