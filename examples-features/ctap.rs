@@ -5,6 +5,7 @@ extern crate alloc;
 
 use core::alloc::Layout;
 use core::cell::Cell;
+use core::convert::TryInto;
 use core::fmt::{self, Debug, Error, Formatter};
 use core::time::Duration;
 use ctap2_authenticator::credentials::{RpCredential, UserCredential};
@@ -17,12 +18,12 @@ use ctap2_authenticator::{
 };
 use generic_array::GenericArray;
 use libtock::ctap::{CtapRecvBuffer, CtapSendBuffer};
-use libtock::hmac::HmacDriverFactory;
+use libtock::hmac::{HmacDataBuffer, HmacDestBuffer, HmacDriverFactory, HmacKeyBuffer};
 use libtock::println;
 use libtock::result::TockResult;
 use libtock::syscalls;
 use p256::elliptic_curve::ff::PrimeField;
-use p256::Scalar;
+use p256::{Scalar, SecretKey};
 use subtle::{Choice, ConditionallySelectable};
 
 #[derive(Debug, Clone, PartialEq, Eq, Copy)]
@@ -194,6 +195,46 @@ impl fmt::Debug for CtapPlatform {
     }
 }
 
+impl CtapPlatform {
+    fn generate_key_seed(
+        &mut self,
+        rp_id: &str,
+        nonce: &[u8; 8],
+    ) -> [u8; libtock::hmac::DEST_BUFFER_SIZE] {
+        let hmac_driver = self.hmac.init_driver().unwrap();
+
+        let mut key_buffer = HmacKeyBuffer::default();
+        for (i, d) in rp_id.as_bytes().iter().enumerate() {
+            key_buffer[i] = *d;
+        }
+        let _key_buffer = hmac_driver.init_key_buffer(&mut key_buffer).unwrap();
+
+        let mut data_buffer = HmacDataBuffer::default();
+        for (i, d) in nonce.iter().enumerate() {
+            data_buffer[i] = *d;
+        }
+        let _data_buffer = hmac_driver.init_data_buffer(&mut data_buffer).unwrap();
+
+        let mut seed_buffer = HmacDestBuffer::default();
+        let seed_buffer = hmac_driver.init_dest_buffer(&mut seed_buffer).unwrap();
+
+        let mut callback = |_result, _digest| {};
+
+        let _subscription = hmac_driver.subscribe(&mut callback).unwrap();
+
+        hmac_driver.run().unwrap();
+
+        // Yield waiting for the HMAC callback
+        unsafe {
+            syscalls::raw::yieldk();
+        }
+
+        let mut temp_buffer = [0; libtock::hmac::DEST_BUFFER_SIZE];
+        seed_buffer.read_bytes(&mut temp_buffer[..]);
+        temp_buffer
+    }
+}
+
 impl AuthenticatorPlatform for CtapPlatform {
     const AAGUID: [u8; 16] = [
         0xf8, 0xa0, 0x11, 0xf3, 0x8c, 0x0a, 0x4d, 0x15, 0x80, 0x06, 0x17, 0x11, 0x1f, 0x9e, 0xdc,
@@ -240,10 +281,32 @@ impl AuthenticatorPlatform for CtapPlatform {
 
     fn create_credential(
         &mut self,
-        _rp: RpCredential<&[u8], &str>,
+        rp: RpCredential<&[u8], &str>,
         _user: UserCredential<&[u8], &str>,
     ) -> (Self::CredentialId, PublicKey<Self::PublicKeyBuffer>, u32) {
-        unimplemented!()
+        println!("create_credential");
+        let rp_id = core::str::from_utf8(rp.rp_id()).unwrap();
+        // This nonce is static!!!!
+        // This is really bad cryptowise, let's print a warning
+        // TODO: Convert this to generate a nonce from Tock's TRNG
+        println!("WARNING!!! The nonce is static, this key is insecure");
+        println!("WARNING!!! Do not use this anywhere important");
+        let nonce = [0; 8];
+
+        let seed_buffer = self.generate_key_seed(rp_id, &nonce);
+
+        let credential = HmacKeyCredential::new(&seed_buffer, nonce.try_into().unwrap());
+
+        let secret_key = SecretKey::from_bytes(&seed_buffer[0..32]).unwrap();
+
+        let pub_key = p256::EncodedPoint::from_secret_key(&secret_key, false);
+
+        let x: [u8; 32] = pub_key.as_bytes()[1..33].try_into().unwrap();
+        let y: [u8; 32] = pub_key.as_bytes()[33..].try_into().unwrap();
+
+        let ret_key = PublicKey::nistp256(x, y);
+
+        (credential, ret_key, 0)
     }
 
     fn attest(
