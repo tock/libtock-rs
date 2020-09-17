@@ -15,11 +15,38 @@ use ctap2_authenticator::Authenticator;
 use ctap2_authenticator::{
     AuthenticatorPlatform, CredentialDescriptorList, CtapOptions, PublicKey, Signature,
 };
+use generic_array::GenericArray;
 use libtock::ctap::{CtapRecvBuffer, CtapSendBuffer};
 use libtock::hmac::HmacDriverFactory;
 use libtock::println;
 use libtock::result::TockResult;
 use libtock::syscalls;
+use p256::elliptic_curve::ff::PrimeField;
+use p256::Scalar;
+use subtle::{Choice, ConditionallySelectable};
+
+#[derive(Debug, Clone, PartialEq, Eq, Copy)]
+pub struct PrivateKey(Scalar);
+
+impl ConditionallySelectable for PrivateKey {
+    fn conditional_select(a: &Self, b: &Self, choice: Choice) -> Self {
+        Self(ConditionallySelectable::conditional_select(
+            &a.0, &b.0, choice,
+        ))
+    }
+}
+
+impl Default for PrivateKey {
+    fn default() -> Self {
+        Self(Scalar::default())
+    }
+}
+
+impl PrivateKey {
+    pub fn from_bytes(bytes: &[u8; 32]) -> Option<Self> {
+        Scalar::from_repr(GenericArray::clone_from_slice(bytes)).map(|s| Self(s))
+    }
+}
 
 /// This is the provided implementation of `CtapHidPlatform` to be used in the `UsbContext`
 pub(crate) struct UsbKeyHidPlatform {}
