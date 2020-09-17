@@ -22,6 +22,7 @@ use libtock::hmac::{HmacDataBuffer, HmacDestBuffer, HmacDriverFactory, HmacKeyBu
 use libtock::println;
 use libtock::result::TockResult;
 use libtock::syscalls;
+use p256::ecdsa::{signature::Signer, SigningKey};
 use p256::elliptic_curve::ff::PrimeField;
 use p256::{Scalar, SecretKey};
 use subtle::{Choice, ConditionallySelectable};
@@ -311,18 +312,47 @@ impl AuthenticatorPlatform for CtapPlatform {
 
     fn attest(
         &mut self,
-        _id: &Self::CredentialId,
-        _data: &[u8],
+        id: &Self::CredentialId,
+        data: &[u8],
     ) -> Option<Signature<Self::SignatureBuffer>> {
-        unimplemented!();
+        // TODO: Should attest be different then sign?
+        let attest = {
+            let secret_key = SecretKey::from_bytes(id.get_mac()).unwrap();
+
+            let signer = SigningKey::from(&secret_key);
+
+            let sig = signer.sign(data);
+
+            let mut r: [u8; 32] = [0; 32];
+            r.clone_from_slice(&sig.r().as_ref().to_bytes());
+            let mut s: [u8; 32] = [0; 32];
+            s.clone_from_slice(&sig.s().as_ref().to_bytes());
+
+            Signature::nistp256(r, s)
+        };
+
+        Some(attest)
     }
 
     fn sign(
         &mut self,
-        _id: &Self::CredentialId,
-        _data: &[u8],
+        id: &Self::CredentialId,
+        data: &[u8],
     ) -> Option<Signature<Self::SignatureBuffer>> {
-        unimplemented!();
+        let attest = {
+            let secret_key = SecretKey::from_bytes(id.get_mac()).unwrap();
+            let signer = SigningKey::from(&secret_key);
+            let sig = signer.sign(data);
+
+            let mut r: [u8; 32] = [0; 32];
+            r.clone_from_slice(&sig.r().as_ref().to_bytes());
+            let mut s: [u8; 32] = [0; 32];
+            s.clone_from_slice(&sig.s().as_ref().to_bytes());
+
+            Signature::nistp256(r, s)
+        };
+
+        Some(attest)
     }
 
     fn start_timeout(&mut self) {
