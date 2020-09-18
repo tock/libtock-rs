@@ -23,7 +23,7 @@ async fn main() -> TockResult<()> {
         b"A language empowering everyone to build reliable and efficient software.";
 
     for (i, d) in data.iter().enumerate() {
-        data_buffer.buffer[i] = *d;
+        data_buffer[i] = *d;
     }
     let _data_buffer = hmac_driver.init_data_buffer(&mut data_buffer)?;
     writeln!(console, "  done")?;
