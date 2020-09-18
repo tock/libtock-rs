@@ -1,6 +1,7 @@
 use crate::adc::AdcDriverFactory;
 use crate::buttons::ButtonsDriverFactory;
 use crate::console::ConsoleDriver;
+use crate::ctap::CtapDriverFactory;
 use crate::gpio::GpioDriverFactory;
 use crate::hmac::HmacDriverFactory;
 use crate::leds::LedsDriverFactory;
@@ -21,6 +22,7 @@ use core::cell::Cell;
 #[non_exhaustive]
 pub struct Drivers {
     pub console: ConsoleDriver,
+    pub ctap: CtapDriverFactory,
     pub leds: LedsDriverFactory,
     pub timer: DriverContext,
     pub gpio: GpioDriverFactory,
@@ -68,6 +70,7 @@ const DRIVERS: Drivers = Drivers {
     ble_scanning: BleScanningDriverFactory,
     buttons: ButtonsDriverFactory,
     console: ConsoleDriver,
+    ctap: CtapDriverFactory,
     leds: LedsDriverFactory,
     timer: DriverContext {
         active_timer: Cell::new(None),
