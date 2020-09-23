@@ -41,8 +41,14 @@ pub struct Console {
     allow_buffer: [u8; 64],
 }
 
-pub fn get_global_console() -> Option<&'static mut Console> {
-    unsafe { CONSOLE.as_mut() }
+pub fn get_global_console() -> Option<Console> {
+    unsafe {
+        if let Some(con) = CONSOLE.take() {
+            Some(con)
+        } else {
+            None
+        }
+    }
 }
 
 impl Console {
@@ -83,7 +89,7 @@ impl Console {
         Ok(())
     }
 
-    fn set_global_console(self) {
+    pub fn set_global_console(self) {
         unsafe {
             CONSOLE = Some(self);
         }
@@ -103,15 +109,17 @@ macro_rules! println {
         println!("")
     });
     ($msg:expr) => ({
-        if let Some(console) = $crate::console::get_global_console() {
+        if let Some(mut console) = $crate::console::get_global_console() {
             use core::fmt::Write;
             let _ = writeln!(console, $msg);
+            console.set_global_console();
         }
     });
     ($fmt:expr, $($arg:tt)+) => ({
-        if let Some(console) = $crate::console::get_global_console() {
+        if let Some(mut console) = $crate::console::get_global_console() {
             use core::fmt::Write;
             let _ = writeln!(console, "{}", format_args!($fmt, $($arg)+));
+            console.set_global_console();
         }
     });
 }
@@ -123,15 +131,17 @@ macro_rules! print {
         print!("")
     });
     ($msg:expr) => ({
-        if let Some(console) = $crate::console::get_global_console() {
+        if let Some(mut console) = $crate::console::get_global_console() {
             use core::fmt::Write;
             let _ =  write!(console, $msg);
+            console.set_global_console();
         }
     });
     ($fmt:expr, $($arg:tt)+) => ({
-        if let Some(console) = $crate::console::get_global_console() {
+        if let Some(mut console) = $crate::console::get_global_console() {
             use core::fmt::Write;
             let _ = write!(console, "{}", format_args!($fmt, $($arg)+));
+            console.set_global_console();
         }
     });
 }
