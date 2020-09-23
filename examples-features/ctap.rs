@@ -5,6 +5,7 @@
 #![feature(alloc_error_handler)]
 
 extern crate alloc;
+extern crate log;
 
 use core::alloc::Layout;
 use core::cell::Cell;
@@ -22,13 +23,30 @@ use ctap2_authenticator::{
 use generic_array::GenericArray;
 use libtock::ctap::{CtapRecvBuffer, CtapSendBuffer};
 use libtock::hmac::{HmacDataBuffer, HmacDestBuffer, HmacDriverFactory, HmacKeyBuffer};
-use libtock::println;
+use libtock::{print, println};
 use libtock::result::TockResult;
 use libtock::syscalls;
+use log::{Level, LevelFilter, Metadata, Record};
 use p256::ecdsa::{signature::Signer, SigningKey};
 use p256::elliptic_curve::ff::PrimeField;
 use p256::{Scalar, SecretKey};
 use subtle::{Choice, ConditionallySelectable};
+
+struct SimpleLogger;
+
+impl log::Log for SimpleLogger {
+    fn enabled(&self, metadata: &Metadata) -> bool {
+        metadata.level() <= Level::Info
+    }
+
+    fn log(&self, record: &Record) {
+        println!("{} - {}", record.level(), record.args());
+    }
+
+    fn flush(&self) {}
+}
+
+static LOGGER: SimpleLogger = SimpleLogger;
 
 #[derive(Debug, Clone, PartialEq, Eq, Copy)]
 pub struct PrivateKey(Scalar);
@@ -360,6 +378,7 @@ impl AuthenticatorPlatform for CtapPlatform {
     ) -> (Self::CredentialId, PublicKey<Self::PublicKeyBuffer>, u32) {
         println!("create_credential");
         let rp_id = core::str::from_utf8(rp.rp_id()).unwrap();
+        println!("rp_id: {:?}", rp_id);
         // This nonce is static!!!!
         // This is really bad cryptowise, let's print a warning
         // TODO: Convert this to generate a nonce from Tock's TRNG
@@ -375,10 +394,14 @@ impl AuthenticatorPlatform for CtapPlatform {
 
         let pub_key = p256::EncodedPoint::from_secret_key(&secret_key, false);
 
+        println!("  pub_key: {:?}", pub_key);
+
         let x: [u8; 32] = pub_key.as_bytes()[1..33].try_into().unwrap();
         let y: [u8; 32] = pub_key.as_bytes()[33..].try_into().unwrap();
 
         let ret_key = PublicKey::nistp256(x, y);
+
+        println!("Done");
 
         (credential, ret_key, 0)
     }
@@ -412,6 +435,8 @@ impl AuthenticatorPlatform for CtapPlatform {
         id: &Self::CredentialId,
         data: &[u8],
     ) -> Option<Signature<Self::SignatureBuffer>> {
+        println!("sign");
+
         let attest = {
             let secret_key = SecretKey::from_bytes(id.get_mac()).unwrap();
             let signer = SigningKey::from(&secret_key);
@@ -424,6 +449,20 @@ impl AuthenticatorPlatform for CtapPlatform {
 
             Signature::nistp256(r, s)
         };
+
+        // let (x, y) = attest.get_points();
+
+        // print!("x: 0x");
+        // for d in x.iter() {
+        //     print!("{:02x}", d);
+        // }
+        // println!("");
+
+        // print!("y: 0x");
+        // for d in y.iter() {
+        //     print!("{:02x}", d);
+        // }
+        // println!("");
 
         Some(attest)
     }
@@ -456,6 +495,11 @@ async fn main() -> TockResult<()> {
 
     println!("Starting CTAP feature example");
 
+    unsafe {
+        log::set_logger_racy(&LOGGER).unwrap();
+        log::set_max_level(LevelFilter::Info);
+    }
+
     let ctap_driver = drivers.ctap.init_driver()?;
 
     let mut recv_buffer = CtapRecvBuffer::default();
@@ -471,7 +515,10 @@ async fn main() -> TockResult<()> {
 
     let mut authenticator = Authenticator::create(CtapPlatform::new(drivers.hmac));
 
+    println!("Setting callback and running");
+
     let mut callback = |sent, _| {
+        println!("Starting CTAP callback");
         let mut looping = true;
         recv_buffer.read_bytes(&mut temp_buffer[..]);
 
@@ -479,22 +526,40 @@ async fn main() -> TockResult<()> {
         let mut poll_msg = if sent == 0 { Some(&temp_buffer) } else { None };
 
         while looping {
+            println!("Calling poll");
             looping = false;
             let (maybe_request, maybe_data) = temp_tp.poll(poll_msg);
+            println!("  Finished calling poll");
 
             if let Some(request) = maybe_request {
+                println!("Calling authenticator.process");
                 let response = authenticator.process(request);
+                println!("  Finished authenticator.process");
                 temp_tp.response(response);
+                println!("Finished response");
                 looping = true;
+            } else {
+                println!("No request returned");
             }
 
             if let Some(mut data) = maybe_data {
+                // println!("Data in ret buf:");
+                // for buf in data.iter().take(libtock::ctap::RECV_BUFFER_SIZE) {
+                //     print!("{:02x}", *buf);
+                // }
+                println!("Sending");
                 send_buffer.write_bytes(&mut data[0..]);
                 let _ = ctap_driver.send_data();
+            } else {
+                println!("No data returned");
             }
 
             poll_msg = None;
         }
+
+        println!("Finished");
+
+        // Signal that we will allow receiving data
         let _ = ctap_driver.allow_receive();
     };
 
