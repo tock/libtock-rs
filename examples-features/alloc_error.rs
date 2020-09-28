@@ -7,7 +7,7 @@ extern crate alloc;
 
 use alloc::vec::Vec;
 use core::alloc::Layout;
-use core::fmt::Write;
+use libtock::println;
 use libtock::result::TockResult;
 use libtock::syscalls;
 
@@ -22,8 +22,8 @@ fn main() -> TockResult<()> {
 #[alloc_error_handler]
 unsafe fn alloc_error_handler(_: Layout) -> ! {
     if let Ok(drivers) = libtock::retrieve_drivers() {
-        let mut console = drivers.console.create_console();
-        let _ = writeln!(console, "alloc_error_handler called");
+        drivers.console.create_console();
+        println!("alloc_error_handler called");
     }
     loop {
         syscalls::raw::yieldk();

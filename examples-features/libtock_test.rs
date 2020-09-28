@@ -12,11 +12,11 @@ use core::mem;
 use core::pin::Pin;
 use core::task::Context;
 use core::task::Poll;
-use libtock::console::Console;
 use libtock::console::ConsoleDriver;
 use libtock::gpio::GpioDriverFactory;
 use libtock::gpio::GpioState;
 use libtock::gpio::ResistorMode;
+use libtock::println;
 use libtock::result::TockResult;
 use libtock::timer::DriverContext;
 use libtock::timer::Duration;
@@ -59,16 +59,13 @@ async fn libtock_test(
 }
 
 struct LibtockTest {
-    console: Console,
     success: bool,
 }
 
 impl LibtockTest {
     fn initialize(console: ConsoleDriver) -> Self {
-        Self {
-            console: console.create_console(),
-            success: true,
-        }
+        console.create_console();
+        Self { success: true }
     }
 
     fn console(&mut self) -> TockResult<()> {
@@ -170,12 +167,12 @@ impl LibtockTest {
     }
 
     fn log_success(&mut self, message: &str) -> TockResult<()> {
-        writeln!(&mut self.console, "[      OK ] {}", message)?;
+        println!("[      OK ] {}", message);
         Ok(())
     }
 
     fn log_failure(&mut self, message: &str) -> TockResult<()> {
-        writeln!(&mut self.console, "[ FAILURE ] {}", message)?;
+        println!("[ FAILURE ] {}", message);
         self.success = false;
         Ok(())
     }

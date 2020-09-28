@@ -5,7 +5,11 @@ use crate::result::TockResult;
 use crate::syscalls;
 use core::cell::Cell;
 use core::fmt;
+use core::fmt::Write;
 use core::mem;
+
+// Global console
+static mut CONSOLE: Option<Console> = None;
 
 const DRIVER_NUMBER: usize = 1;
 
@@ -25,15 +29,33 @@ mod allow_nr {
 pub struct ConsoleDriver;
 
 impl ConsoleDriver {
-    pub fn create_console(self) -> Console {
-        Console {
+    pub fn create_console(self) {
+        let console = Console {
             allow_buffer: [0; 64],
-        }
+        };
+
+        console.set_global_console();
     }
 }
 
 pub struct Console {
     allow_buffer: [u8; 64],
+}
+
+pub static mut MISSED_PRINT: bool = false;
+
+pub fn get_global_console() -> Option<Console> {
+    unsafe {
+        if let Some(con) = CONSOLE.take() {
+            Some(con)
+        } else {
+            // If we get here then either the console was never initalised
+            // or someone else took it. Set MISSED_PRINT to true so that we
+            // can warn the user.
+            MISSED_PRINT = true;
+            None
+        }
+    }
 }
 
 impl Console {
@@ -73,10 +95,67 @@ impl Console {
 
         Ok(())
     }
+
+    pub fn set_global_console(mut self) {
+        unsafe {
+            if MISSED_PRINT {
+                // Someone tried to print while we were or someone tried
+                // to print before initalisation, print a warning here.
+                let _ = write!(self, "A print was dropped while the console was locked");
+                MISSED_PRINT = false;
+            }
+
+            CONSOLE = Some(self);
+        }
+    }
 }
 
 impl fmt::Write for Console {
     fn write_str(&mut self, string: &str) -> Result<(), fmt::Error> {
         self.write(string).map_err(|_| fmt::Error)
     }
+}
+
+#[macro_export]
+macro_rules! println {
+    () => ({
+        // Allow an empty println!() to print the location when hit
+        println!("")
+    });
+    ($msg:expr) => ({
+        if let Some(mut console) = $crate::console::get_global_console() {
+            use core::fmt::Write;
+            let _ = writeln!(console, $msg);
+            console.set_global_console();
+        }
+    });
+    ($fmt:expr, $($arg:tt)+) => ({
+        if let Some(mut console) = $crate::console::get_global_console() {
+            use core::fmt::Write;
+            let _ = writeln!(console, "{}", format_args!($fmt, $($arg)+));
+            console.set_global_console();
+        }
+    });
+}
+
+#[macro_export]
+macro_rules! print {
+    () => ({
+        // Allow an empty print!() to print the location when hit
+        print!("")
+    });
+    ($msg:expr) => ({
+        if let Some(mut console) = $crate::console::get_global_console() {
+            use core::fmt::Write;
+            let _ =  write!(console, $msg);
+            console.set_global_console();
+        }
+    });
+    ($fmt:expr, $($arg:tt)+) => ({
+        if let Some(mut console) = $crate::console::get_global_console() {
+            use core::fmt::Write;
+            let _ = write!(console, "{}", format_args!($fmt, $($arg)+));
+            console.set_global_console();
+        }
+    });
 }

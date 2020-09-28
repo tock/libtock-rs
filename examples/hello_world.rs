@@ -4,16 +4,16 @@
 
 #![no_std]
 
-use core::fmt::Write;
+use libtock::println;
 use libtock::result::TockResult;
 
 #[libtock::main]
 async fn main() -> TockResult<()> {
     let drivers = libtock::retrieve_drivers()?;
 
-    let mut console = drivers.console.create_console();
+    drivers.console.create_console();
 
-    writeln!(console, "Hello Tock World")?;
+    println!("Hello Tock World");
 
     Ok(())
 }

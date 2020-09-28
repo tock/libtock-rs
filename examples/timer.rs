@@ -1,10 +1,9 @@
 #![no_std]
+use libtock::println;
 /**
  * This example shows a repeated timer combined with reading and displaying the current time in
  * clock ticks.
  **/
-use core::fmt::Write;
-use libtock::console::Console;
 use libtock::result::TockResult;
 use libtock::timer::DriverContext;
 use libtock::timer::Duration;
@@ -15,12 +14,12 @@ const DELAY_MS: usize = 500;
 async fn main() -> TockResult<()> {
     let mut drivers = libtock::retrieve_drivers()?;
 
-    let mut console = drivers.console.create_console();
+    drivers.console.create_console();
 
     let mut previous_ticks = None;
 
     for i in 0.. {
-        print_now(&mut console, &mut drivers.timer, &mut previous_ticks, i)?;
+        print_now(&mut drivers.timer, &mut previous_ticks, i)?;
         let mut timer_driver = drivers.timer.create_timer_driver();
         let timer_driver = timer_driver.activate()?;
 
@@ -31,7 +30,6 @@ async fn main() -> TockResult<()> {
 }
 
 fn print_now(
-    console: &mut Console,
     timer_context: &mut DriverContext,
     previous_ticks: &mut Option<isize>,
     i: usize,
@@ -41,8 +39,7 @@ fn print_now(
     let current_clock = timer.get_current_clock()?;
     let ticks = current_clock.num_ticks();
     let frequency = timer.clock_frequency().hz();
-    writeln!(
-        console,
+    println!(
         "[{}] Waited roughly {}. Now is {} = {:#010x} ticks ({:?} ticks since last time at {} Hz)",
         i,
         PrettyTime::from_ms(i * DELAY_MS),
@@ -50,7 +47,7 @@ fn print_now(
         ticks,
         previous_ticks.map(|previous| ticks - previous),
         frequency
-    )?;
+    );
     *previous_ticks = Some(ticks);
     Ok(())
 }
