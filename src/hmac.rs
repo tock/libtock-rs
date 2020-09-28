@@ -3,6 +3,8 @@ use crate::callback::Consumer;
 use crate::result::TockResult;
 use crate::syscalls;
 use core::marker::PhantomData;
+use core::ops::Deref;
+use core::ops::DerefMut;
 use libtock_core::shared_memory::SharedMemory;
 
 const DRIVER_NUMBER: usize = 0x40003;
@@ -58,8 +60,22 @@ impl Default for HmacKeyBuffer {
     }
 }
 
+impl Deref for HmacKeyBuffer {
+    type Target = [u8; KEY_BUFFER_SIZE];
+
+    fn deref(&self) -> &Self::Target {
+        &self.buffer
+    }
+}
+
+impl DerefMut for HmacKeyBuffer {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.buffer
+    }
+}
+
 pub struct HmacDataBuffer {
-    pub buffer: [u8; DATA_BUFFER_SIZE],
+    buffer: [u8; DATA_BUFFER_SIZE],
 }
 
 impl Default for HmacDataBuffer {
@@ -67,6 +83,20 @@ impl Default for HmacDataBuffer {
         HmacDataBuffer {
             buffer: [0; DATA_BUFFER_SIZE],
         }
+    }
+}
+
+impl Deref for HmacDataBuffer {
+    type Target = [u8; DATA_BUFFER_SIZE];
+
+    fn deref(&self) -> &Self::Target {
+        &self.buffer
+    }
+}
+
+impl DerefMut for HmacDataBuffer {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.buffer
     }
 }
 
@@ -79,6 +109,20 @@ impl Default for HmacDestBuffer {
         HmacDestBuffer {
             buffer: [0; DEST_BUFFER_SIZE],
         }
+    }
+}
+
+impl Deref for HmacDestBuffer {
+    type Target = [u8; DEST_BUFFER_SIZE];
+
+    fn deref(&self) -> &Self::Target {
+        &self.buffer
+    }
+}
+
+impl DerefMut for HmacDestBuffer {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.buffer
     }
 }
 
