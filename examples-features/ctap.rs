@@ -202,28 +202,58 @@ impl CtapPlatform {
         rp_id: &str,
         nonce: &[u8; 8],
     ) -> [u8; libtock::hmac::DEST_BUFFER_SIZE] {
-        let hmac_driver = self.hmac.init_driver().unwrap();
+        let hmac_driver;
+        match self.hmac.init_driver() {
+            Err(_) => {
+                panic!("Hmac init error");
+            }
+            Ok(driver) => {
+                hmac_driver = driver;
+            }
+        }
 
         let mut key_buffer = HmacKeyBuffer::default();
         for (i, d) in rp_id.as_bytes().iter().enumerate() {
             key_buffer[i] = *d;
         }
-        let _key_buffer = hmac_driver.init_key_buffer(&mut key_buffer).unwrap();
+        // We need to make sure this isn't dropped straight away
+        let key_buffer_ret = hmac_driver.init_key_buffer(&mut key_buffer);
+        if key_buffer_ret.is_err() {
+            panic!("Hmac key buffer init error");
+        }
 
         let mut data_buffer = HmacDataBuffer::default();
         for (i, d) in nonce.iter().enumerate() {
             data_buffer[i] = *d;
         }
-        let _data_buffer = hmac_driver.init_data_buffer(&mut data_buffer).unwrap();
+        // We need to make sure this isn't dropped straight away
+        let data_buffer_ret = hmac_driver.init_data_buffer(&mut data_buffer);
+        if data_buffer_ret.is_err() {
+            panic!("Hmac data buffer init error");
+        }
 
-        let mut seed_buffer = HmacDestBuffer::default();
-        let seed_buffer = hmac_driver.init_dest_buffer(&mut seed_buffer).unwrap();
+        let mut dest_buffer = HmacDestBuffer::default();
+        let seed_buffer;
+        match hmac_driver.init_dest_buffer(&mut dest_buffer) {
+            Err(_) => {
+                panic!("Hmac subscribe error");
+            }
+            Ok(buffer) => {
+                seed_buffer = buffer;
+            }
+        }
 
         let mut callback = |_result, _digest| {};
 
-        let _subscription = hmac_driver.subscribe(&mut callback).unwrap();
+        // We need to make sure this isn't dropped straight away
+        let subscribe = hmac_driver.subscribe(&mut callback);
+        if subscribe.is_err() {
+            panic!("Hmac subscribe error");
+        }
 
-        hmac_driver.run().unwrap();
+        if hmac_driver.run().is_err() {
+            panic!("Hmac run error");
+        }
 
         // Yield waiting for the HMAC callback
         unsafe {
