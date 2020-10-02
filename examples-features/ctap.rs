@@ -1,3 +1,6 @@
+//! This is a featured CTAP example
+//! WARNING! This currently uses unsound crypto operations
+//! This is only a demo and should not be used in real enviroments
 #![no_std]
 #![feature(alloc_error_handler)]
 
