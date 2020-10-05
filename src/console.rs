@@ -5,7 +5,6 @@ use crate::result::TockResult;
 use crate::syscalls;
 use core::cell::Cell;
 use core::fmt;
-use core::fmt::Write;
 use core::mem;
 
 // Global console
@@ -42,20 +41,8 @@ pub struct Console {
     allow_buffer: [u8; 64],
 }
 
-pub static mut MISSED_PRINT: bool = false;
-
-pub fn get_global_console() -> Option<Console> {
-    unsafe {
-        if let Some(con) = CONSOLE.take() {
-            Some(con)
-        } else {
-            // If we get here then either the console was never initalised
-            // or someone else took it. Set MISSED_PRINT to true so that we
-            // can warn the user.
-            MISSED_PRINT = true;
-            None
-        }
-    }
+pub fn get_global_console() -> Option<&'static mut Console> {
+    unsafe { CONSOLE.as_mut() }
 }
 
 impl Console {
@@ -96,15 +83,8 @@ impl Console {
         Ok(())
     }
 
-    pub fn set_global_console(mut self) {
+    fn set_global_console(self) {
         unsafe {
-            if MISSED_PRINT {
-                // Someone tried to print while we were or someone tried
-                // to print before initalisation, print a warning here.
-                let _ = write!(self, "A print was dropped while the console was locked");
-                MISSED_PRINT = false;
-            }
-
             CONSOLE = Some(self);
         }
     }
@@ -123,17 +103,15 @@ macro_rules! println {
         println!("")
     });
     ($msg:expr) => ({
-        if let Some(mut console) = $crate::console::get_global_console() {
+        if let Some(console) = $crate::console::get_global_console() {
             use core::fmt::Write;
             let _ = writeln!(console, $msg);
-            console.set_global_console();
         }
     });
     ($fmt:expr, $($arg:tt)+) => ({
-        if let Some(mut console) = $crate::console::get_global_console() {
+        if let Some(console) = $crate::console::get_global_console() {
             use core::fmt::Write;
             let _ = writeln!(console, "{}", format_args!($fmt, $($arg)+));
-            console.set_global_console();
         }
     });
 }
@@ -145,17 +123,15 @@ macro_rules! print {
         print!("")
     });
     ($msg:expr) => ({
-        if let Some(mut console) = $crate::console::get_global_console() {
+        if let Some(console) = $crate::console::get_global_console() {
             use core::fmt::Write;
             let _ =  write!(console, $msg);
-            console.set_global_console();
         }
     });
     ($fmt:expr, $($arg:tt)+) => ({
-        if let Some(mut console) = $crate::console::get_global_console() {
+        if let Some(console) = $crate::console::get_global_console() {
             use core::fmt::Write;
             let _ = write!(console, "{}", format_args!($fmt, $($arg)+));
-            console.set_global_console();
         }
     });
 }
