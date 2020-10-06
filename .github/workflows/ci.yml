@@ -1,7 +1,15 @@
 # This workflow provides automated testing. It builds and runs tests on each PR.
 
 name: ci
-on: pull_request
+
+# We want to run CI on all pull requests. Additionally, Bors needs workflows to
+# run on the `staging` and `trying` branches.
+on:
+  pull_request:
+  push:
+    branches:
+      - staging
+      - trying
 
 jobs:
   ci:

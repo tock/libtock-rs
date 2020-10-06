@@ -2,7 +2,15 @@
 # request is created or modified.
 
 name: size-diff
-on: pull_request
+
+# We want to run this on all pull requests. Additionally, Bors needs workflows
+# to run on the `staging` and `trying` branches to block merges on them.
+on:
+  pull_request:
+  push:
+    branches:
+      - staging
+      - trying
 
 jobs:
   size-diff:
