@@ -113,6 +113,7 @@ SECTIONS {
         . = ALIGN(4); /* Make sure we're word-aligned here */
         _data = .;
         KEEP(*(.data*))
+        *(.sdata*) /* RISC-V small-pointer data section */
         . = ALIGN(4); /* Make sure we're word-aligned at the end of flash */
     } > SRAM
 

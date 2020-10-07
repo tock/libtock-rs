@@ -10,6 +10,7 @@ use core::fmt::Write;
 use core::future::Future;
 use core::mem;
 use core::pin::Pin;
+use core::ptr::read_volatile;
 use core::task::Context;
 use core::task::Poll;
 use libtock::console::ConsoleDriver;
@@ -46,6 +47,7 @@ async fn libtock_test(
     gpio: &mut GpioDriverFactory,
 ) -> TockResult<()> {
     test.console()?;
+    test.sdata()?;
     test.static_mut()?;
     test.dynamic_dispatch()?;
     test.formatting()?;
@@ -70,6 +72,21 @@ impl LibtockTest {
 
     fn console(&mut self) -> TockResult<()> {
         self.log_success("Console")
+    }
+
+    // RISC-V has the .sdata section, which is ostensibly for commonly-accessed
+    // read-write global variables. In practice, the Rust compiler tends to put
+    // small globals (<= 8 bytes) into it. This test verifies that small
+    // data symbols are accessible.
+    fn sdata(&mut self) -> TockResult<()> {
+        static mut SDATA: [u8; 4] = [1, 2, 3, 4];
+        // Use volatile reads to prevent the compiler from constant-folding
+        // everything away.
+        let sdata_ptr = unsafe { &SDATA } as *const u8;
+        let sum = (0..4)
+            .map(|i| unsafe { read_volatile(sdata_ptr.offset(i)) })
+            .sum::<u8>();
+        self.check_if_true(sum == 10, "sdata")
     }
 
     fn static_mut(&mut self) -> TockResult<()> {
