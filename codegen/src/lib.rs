@@ -73,31 +73,45 @@ pub fn make_read_env_var(input: TokenStream) -> TokenStream {
 /// ```
 #[proc_macro_attribute]
 pub fn main(attr: TokenStream, input: TokenStream) -> TokenStream {
-    generate_main_wrapped(attr.into(), input.into()).into()
+    let stack_size: usize = match attr.is_empty() {
+        true => 0x800, // default stack size is 2048 bytes
+        false => {
+            let attrs = syn::parse_macro_input!(attr as syn::AttributeArgs);
+            match attrs.get(0).unwrap() {
+                syn::NestedMeta::Meta(meta) => match meta {
+                    syn::Meta::NameValue(syn::MetaNameValue {
+                        path,
+                        eq_token: _eq_token,
+                        lit: syn::Lit::Int(litint),
+                    }) => {
+                        assert!(path.get_ident().unwrap().to_string() == "stack_size");
+                        litint.base10_parse::<usize>().unwrap()
+                    }
+                    _ => panic!("Invalid attribute"),
+                },
+                _ => panic!("Invalid attribute"),
+            }
+        }
+    };
+    assert!(stack_size % 8 == 0);
+    generate_main_wrapped(stack_size, input.into()).into()
 }
 
 fn generate_main_wrapped(
-    attr: proc_macro2::TokenStream,
+    stack_size: usize,
     input: proc_macro2::TokenStream,
 ) -> proc_macro2::TokenStream {
-    try_generate_main_wrapped(attr, input).unwrap_or_else(|err| err.to_compile_error())
+    try_generate_main_wrapped(stack_size, input).unwrap_or_else(|err| err.to_compile_error())
 }
 
 fn try_generate_main_wrapped(
-    attr: proc_macro2::TokenStream,
+    stack_size: usize,
     input: proc_macro2::TokenStream,
 ) -> Result<proc_macro2::TokenStream, Error> {
     let ast = syn::parse2::<ItemFn>(input)?;
     let block = ast.block;
     let output = &ast.sig.output;
 
-    let stack_size: usize = match attr.is_empty() {
-        true => 0x800, // default stack size is 2048 bytes
-        false => {
-            let size = syn::parse2::<syn::LitInt>(attr)?;
-            size.base10_parse::<usize>()?
-        }
-    };
     Ok(quote!(
         /// Dummy buffer that causes the linker to reserve enough space for the stack.
         #[no_mangle]
