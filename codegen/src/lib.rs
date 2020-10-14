@@ -142,8 +142,13 @@ mod tests {
                 method_call().await;
             }
         };
-        let actual: ItemFn = syn::parse2::<ItemFn>(generate_main_wrapped(method_def)).unwrap();
-        let expected: ItemFn = syn::parse2::<ItemFn>(quote!(
+        let actual = generate_main_wrapped(2048, method_def).to_string();
+        let expected = quote!(
+            /// Dummy buffer that causes the linker to reserve enough space for the stack.
+            #[no_mangle]
+            #[link_section = ".stack_buffer"]
+            pub static mut STACK_MEMORY: [u8; 2048usize] = [0; 2048usize];
+
             fn main() -> ::libtock::result::TockResult<()> {
                 static mut MAIN_INVOKED: bool = false;
                 unsafe {
@@ -157,8 +162,8 @@ mod tests {
                 };
                 unsafe { ::libtock::executor::block_on(_block) }
             }
-        ))
-        .unwrap();
+        )
+        .to_string();
         assert_eq!(actual, expected);
     }
 }
