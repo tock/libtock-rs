@@ -72,21 +72,38 @@ pub fn make_read_env_var(input: TokenStream) -> TokenStream {
 /// }
 /// ```
 #[proc_macro_attribute]
-pub fn main(_: TokenStream, input: TokenStream) -> TokenStream {
-    generate_main_wrapped(input.into()).into()
+pub fn main(attr: TokenStream, input: TokenStream) -> TokenStream {
+    generate_main_wrapped(attr.into(), input.into()).into()
 }
 
-fn generate_main_wrapped(input: proc_macro2::TokenStream) -> proc_macro2::TokenStream {
-    try_generate_main_wrapped(input).unwrap_or_else(|err| err.to_compile_error())
+fn generate_main_wrapped(
+    attr: proc_macro2::TokenStream,
+    input: proc_macro2::TokenStream,
+) -> proc_macro2::TokenStream {
+    try_generate_main_wrapped(attr, input).unwrap_or_else(|err| err.to_compile_error())
 }
 
 fn try_generate_main_wrapped(
+    attr: proc_macro2::TokenStream,
     input: proc_macro2::TokenStream,
 ) -> Result<proc_macro2::TokenStream, Error> {
     let ast = syn::parse2::<ItemFn>(input)?;
     let block = ast.block;
     let output = &ast.sig.output;
+
+    let stack_size: usize = match attr.is_empty() {
+        true => 0x800, // default stack size is 2048 bytes
+        false => {
+            let size = syn::parse2::<syn::LitInt>(attr)?;
+            size.base10_parse::<usize>()?
+        }
+    };
     Ok(quote!(
+        /// Dummy buffer that causes the linker to reserve enough space for the stack.
+        #[no_mangle]
+        #[link_section = ".stack_buffer"]
+        pub static mut STACK_MEMORY: [u8; #stack_size] = [0; #stack_size];
+
         fn main() #output {
             static mut MAIN_INVOKED: bool = false;
             unsafe {

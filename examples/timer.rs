@@ -8,11 +8,6 @@ use libtock::result::TockResult;
 use libtock::timer::DriverContext;
 use libtock::timer::Duration;
 
-/// Dummy buffer that causes the linker to reserve enough space for the stack.
-#[no_mangle]
-#[link_section = ".stack_buffer"]
-pub static mut STACK_MEMORY: [u8; 0x800] = [0; 0x800];
-
 const DELAY_MS: usize = 500;
 
 #[libtock::main]

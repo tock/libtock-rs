@@ -4,11 +4,6 @@
 #![no_std]
 #![feature(alloc_error_handler)]
 
-/// Dummy buffer that causes the linker to reserve enough space for the stack.
-#[no_mangle]
-#[link_section = ".stack_buffer"]
-pub static mut STACK_MEMORY: [u8; 0x5000] = [0; 0x5000];
-
 extern crate alloc;
 
 use core::alloc::Layout;

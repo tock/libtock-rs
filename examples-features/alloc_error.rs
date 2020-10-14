@@ -11,11 +11,6 @@ use libtock::println;
 use libtock::result::TockResult;
 use libtock::syscalls;
 
-/// Dummy buffer that causes the linker to reserve enough space for the stack.
-#[no_mangle]
-#[link_section = ".stack_buffer"]
-pub static mut STACK_MEMORY: [u8; 0x800] = [0; 0x800];
-
 #[libtock::main]
 fn main() -> TockResult<()> {
     let mut vec = Vec::new();
