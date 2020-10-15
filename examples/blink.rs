@@ -3,7 +3,7 @@
 use libtock::result::TockResult;
 use libtock::timer::Duration;
 
-#[libtock::main(stack_size = 4096)]
+#[libtock::main(stack_size = 0x400)]
 async fn main() -> TockResult<()> {
     let mut drivers = libtock::retrieve_drivers()?;
 
