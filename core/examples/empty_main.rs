@@ -4,10 +4,7 @@
 
 #![no_std]
 
-/// Dummy buffer that causes the linker to reserve enough space for the stack.
-#[no_mangle]
-#[link_section = ".stack_buffer"]
-pub static mut STACK_MEMORY: [u8; 0x400] = [0; 0x400];
+libtock_core::stack_size! {0x400}
 
 // If you don't *use* anything from libtock_core directly, cargo will not link
 // it into the executable. However, we still need the runtime and lang items.
