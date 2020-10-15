@@ -113,10 +113,7 @@ fn try_generate_main_wrapped(
     let output = &ast.sig.output;
 
     Ok(quote!(
-        /// Dummy buffer that causes the linker to reserve enough space for the stack.
-        #[no_mangle]
-        #[link_section = ".stack_buffer"]
-        pub static mut STACK_MEMORY: [u8; #stack_size] = [0; #stack_size];
+        libtock_core::stack_size! {#stack_size}
 
         fn main() #output {
             static mut MAIN_INVOKED: bool = false;
