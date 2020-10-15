@@ -8,6 +8,8 @@ use libtock::result::TockResult;
 use libtock::timer::DriverContext;
 use libtock::timer::Duration;
 
+libtock_core::stack_size! {0x800}
+
 const DELAY_MS: usize = 500;
 
 #[libtock::main]

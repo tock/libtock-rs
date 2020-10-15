@@ -4,6 +4,8 @@ use libtock::electronics::ShiftRegister;
 use libtock::result::TockResult;
 use libtock::timer::Duration;
 
+libtock_core::stack_size! {0x800}
+
 fn number_to_bits(n: u8) -> [bool; 8] {
     match n {
         1 => [false, false, false, true, false, true, false, false],

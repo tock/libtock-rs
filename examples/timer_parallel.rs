@@ -6,6 +6,8 @@ use libtock::result::TockResult;
 use libtock::timer::Duration;
 use libtock::timer::ParallelSleepDriver;
 
+libtock_core::stack_size! {0x800}
+
 async fn blink(
     timer_driver: &ParallelSleepDriver<'_>,
     duration: Duration<usize>,

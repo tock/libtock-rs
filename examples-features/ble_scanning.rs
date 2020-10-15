@@ -5,6 +5,8 @@ use libtock::result::TockResult;
 use libtock::simple_ble;
 use serde::Deserialize;
 
+libtock_core::stack_size! {0x800}
+
 #[derive(Deserialize)]
 struct LedCommand {
     pub nr: u8,

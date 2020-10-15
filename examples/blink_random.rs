@@ -4,6 +4,8 @@ use libtock::leds::LedsDriver;
 use libtock::result::TockResult;
 use libtock::timer::Duration;
 
+libtock_core::stack_size! {0x400}
+
 #[libtock::main]
 async fn main() -> TockResult<()> {
     let mut drivers = libtock::retrieve_drivers()?;

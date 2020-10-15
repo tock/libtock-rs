@@ -3,6 +3,8 @@
 use libtock::result::TockResult;
 use libtock::timer::Duration;
 
+libtock_core::stack_size! {0x800}
+
 // Example works on P0.03
 #[libtock::main]
 async fn main() -> TockResult<()> {

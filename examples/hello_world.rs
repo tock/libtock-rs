@@ -7,6 +7,8 @@
 use libtock::println;
 use libtock::result::TockResult;
 
+libtock_core::stack_size! {0x400}
+
 #[libtock::main]
 async fn main() -> TockResult<()> {
     let drivers = libtock::retrieve_drivers()?;

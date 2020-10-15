@@ -7,6 +7,8 @@ use libtock::println;
 use libtock::result::TockResult;
 use libtock::syscalls;
 
+libtock_core::stack_size! {0x800}
+
 #[libtock::main]
 async fn main() -> TockResult<()> {
     panic!("Bye world!");

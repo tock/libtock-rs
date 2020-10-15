@@ -11,6 +11,8 @@ use libtock::println;
 use libtock::result::TockResult;
 use libtock::syscalls;
 
+libtock_core::stack_size! {0x800}
+
 #[libtock::main]
 fn main() -> TockResult<()> {
     let mut vec = Vec::new();
