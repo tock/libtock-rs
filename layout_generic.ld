@@ -14,7 +14,6 @@
  *         FLASH (rx) : ORIGIN = 0x10030, LENGTH = 0x0FFD0
  *         SRAM (RWX) : ORIGIN = 0x20000, LENGTH = 0x10000
  *     }
- *     STACK_SIZE = 2048;
  *     MPU_MIN_ALIGN = 8K;
  *     INCLUDE ../libtock-rs/layout.ld
  */
@@ -64,7 +63,7 @@ SECTIONS {
          * .rel.data section */
         LONG(LOADADDR(.endflash) - _beginning);
         /* The size of the stack requested by this application */
-        LONG(STACK_SIZE);
+        LONG(_stack_top_aligned - _sstack);
         /* Pad the header out to a multiple of 32 bytes so there is not a gap
          * between the header and subsequent .data section. It's unclear why,
          * but LLD is aligning sections to a multiple of 32 bytes. */
@@ -96,12 +95,11 @@ SECTIONS {
          * TBF header if needed.
          */
         _sram_origin = .;
-
-        . = . + STACK_SIZE;
-
-	_stack_top_unaligned = .;
+        _sstack = .;
+        KEEP(*(.stack_buffer))
+        _stack_top_unaligned = .;
         . = ALIGN(8);
-	_stack_top_aligned = .;
+        _stack_top_aligned = .;
     } > SRAM
 
     /* Data section, static initialized variables

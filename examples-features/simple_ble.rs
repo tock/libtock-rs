@@ -7,6 +7,8 @@ use libtock::simple_ble::BleAdvertisingDriver;
 use libtock::timer::Duration;
 use serde::Serialize;
 
+libtock_core::stack_size! {0x800}
+
 #[derive(Serialize)]
 struct LedCommand {
     pub nr: u8,

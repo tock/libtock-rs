@@ -6,6 +6,8 @@ use libtock::result::TockResult;
 use libtock::syscalls;
 use libtock::{print, println};
 
+libtock_core::stack_size! {0x800}
+
 #[libtock::main]
 async fn main() -> TockResult<()> {
     let mut drivers = libtock::retrieve_drivers()?;

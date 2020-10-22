@@ -5,6 +5,8 @@ use libtock::println;
 use libtock::result::TockResult;
 use libtock::syscalls;
 
+libtock_core::stack_size! {0x800}
+
 #[libtock::main]
 /// Reads a 128 byte sample into a buffer and prints the first value to the console.
 async fn main() -> TockResult<()> {

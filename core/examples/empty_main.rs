@@ -11,4 +11,6 @@
 // follows.
 extern crate libtock_core;
 
+libtock_core::stack_size! {0x400}
+
 fn main() {}
