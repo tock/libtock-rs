@@ -45,7 +45,7 @@ correctly and to keep existing functionality working through nontrivial
 refactorings. Different types of tests offer different capabilities:
 
   * **Host-based unit tests** run on a non-Tock host OS (such as Linux). They
-    can only be used with portable `libtock_core` code, as they code they test
+    can only be used with portable `libtock_core` code, as the code they test
     must run on both Tock and the host OS. These tests must either test code
     that does not directly use system calls, or must direct the system calls to
     a fake Tock kernel. These tests can be fast (compile and run in seconds),
