@@ -47,6 +47,14 @@ impl NinedofDriver {
         Ok(res.res.get())
     }
 
+    pub fn read_gyroscope(&mut self) -> TockResult<NinedofReading> {
+        let res: CbData = Default::default();
+        subscribe(Self::cb, unsafe { mem::transmute(&res) })?;
+        start_gyroscope_reading()?;
+        unsafe { executor::block_on(futures::wait_until(|| res.ready.get())) };
+        Ok(res.res.get())
+    }
+
     extern "C" fn cb(x: usize, y: usize, z: usize, ptr: usize) {
         let res: &CbData = unsafe { mem::transmute(ptr) };
         res.res.set(NinedofReading {
@@ -70,5 +78,10 @@ pub fn start_accel_reading() -> TockResult<()> {
 
 pub fn start_magnetometer_reading() -> TockResult<()> {
     syscalls::command(DRIVER_NUM, 100, 0, 0)?;
+    Ok(())
+}
+
+pub fn start_gyroscope_reading() -> TockResult<()> {
+    syscalls::command(DRIVER_NUM, 200, 0, 0)?;
     Ok(())
 }
