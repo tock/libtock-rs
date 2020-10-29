@@ -72,8 +72,9 @@ not portable.
 
 Testing pieces of `libtock_core` against a fake kernel can be done using
 dependency injection, but most dependency injection techniques have considerable
-code size and RAM usage costs. `libtock_core` needs a dependency injection
-technique that has minimal size impact.
+code size and RAM usage costs. `libtock_core` needs either a dependency
+injection technique that has minimal size impact or an alternative mechanism for
+testing `libtock_core`'s system call error handling logic.
 
 ## Support multiple asynchronous programming models.
 
