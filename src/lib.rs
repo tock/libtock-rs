@@ -13,7 +13,7 @@ pub mod executor;
 pub mod futures;
 pub mod gpio;
 pub mod hmac;
-pub mod i2c;
+pub mod i2c_master_slave;
 pub mod leds;
 pub mod result;
 pub mod rng;

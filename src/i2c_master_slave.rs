@@ -35,38 +35,38 @@ mod allow_nr {
 }
 
 #[non_exhaustive]
-pub struct I2cDriverFactory;
+pub struct I2cMSDriverFactory;
 
-impl I2cDriverFactory {
-    pub fn init_driver(&mut self) -> TockResult<I2cDriver> {
-        let i2c = I2cDriver {
+impl I2cMSDriverFactory {
+    pub fn init_driver(&mut self) -> TockResult<I2cMSDriver> {
+        let i2c_ms = I2cMSDriver {
             lifetime: PhantomData,
         };
-        Ok(i2c)
+        Ok(i2c_ms)
     }
 }
 
-struct I2cEventConsumer;
+struct I2cMSEventConsumer;
 
-impl<CB: FnMut(usize, usize)> Consumer<CB> for I2cEventConsumer {
+impl<CB: FnMut(usize, usize)> Consumer<CB> for I2cMSEventConsumer {
     fn consume(callback: &mut CB, _: usize, _: usize, _: usize) {
         callback(0, 0);
     }
 }
 
-pub struct I2cMasterWriteBuffer {
+pub struct I2cMSMasterWriteBuffer {
     buffer: [u8; MASTER_BUFFER_SIZE],
 }
 
-impl Default for I2cMasterWriteBuffer {
+impl Default for I2cMSMasterWriteBuffer {
     fn default() -> Self {
-        I2cMasterWriteBuffer {
+        I2cMSMasterWriteBuffer {
             buffer: [0; MASTER_BUFFER_SIZE],
         }
     }
 }
 
-impl Deref for I2cMasterWriteBuffer {
+impl Deref for I2cMSMasterWriteBuffer {
     type Target = [u8; MASTER_BUFFER_SIZE];
 
     fn deref(&self) -> &Self::Target {
@@ -74,25 +74,25 @@ impl Deref for I2cMasterWriteBuffer {
     }
 }
 
-impl DerefMut for I2cMasterWriteBuffer {
+impl DerefMut for I2cMSMasterWriteBuffer {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.buffer
     }
 }
 
-pub struct I2cMasterReadBuffer {
+pub struct I2cMSMasterReadBuffer {
     buffer: [u8; MASTER_BUFFER_SIZE],
 }
 
-impl Default for I2cMasterReadBuffer {
+impl Default for I2cMSMasterReadBuffer {
     fn default() -> Self {
-        I2cMasterReadBuffer {
+        I2cMSMasterReadBuffer {
             buffer: [0; MASTER_BUFFER_SIZE],
         }
     }
 }
 
-impl Deref for I2cMasterReadBuffer {
+impl Deref for I2cMSMasterReadBuffer {
     type Target = [u8; MASTER_BUFFER_SIZE];
 
     fn deref(&self) -> &Self::Target {
@@ -100,25 +100,25 @@ impl Deref for I2cMasterReadBuffer {
     }
 }
 
-impl DerefMut for I2cMasterReadBuffer {
+impl DerefMut for I2cMSMasterReadBuffer {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.buffer
     }
 }
 
-pub struct I2cSlaveReadBuffer {
+pub struct I2cMSSlaveReadBuffer {
     buffer: [u8; SLAVE_BUFFER_SIZE],
 }
 
-impl Default for I2cSlaveReadBuffer {
+impl Default for I2cMSSlaveReadBuffer {
     fn default() -> Self {
-        I2cSlaveReadBuffer {
+        I2cMSSlaveReadBuffer {
             buffer: [0; SLAVE_BUFFER_SIZE],
         }
     }
 }
 
-impl Deref for I2cSlaveReadBuffer {
+impl Deref for I2cMSSlaveReadBuffer {
     type Target = [u8; SLAVE_BUFFER_SIZE];
 
     fn deref(&self) -> &Self::Target {
@@ -126,25 +126,25 @@ impl Deref for I2cSlaveReadBuffer {
     }
 }
 
-impl DerefMut for I2cSlaveReadBuffer {
+impl DerefMut for I2cMSSlaveReadBuffer {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.buffer
     }
 }
 
-pub struct I2cSlaveWriteBuffer {
+pub struct I2cMSSlaveWriteBuffer {
     buffer: [u8; SLAVE_BUFFER_SIZE],
 }
 
-impl Default for I2cSlaveWriteBuffer {
+impl Default for I2cMSSlaveWriteBuffer {
     fn default() -> Self {
-        I2cSlaveWriteBuffer {
+        I2cMSSlaveWriteBuffer {
             buffer: [0; SLAVE_BUFFER_SIZE],
         }
     }
 }
 
-impl Deref for I2cSlaveWriteBuffer {
+impl Deref for I2cMSSlaveWriteBuffer {
     type Target = [u8; SLAVE_BUFFER_SIZE];
 
     fn deref(&self) -> &Self::Target {
@@ -152,20 +152,20 @@ impl Deref for I2cSlaveWriteBuffer {
     }
 }
 
-impl DerefMut for I2cSlaveWriteBuffer {
+impl DerefMut for I2cMSSlaveWriteBuffer {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.buffer
     }
 }
 
-pub struct I2cDriver<'a> {
+pub struct I2cMSDriver<'a> {
     lifetime: PhantomData<&'a ()>,
 }
 
-impl<'a> I2cDriver<'a> {
+impl<'a> I2cMSDriver<'a> {
     pub fn init_master_write_buffer(
         &self,
-        buffer: &'a mut I2cMasterWriteBuffer,
+        buffer: &'a mut I2cMSMasterWriteBuffer,
     ) -> TockResult<SharedMemory> {
         syscalls::allow(DRIVER_NUMBER, allow_nr::MASTER_WRIE, &mut buffer.buffer)
             .map_err(Into::into)
@@ -173,7 +173,7 @@ impl<'a> I2cDriver<'a> {
 
     pub fn init_master_read_buffer(
         &self,
-        buffer: &'a mut I2cMasterReadBuffer,
+        buffer: &'a mut I2cMSMasterReadBuffer,
     ) -> TockResult<SharedMemory> {
         syscalls::allow(DRIVER_NUMBER, allow_nr::MASTER_READ, &mut buffer.buffer)
             .map_err(Into::into)
@@ -181,14 +181,14 @@ impl<'a> I2cDriver<'a> {
 
     pub fn init_slave_read_buffer(
         &self,
-        buffer: &'a mut I2cSlaveReadBuffer,
+        buffer: &'a mut I2cMSSlaveReadBuffer,
     ) -> TockResult<SharedMemory> {
         syscalls::allow(DRIVER_NUMBER, allow_nr::SLAVE_READ, &mut buffer.buffer).map_err(Into::into)
     }
 
     pub fn init_slave_write_buffer(
         &self,
-        buffer: &'a mut I2cSlaveWriteBuffer,
+        buffer: &'a mut I2cMSSlaveWriteBuffer,
     ) -> TockResult<SharedMemory> {
         syscalls::allow(DRIVER_NUMBER, allow_nr::SLAVE_WRITE, &mut buffer.buffer)
             .map_err(Into::into)
@@ -198,7 +198,7 @@ impl<'a> I2cDriver<'a> {
         &self,
         callback: &'a mut CB,
     ) -> TockResult<CallbackSubscription> {
-        syscalls::subscribe::<I2cEventConsumer, _>(
+        syscalls::subscribe::<I2cMSEventConsumer, _>(
             DRIVER_NUMBER,
             subscribe_nr::SUBSCRIBE_CALLBACK,
             callback,
