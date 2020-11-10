@@ -43,7 +43,7 @@ setup: setup-qemu
 	rustup component add clippy
 	rustup component add rustfmt
 	rustup component add miri
-	cargo install elf2tab --version 0.4.0
+	cargo install elf2tab --version 0.6.0
 	cargo install stack-sizes
 	cargo miri setup
 
