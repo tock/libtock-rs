@@ -11,7 +11,10 @@ structopt = { version = "0.3", default-features = false }
 futures = "0.3.4"
 
 [dependencies.async-std]
-version = "1.5.0"
+# async-std 1.7 pulls in crossbeam_utils 1.8, which does not work with the
+# nightly Rust toolchain we use. Temporarily block async-std 1.7 until we can
+# update our Rust toolchain.
+version = "1.5.0, <1.7"
 features = ["attributes"]
 
 [dependencies.tokio]
