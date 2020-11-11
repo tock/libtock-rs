@@ -35,4 +35,3 @@ pub const ENOSUPPORT: isize = -10;
 pub const ENODEVICE: isize = -11;
 pub const EUNINSTALLED: isize = -12;
 pub const ENOACK: isize = -13;
-
