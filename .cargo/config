@@ -11,5 +11,6 @@ rtv7em = "rthumbv7em"
 rustflags = [
     "-C", "relocation-model=static",
     "-C", "link-arg=-Tlayout.ld",
+    "--emit=llvm-ir",
 ]
 runner = "./tools/flash.sh"
