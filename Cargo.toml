@@ -29,6 +29,7 @@ ctap2-authenticator = { git = "https://gitlab.com/ctap2-authenticator/ctap2-auth
 p256 = { version = "0.5.0" , default-features = false, features = ["arithmetic", "ecdsa", "ecdsa-core"] }
 subtle = { version = "2.3.0", default-features = false, features = ["i128"] }
 generic-array = { version = "0.14.3" }
+libmctp = { version = "0.1.0" }
 
 # We need to override this to allow builds for targets that don't support atomics.
 # Once a version newer then 0.4.11 is released we can update to use that.

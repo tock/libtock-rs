@@ -18,6 +18,7 @@ usage:
 	@echo " - nrf52"
 	@echo " - imxrt1050"
 	@echo " - apollo3"
+	@echo " - stm32f3discovery"
 	@echo
 	@echo "Run 'make setup' to setup Rust to build libtock-rs."
 	@echo "Run 'make <board>' to build libtock-rs for that board"
@@ -131,6 +132,14 @@ nrf52840:
 .PHONY: flash-nrf52840
 flash-nrf52840:
 	PLATFORM=nrf52840 cargo run $(release) --target=thumbv7em-none-eabi --example $(EXAMPLE) $(features)
+
+.PHONY: stm32f3discovery
+stm32f3discovery:
+	PLATFORM=stm32f3discovery cargo build $(release) --target=thumbv7em-none-eabi --examples $(features)
+	
+.PHONY: flash-stm32f3discovery
+flash-stm32f3discovery:
+	PLATFORM=stm32f3discovery cargo run $(release) --target=thumbv7em-none-eabi --example $(EXAMPLE) $(features)
 
 .PHONY: opentitan
 opentitan:
