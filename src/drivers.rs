@@ -4,7 +4,8 @@ use crate::console::ConsoleDriver;
 use crate::ctap::CtapDriverFactory;
 use crate::gpio::GpioDriverFactory;
 use crate::hmac::HmacDriverFactory;
-use crate::i2c::I2cDriverFactory;
+use crate::i2c_master::I2cDriverFactory;
+use crate::i2c_master_slave::I2cMSDriverFactory;
 use crate::leds::LedsDriverFactory;
 use crate::result::OtherError;
 use crate::result::TockError;
@@ -31,6 +32,7 @@ pub struct Drivers {
     pub temperature: TemperatureDriverFactory,
     pub buttons: ButtonsDriverFactory,
     pub adc: AdcDriverFactory,
+    pub i2c_ms: I2cMSDriverFactory,
     pub i2c: I2cDriverFactory,
     pub rng: RngDriver,
     pub ble_advertising: BleAdvertisingDriverFactory,
@@ -79,6 +81,7 @@ const DRIVERS: Drivers = Drivers {
     },
     gpio: GpioDriverFactory,
     hmac: HmacDriverFactory,
+    i2c_ms: I2cMSDriverFactory,
     i2c: I2cDriverFactory,
     temperature: TemperatureDriverFactory,
     rng: RngDriver,
