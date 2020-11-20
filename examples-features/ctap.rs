@@ -30,6 +30,8 @@ use p256::elliptic_curve::ff::PrimeField;
 use p256::{Scalar, SecretKey};
 use subtle::{Choice, ConditionallySelectable};
 
+libtock_core::stack_size! {0x4000}
+
 #[derive(Debug, Clone, PartialEq, Eq, Copy)]
 pub struct PrivateKey(Scalar);
 
