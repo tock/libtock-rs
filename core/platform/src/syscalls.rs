@@ -1,99 +1,199 @@
-//! Provides the Syscalls trait which directly represents Tock's system call
-//! APIs. Syscalls is implemented by both `libtock_runtime` which makes system
-//! calls into a real Tock kernel, and `libtock_fake` which is a fake Tock
-//! kernel.
+// TODO: Implement `libtock_runtime` and `libtock_unittest`, which are
+// referenced in the comment on `Syscalls`.
 
-// TODO: Implement `libtock_runtime` and `libtock_fake`.
+use crate::syscall_types::{OneArgMemop, ReturnType, YieldType, ZeroArgMemop};
 
-/// Syscalls represents Tock's system call APIs. It is designed to be
-/// implemented as easily as possible -- its arguments and return values
-/// correspond directly to registers in the ABI. For a higher-level abstraction,
-/// see Platform.
+/// `Syscalls` serves two purposes:
+///     High level: It provides safe abstractions over Tock's raw system calls.
+///     Low level:  It allows a fake Tock kernel to be injected into components
+///                 for unit testing.
 ///
-/// By design, syscalls is designed to be zero-cost in a TBF binary and
-/// functional (but not zero-cost) in unit tests. In a TBF binary, Syscalls is
-/// implemented with the `'static` lifetime, and is a zero-sized type. Syscalls
-/// requires `Copy` in order to support defining it usefully on zero-sized
-/// types. When used in unit tests, the Syscalls implementation carries a
-/// lifetime local to that unit test.
-///
-/// With the exception of `memop`, this trait aligns closely to Tock's
-/// kernel::Driver trait.
-pub trait Syscalls<'k>: Copy {
-    /// Calls the `allow` system call.
-    ///
+/// To serve these use cases, `Syscalls` has two API layers (called the
+/// high-level API and the low-level API). Components needing access to Tock's
+/// system calls should use the high-level API, which is safe and has nice
+/// abstractions. The low-level API is implemented by
+/// `libtock_runtime::TockSyscalls` and `libtock_unittest::FakeSyscalls`, and
+/// provides the raw userspace<->kernel interface.
+pub trait Syscalls {
+    // -------------------------------------------------------------------------
+    // High-level API
+    // -------------------------------------------------------------------------
+
+    /// Puts the process to sleep until a callback becomes pending, invokes the
+    /// callback, then returns.
+    fn yield_wait() {
+        Self::raw_yield(YieldType::Wait);
+    }
+
+    /// Runs the next pending callback, if a callback is pending. Unlike
+    /// `yield_wait`, `yield_no_wait` returns immediately if no callback is
+    /// pending. Returns true if a callback was executed, false otherwise.
+    fn yield_no_wait() -> bool {
+        Self::raw_yield(YieldType::NoWait) != ReturnType::Failure as usize
+    }
+
+    // TODO: Implement a subscribe interface.
+
+    // TODO: Implement a command interface.
+
+    // TODO: Implement a read-write allow interface.
+
+    // TODO: Implement a read-only allow interface.
+
+    // TODO: Implement memop() methods.
+
+    // -------------------------------------------------------------------------
+    // Low-level API
+    // -------------------------------------------------------------------------
+
+    // This API is designed to minimize the amount of handwritten assembly code
+    // needed without generating unnecessary instructions. There are a few major
+    // factors affecting its design:
+    //     1. Most system calls only clobber r0-r4, while yield has a far longer
+    //        clobber list. As such, yield must have its own assembly
+    //        implementation.
+    //     2. The compiler is unable to optimize away unused arguments. For
+    //        example, memop's "get process RAM start address" operation only
+    //        needs r0 set, while memop's "break" operation needs both r0 and r1
+    //        set. If our inline assembly calls "get process RAM start address"
+    //        but sets both r0 and r1, the compiler doesn't know that r1 will be
+    //        ignored so setting that register will not be optimized away.
+    //        Therefore we want to set the minimum number of argument registers
+    //        possible.
+    //     3. The cost of specifying unused return registers is only that of
+    //        unnecessarily marking a register as clobbered. Explanation: After
+    //        inlining, an unused register is marked as "changed by the
+    //        assembly" but can immediately be re-used by the compiler, which is
+    //        the same as a clobbered register. System calls should generally be
+    //        inlined -- and even if they aren't, the unused return values will
+    //        probably be passed in caller-saved registers (this is true for the
+    //        C ABI, so probably true for the Rust ABI), which are treated as
+    //        clobbered regardless.
+    //
+    // Currently, yield takes exactly one argument, to specify what yield type
+    // to do. Therefore we only need one raw yield call.
+    //
+    // Subscribe, command, read-write allow, and read-only allow all take four
+    // argument types. Even when calling command IDs that have unused arguments,
+    // we still need to clear the argument registers so as to avoid passing
+    // confidential data to capsules (this is in line with Tock's threat model).
+    // As such, four_arg_syscall() is used for all subscribe, command, read-only
+    // allow, and read-write allow system calls.
+    //
+    // Memop takes 1 or 2 arguments (operation and an optional argument), and
+    // being part of the core kernel it is okay for us to leave arbitrary data
+    // in the argument register if the argument is unused (again, in line with
+    // Tock's threat model). Memop returns up to 2 return arguments, so we don't
+    // need to mark r2 and r3 as clobbered. As such, we need two raw memop
+    // calls: one for operations without an argument and one for operations with
+    // an argument.
+    //
+    // Because the variables passed in and out of raw system calls represent
+    // register values, they are of type usize. In cases where it doesn't make
+    // sense to pass a pointer-sized value, libtock_unittest::FakeSyscalls is
+    // free to panic if a too-large value is passed.
+
+    // raw_yield should:
+    //     1. Call syscall class 0
+    //     2. Use register r0 for input and output as an inlateout register,
+    //        passing in r0_in and returning its value.
+    //     3. Mark all caller-saved registers as lateout clobbers.
+    //     4. NOT provide any of the following options:
+    //            pure             (yield has side effects)
+    //            nomem            (a callback can read + write globals)
+    //            readonly         (a callback can write globals)
+    //            preserves_flags  (a callback can change flags)
+    //            noreturn         (yield is expected to return)
+    //            nostack          (a callback needs the stack)
+    //
+    // Design note: This is safe because the yield types that currently exist
+    // are safe. If an unsafe yield type is added, we will need to make
+    // raw_yield unsafe. Although raw_yield shouldn't be called by code outside
+    // this crate, it can be, so that is a backwards-incompatible change. We
+    // pass YieldType rather than a usize because if we used usize directly then
+    // this API becomes unsound if the kernel adds support for an unsafe yield
+    // type (or even one that takes one more argument).
+    fn raw_yield(r0_in: YieldType) -> usize;
+
+    // four_arg_syscall is used to invoke subscribe, command, read-write allow,
+    // and read-only allow system calls.
+    //
+    // four_arg_syscall's inline assembly should have the following properties:
+    //     1. Calls the syscall class specified by class
+    //     2. Passes r0-r3 in the corresponding registers as inlateout
+    //        registers. Returns r0-r3 in order.
+    //     3. Does not mark any registers as clobbered.
+    //     4. Has all of the following options:
+    //            preserves_flags  (these system calls do not touch flags)
+    //            nostack          (these system calls do not touch the stack)
+    //     5. Does NOT have any of the following options:
+    //            pure      (these system calls have side effects)
+    //            nomem     (the compiler needs to write to globals before allow)
+    //            readonly  (rw allow can modify memory)
+    //            noreturn  (all these system calls are expected to return)
+    //
     /// # Safety
-    /// `allow` is unsafe because callers must guarantee that `pointer` and
-    /// `length` refer to memory that the kernel can mutate safely. The buffer
-    /// must last for the lifetime 'k.
-    // `driver` and `minor` are `usize` because the kernel internally treats
-    // them as `usize`s. `allow`'s return value is a kernel `ReturnCode`;
-    // Platform translates the `isize` into a `ReturnCode`.
-    unsafe fn allow(self, driver: usize, minor: usize, pointer: *mut u8, length: usize) -> isize;
+    /// A four_arg_syscall must NOT be used to invoke yield. Otherwise, it is
+    /// exactly as safe as the underlying system call, which varies depending on
+    /// the system call class.
+    unsafe fn four_arg_syscall(
+        r0: usize,
+        r1: usize,
+        r2: usize,
+        r3: usize,
+        class: u8,
+    ) -> (usize, usize, usize, usize);
 
-    /// Calls the `command` system call.
-    // `driver`, `minor`, `arg1`, and `arg2` are all `usize` (rather than `u32`)
-    // because the kernel refers to them internally as `usize`s. command returns
-    // a kernel ReturnCode; Platform is responsible for translating an isize
-    // into the local ReturnCode.
-    fn command(self, driver: usize, minor: usize, arg1: usize, arg2: usize) -> isize;
+    // zero_arg_memop is used to invoke memop operations that do not accept an
+    // argument register. Because the are no memop commands that set r2 or r3,
+    // this only needs to return r0 and r1.
+    //
+    // Many memop commands are not expected to work in the unit test
+    // environment. If called, those commands may panic.
+    //
+    // zero_arg_memop's inline assembly should have the following properties:
+    //     1. Calls syscall class 5
+    //     2. Specifies r0 as an inlateout register, and r1 as a lateout
+    //        register.
+    //     3. Does not mark any registers as clobbered.
+    //     4. Has all of the following options:
+    //            preserves_flags
+    //            nostack
+    //            nomem            (it is okay for the compiler to cache globals
+    //                              across memop calls)
+    //     5. Does NOT have any of the following options:
+    //            pure      (two invocations of the same memop can return
+    //                       different values)
+    //            readonly  (incompatible with nomem)
+    //            noreturn
+    //
+    // Design note: like raw_yield, this is safe because memops that currently
+    // exist are safe. zero_arg_memop takes a ZeroArgMemop rather than a usize
+    // so that if the kernel adds an unsafe memop this API doesn't become
+    // unsound.
+    fn zero_arg_memop(r0_in: ZeroArgMemop) -> (usize, usize);
 
-    /// Calls the `memop` system call with an argument. Note that memop() cannot
-    /// cause memory unsafety, although it can cause the app to fault (e.g. Brk
-    /// can move the app break below the stack, causing a fault). The isize
-    /// returned is a kernel ReturnCode.
-    // Platform performs the translation from isize into ReturnCode to keep
-    // Syscalls implementations simple.
-    fn memop_arg(self, op: MemopWithArg, arg: usize) -> isize;
-
-    /// Calls the `memop` system call with no arguments. This version is
-    /// slightly cheaper because it does not need to set the argument register.
-    // We're okay with leaking the value in the argument register because
-    // memop() is always handled by the core kernel, never by an untrusted
-    // capsule.
-    fn memop_noarg(self, op: MemopNoArg) -> isize;
-
-    /// Calls the `subscribe` system call.
-    ///
-    /// # Safety
-    /// `subscribe` is unsafe because the callback can potentially be unsafe,
-    /// and callers of `subscribe` must assert that calling the callback with
-    /// the provided `data` value is safe. The callback must last for the 'k
-    /// lifetime.
-    // Driver, minor, the callback args, and data are all represented as `usize`
-    // because that is the type the kernel uses internally to store them (e.g.
-    // as opposed to u32).
-    unsafe fn subscribe(
-        self,
-        driver: usize,
-        minor: usize,
-        callback: Option<unsafe extern "C" fn(usize, usize, usize, usize)>,
-        data: usize,
-    );
-
-    /// Puts the process to sleep until a callback becomes pending, then invokes
-    /// the callback.
-    fn yieldk(self);
-}
-
-#[non_exhaustive]
-#[repr(usize)]
-pub enum MemopWithArg {
-    Brk = 0,
-    Sbrk = 1,
-    FlashRegionStart = 8,
-    FlashRegionEnd = 9,
-    SpecifyStackTop = 10,
-    SpecifyHeapStart = 11,
-}
-
-#[non_exhaustive]
-#[repr(usize)]
-pub enum MemopNoArg {
-    MemoryStart = 2,
-    MemoryEnd = 3,
-    FlashStart = 4,
-    FlashEnd = 5,
-    GrantStart = 6,
-    FlashRegions = 7,
+    // one_arg_memop is used to invoke memop operations that take an argument.
+    // Because there are no memop operations that set r2 or r3, this only needs
+    // to return r0 and r1.
+    //
+    // one_arg_memop's inline assembly should:
+    //     1. Call syscall class 5
+    //     2. Specify r0 and r1 as inlateout registers, and return (r0, r1)
+    //     3. Not mark any registers as clobbered.
+    //     4. Have all of the following options:
+    //            preserves_flags
+    //            nostack
+    //            nomem            (the compiler can cache globals across memop
+    //                              calls)
+    //     5. Does NOT have any of the following options:
+    //            pure      Two invocations of sbrk can return different values
+    //            readonly  Incompatible with nomem
+    //            noreturn
+    //
+    // Design note: like raw_yield, this is safe because memops that currently
+    // exist are safe. zero_arg_memop takes a ZeroArgMemop rather than a usize
+    // so that if the kernel adds an unsafe memop this API doesn't become
+    // unsound.
+    fn one_arg_memop(r0_in: OneArgMemop, r1: usize) -> (usize, usize);
 }

@@ -10,8 +10,10 @@
 
 mod allows;
 mod error_code;
+mod syscall_types;
 mod syscalls;
 
 pub use allows::{AllowReadable, Allowed};
 pub use error_code::ErrorCode;
-pub use syscalls::{MemopNoArg, MemopWithArg, Syscalls};
+pub use syscall_types::{OneArgMemop, ReturnType, YieldType, ZeroArgMemop};
+pub use syscalls::Syscalls;
