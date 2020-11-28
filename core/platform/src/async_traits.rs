@@ -83,7 +83,7 @@ pub trait Locator: 'static {
 
 impl<L: Locator, AsyncResponse> FreeCallback<AsyncResponse> for L
 where
-    L::Target: MethodCallback<AsyncResponse>
+    L::Target: MethodCallback<AsyncResponse>,
 {
     fn call(context: CallbackContext, response: AsyncResponse) {
         L::locate().call(context, response);
