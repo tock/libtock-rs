@@ -38,12 +38,6 @@ endif
 
 .PHONY: setup
 setup: setup-qemu
-	rustup target add thumbv7em-none-eabi
-	rustup target add riscv32imac-unknown-none-elf
-	rustup target add riscv32imc-unknown-none-elf
-	rustup component add clippy
-	rustup component add rustfmt
-	rustup component add miri
 	cargo install elf2tab --version 0.6.0
 	cargo install stack-sizes
 	cargo miri setup
