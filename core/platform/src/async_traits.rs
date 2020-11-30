@@ -63,8 +63,10 @@ pub trait MethodCallback<AsyncResponse> {
 pub struct CallbackContext<'c> {
     // `_phantom` serves three purposes. It uses the `c lifetime to avoid an
     // "unused lifetime" error, it provides the proper variance over 'c, and it
-    // prevents code outside this crate from constructing a CallbackContext
-    // (because of its visibility control).
+    // prevents code outside this crate from directly constructing a
+    // CallbackContext (because of its visibility control). Code outside this
+    // crate can copy a CallbackContext, but that is fine as copying the
+    // CallbackContext preserves its associated lifetime.
     pub(crate) _phantom: core::marker::PhantomData<&'c ()>,
 }
 
