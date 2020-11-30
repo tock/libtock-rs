@@ -10,7 +10,7 @@
 // RawSyscalls is designed to minimize the amount of handwritten assembly code
 // needed without generating unnecessary instructions. There are a few major
 // factors affecting its design:
-//     1. Most system calls only clobber r0-r4, while yield has a far longer
+//     1. Most system calls only clobber r0-r4 (*), while yield has a far longer
 //        clobber list. As such, yield must have its own assembly
 //        implementation.
 //     2. The compiler is unable to optimize away unused arguments. For example,
@@ -29,6 +29,10 @@
 //        probably be passed in caller-saved registers (this is true for the C
 //        ABI, so probably true for the Rust ABI), which are treated as
 //        clobbered regardless.
+//
+// (*) When this file refers to registers, it uses the same naming convention as
+// the Tock 2.0 syscalls TRD. Registers r0-r4 correspond to ARM registers r0-r4
+// and RISC-V registers a0-a4.
 //
 // Currently, yield takes exactly one argument, to specify what yield type to
 // do. Therefore we only need one raw yield call.
