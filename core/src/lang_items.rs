@@ -21,6 +21,7 @@
 use crate::syscalls;
 
 #[lang = "start"]
+#[allow(improper_ctypes_definitions)]
 extern "C" fn start<T>(main: fn() -> T, _argc: isize, _argv: *const *const u8) -> bool
 where
     T: Termination,

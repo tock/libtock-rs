@@ -160,6 +160,11 @@ SECTIONS {
       *(.ARM.exidx* .gnu.linkonce.armexidx.*)
     } > FLASH
     PROVIDE_HIDDEN (__exidx_end = .);
+
+    /DISCARD/ :
+    {
+      *(.eh_frame)
+    }
 }
 
 ASSERT((_stack_top_aligned - _stack_top_unaligned) == 0, "
