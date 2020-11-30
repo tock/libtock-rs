@@ -12,6 +12,7 @@ mod allows;
 mod error_code;
 mod raw_syscalls;
 mod syscalls;
+mod syscalls_impl;
 
 pub use allows::{AllowReadable, Allowed};
 pub use error_code::ErrorCode;

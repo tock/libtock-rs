@@ -1,8 +1,6 @@
 // TODO: Implement `libtock_runtime` and `libtock_unittest`, which are
 // referenced in the comment on `Syscalls`.
 
-use crate::raw_syscalls::{RawSyscalls, YieldType};
-
 /// `Syscalls` provides safe abstractions over Tock's system calls. It is
 /// implemented for `libtock_runtime::TockSyscalls` and
 /// `libtock_unittest::FakeSyscalls` (by way of `RawSyscalls`).
@@ -25,31 +23,4 @@ pub trait Syscalls {
     // TODO: Add a read-only allow interface.
 
     // TODO: Add memop() methods.
-}
-
-impl<S: RawSyscalls> Syscalls for S {
-    fn yield_wait() {
-        Self::raw_yield(YieldType::Wait);
-    }
-
-    fn yield_no_wait() -> bool {
-        Self::raw_yield(YieldType::NoWait) != ReturnType::Failure as usize
-    }
-}
-
-// Note: variants are commented out because if they aren't commented out I get a
-// "variant is never constructed" error. When we figure out an error handling
-// design, this type is likely to move into an error handling-related module, at
-// which point we will uncomment the other variants.
-enum ReturnType {
-    Failure = 0,
-    //FailureWithU32 = 1,
-    //FailureWith2U32 = 2,
-    //FailureWithU64 = 3,
-    //Success = 128,
-    //SuccessWithU32 = 129,
-    //SuccessWith2U32 = 130,
-    //SuccessWithU64 = 131,
-    //SuccessWith3U32 = 132,
-    //SuccessWithU32AndU64 = 133,
 }
