@@ -47,10 +47,15 @@
 // Memop takes 1 or 2 arguments (operation and an optional argument). Because it
 // is part of the core kernel, it is okay for us to leave arbitrary data in the
 // argument register for operations where the argument register is unused
-// (again, in line with Tock's threat model). Memop returns up to 2 return
-// arguments, so we don't need to mark r2 and r3 as clobbered. As such, we need
+// (again, in line with Tock's threat model). As such, for efficiency, we need
 // two raw memop calls: one for operations without an argument and one for
 // operations with an argument.
+//
+// The success type for Memop calls depends on the operation perform. However,
+// all *currently defined* memop operations return either Success or Success
+// with u32. Therefore, the memop implementations only need to mark r0 and r1 as
+// clobbered, not r2 and r3. This choice of clobbers will need to be revisited
+// if and when a memop operation that returns more data is added.
 //
 // Because the variables passed in and out of raw system calls represent
 // register values, they are of type usize. In cases where it doesn't make sense
@@ -133,8 +138,8 @@ pub trait RawSyscalls {
     //
     // Design note: like raw_yield, this is safe because memops that currently
     // exist are safe. zero_arg_memop takes a ZeroArgMemop rather than a usize
-    // so that if the kernel adds an unsafe memop this API doesn't become
-    // unsound.
+    // so that if the kernel adds an unsafe memop -- or one that can clobber
+    // r2/r3 --  this API doesn't become unsound.
     fn zero_arg_memop(r0_in: ZeroArgMemop) -> (usize, usize);
 
     // one_arg_memop is used to invoke memop operations that take an argument.
@@ -157,8 +162,8 @@ pub trait RawSyscalls {
     //
     // Design note: like raw_yield, this is safe because memops that currently
     // exist are safe. zero_arg_memop takes a ZeroArgMemop rather than a usize
-    // so that if the kernel adds an unsafe memop this API doesn't become
-    // unsound.
+    // so that if the kernel adds an unsafe memop -- or one that can clobber
+    // r2/r3 -- this API doesn't become unsound.
     fn one_arg_memop(r0_in: OneArgMemop, r1: usize) -> (usize, usize);
 }
 
@@ -171,6 +176,8 @@ pub enum OneArgMemop {
     FlashRegionEnd = 9,
     SpecifyStackTop = 10,
     SpecifyHeapStart = 11,
+    // Note: before adding new memop operations, make sure the assumptions in
+    // the design notes on `one_arg_memop` are valid for the new operation type.
 }
 
 // TODO: When the numeric values (0 and 1) are assigned to the yield types,
@@ -191,4 +198,7 @@ pub enum ZeroArgMemop {
     FlashEnd = 5,
     GrantStart = 6,
     FlashRegions = 7,
+    // Note: before adding new memop operations, make sure the assumptions in
+    // the design notes on `zero_arg_memop` are valid for the new operation
+    // type.
 }
