@@ -31,15 +31,6 @@ jobs:
         with:
           submodules: true
 
-      # Install a Rust toolchain with the components necessary to build
-      # libtock-rs and its examples. This action doesn't seem to be able to
-      # install toolchains for multiple targets, so I add the targets later in
-      # the "Build and Test" step.
-      - name: Install Rust toolchain
-        uses: actions-rs/toolchain@v1.0.6
-        with:
-          profile: minimal
-
       # The main test step. We let the makefile do most of the work because the
       # makefile can be tested locally. We experimentally determined that -j2 is
       # optimal for the Azure Standard_DS2_v2 VM, which is the VM type used by
@@ -47,6 +38,5 @@ jobs:
       - name: Build and Test
         run: |
           cd "${GITHUB_WORKSPACE}"
-          rustup target add riscv32imc-unknown-none-elf thumbv7em-none-eabi
           make -j2 setup
           make -j2 test
