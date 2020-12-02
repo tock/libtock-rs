@@ -9,9 +9,11 @@
 //      unit test environments. [DONE]
 
 mod allows;
+mod async_traits;
 mod error_code;
 mod syscalls;
 
 pub use allows::{AllowReadable, Allowed};
+pub use async_traits::{CallbackContext, FreeCallback, Locator, MethodCallback};
 pub use error_code::ErrorCode;
 pub use syscalls::{MemopNoArg, MemopWithArg, Syscalls};
