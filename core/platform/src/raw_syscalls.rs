@@ -116,7 +116,7 @@ pub trait RawSyscalls {
     /// depending on the system call class.
     unsafe fn four_arg_syscall(
         r0: u32,
-        r1: usize,
+        r1: u32,
         r2: usize,
         r3: usize,
         class: u8,
