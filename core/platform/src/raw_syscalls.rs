@@ -8,8 +8,10 @@
 /// interfaces to the system calls.
 
 // RawSyscalls is designed to minimize the amount of handwritten assembly code
-// needed without generating unnecessary instructions. There are a few major
-// factors affecting its design:
+// needed without generating unnecessary instructions. This comment describes
+// the thought process that led to the choice of methods for RawSyscalls. There
+// are a few major considerations affecting its design:
+//
 //     1. Most system calls only clobber r0-r4 (*), while yield has a far longer
 //        clobber list. As such, yield must have its own assembly
 //        implementation.
@@ -34,24 +36,48 @@
 // the Tock 2.0 syscalls TRD. Registers r0-r4 correspond to ARM registers r0-r4
 // and RISC-V registers a0-a4.
 //
-// Currently, yield takes exactly one argument, to specify what yield type to
-// do. Therefore we only need one raw yield call.
+// Currently, yield takes exactly one argument (to specify what yield type to
+// do). Therefore we only need one raw yield call.
 //
-// Subscribe, command, read-write allow, and read-only allow all take four
-// argument types. Even when calling command IDs that have unused arguments, we
-// still need to clear the argument registers so as to avoid passing
-// confidential data to capsules (this is in line with Tock's threat model). As
-// such, four_arg_syscall() is used for all subscribe, command, read-only allow,
-// and read-write allow system calls.
+// Based on these considerations, it would make sense to have the following
+// methods:
+//     yield
+//     zero_arg_syscall
+//     one_arg_syscall
+//     two_arg_syscall
+//     three_arg_syscall
+//     four_arg_syscall
 //
-// Memop takes 1 or 2 arguments (operation and an optional argument). Because it
-// is part of the core kernel, it is okay for us to leave arbitrary data in the
-// argument register for operations where the argument register is unused
-// (again, in line with Tock's threat model). As such, for efficiency, we need
-// two raw memop calls: one for operations without an argument and one for
-// operations with an argument.
+// However, there are no system calls that take 0 or 3 arguments, so we do not
+// need the corresponding methods. This leaves yield, 1-arg, 2-arg, and 4-arg
+// system calls.
 //
-// The success type for Memop calls depends on the operation perform. However,
+// The 1-arg and 2-arg system calls are only used for memop. Memop currently has
+// the property that none of its operations can lead to undefined behavior.
+// Therefore, we can rename the 1-arg and 2-arg system calls to zero_arg_memop
+// and one_arg_memop and make them safe methods (the argument counts change
+// because the number of system call arguments is one greater than the number of
+// arguments passed to the specific op).
+//
+// This only leaves four_arg_syscall, which is used to implement subscribe,
+// command, read-write allow, and read-only allow.
+//
+// Therefore the final design has 4 methods:
+//     yield
+//     zero_arg_memop
+//     one_arg_memop
+//     four_arg_syscall
+//
+// If a new system call class that uses fewer than four arguments is added, then
+// the above list will need to be revised.
+//
+// Note that `command` always needs to use four_arg_syscall, even when calling a
+// command with fewer arguments, because we don't want to leak the
+// (possibly secret) values in the r2 and r3 registers to untrusted capsules.
+// Yield and memop do not have this concern and can leave arbitrary data in r2
+// and r3, because they are implemented by the core kernel, which is trusted.
+//
+// The success type for Memop calls depends on the operation performed. However,
 // all *currently defined* memop operations return either Success or Success
 // with u32. Therefore, the memop implementations only need to mark r0 and r1 as
 // clobbered, not r2 and r3. This choice of clobbers will need to be revisited
