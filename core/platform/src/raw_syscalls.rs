@@ -57,10 +57,13 @@
 // clobbered, not r2 and r3. This choice of clobbers will need to be revisited
 // if and when a memop operation that returns more data is added.
 //
-// Because the variables passed in and out of raw system calls represent
-// register values, they are of type usize. In cases where it doesn't make sense
-// to pass a pointer-sized value, libtock_unittest::FakeSyscalls may panic if a
-// too-large value is passed.
+// The decision of where to use u32 and usize can be a bit tricky. The Tock
+// syscall ABI is currently only specified for 32-bit systems, so on real Tock
+// systems both types match the size of a register, but the unit test
+// environment can be either 32 bit or 64 bit. This interface uses usize for
+// values that can contain pointers, so that pointers are not truncated in the
+// unit test environment. To keep types as consistent as possible, it uses u32
+// for all values that cannot be pointers.
 pub trait RawSyscalls {
     // raw_yield should:
     //     1. Call syscall class 0
@@ -82,7 +85,7 @@ pub trait RawSyscalls {
     // pass YieldType rather than a usize because if we used usize directly then
     // this API becomes unsound if the kernel adds support for an unsafe yield
     // type (or even one that takes one more argument).
-    fn raw_yield(r0_in: YieldType) -> usize;
+    fn raw_yield(r0_in: YieldType) -> u32;
 
     // four_arg_syscall is used to invoke the subscribe, command, read-write
     // allow, and read-only allow system calls.
@@ -101,17 +104,23 @@ pub trait RawSyscalls {
     //            readonly  (rw allow can modify memory)
     //            noreturn  (all these system calls are expected to return)
     //
+    // Note that subscribe's application data argument can potentially contain a
+    // pointer, so r3 can contain a pointer (in addition to r1 and r2, which
+    // more obviously contain pointers for subscribe and memop).
+    //
+    // For subscribe(), the callback pointer should be either 0 (for the null
+    // callback) or an `unsafe extern fn(u32, u32, u32, usize)`.
     /// # Safety
     /// `four_arg_syscall` must NOT be used to invoke yield. Otherwise, it has
     /// the same safety invariants as the underlying system call, which varies
     /// depending on the system call class.
     unsafe fn four_arg_syscall(
-        r0: usize,
+        r0: u32,
         r1: usize,
         r2: usize,
         r3: usize,
         class: u8,
-    ) -> (usize, usize, usize, usize);
+    ) -> (u32, usize, usize, usize);
 
     // zero_arg_memop is used to invoke memop operations that do not accept an
     // argument register. Because there are no memop commands that set r2 or r3,
@@ -137,10 +146,10 @@ pub trait RawSyscalls {
     //            noreturn
     //
     // Design note: like raw_yield, this is safe because memops that currently
-    // exist are safe. zero_arg_memop takes a ZeroArgMemop rather than a usize
-    // so that if the kernel adds an unsafe memop -- or one that can clobber
-    // r2/r3 --  this API doesn't become unsound.
-    fn zero_arg_memop(r0_in: ZeroArgMemop) -> (usize, usize);
+    // exist are safe. zero_arg_memop takes a ZeroArgMemop rather than a u32 so
+    // that if the kernel adds an unsafe memop -- or one that can clobber r2/r3
+    // --  this API doesn't become unsound.
+    fn zero_arg_memop(r0_in: ZeroArgMemop) -> (u32, usize);
 
     // one_arg_memop is used to invoke memop operations that take an argument.
     // Because there are no memop operations that set r2 or r3, this only needs
@@ -161,14 +170,14 @@ pub trait RawSyscalls {
     //            noreturn
     //
     // Design note: like raw_yield, this is safe because memops that currently
-    // exist are safe. zero_arg_memop takes a ZeroArgMemop rather than a usize
-    // so that if the kernel adds an unsafe memop -- or one that can clobber
-    // r2/r3 -- this API doesn't become unsound.
-    fn one_arg_memop(r0_in: OneArgMemop, r1: usize) -> (usize, usize);
+    // exist are safe. zero_arg_memop takes a ZeroArgMemop rather than a u32 so
+    // that if the kernel adds an unsafe memop -- or one that can clobber r2/r3
+    // -- this API doesn't become unsound.
+    fn one_arg_memop(r0_in: OneArgMemop, r1: usize) -> (u32, usize);
 }
 
 #[non_exhaustive]
-#[repr(usize)]
+#[repr(u32)]
 pub enum OneArgMemop {
     Brk = 0,
     Sbrk = 1,
@@ -183,14 +192,14 @@ pub enum OneArgMemop {
 // TODO: When the numeric values (0 and 1) are assigned to the yield types,
 // specify those values here.
 #[non_exhaustive]
-#[repr(usize)]
+#[repr(u32)]
 pub enum YieldType {
     Wait,
     NoWait,
 }
 
 #[non_exhaustive]
-#[repr(usize)]
+#[repr(u32)]
 pub enum ZeroArgMemop {
     MemoryStart = 2,
     MemoryEnd = 3,
