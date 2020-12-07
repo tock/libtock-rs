@@ -1,6 +1,6 @@
 //! Implements `Syscalls` for all types that implement `RawSyscalls`.
 
-use crate::{RawSyscalls, Syscalls, YieldType};
+use crate::{return_type, RawSyscalls, Syscalls, YieldType};
 
 impl<S: RawSyscalls> Syscalls for S {
     // -------------------------------------------------------------------------
@@ -12,7 +12,6 @@ impl<S: RawSyscalls> Syscalls for S {
     }
 
     fn yield_no_wait() -> bool {
-        // TODO: Introduce a return type abstraction so this 0 isn't hardcoded.
-        Self::raw_yield(YieldType::NoWait) != 0
+        Self::raw_yield(YieldType::NoWait) != return_type::FAILURE.into()
     }
 }

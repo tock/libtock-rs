@@ -1,25 +1,36 @@
-/// An error code returned by the kernel. Tock's system calls return errors as a
-/// negative `isize`. This wraps the isize, and is useful for adding type safety
-/// to APIs.
-
+/// A system call error code. This can either be an error code returned by the
+/// kernel or BADRVAL, which indicates the kernel returned the wrong type of
+/// response to a system call.
+// ErrorCode is not an enum so that conversion from the kernel's return value (a
+// `usize` in a register) is free.
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub struct ErrorCode {
-    // Note: value *should* always be negative, but we do not *verify* that so
-    // unsafe code cannot rely on value being negative.
-    value: isize,
+    value: usize,
 }
 
-impl ErrorCode {
-    // Converts the given isize into an ErrorCode. Note that the isize should be
-    // negative, although that is not verified to reduce code size. We don't
-    // implement From because not every isize converts sensibly to an ErrorCode.
-    pub fn new(value: isize) -> ErrorCode {
+impl From<usize> for ErrorCode {
+    fn from(value: usize) -> ErrorCode {
         ErrorCode { value }
     }
 }
 
-impl Into<isize> for ErrorCode {
-    fn into(self) -> isize {
-        self.value
+impl From<ErrorCode> for usize {
+    fn from(error_code: ErrorCode) -> usize {
+        error_code.value
     }
 }
+
+pub const FAIL: ErrorCode = ErrorCode { value: 1 };
+pub const BUSY: ErrorCode = ErrorCode { value: 2 };
+pub const ALREADY: ErrorCode = ErrorCode { value: 3 };
+pub const OFF: ErrorCode = ErrorCode { value: 4 };
+pub const RESERVE: ErrorCode = ErrorCode { value: 5 };
+pub const INVALID: ErrorCode = ErrorCode { value: 6 };
+pub const SIZE: ErrorCode = ErrorCode { value: 7 };
+pub const CANCEL: ErrorCode = ErrorCode { value: 8 };
+pub const NOMEM: ErrorCode = ErrorCode { value: 9 };
+pub const NOSUPPORT: ErrorCode = ErrorCode { value: 10 };
+pub const NODEVICE: ErrorCode = ErrorCode { value: 11 };
+pub const UNINSTALLED: ErrorCode = ErrorCode { value: 12 };
+pub const NOACK: ErrorCode = ErrorCode { value: 13 };
+pub const BADRVAL: ErrorCode = ErrorCode { value: 1024 };
