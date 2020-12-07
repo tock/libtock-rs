@@ -3,20 +3,3 @@ name = "test_runner"
 version = "0.1.0"
 authors = ["torfmaster <briefe@kebes.de>"]
 edition = "2018"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
-[dependencies]
-structopt = { version = "0.3", default-features = false }
-futures = "0.3.4"
-
-[dependencies.async-std]
-# async-std 1.7 pulls in crossbeam_utils 1.8, which does not work with the
-# nightly Rust toolchain we use. Temporarily block async-std 1.7 until we can
-# update our Rust toolchain.
-version = "1.5.0, <1.7"
-features = ["attributes"]
-
-[dependencies.tokio]
-version = "0.2.12"
-features = ["process", "rt-threaded", "macros", "io-util", "time"]

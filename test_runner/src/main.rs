@@ -1,20 +1,10 @@
 use std::fmt;
-use std::process::Stdio;
+use std::io::{BufRead, BufReader};
+use std::process::{ChildStdout, Command, Stdio};
 use std::time::Duration;
-use tokio::io::AsyncBufReadExt;
-use tokio::io::BufReader;
-use tokio::process::Command;
-use tokio::time::timeout;
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    timeout(Duration::from_secs(10), perform_tests()).await?
-}
-
-async fn perform_tests() -> Result<(), Box<dyn std::error::Error>> {
-    let mut failed_tests = Vec::new();
-
-    let tests = Command::new("tock/tools/qemu-build/riscv32-softmmu/qemu-system-riscv32")
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let mut tests = Command::new("tock/tools/qemu-build/riscv32-softmmu/qemu-system-riscv32")
         .arg("-M")
         .arg("sifive_e,revb=true")
         .arg("-kernel")
@@ -24,15 +14,32 @@ async fn perform_tests() -> Result<(), Box<dyn std::error::Error>> {
         .arg("-nographic")
         .stdin(Stdio::null())
         .stdout(Stdio::piped())
-        .kill_on_drop(true)
         .spawn()?;
+    let stdout = tests.stdout.take().unwrap();
+    let child_handle = std::sync::Arc::new(std::sync::Mutex::new(tests));
+    let timeout_handle = child_handle.clone();
+    std::thread::spawn(move || {
+        std::thread::sleep(Duration::from_secs(10));
+        let _ = timeout_handle
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .kill();
+    });
+    let result = process_output(stdout);
+    let _ = child_handle
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner)
+        .kill();
+    result
+}
 
-    let stdout = tests.stdout.unwrap();
-
+fn process_output(stdout: ChildStdout) -> Result<(), Box<dyn std::error::Error>> {
+    let mut failed_tests = Vec::new();
     let stdout_reader = BufReader::new(stdout);
-    let mut stdout_lines = stdout_reader.lines();
+    let stdout_lines = stdout_reader.lines();
 
-    while let Some(line) = stdout_lines.next_line().await? {
+    for line in stdout_lines {
+        let line = line?;
         println!("UART: {}", line);
         let test_result = test_succeeded(line, &mut failed_tests);
         if let Some(true) = test_result {
