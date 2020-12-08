@@ -4,33 +4,31 @@
 // ErrorCode is not an enum so that conversion from the kernel's return value (a
 // `usize` in a register) is free.
 #[derive(Clone, Copy, PartialEq, Eq)]
-pub struct ErrorCode {
-    value: usize,
-}
+pub struct ErrorCode(usize);
 
 impl From<usize> for ErrorCode {
     fn from(value: usize) -> ErrorCode {
-        ErrorCode { value }
+        ErrorCode(value)
     }
 }
 
 impl From<ErrorCode> for usize {
     fn from(error_code: ErrorCode) -> usize {
-        error_code.value
+        error_code.0
     }
 }
 
-pub const FAIL: ErrorCode = ErrorCode { value: 1 };
-pub const BUSY: ErrorCode = ErrorCode { value: 2 };
-pub const ALREADY: ErrorCode = ErrorCode { value: 3 };
-pub const OFF: ErrorCode = ErrorCode { value: 4 };
-pub const RESERVE: ErrorCode = ErrorCode { value: 5 };
-pub const INVALID: ErrorCode = ErrorCode { value: 6 };
-pub const SIZE: ErrorCode = ErrorCode { value: 7 };
-pub const CANCEL: ErrorCode = ErrorCode { value: 8 };
-pub const NOMEM: ErrorCode = ErrorCode { value: 9 };
-pub const NOSUPPORT: ErrorCode = ErrorCode { value: 10 };
-pub const NODEVICE: ErrorCode = ErrorCode { value: 11 };
-pub const UNINSTALLED: ErrorCode = ErrorCode { value: 12 };
-pub const NOACK: ErrorCode = ErrorCode { value: 13 };
-pub const BADRVAL: ErrorCode = ErrorCode { value: 1024 };
+pub const FAIL: ErrorCode = ErrorCode(1);
+pub const BUSY: ErrorCode = ErrorCode(2);
+pub const ALREADY: ErrorCode = ErrorCode(3);
+pub const OFF: ErrorCode = ErrorCode(4);
+pub const RESERVE: ErrorCode = ErrorCode(5);
+pub const INVALID: ErrorCode = ErrorCode(6);
+pub const SIZE: ErrorCode = ErrorCode(7);
+pub const CANCEL: ErrorCode = ErrorCode(8);
+pub const NOMEM: ErrorCode = ErrorCode(9);
+pub const NOSUPPORT: ErrorCode = ErrorCode(10);
+pub const NODEVICE: ErrorCode = ErrorCode(11);
+pub const UNINSTALLED: ErrorCode = ErrorCode(12);
+pub const NOACK: ErrorCode = ErrorCode(13);
+pub const BADRVAL: ErrorCode = ErrorCode(1024);
