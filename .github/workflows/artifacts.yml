@@ -10,16 +10,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Install Rust toolchain
-        uses: actions-rs/toolchain@v1.0.6
-        with:
-          profile: minimal
-
       - name: Install dependencies
         run: |
-          rustup target add thumbv7em-none-eabi
-          rustup target add riscv32imac-unknown-none-elf
-          rustup target add riscv32imc-unknown-none-elf
           cargo install elf2tab --version 0.4.0
 
       - name: Build Hello World
