@@ -32,6 +32,11 @@ jobs:
       # The main diff script. Stores the sizes of the example binaries for both
       # the merge commit and the target branch. We display the diff in a
       # separate step to make it easy to navigate to in the GitHub Actions UI.
+      #
+      # If the build on master doesn't work (`make -j2 examples` fails), we
+      # output a warning message and ignore the error. Ignoring the error
+      # prevents this workflow from blocking PRs that fix a broken build in
+      # master.
       - name: Compute sizes
         run: |
           UPSTREAM_REMOTE_NAME="${UPSTREAM_REMOTE_NAME:-origin}"
@@ -42,12 +47,14 @@ jobs:
           git remote set-branches "${UPSTREAM_REMOTE_NAME}" "${GITHUB_BASE_REF}"
           git fetch --depth=1 "${UPSTREAM_REMOTE_NAME}" "${GITHUB_BASE_REF}"
           git checkout "${UPSTREAM_REMOTE_NAME}/${GITHUB_BASE_REF}"
-          make -j2 examples
-          cargo run --release -p print_sizes >'${{runner.temp}}/base-sizes'
+          make -j2 examples && \
+            cargo run --release -p print_sizes >'${{runner.temp}}/base-sizes' || \
+            echo 'Broken build on the master branch.'
 
       # Computes and displays the size diff. diff returns a nonzero status code
       # if the files differ, and GitHub interprets a nonzero status code as an
       # error. To avoid GitHub interpreting a difference as an error, we add
-      # || exit 0 to the command.
+      # || exit 0 to the command. This also prevents the workflow from failing
+      # if the master build is broken and we didn't generate base-sizes.
       - name: Size diff
         run: diff '${{runner.temp}}/base-sizes' '${{runner.temp}}/merge-sizes' || exit 0
