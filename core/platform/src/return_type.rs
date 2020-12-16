@@ -1,5 +1,10 @@
 /// `ReturnType` describes what value type the kernel has returned.
 // ReturnType is not an enum so that it can be converted from a u32 for free.
+// TODO: derive(Debug) is currently only enabled for test builds, which is
+// necessary so it can be used in assert_eq!. We should develop a lighter-weight
+// Debug implementation and see if it is small enough to enable on non-Debug
+// builds.
+#[cfg_attr(test, derive(Debug))]
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub struct ReturnType(u32);
 
