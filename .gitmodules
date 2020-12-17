@@ -1,3 +1,6 @@
 [submodule "tock"]
 	path = tock
 	url = https://github.com/tock/tock.git
+[submodule "tock2"]
+	path = tock2
+	url = https://github.com/tock/tock.git
