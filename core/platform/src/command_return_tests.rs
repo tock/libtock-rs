@@ -1,9 +1,9 @@
-use crate::{error_code, return_type, CommandReturn};
+use crate::{error_code, return_variant, CommandReturn};
 
 #[test]
 fn failure() {
     let command_return = CommandReturn {
-        return_type: return_type::FAILURE,
+        return_variant: return_variant::FAILURE,
         r1: error_code::RESERVE.into(),
         r2: 1002,
         r3: 1003,
@@ -27,13 +27,13 @@ fn failure() {
     assert_eq!(command_return.get_success_u64(), None);
     assert_eq!(command_return.get_success_3_u32(), None);
     assert_eq!(command_return.get_success_u32_u64(), None);
-    assert_eq!(command_return.return_type(), return_type::FAILURE);
+    assert_eq!(command_return.return_variant(), return_variant::FAILURE);
 }
 
 #[test]
 fn failure_u32() {
     let command_return = CommandReturn {
-        return_type: return_type::FAILURE_U32,
+        return_variant: return_variant::FAILURE_U32,
         r1: error_code::OFF.into(),
         r2: 1002,
         r3: 1003,
@@ -60,13 +60,13 @@ fn failure_u32() {
     assert_eq!(command_return.get_success_u64(), None);
     assert_eq!(command_return.get_success_3_u32(), None);
     assert_eq!(command_return.get_success_u32_u64(), None);
-    assert_eq!(command_return.return_type(), return_type::FAILURE_U32);
+    assert_eq!(command_return.return_variant(), return_variant::FAILURE_U32);
 }
 
 #[test]
 fn failure_2_u32() {
     let command_return = CommandReturn {
-        return_type: return_type::FAILURE_2_U32,
+        return_variant: return_variant::FAILURE_2_U32,
         r1: error_code::ALREADY.into(),
         r2: 1002,
         r3: 1003,
@@ -93,13 +93,16 @@ fn failure_2_u32() {
     assert_eq!(command_return.get_success_u64(), None);
     assert_eq!(command_return.get_success_3_u32(), None);
     assert_eq!(command_return.get_success_u32_u64(), None);
-    assert_eq!(command_return.return_type(), return_type::FAILURE_2_U32);
+    assert_eq!(
+        command_return.return_variant(),
+        return_variant::FAILURE_2_U32
+    );
 }
 
 #[test]
 fn failure_u64() {
     let command_return = CommandReturn {
-        return_type: return_type::FAILURE_U64,
+        return_variant: return_variant::FAILURE_U64,
         r1: error_code::BUSY.into(),
         r2: 0x00001002,
         r3: 0x00001003,
@@ -126,13 +129,13 @@ fn failure_u64() {
     assert_eq!(command_return.get_success_u64(), None);
     assert_eq!(command_return.get_success_3_u32(), None);
     assert_eq!(command_return.get_success_u32_u64(), None);
-    assert_eq!(command_return.return_type(), return_type::FAILURE_U64);
+    assert_eq!(command_return.return_variant(), return_variant::FAILURE_U64);
 }
 
 #[test]
 fn success() {
     let command_return = CommandReturn {
-        return_type: return_type::SUCCESS,
+        return_variant: return_variant::SUCCESS,
         r1: 1001,
         r2: 1002,
         r3: 1003,
@@ -156,13 +159,13 @@ fn success() {
     assert_eq!(command_return.get_success_u64(), None);
     assert_eq!(command_return.get_success_3_u32(), None);
     assert_eq!(command_return.get_success_u32_u64(), None);
-    assert_eq!(command_return.return_type(), return_type::SUCCESS);
+    assert_eq!(command_return.return_variant(), return_variant::SUCCESS);
 }
 
 #[test]
 fn success_u32() {
     let command_return = CommandReturn {
-        return_type: return_type::SUCCESS_U32,
+        return_variant: return_variant::SUCCESS_U32,
         r1: 1001,
         r2: 1002,
         r3: 1003,
@@ -186,13 +189,13 @@ fn success_u32() {
     assert_eq!(command_return.get_success_u64(), None);
     assert_eq!(command_return.get_success_3_u32(), None);
     assert_eq!(command_return.get_success_u32_u64(), None);
-    assert_eq!(command_return.return_type(), return_type::SUCCESS_U32);
+    assert_eq!(command_return.return_variant(), return_variant::SUCCESS_U32);
 }
 
 #[test]
 fn success_2_u32() {
     let command_return = CommandReturn {
-        return_type: return_type::SUCCESS_2_U32,
+        return_variant: return_variant::SUCCESS_2_U32,
         r1: 1001,
         r2: 1002,
         r3: 1003,
@@ -216,13 +219,16 @@ fn success_2_u32() {
     assert_eq!(command_return.get_success_u64(), None);
     assert_eq!(command_return.get_success_3_u32(), None);
     assert_eq!(command_return.get_success_u32_u64(), None);
-    assert_eq!(command_return.return_type(), return_type::SUCCESS_2_U32);
+    assert_eq!(
+        command_return.return_variant(),
+        return_variant::SUCCESS_2_U32
+    );
 }
 
 #[test]
 fn success_u64() {
     let command_return = CommandReturn {
-        return_type: return_type::SUCCESS_U64,
+        return_variant: return_variant::SUCCESS_U64,
         r1: 0x00001001,
         r2: 0x00001002,
         r3: 1003,
@@ -246,13 +252,13 @@ fn success_u64() {
     assert_eq!(command_return.get_success_u64(), Some(0x00001002_00001001));
     assert_eq!(command_return.get_success_3_u32(), None);
     assert_eq!(command_return.get_success_u32_u64(), None);
-    assert_eq!(command_return.return_type(), return_type::SUCCESS_U64);
+    assert_eq!(command_return.return_variant(), return_variant::SUCCESS_U64);
 }
 
 #[test]
 fn success_3_u32() {
     let command_return = CommandReturn {
-        return_type: return_type::SUCCESS_3_U32,
+        return_variant: return_variant::SUCCESS_3_U32,
         r1: 1001,
         r2: 1002,
         r3: 1003,
@@ -276,13 +282,16 @@ fn success_3_u32() {
     assert_eq!(command_return.get_success_u64(), None);
     assert_eq!(command_return.get_success_3_u32(), Some((1001, 1002, 1003)));
     assert_eq!(command_return.get_success_u32_u64(), None);
-    assert_eq!(command_return.return_type(), return_type::SUCCESS_3_U32);
+    assert_eq!(
+        command_return.return_variant(),
+        return_variant::SUCCESS_3_U32
+    );
 }
 
 #[test]
 fn success_u32_u64() {
     let command_return = CommandReturn {
-        return_type: return_type::SUCCESS_U32_U64,
+        return_variant: return_variant::SUCCESS_U32_U64,
         r1: 1001,
         r2: 0x00001002,
         r3: 0x00001003,
@@ -309,5 +318,8 @@ fn success_u32_u64() {
         command_return.get_success_u32_u64(),
         Some((1001, 0x00001003_00001002))
     );
-    assert_eq!(command_return.return_type(), return_type::SUCCESS_U32_U64);
+    assert_eq!(
+        command_return.return_variant(),
+        return_variant::SUCCESS_U32_U64
+    );
 }

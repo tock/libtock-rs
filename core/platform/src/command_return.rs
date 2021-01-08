@@ -1,10 +1,10 @@
-use crate::{return_type, ErrorCode, ReturnType};
+use crate::{return_variant, ErrorCode, ReturnVariant};
 
 /// The response type from `command`. Can represent a successful value or a
 /// failure.
 #[derive(Clone, Copy)]
 pub struct CommandReturn {
-    pub(crate) return_type: ReturnType,
+    pub(crate) return_variant: ReturnVariant,
     // r1, r2, and r3 should only contain 32-bit values. However, these are
     // converted directly from usizes returned by RawSyscalls::four_arg_syscall.
     // To avoid casting twice (both when converting to a Command Return and when
@@ -25,59 +25,59 @@ impl CommandReturn {
     //     } else if let Some(error_code) = command_return.get_failure() {
     //         // ...
     //     } else {
-    //         // Incorrect return type
+    //         // Incorrect return variant
     //     }
 
     /// Returns true if this CommandReturn is of type Failure. Note that this
     /// does not return true for other failure types, such as Failure with u32.
     pub fn is_failure(&self) -> bool {
-        self.return_type == return_type::FAILURE
+        self.return_variant == return_variant::FAILURE
     }
 
     /// Returns true if this CommandReturn is of type Failure with u32.
     pub fn is_failure_u32(&self) -> bool {
-        self.return_type == return_type::FAILURE_U32
+        self.return_variant == return_variant::FAILURE_U32
     }
 
     /// Returns true if this CommandReturn is of type Failure with 2 u32.
     pub fn is_failure_2_u32(&self) -> bool {
-        self.return_type == return_type::FAILURE_2_U32
+        self.return_variant == return_variant::FAILURE_2_U32
     }
 
     /// Returns true if this CommandReturn is of type Failure with u64.
     pub fn is_failure_u64(&self) -> bool {
-        self.return_type == return_type::FAILURE_U64
+        self.return_variant == return_variant::FAILURE_U64
     }
 
     /// Returns true if this CommandReturn is of type Success. Note that this
     /// does not return true for other success types, such as Success with u32.
     pub fn is_success(&self) -> bool {
-        self.return_type == return_type::SUCCESS
+        self.return_variant == return_variant::SUCCESS
     }
 
     /// Returns true if this CommandReturn is of type Success with u32.
     pub fn is_success_u32(&self) -> bool {
-        self.return_type == return_type::SUCCESS_U32
+        self.return_variant == return_variant::SUCCESS_U32
     }
 
     /// Returns true if this CommandReturn is of type Success with 2 u32.
     pub fn is_success_2_u32(&self) -> bool {
-        self.return_type == return_type::SUCCESS_2_U32
+        self.return_variant == return_variant::SUCCESS_2_U32
     }
 
     /// Returns true if this CommandReturn is of type Success with u64.
     pub fn is_success_u64(&self) -> bool {
-        self.return_type == return_type::SUCCESS_U64
+        self.return_variant == return_variant::SUCCESS_U64
     }
 
     /// Returns true if this CommandReturn is of type Success with 3 u32.
     pub fn is_success_3_u32(&self) -> bool {
-        self.return_type == return_type::SUCCESS_3_U32
+        self.return_variant == return_variant::SUCCESS_3_U32
     }
 
     /// Returns true if this CommandReturn is of type Success with u32 and u64.
     pub fn is_success_u32_u64(&self) -> bool {
-        self.return_type == return_type::SUCCESS_U32_U64
+        self.return_variant == return_variant::SUCCESS_U32_U64
     }
 
     /// Returns the error code if this CommandReturn is of type Failure.
@@ -156,8 +156,8 @@ impl CommandReturn {
         Some((self.r1 as u32, self.r2 as u64 + ((self.r3 as u64) << 32)))
     }
 
-    /// Returns the return type of this command.
-    pub fn return_type(&self) -> ReturnType {
-        self.return_type
+    /// Returns the return variant of this command.
+    pub fn return_variant(&self) -> ReturnVariant {
+        self.return_variant
     }
 }
