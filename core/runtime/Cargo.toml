@@ -1,0 +1,19 @@
+[package]
+authors = ["Tock Project Developers <tock-dev@googlegroups.com>"]
+categories = ["embedded", "no-std", "os"]
+description = """libtock-rs runtime. Provides raw system call implementations \
+                 and language items necessary for Tock apps."""
+edition = "2018"
+license = "Apache-2.0 OR MIT"
+name = "libtock_runtime"
+repository = "https://www.github.com/tock/libtock-rs"
+version = "0.1.0"
+
+[dependencies]
+libtock_platform = { path = "../platform" }
+
+[features]
+# By default, libtock_runtime looks for the LIBTOCK_PLATFORM variable to decide
+# what layout file to use. If you are providing your own linker script, set
+# no_auto_layout to disable the layout file logic.
+no_auto_layout = []
