@@ -18,8 +18,7 @@ fn auto_layout(out_dir: &str) {
 
     // Read the platform environment variable as a String (our platform names
     // should all be valid UTF-8).
-    let platform =
-        std::env::var(PLATFORM_CFG_VAR).expect("Please specify LIBTOCK_PLATFORM");
+    let platform = std::env::var(PLATFORM_CFG_VAR).expect("Please specify LIBTOCK_PLATFORM");
 
     // Copy the platform-specific layout file into OUT_DIR.
     let platform_filename = format!("{}.ld", platform);
