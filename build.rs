@@ -3,10 +3,11 @@ use std::fs;
 use std::fs::File;
 use std::io::BufRead;
 use std::io::BufReader;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process;
 
 static LAYOUT_FILE_NAME: &str = "layout.ld";
+static LAYOUT_GENERIC_FILENAME: &str = "layout_generic.ld";
 
 fn main() {
     static PLATFORM_ENV_VAR: &str = "PLATFORM";
@@ -19,6 +20,7 @@ fn main() {
     println!("cargo:rerun-if-env-changed={}", KERNEL_HEAP_SIZE);
     println!("cargo:rerun-if-changed={}", PLATFORM_FILE_NAME);
     println!("cargo:rerun-if-changed={}", LAYOUT_FILE_NAME);
+    println!("cargo:rerun-if-changed={}", LAYOUT_GENERIC_FILENAME);
 
     let platform_name =
         read_env_var(PLATFORM_ENV_VAR).or_else(|| read_board_name_from_file(PLATFORM_FILE_NAME));
@@ -70,5 +72,20 @@ fn copy_linker_file(platform_name: &str) {
         println!("Cannot find layout file {:?}", path);
         process::exit(1);
     }
-    fs::copy(linker_file_name, LAYOUT_FILE_NAME).unwrap();
+    // Note: cargo fails if run in a path that is not valid Unicode, so this
+    // script doesn't need to handle non-Unicode paths. Also, OUT_DIR cannot be
+    // in a location with a newline in it, or we have no way to pass
+    // rustc-link-search to cargo.
+    let out_dir = &std::env::var("OUT_DIR").expect("Unable to read OUT_DIR");
+    if out_dir.contains('\n') {
+        panic!("Build path contains a newline, which is unsupported");
+    }
+    let out_layout_path: PathBuf = [out_dir, "layout.ld"].iter().collect();
+    fs::copy(linker_file_name, out_layout_path).unwrap();
+
+    // Copy the generic layout file into OUT_DIR.
+    let out_layout_generic: PathBuf = [out_dir, LAYOUT_GENERIC_FILENAME].iter().collect();
+    fs::copy(LAYOUT_GENERIC_FILENAME, out_layout_generic)
+        .expect("Unable to copy layout_generic.ld into OUT_DIR");
+    println!("cargo:rustc-link-search={}", out_dir);
 }
