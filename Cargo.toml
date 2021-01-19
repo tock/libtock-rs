@@ -83,6 +83,7 @@ members = [
     "codegen",
     "core",
     "core/platform",
+    "core/runtime",
     "test_runner",
     "tools/print_sizes",
 ]
