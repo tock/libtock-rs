@@ -77,9 +77,10 @@ fn copy_linker_file(platform_name: &str) {
     // in a location with a newline in it, or we have no way to pass
     // rustc-link-search to cargo.
     let out_dir = &std::env::var("OUT_DIR").expect("Unable to read OUT_DIR");
-    if out_dir.contains('\n') {
-        panic!("Build path contains a newline, which is unsupported");
-    }
+    assert!(
+        !out_dir.contains('\n'),
+        "Build path contains a newline, which is unsupported"
+    );
     let out_layout_path: PathBuf = [out_dir, "layout.ld"].iter().collect();
     fs::copy(linker_file_name, out_layout_path).unwrap();
 

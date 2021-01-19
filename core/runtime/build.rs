@@ -24,9 +24,7 @@ fn auto_layout(out_dir: &str) {
     let platform_filename = format!("{}.ld", platform);
     let platform_path: PathBuf = ["layouts", &platform_filename].iter().collect();
     println!("cargo:rerun-if-changed={}", platform_path.display());
-    if !platform_path.exists() {
-        panic!("Unknown platform {}", platform);
-    }
+    assert!(platform_path.exists(), "Unknown platform {}", platform);
     let out_platform_path: PathBuf = [out_dir, "layout.ld"].iter().collect();
     copy(&platform_path, out_platform_path).expect("Unable to copy platform layout into OUT_DIR");
 
@@ -43,9 +41,10 @@ fn main() {
     // in a location with a newline in it, or we have no way to pass
     // rustc-link-search to cargo.
     let out_dir = &std::env::var("OUT_DIR").expect("Unable to read OUT_DIR");
-    if out_dir.contains('\n') {
-        panic!("Build path contains a newline, which is unsupported");
-    }
+    assert!(
+        !out_dir.contains('\n'),
+        "Build path contains a newline, which is unsupported"
+    );
 
     #[cfg(not(feature = "no_auto_layout"))]
     auto_layout(out_dir);
