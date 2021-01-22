@@ -6,30 +6,29 @@ impl RawSyscalls for crate::TockSyscalls {
     #[cfg(not(any(target_feature = "d", target_feature = "f")))]
     fn raw_yield(r0_in: YieldType) -> u32 {
         let mut r0 = r0_in as u32;
-        let mut _a4 = 0;
         unsafe {
             asm!("ecall",
-                 // x0 is a constant.
+                 // x0 is the zero register.
                  lateout("x1") _, // Return address
                  // x2-x4 are stack, global, and thread pointers. sp is
                  // callee-saved.
-                 lateout("x5") _,
-                 lateout("x6") _,
-                 lateout("x7") _,
-                 // x8 and x9 are callee-saved.
-                 inlateout("x10") r0,
-                 lateout("x11") _,
-                 lateout("x12") _,
-                 lateout("x13") _,
-                 inlateout("x14") _a4,
-                 lateout("x15") _,
-                 lateout("x16") _,
-                 lateout("x17") _,
-                 // x18-27 (aka s2-s11) are callee-saved
-                 lateout("x28") _,
-                 lateout("x29") _,
-                 lateout("x30") _,
-                 lateout("x31") _,
+                 lateout("x5") _, // t0
+                 lateout("x6") _, // t1
+                 lateout("x7") _, // t2
+                 // x8 and x9 are s0 and s1 and are callee-saved.
+                 inlateout("x10") r0,     // a0
+                 lateout("x11") _,        // a1
+                 lateout("x12") _,        // a2
+                 lateout("x13") _,        // a3
+                 inlateout("x14") 0 => _, // a4
+                 lateout("x15") _,        // a5
+                 lateout("x16") _,        // a6
+                 lateout("x17") _,        // a7
+                 // x18-27 are s2-s11 and are callee-saved
+                 lateout("x28") _, // t3
+                 lateout("x29") _, // t4
+                 lateout("x30") _, // t5
+                 lateout("x31") _, // t6
             );
         }
         r0
