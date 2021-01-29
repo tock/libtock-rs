@@ -1,11 +1,11 @@
-// TODO: Implement `libtock_runtime` and `libtock_unittest`, which are
-// referenced in the comment on `RawSyscalls`.
+// TODO: Implement `libtock_unittest`, which is referenced in the comment on
+// `RawSyscalls`.
 
 /// `RawSyscalls` allows a fake Tock kernel to be injected into components for
 /// unit testing. It is implemented by `libtock_runtime::TockSyscalls` and
-/// `libtock_unittest::FakeSyscalls`. Components should not use `RawSyscalls`
+/// `libtock_unittest::FakeSyscalls`. **Components should not use `RawSyscalls`
 /// directly; instead, use the `Syscalls` trait, which provides higher-level
-/// interfaces to the system calls.
+/// interfaces to the system calls.**
 
 // RawSyscalls is designed to minimize the amount of handwritten assembly code
 // needed without generating unnecessary instructions. This comment describes
@@ -111,6 +111,7 @@ pub trait RawSyscalls {
     // pass YieldType rather than a usize because if we used usize directly then
     // this API becomes unsound if the kernel adds support for an unsafe yield
     // type (or even one that takes one more argument).
+    /// `raw_yield` should only be called by `libtock_platform`.
     fn raw_yield(r0_in: YieldType) -> u32;
 
     // four_arg_syscall is used to invoke the subscribe, command, read-write
@@ -136,6 +137,8 @@ pub trait RawSyscalls {
     //
     // For subscribe(), the callback pointer should be either 0 (for the null
     // callback) or an `unsafe extern fn(u32, u32, u32, usize)`.
+    /// `four_arg_syscall` should only be called by `libtock_platform`.
+    ///
     /// # Safety
     /// `four_arg_syscall` must NOT be used to invoke yield. Otherwise, it has
     /// the same safety invariants as the underlying system call, which varies
@@ -175,6 +178,7 @@ pub trait RawSyscalls {
     // exist are safe. zero_arg_memop takes a ZeroArgMemop rather than a u32 so
     // that if the kernel adds an unsafe memop -- or one that can clobber r2/r3
     // --  this API doesn't become unsound.
+    /// `four_arg_syscall` should only be called by `libtock_platform`.
     fn zero_arg_memop(r0_in: ZeroArgMemop) -> (u32, usize);
 
     // one_arg_memop is used to invoke memop operations that take an argument.
@@ -199,6 +203,7 @@ pub trait RawSyscalls {
     // exist are safe. zero_arg_memop takes a ZeroArgMemop rather than a u32 so
     // that if the kernel adds an unsafe memop -- or one that can clobber r2/r3
     // -- this API doesn't become unsound.
+    /// `four_arg_syscall` should only be called by `libtock_platform`.
     fn one_arg_memop(r0_in: OneArgMemop, r1: usize) -> (u32, usize);
 }
 
