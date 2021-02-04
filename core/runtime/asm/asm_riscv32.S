@@ -20,7 +20,7 @@ start:
 	li a4, 6  /* `exit` class */
 	ecall
 
-	.Lset_brk:
+.Lset_brk:
 	/* memop(): set brk to rt_header's initial break value */
 	li a0, 0      /* operation: set break */
 	lw a1, 4(a5)  /* rt_header's initial process break */
@@ -35,23 +35,24 @@ start:
 	beqz a0, .Lzero_bss        /* Jump to zero_bss if remaining is zero */
 	lw a1, 16(a5)              /* src = rt_header.data_flash_start */
 	lw a2, 20(a5)              /* dest = rt_header.data_ram_start */
-	.Ldata_loop_body:
+.Ldata_loop_body:
 	lw a3, 0(a1)               /* a3 = *src */
 	sw a3, 0(a2)               /* *dest = a3 */
-	c.addi a0, -4              /* remaining -= 4 */
-	c.addi a1, 4               /* src += 4 */
-	c.addi a2, 4               /* dest += 4 */
+	addi a0, a0, -4            /* remaining -= 4 */
+	addi a1, a1, 4             /* src += 4 */
+	addi a2, a2, 4             /* dest += 4 */
 	bnez a0, .Ldata_loop_body  /* Iterate again if remaining != 0 */
 
-	.Lzero_bss:
+.Lzero_bss:
 	lw a0, 24(a5)               /* remaining = rt_header.bss_size */
 	beqz a0, .Lcall_rust_start  /* Jump to call_Main if remaining is zero */
 	lw a1, 28(a5)               /* dest = rt_header.bss_start */
-	.Lbss_loop_body:
+.Lbss_loop_body:
 	sb zero, 0(a1)              /* *dest = zero */
-	c.addi a0, -1               /* remaining -= 1 */
-	c.addi a1, 1                /* dest += 1 */
+	addi a0, a0, -1             /* remaining -= 1 */
+	addi a1, a1, 1              /* dest += 1 */
 	bnez a0, .Lbss_loop_body    /* Iterate again if remaining != 0 */
 
-	.Lcall_rust_start:
+.Lcall_rust_start:
+	/* Note: rust_start must be a diverging function (i.e. return `!`) */
 	jal rust_start
