@@ -34,6 +34,10 @@
  *                  the process break.
  */
 
+/* TODO: Should TBF_HEADER_SIZE be configured via a similar mechanism to the
+ * stack size? We should see if that is possible.
+ */
+
 /* GNU LD looks for `start` as an entry point by default, while LLVM's LLD looks
  * for `_start`. To be compatible with both, we manually specify an entry point.
  */
@@ -88,7 +92,8 @@ SECTIONS {
      */
     .stack (NOLOAD) : {
         KEEP(*(.stack_buffer))
-        _stack_top = ALIGN(16);  /* Used in rt_header */
+        . = ALIGN(16);
+        _stack_top = .;  /* Used in rt_header */
     } > RAM
 
     /* Read-write data section. This is deployed as part of FLASH but is copied

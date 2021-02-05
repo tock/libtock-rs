@@ -12,14 +12,21 @@ pub(crate) fn build_and_link(out_dir: &str) {
     let build_configs = match arch.as_str() {
         "riscv32" => &[
             // First try riscv64-unknown-elf, as it is the toolchain used by
-            // libtock-c.
+            // libtock-c and the toolchain used in the CI environment.
             AsmBuildConfig {
                 triple: "riscv64-unknown-elf",
                 as_extra_args: &["-march=rv32imc"],
                 strip: true,
             },
-            // Second try riscv64-linux-gnu, as riscv64-unknown-elf is
-            // unavailable on Debian 10.
+            // Second try riscv32-unknown-elf. This is the best match for Tock's
+            // risc-v targets, but is not as widely available (and has not been
+            // tested with libtock-rs yet).
+            AsmBuildConfig {
+                triple: "riscv32-unknown-elf",
+                as_extra_args: &[],
+                strip: false, // Untested, may need to change.
+            },
+            // Last try riscv64-linux-gnu, as it is the only option on Debian 10
             AsmBuildConfig {
                 triple: "riscv64-linux-gnu",
                 as_extra_args: &["-march=rv32imc"],

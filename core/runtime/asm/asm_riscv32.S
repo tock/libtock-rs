@@ -1,3 +1,31 @@
+/* rt_header is defined by the general linker script (libtock_layout.ld). It has
+ * the following layout:
+ *
+ *     Field                       | Offset
+ *     ------------------------------------
+ *     Address of the start symbol |      0
+ *     Initial process break       |      4
+ *     Top of the stack            |      8
+ *     Size of .data               |     12
+ *     Start of .data in flash     |     16
+ *     Start of .data in ram       |     20
+ *     Size of .bss                |     24
+ *     Start of .bss in ram        |     28
+ */
+
+/* start is the entry point -- the first code executed by the kernel. The kernel
+ * passes arguments through 4 registers:
+ *
+ *     a0  Pointer to beginning of the process binary's code. The linker script
+ *         locates rt_header at this address.
+ *
+ *     a1  Address of the beginning of the process's usable memory region.
+ *     a2  Size of the process' allocated memory region (including grant region)
+ *     a3  Process break provided by the kernel.
+ *
+ * We currently only use the value in a0. It is copied into a5 early on because
+ * a0-a4 are needed to invoke system calls.
+ */
 .section .start, "ax"
 .globl start
 start:
