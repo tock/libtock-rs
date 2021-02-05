@@ -39,6 +39,7 @@ jobs:
       # master.
       - name: Compute sizes
         run: |
+          sudo apt-get install binutils-riscv64-unknown-elf
           UPSTREAM_REMOTE_NAME="${UPSTREAM_REMOTE_NAME:-origin}"
           GITHUB_BASE_REF="${GITHUB_BASE_REF:-master}"
           cd "${GITHUB_WORKSPACE}"

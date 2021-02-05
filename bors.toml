@@ -1,5 +1,5 @@
 status = [
-  "assembly",
   "ci",
+  "ci-mac-os",
   "size-diff",
 ]

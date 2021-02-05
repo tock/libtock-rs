@@ -1,6 +1,8 @@
 use std::fs::copy;
 use std::path::PathBuf;
 
+mod extern_asm;
+
 // auto_layout() identifies the correct linker scripts to use based on the
 // LIBTOCK_PLATFORM environment variable, and copies the linker scripts into
 // OUT_DIR. The cargo invocation must pass -C link-arg=-Tlayout.ld to rustc
@@ -8,7 +10,7 @@ use std::path::PathBuf;
 #[cfg(not(feature = "no_auto_layout"))]
 fn auto_layout(out_dir: &str) {
     const PLATFORM_CFG_VAR: &str = "LIBTOCK_PLATFORM";
-    const LAYOUT_GENERIC_FILENAME: &str = "layout_generic.ld";
+    const LAYOUT_GENERIC_FILENAME: &str = "libtock_layout.ld";
 
     // Note: we need to print these rerun-if commands before using the variable
     // or file, so that if the build script fails cargo knows when to re-run it.
@@ -49,7 +51,9 @@ fn main() {
     #[cfg(not(feature = "no_auto_layout"))]
     auto_layout(out_dir);
 
-    // This link search path is used by both auto_layout() and extern_asm().
-    // TODO: Add external assembly and extern_asm().
+    extern_asm::build_and_link(out_dir);
+
+    // This link search path is used by both auto_layout() and
+    // extern_asm::build_and_link().
     println!("cargo:rustc-link-search={}", out_dir);
 }

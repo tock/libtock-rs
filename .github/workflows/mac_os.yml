@@ -1,0 +1,39 @@
+# This workflow verifies libtock-rs is usable on Mac OS.
+
+name: ci-mac-os
+
+# We want to run CI on all pull requests. Additionally, Bors needs workflows to
+# run on the `staging` and `trying` branches.
+on:
+  pull_request:
+  push:
+    branches:
+      - staging
+      - trying
+
+jobs:
+  ci-mac-os:
+    runs-on: macos-10.15
+
+    steps:
+      # Clones a single commit from the libtock-rs repository. The commit cloned
+      # is a merge commit between the PR's target branch and the PR's source.
+      # Note that we checkout submodules so that we can invoke Tock's CI setup
+      # scripts, but we do not recursively checkout submodules as we need Tock's
+      # makefile to set up the qemu submodule itself.
+      - name: Clone repository
+        uses: actions/checkout@v2.3.0
+        with:
+          submodules: true
+
+      # Install the toolchains we need, the run the Makefile's test action. We
+      # let the makefile do most of the work because the makefile can be tested
+      # locally. Using -j2 because the Actions VMs have 2 cores.
+      - name: Build and Test
+        run: |
+          brew tap riscv/riscv
+          brew update
+          brew install riscv-gnu-toolchain --with-multilib
+          cd "${GITHUB_WORKSPACE}"
+          make -j2 setup
+          make -j2 test

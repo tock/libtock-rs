@@ -37,6 +37,7 @@ jobs:
       # GitHub Actions at the time of this writing.
       - name: Build and Test
         run: |
+          sudo apt-get install binutils-riscv64-unknown-elf
           cd "${GITHUB_WORKSPACE}"
           make -j2 setup
           make -j2 test
