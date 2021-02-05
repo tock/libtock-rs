@@ -2,7 +2,7 @@
 
 mod async_traits;
 mod command_return;
-pub mod error_code;
+mod error_code;
 mod raw_syscalls;
 pub mod return_variant;
 mod syscalls;
