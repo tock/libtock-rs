@@ -35,5 +35,5 @@ jobs:
           brew update
           brew install riscv-gnu-toolchain --with-multilib
           cd "${GITHUB_WORKSPACE}"
-          make -j2 setup
-          make -j2 test
+          LIBTOCK_PLATFORM=hifive1 cargo build -p libtock_runtime \
+            --target=riscv32imac-unknown-none-elf
