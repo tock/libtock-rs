@@ -1,12 +1,14 @@
+// This file is not compiled or tested! It is kept in this repository in case
+// future libtock_runtime developers want to use it. To use this file, copy it
+// into libtock_runtime's src/ directory and add mod start_prototype; to
+// libtock_runtime's lib.rs.
+
 // The `start` symbol must be written purely in assembly, because it has an ABI
 // that the Rust compiler doesn't know (e.g. it does not expect the stack to be
 // set up). One way to write a correct `start` implementation is to write it in
 // Rust using the C ABI, compile that implementation, then tweak the assembly by
 // hand. This is a Rust version of `start` for developers who are working on
 // `start`.
-//
-// This file is not compiled by default; it must be included manually by adding
-// `mod start_prototype;` to `lib.rs`.
 
 #[repr(C)]
 struct RtHeader {
