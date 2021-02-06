@@ -1,11 +1,14 @@
 /// `ReturnVariant` describes what value type the kernel has returned.
 // ReturnVariant is not an enum so that it can be converted from a u32 for free.
+// It is repr(transparent) so it can be used as a register output in an `asm!`
+// statement (in the `RawSyscalls` implementation).
 // TODO: derive(Debug) is currently only enabled for test builds, which is
 // necessary so it can be used in assert_eq!. We should develop a lighter-weight
 // Debug implementation and see if it is small enough to enable on non-Debug
 // builds.
 #[cfg_attr(test, derive(Debug))]
 #[derive(Clone, Copy, PartialEq, Eq)]
+#[repr(transparent)]
 pub struct ReturnVariant(u32);
 
 impl From<u32> for ReturnVariant {
