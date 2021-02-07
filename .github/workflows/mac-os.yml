@@ -2,14 +2,9 @@
 
 name: ci-mac-os
 
-# We want to run CI on all pull requests. Additionally, Bors needs workflows to
-# run on the `staging` and `trying` branches.
-on:
-  pull_request:
-  push:
-    branches:
-      - staging
-      - trying
+# We run this workflow during pull request review, but not for Bors merges, as
+# it takes over an hour to run.
+on: pull_request
 
 jobs:
   ci-mac-os:
