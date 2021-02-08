@@ -10,10 +10,8 @@ impl<S: crate::RawSyscalls> crate::Syscalls for S {
     }
 
     fn yield_no_wait() -> bool {
-        let mut flag = core::mem::MaybeUninit::uninit();
-        unsafe {
-            Self::raw_yield_no_wait(flag.as_mut_ptr());
-        }
-        (unsafe { flag.assume_init() }) != 0
+        let mut flag = 0;
+        Self::raw_yield_no_wait(&mut flag);
+        flag != 0
     }
 }

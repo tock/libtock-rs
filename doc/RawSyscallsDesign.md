@@ -85,20 +85,24 @@ Rust does not specify the representation of `bool`, only that it casts to `0`
 and `1`, so it would not be correct use a `bool` as the flag for
 `yield-no-wait`. Instead we use a `u8`.
 
-Also, passing in a `&mut` reference to the `u8` requires the compiler to
-initialize the `u8`. Instead, we take a `*mut u8` which can point at
-uninitilized memory. When `raw_yield_no_wait` returns the memory will have been
-initialized by the kernel.
-
 To avoid name collisions with the Yield methods in `Syscalls`, we prepend `raw_`
 to their names.
 
 This results in the following signatures:
 
 ```rust
-unsafe raw_yield_no_wait(flag: *mut u8);
+raw_yield_no_wait(flag: &mut u8);
 raw_yield_wait();
 ```
+
+Note that the signature of `raw_yield_no_wait` gives up the following two
+optimization to reduce its use of `unsafe`:
+
+1. It requires `flag` to be initialized before calling into the kernel, which
+   the kernel does not require.
+1. Converting the value of `flag` to a bool requires a comparison. Using a
+   custom enum here would remove the comparison (assuming `bool` is represented
+   via `false = 0` and `true = 1`).
 
 The `asm!` statements for these methods must:
 

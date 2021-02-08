@@ -4,7 +4,7 @@ impl RawSyscalls for crate::TockSyscalls {
     // This yield implementation is currently limited to RISC-V versions without
     // floating-point registers, as it does not mark them clobbered.
     #[cfg(not(any(target_feature = "d", target_feature = "f")))]
-    unsafe fn raw_yield_no_wait(flag: *mut u8) {
+    fn raw_yield_no_wait(flag: &mut u8) {
         unsafe {
             asm!("ecall",
                  // x0 is the zero register.
@@ -66,27 +66,23 @@ impl RawSyscalls for crate::TockSyscalls {
     unsafe fn one_arg_syscall(op: u32, class: u8) -> (ReturnVariant, usize) {
         let r0_out;
         let r1;
-        unsafe {
-            asm!("ecall",
-                 inlateout("a0") op => r0_out,
-                 lateout("a1") r1,
-                 in("a4") class as usize, // Cast needed to zero high bits
-                 options(preserves_flags, nostack, nomem),
-            );
-        }
+        asm!("ecall",
+             inlateout("a0") op => r0_out,
+             lateout("a1") r1,
+             in("a4") class as usize, // Cast needed to zero high bits
+             options(preserves_flags, nostack, nomem),
+        );
         (r0_out, r1)
     }
 
     unsafe fn two_arg_syscall(op: u32, r1: usize, class: u8) -> (ReturnVariant, usize) {
         let r0_out;
-        unsafe {
-            asm!("ecall",
-                 inlateout("a0") op => r0_out,
-                 inlateout("a1") r1,
-                 in("a4") class as usize, // Cast needed to zero high bits
-                 options(preserves_flags, nostack, nomem)
-            );
-        }
+        asm!("ecall",
+             inlateout("a0") op => r0_out,
+             inlateout("a1") r1,
+             in("a4") class as usize, // Cast needed to zero high bits
+             options(preserves_flags, nostack, nomem)
+        );
         (r0_out, r1)
     }
 

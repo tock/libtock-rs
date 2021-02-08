@@ -15,10 +15,9 @@ use crate::ReturnVariant;
 pub trait RawSyscalls {
     // Calls yield-no-wait, passing `flag` to the kernel. The kernel will set
     // the value that flag points to based on whether a callback was executed.
-    /// # Safety
-    /// Will write a 0 or 1 into flag's pointee.
-    unsafe fn raw_yield_no_wait(flag: *mut u8);
+    fn raw_yield_no_wait(flag: &mut u8);
 
+    // Calls tho `yield-wait` form of the Yield system call.
     fn raw_yield_wait();
 
     // `one_arg_syscall` supports calling Exit and Memop operations that do not
