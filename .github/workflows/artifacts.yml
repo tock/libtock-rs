@@ -12,6 +12,7 @@ jobs:
 
       - name: Install dependencies
         run: |
+          sudo apt-get install binutils-riscv64-unknown-elf
           cargo install elf2tab --version 0.4.0
 
       - name: Build Hello World

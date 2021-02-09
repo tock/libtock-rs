@@ -79,8 +79,9 @@ examples:
 .PHONY: test
 test: examples test-qemu-hifive
 	LIBTOCK_PLATFORM=nrf52 PLATFORM=nrf52 cargo fmt --all -- --check
-	LIBTOCK_PLATFORM=nrf52 PLATFORM=nrf52 cargo clippy --workspace --all-targets
-	LIBTOCK_PLATFORM=nrf52 PLATFORM=nrf52 cargo miri test --workspace
+	PLATFORM=nrf52 cargo clippy --all-targets --exclude libtock_runtime --workspace
+	LIBTOCK_PLATFORM=hifive1 cargo clippy --target=riscv32imac-unknown-none-elf -p libtock_runtime
+	PLATFORM=nrf52 cargo miri test --exclude libtock_runtime --workspace
 	echo '[ SUCCESS ] libtock-rs tests pass'
 
 .PHONY: analyse-stack-sizes

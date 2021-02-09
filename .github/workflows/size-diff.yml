@@ -17,9 +17,9 @@ jobs:
     # Using ubuntu-latest can cause breakage when ubuntu-latest is updated to
     # point at a new Ubuntu version. Instead, explicitly specify the version, so
     # we can update when we need to. This *could* break if we don't update it
-    # until support for 18.04 is dropped, but it is likely we'll have a reason
+    # until support for 20.04 is dropped, but it is likely we'll have a reason
     # to update to a newer Ubuntu before then anyway.
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
 
     steps:
       # Clones a single commit from the libtock-rs repository. The commit cloned
@@ -39,6 +39,7 @@ jobs:
       # master.
       - name: Compute sizes
         run: |
+          sudo apt-get install binutils-riscv64-unknown-elf
           UPSTREAM_REMOTE_NAME="${UPSTREAM_REMOTE_NAME:-origin}"
           GITHUB_BASE_REF="${GITHUB_BASE_REF:-master}"
           cd "${GITHUB_WORKSPACE}"
