@@ -6,10 +6,6 @@ rrv32imc = "rriscv32imc"
 rthumbv7em = "run --release --target=thumbv7em-none-eabi --example"
 rtv7em = "rthumbv7em"
 
-# Deny warnings on all architectures. build.rustflags cannot be used here as the lower section would override its effect.
-[target.'cfg(all())']
-rustflags = ["-D", "warnings"]
-
 # Common settings for all embedded targets
 [target.'cfg(any(target_arch = "arm", target_arch = "riscv32"))']
 rustflags = [

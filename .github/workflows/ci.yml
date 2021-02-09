@@ -35,8 +35,15 @@ jobs:
       # makefile can be tested locally. We experimentally determined that -j2 is
       # optimal for the Azure Standard_DS2_v2 VM, which is the VM type used by
       # GitHub Actions at the time of this writing.
+      #
+      # We have to append the "-D warnings" flag to .cargo/config rather than
+      # using the RUSTFLAGS environment variable because if we set RUSTFLAGS
+      # cargo will ignore the rustflags config in .cargo/config, breaking
+      # relocation.
       - name: Build and Test
         run: |
           cd "${GITHUB_WORKSPACE}"
+          echo "[target.'cfg(all())']" >> .cargo/config
+          echo 'rustflags = ["-D", "warnings"]' >> .cargo/config
           make -j2 setup
           make -j2 test
