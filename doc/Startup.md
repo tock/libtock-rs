@@ -48,9 +48,9 @@ user-provided `main` function.
 
 At this point, the user's `main` starts executing, and `libtock_runtime` is no
 longer in control. Note that unlike most Rust programs, `main` is expected to
-*not* return. Process binaries should use the `exit` system call to terminate
-when they are done executing (which may be done as the last statement of
-`main`).
+*not* return. Process binaries can loop forever or use the `exit` system call to
+terminate when they are done executing (which may be done as the last statement
+of `main`).
 
 ## Appendix: Why `#![no_main]`?
 
