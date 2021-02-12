@@ -1,22 +1,43 @@
 use crate::{return_variant, ErrorCode, ReturnVariant};
 
+use core::mem::transmute;
+
 /// The response type from `command`. Can represent a successful value or a
 /// failure.
 #[derive(Clone, Copy)]
 pub struct CommandReturn {
-    pub(crate) return_variant: ReturnVariant,
+    return_variant: ReturnVariant,
     // r1, r2, and r3 should only contain 32-bit values. However, these are
     // converted directly from usizes returned by RawSyscalls::four_arg_syscall.
     // To avoid casting twice (both when converting to a Command Return and when
     // calling a get_*() function), we store the usizes directly. Then using the
     // CommandReturn only involves one conversion for each of r1, r2, and r3,
     // performed in the get_*() functions.
-    pub(crate) r1: usize,
-    pub(crate) r2: usize,
-    pub(crate) r3: usize,
+
+    // Safety invariant on r1: If return_variant is failure variant, r1 must be
+    // a valid ErrorCode.
+    r1: usize,
+    r2: usize,
+    r3: usize,
 }
 
 impl CommandReturn {
+    /// # Safety
+    /// If return_variant is a failure variant, r1 must be a valid ErrorCode.
+    #[cfg(test)] // Will be removed when command() is implemented.
+    pub(crate) unsafe fn new(
+        return_variant: ReturnVariant,
+        r1: usize,
+        r2: usize,
+        r3: usize,
+    ) -> Self {
+        CommandReturn {
+            return_variant,
+            r1,
+            r2,
+            r3,
+        }
+    }
     // I generally expect CommandReturn to be used with pattern matching, e.g.:
     //
     //     let command_return = Syscalls::command(314, 1, 1, 2);
@@ -85,7 +106,7 @@ impl CommandReturn {
         if !self.is_failure() {
             return None;
         }
-        Some(self.r1.into())
+        Some(unsafe { transmute(self.r1 as u16) })
     }
 
     /// Returns the error code and value if this CommandReturn is of type
@@ -94,7 +115,7 @@ impl CommandReturn {
         if !self.is_failure_u32() {
             return None;
         }
-        Some((self.r1.into(), self.r2 as u32))
+        Some((unsafe { transmute(self.r1 as u16) }, self.r2 as u32))
     }
 
     /// Returns the error code and return values if this CommandReturn is of
@@ -103,7 +124,11 @@ impl CommandReturn {
         if !self.is_failure_2_u32() {
             return None;
         }
-        Some((self.r1.into(), self.r2 as u32, self.r3 as u32))
+        Some((
+            unsafe { transmute(self.r1 as u16) },
+            self.r2 as u32,
+            self.r3 as u32,
+        ))
     }
 
     /// Returns the error code and return value if this CommandReturn is of type
@@ -112,7 +137,10 @@ impl CommandReturn {
         if !self.is_failure_u64() {
             return None;
         }
-        Some((self.r1.into(), self.r2 as u64 + ((self.r3 as u64) << 32)))
+        Some((
+            unsafe { transmute(self.r1 as u16) },
+            self.r2 as u64 + ((self.r3 as u64) << 32),
+        ))
     }
 
     /// Returns the value if this CommandReturn is of type Success with u32.
