@@ -21,6 +21,8 @@
 #![feature(asm)]
 #![no_std]
 
+mod startup;
+
 /// TockSyscalls implements `libtock_platform::Syscalls`.
 pub struct TockSyscalls;
 

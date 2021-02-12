@@ -54,6 +54,14 @@ kernel-hifive:
 	$(MAKE) -C tock/boards/hifive1 \
 		$(CURDIR)/tock/target/riscv32imac-unknown-none-elf/release/hifive1.elf
 
+# Builds a Tock 2.0 kernel for the HiFive board for use by QEMU tests.
+# TODO: After Tock 2.0 is released, we should merge the tock/ and tock2/
+# submodules and only build Tock 2.0 kernels.
+.PHONY: kernel-hifive-2
+kernel-hifive-2:
+	$(MAKE) -C tock2/boards/hifive1 \
+		$(CURDIR)/tock2/target/riscv32imac-unknown-none-elf/release/hifive1.elf
+
 # Prints out the sizes of the example binaries.
 .PHONY: print-sizes
 print-sizes: examples
