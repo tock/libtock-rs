@@ -1,8 +1,10 @@
 `libtock_platform` Design Story
 ===============================
 
-Note: At the time of this writing, `libtock_platform` is still a work in
-progress that exists largely in @jrvanwhy's head.
+Note: `libtock_platform` is part of the libtock 2.0 rewrite. It is partially
+implemented in this repository. A working version exists in @jrvanwhy's
+repository in the [wip](https://github.com/jrvanwhy/libtock-rs/tree/wip) branch.
+It is being refined and merged upstream in pieces.
 
 `libtock_platform` is a crate that will contain core abstractions that will be
 used by `libtock_core`'s drivers. For example, it will contain abstractions for
