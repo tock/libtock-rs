@@ -46,9 +46,9 @@ macro_rules! single_value_sensor {
             }
         }
 
-        impl Into<i32> for $type_name {
-            fn into(self) -> i32 {
-                self.value
+        impl From<$type_name> for i32 {
+            fn from(sensor: $type_name) -> i32 {
+                sensor.value
             }
         }
 

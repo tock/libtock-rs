@@ -28,7 +28,7 @@ pub unsafe fn dump_address(address: *const usize) {
     write_as_hex(&mut buffer[12..22], *address);
     for index in 0..4 {
         let byte = *(address as *const u8).offset(index);
-        let byte_is_printable_char = byte >= 0x20 && byte < 0x80;
+        let byte_is_printable_char = (0x20..0x80).contains(&byte);
         if byte_is_printable_char {
             buffer[23 + index as usize] = byte;
         }

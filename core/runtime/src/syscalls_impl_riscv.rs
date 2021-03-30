@@ -41,14 +41,16 @@ impl RawSyscalls for crate::TockSyscalls {
         mut r3: usize,
         class: u8,
     ) -> (u32, usize, usize, usize) {
-        asm!("ecall",
-             inlateout("a0") r0,
-             inlateout("a1") r1,
-             inlateout("a2") r2,
-             inlateout("a3") r3,
-             in("a4") class,
-             options(preserves_flags, nostack),
-        );
+        unsafe {
+            asm!("ecall",
+                 inlateout("a0") r0,
+                 inlateout("a1") r1,
+                 inlateout("a2") r2,
+                 inlateout("a3") r3,
+                 in("a4") class,
+                 options(preserves_flags, nostack),
+            );
+        }
         (r0, r1 as usize, r2, r3)
     }
 

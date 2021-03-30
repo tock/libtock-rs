@@ -15,7 +15,7 @@ pub struct BlePayload {
 }
 
 impl BlePayload {
-    pub fn add(&mut self, kind: u8, content: &[u8]) -> Result<(), ()> {
+    pub fn add(&mut self, kind: u8, content: &[u8]) -> Result<(), Overflow> {
         self.check_can_write_num_bytes(content.len() + 2)?;
 
         self.bytes[self.occupied] = (content.len() + 1) as u8;
@@ -26,7 +26,7 @@ impl BlePayload {
         Ok(())
     }
 
-    pub fn add_flag(&mut self, flag: u8) -> Result<(), ()> {
+    pub fn add_flag(&mut self, flag: u8) -> Result<(), Overflow> {
         self.check_can_write_num_bytes(3)?;
 
         self.bytes[self.occupied] = 2;
@@ -36,7 +36,7 @@ impl BlePayload {
         Ok(())
     }
 
-    pub fn add_service_payload(&mut self, uuid: [u8; 2], content: &[u8]) -> Result<(), ()> {
+    pub fn add_service_payload(&mut self, uuid: [u8; 2], content: &[u8]) -> Result<(), Overflow> {
         self.check_can_write_num_bytes(4 + content.len())?;
         self.bytes[self.occupied] = (content.len() + 3) as u8;
         self.bytes[self.occupied + 1] = gap_types::SERVICE_DATA;
@@ -49,11 +49,11 @@ impl BlePayload {
         Ok(())
     }
 
-    fn check_can_write_num_bytes(&self, number: usize) -> Result<(), ()> {
+    fn check_can_write_num_bytes(&self, number: usize) -> Result<(), Overflow> {
         if self.occupied + number <= self.bytes.len() {
             Ok(())
         } else {
-            Err(())
+            Err(Overflow)
         }
     }
 }
@@ -71,6 +71,10 @@ impl AsRef<[u8]> for BlePayload {
         &self.bytes[0..self.occupied]
     }
 }
+
+// Error type returned when the buffer is too full to perform an operation.
+#[derive(Debug)]
+pub struct Overflow;
 
 #[cfg(test)]
 mod test {
