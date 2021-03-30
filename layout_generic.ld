@@ -24,9 +24,15 @@ SECTIONS {
     /* Section for just the app crt0 header.
      * This must be first so that the app can find it.
      */
-    .crt0_header :
+    /* Runtime setup logic. The crt0_header symbol is used by the entry point
+     * assembly. We have to include start here rather than .text because
+     * otherwise elf2tab fails to recognize that the process binary's flash
+     * region should start at the beginning of .start.
+     */
+    .start :
     {
         _beginning = .; /* Start of the app in flash. */
+        crt0_header = .;
         /**
          * Populate the header expected by `crt0`:
          *
@@ -68,6 +74,8 @@ SECTIONS {
          * between the header and subsequent .data section. It's unclear why,
          * but LLD is aligning sections to a multiple of 32 bytes. */
         . = ALIGN(32);
+
+        *(.start)
     } > FLASH =0xFF
 
     /* Text section, Code! */
@@ -75,7 +83,6 @@ SECTIONS {
     {
         . = ALIGN(4);
         _text = .;
-        KEEP (*(.start))
         *(.text*)
         *(.rodata*)
         KEEP (*(.syscalls))
@@ -140,30 +147,10 @@ SECTIONS {
     {
     } > FLASH
 
-    /* ARM Exception support
-     *
-     * This contains compiler-generated support for unwinding the stack,
-     * consisting of key-value pairs of function addresses and information on
-     * how to unwind stack frames.
-     * https://wiki.linaro.org/KenWerner/Sandbox/libunwind?action=AttachFile&do=get&target=libunwind-LDS.pdf
-     *
-     * .ARM.exidx is sorted, so has to go in its own output section.
-     *
-     * __NOTE__: It's at the end because we currently don't actually serialize
-     * it to the binary in elf2tbf. If it was before the RAM sections, it would
-     * through off our calculations of the header.
-     */
-    PROVIDE_HIDDEN (__exidx_start = .);
-    .ARM.exidx :
-    {
-      /* (C++) Index entries for section unwinding */
-      *(.ARM.exidx* .gnu.linkonce.armexidx.*)
-    } > FLASH
-    PROVIDE_HIDDEN (__exidx_end = .);
-
+    /* Sections we do not need. */
     /DISCARD/ :
     {
-      *(.eh_frame)
+      *(.ARM.exidx .eh_frame)
     }
 }
 

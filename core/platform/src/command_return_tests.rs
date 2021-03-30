@@ -130,7 +130,7 @@ fn failure_u64() {
     assert_eq!(command_return.get_failure_2_u32(), None);
     assert_eq!(
         command_return.get_failure_u64(),
-        Some((ErrorCode::Busy, 0x00001003_00001002))
+        Some((ErrorCode::Busy, 0x0000_1003_0000_1002))
     );
     assert_eq!(command_return.get_success_u32(), None);
     assert_eq!(command_return.get_success_2_u32(), None);
@@ -240,7 +240,10 @@ fn success_u64() {
     assert_eq!(command_return.get_failure_u64(), None);
     assert_eq!(command_return.get_success_u32(), None);
     assert_eq!(command_return.get_success_2_u32(), None);
-    assert_eq!(command_return.get_success_u64(), Some(0x00001002_00001001));
+    assert_eq!(
+        command_return.get_success_u64(),
+        Some(0x0000_1002_0000_1001)
+    );
     assert_eq!(command_return.get_success_3_u32(), None);
     assert_eq!(command_return.get_success_u32_u64(), None);
     assert_eq!(command_return.return_variant(), return_variant::SUCCESS_U64);
@@ -299,7 +302,7 @@ fn success_u32_u64() {
     assert_eq!(command_return.get_success_3_u32(), None);
     assert_eq!(
         command_return.get_success_u32_u64(),
-        Some((1001, 0x00001003_00001002))
+        Some((1001, 0x0000_1003_0000_1002))
     );
     assert_eq!(
         command_return.return_variant(),

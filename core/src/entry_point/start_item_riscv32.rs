@@ -1,5 +1,3 @@
-use core::hint;
-
 /// Tock programs' entry point. Called by the kernel at program start. Sets up
 /// the stack then calls rust_start() for the remainder of setup.
 #[doc(hidden)]
@@ -14,12 +12,12 @@ use core::hint;
 // Due to Rust issue: https://github.com/rust-lang/rust/issues/42779 we can't have
 // args to the function
 pub unsafe extern "C" fn _start() -> ! {
-    llvm_asm!(
-    // Compute the stack top.
-    //
-    // struct hdr* myhdr = (struct hdr*) app_start;
-    // uint32_t stacktop = (((uint32_t) mem_start + myhdr->stack_size + 7) & 0xfffffff8);
-    "lw   t0, 36(a0)         // t0 = myhdr->stack_size
+    asm!(
+        // Compute the stack top.
+        //
+        // struct hdr* myhdr = (struct hdr*) app_start;
+        // uint32_t stacktop = (((uint32_t) mem_start + myhdr->stack_size + 7) & 0xfffffff8);
+        "lw   t0, 36(a0)         // t0 = myhdr->stack_size
     addi t0, t0, 7          // t0 = myhdr->stack_size + 7
     add  t0, t0, a1         // t0 = mem_start + myhdr->stack_size + 7
     li   t1, 7              // t1 = 7
@@ -89,14 +87,10 @@ pub unsafe extern "C" fn _start() -> ! {
     mv   s0, sp             // Set the frame pointer to sp.
     mv   a1, s1             // second arg is stacktop
     mv   a2, t1             // third arg is app_heap_break that we told the kernel
-    jal  rust_start"
-    :                                                              // No output operands
-    :
-    : "memory", "x10", "x11", "x12", "x13", "x14", "x15", "x16", "x17",
-      "x5", "x6", "x7", "x28", "x29", "x30", "x31", "x1"           // Clobbers
-    : "volatile"                                                   // Options
-    );
-    hint::unreachable_unchecked();
+    jal  rust_start",
+        // No clobbers needed for a noreturn asm! block.
+        options(noreturn),
+    )
 }
 
 /// Ensure an abort symbol exists.
