@@ -26,7 +26,11 @@ corepack = { version = "0.4.0", default-features = false, features = ["alloc"] }
 # with the nightly toolchain used by libtock-rs.
 serde = { version = "=1.0.114", default-features = false, features = ["derive"] }
 ctap2-authenticator = { git = "https://gitlab.com/ctap2-authenticator/ctap2-authenticator.git" }
-p256 = { version = "0.5.0" , default-features = false, features = ["arithmetic", "ecdsa", "ecdsa-core"] }
+p256 = { version = "0.7" , default-features = false, features = ["arithmetic", "ecdsa", "ecdsa-core"] }
+# p256 depends transitively on bitvec 0.18. bitvec 0.18.5 depends on radium
+# 0.3.0, which does not work on platforms that lack atomics. This prevents cargo
+# from selecting bitvec 0.18.5, which avoids the radium 0.3.0 issue.
+bitvec = { version = "<=0.18.4", default-features = false }
 subtle = { version = "2.3.0", default-features = false, features = ["i128"] }
 generic-array = { version = "0.14.3" }
 libmctp = { version = "0.1.0" }
