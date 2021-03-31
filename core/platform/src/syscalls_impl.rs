@@ -13,14 +13,12 @@ impl<S: RawSyscalls> Syscalls for S {
     // -------------------------------------------------------------------------
 
     fn yield_no_wait() -> YieldNoWaitReturn {
-        unsafe {
-            // flag can be uninitialized because it is not read before the yield
-            // system call, and the kernel promises to only write to it (not
-            // read it).
-            let mut flag = core::mem::MaybeUninit::<YieldNoWaitReturn>::uninit();
+        let mut flag = core::mem::MaybeUninit::<YieldNoWaitReturn>::uninit();
 
-            // flag is safe to write a YieldNoWaitReturn to, as guaranteed by
-            // MaybeUninit.
+        unsafe {
+            // Flag can be uninitialized here because the kernel promises to
+            // only write to it, not read from it. MaybeUninit guarantees that
+            // it is safe to write a YieldNoWaitReturn into it.
             Self::yield2(yield_op::NO_WAIT as *mut (), flag.as_mut_ptr() as *mut ());
 
             // yield-no-wait guarantees it sets (initializes) flag before
