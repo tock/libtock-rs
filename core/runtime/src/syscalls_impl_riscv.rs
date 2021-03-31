@@ -4,7 +4,7 @@ unsafe impl RawSyscalls for crate::TockSyscalls {
     // This yield implementation is currently limited to RISC-V versions without
     // floating-point registers, as it does not mark them clobbered.
     #[cfg(not(any(target_feature = "d", target_feature = "f")))]
-    unsafe fn yield1(r0: *mut ()) {
+    unsafe fn yield1([r0]: [*mut (); 1]) {
         // Safety: This matches the invariants required by the documentation on
         // RawSyscalls::yield1
         unsafe {
@@ -37,7 +37,7 @@ unsafe impl RawSyscalls for crate::TockSyscalls {
     // This yield implementation is currently limited to RISC-V versions without
     // floating-point registers, as it does not mark them clobbered.
     #[cfg(not(any(target_feature = "d", target_feature = "f")))]
-    unsafe fn yield2(r0: *mut (), r1: *mut ()) {
+    unsafe fn yield2([r0, r1]: [*mut (); 2]) {
         // Safety: This matches the invariants required by the documentation on
         // RawSyscalls::yield2
         unsafe {
@@ -67,7 +67,7 @@ unsafe impl RawSyscalls for crate::TockSyscalls {
         }
     }
 
-    unsafe fn syscall1<const CLASS: usize>(mut r0: *mut ()) -> (*mut (), *mut ()) {
+    unsafe fn syscall1<const CLASS: usize>([mut r0]: [*mut (); 1]) -> [*mut (); 2] {
         let r1;
         // Safety: This matches the invariants required by the documentation on
         // RawSyscalls::syscall1
@@ -79,10 +79,10 @@ unsafe impl RawSyscalls for crate::TockSyscalls {
                  options(preserves_flags, nostack, nomem),
             );
         }
-        (r0, r1)
+        [r0, r1]
     }
 
-    unsafe fn syscall2<const CLASS: usize>(mut r0: *mut (), mut r1: *mut ()) -> (*mut (), *mut ()) {
+    unsafe fn syscall2<const CLASS: usize>([mut r0, mut r1]: [*mut (); 2]) -> [*mut (); 2] {
         // Safety: This matches the invariants required by the documentation on
         // RawSyscalls::syscall2
         unsafe {
@@ -93,15 +93,12 @@ unsafe impl RawSyscalls for crate::TockSyscalls {
                  options(preserves_flags, nostack, nomem)
             );
         }
-        (r0, r1)
+        [r0, r1]
     }
 
     unsafe fn syscall4<const CLASS: usize>(
-        mut r0: *mut (),
-        mut r1: *mut (),
-        mut r2: *mut (),
-        mut r3: *mut (),
-    ) -> (*mut (), *mut (), *mut (), *mut ()) {
+        [mut r0, mut r1, mut r2, mut r3]: [*mut (); 4],
+    ) -> [*mut (); 4] {
         // Safety: This matches the invariants required by the documentation on
         // RawSyscalls::syscall4
         unsafe {
@@ -114,6 +111,6 @@ unsafe impl RawSyscalls for crate::TockSyscalls {
                  options(preserves_flags, nostack),
             );
         }
-        (r0, r1, r2, r3)
+        [r0, r1, r2, r3]
     }
 }

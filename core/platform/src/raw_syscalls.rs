@@ -64,23 +64,6 @@
 //   unsafe fn syscall2<const CLASS: usize>([*mut (); 2]) -> [*mut (); 4];
 //   unsafe fn syscall4<const CLASS: usize>([*mut (); 4]) -> [*mut (); 4];
 //
-// To avoid making the RawSyscalls implementation index into arrays, we replace
-// the arrays in the input with multiple arguments. For symmetry, we also
-// replace the output with a tuple of individual values. This gives:
-//
-//   unsafe fn yield1(*mut ()) -> (*mut (), *mut (), *mut (), *mut ());
-//
-//   unsafe fn yield2(*mut (), *mut ()) -> (*mut (), *mut (), *mut (), *mut ());
-//
-//   unsafe fn syscall1<const CLASS: usize>(*mut ())
-//       -> (*mut (), *mut (), *mut (), *mut ());
-//
-//   unsafe fn syscall2<const CLASS: usize>(*mut (), *mut ())
-//       -> (*mut (), *mut (), *mut (), *mut ());
-//
-//   unsafe fn syscall4<const CLASS: usize>(*mut (), *mut (), *mut (), *mut ())
-//       -> (*mut (), *mut (), *mut (), *mut ());
-//
 // These system calls are refined further individually, which is documented on
 // a per-function basis.
 pub unsafe trait RawSyscalls {
@@ -103,7 +86,7 @@ pub unsafe trait RawSyscalls {
     /// # Safety
     /// yield1 may only be used for yield operations that do not return a value.
     /// It is exactly as safe as the underlying system call.
-    unsafe fn yield1(r0: *mut ());
+    unsafe fn yield1(_: [*mut (); 1]);
 
     // yield2 can only be used to call `yield-no-wait`. `yield-no-wait` does not
     // return any values, so to simplify the assembly we omit return arguments.
@@ -123,7 +106,7 @@ pub unsafe trait RawSyscalls {
     /// # Safety
     /// yield2 may only be used for yield operations that do not return a value.
     /// It has the same safety invariants as the underlying system call.
-    unsafe fn yield2(r0: *mut (), r1: *mut ());
+    unsafe fn yield2(_: [*mut (); 2]);
 
     // syscall1 is only used to invoke Memop operations. Because there are no
     // Memop commands that set r2 or r3, raw_syscall1 only needs to return r0
@@ -152,7 +135,7 @@ pub unsafe trait RawSyscalls {
     /// This directly makes a system call. It can only be used for core kernel
     /// system calls that accept 1 argument and only overwrite r0 and r1 on
     /// return. It is unsafe any time the underlying system call is unsafe.
-    unsafe fn syscall1<const CLASS: usize>(r0: *mut ()) -> (*mut (), *mut ());
+    unsafe fn syscall1<const CLASS: usize>(_: [*mut (); 1]) -> [*mut (); 2];
 
     // syscall2 is used to invoke Exit as well as Memop operations that take an
     // argument. Memop does not currently use more than 2 registers for its
@@ -177,7 +160,7 @@ pub unsafe trait RawSyscalls {
     /// `syscall2` directly makes a system call. It can only be used for core
     /// kernel system calls that accept 2 arguments and only overwrite r0 and r1
     /// on return. It is unsafe any time the underlying system call is unsafe.
-    unsafe fn syscall2<const CLASS: usize>(r0: *mut (), r1: *mut ()) -> (*mut (), *mut ());
+    unsafe fn syscall2<const CLASS: usize>(_: [*mut (); 2]) -> [*mut (); 2];
 
     // syscall4 should:
     //     1. Call the syscall class specified by CLASS.
@@ -200,10 +183,5 @@ pub unsafe trait RawSyscalls {
     /// `syscall4` must NOT be used to invoke yield. Otherwise, it has the same
     /// safety invariants as the underlying system call, which varies depending
     /// on the system call class.
-    unsafe fn syscall4<const CLASS: usize>(
-        r0: *mut (),
-        r1: *mut (),
-        r2: *mut (),
-        r3: *mut (),
-    ) -> (*mut (), *mut (), *mut (), *mut ());
+    unsafe fn syscall4<const CLASS: usize>(_: [*mut (); 4]) -> [*mut (); 4];
 }
