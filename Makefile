@@ -84,12 +84,19 @@ examples:
 	# Important: This tests a platform without atomic instructions.
 	PLATFORM=opentitan cargo build --release --target=riscv32imc-unknown-none-elf --examples -p libtock -p libtock_core
 
+# Arguments to pass to cargo to exclude libtock_runtime and crates that depend
+# on libtock_runtime. Used when we need to build a crate for the host OS, as
+# libtock_runtime only suppors running on Tock.
+EXCLUDE_RUNTIME := --exclude libtock_runtime
+
 .PHONY: test
 test: examples test-qemu-hifive
 	LIBTOCK_PLATFORM=nrf52 PLATFORM=nrf52 cargo fmt --all -- --check
 	PLATFORM=nrf52 cargo clippy --all-targets --exclude libtock_runtime --workspace
 	LIBTOCK_PLATFORM=hifive1 cargo clippy --target=riscv32imac-unknown-none-elf -p libtock_runtime
-	PLATFORM=nrf52 cargo miri test --exclude libtock_runtime --workspace
+	PLATFORM=nrf52 cargo miri test $(EXCLUDE_RUNTIME) --workspace
+	MIRIFLAGS="-Zmiri-symbolic-alignment-check -Zmiri-track-raw-pointers" \
+		PLATFORM=nrf52 cargo miri test $(EXCLUDE_RUNTIME) --workspace
 	echo '[ SUCCESS ] libtock-rs tests pass'
 
 .PHONY: analyse-stack-sizes
