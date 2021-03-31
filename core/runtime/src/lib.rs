@@ -20,6 +20,9 @@
 
 #![feature(asm)]
 #![no_std]
+#![warn(unsafe_op_in_unsafe_fn)]
+// TODO: Remove after toolchain upgrade, these have been stabilized.
+#![feature(min_const_generics, unsafe_block_in_unsafe_fn)]
 
 mod startup;
 
