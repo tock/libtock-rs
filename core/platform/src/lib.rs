@@ -1,5 +1,5 @@
-#![feature(min_const_generics)] // TODO: Remove when toolchain updated.
 #![no_std]
+#![warn(unsafe_op_in_unsafe_fn)]
 
 mod async_traits;
 mod command_return;

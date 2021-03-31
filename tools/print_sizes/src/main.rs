@@ -117,18 +117,21 @@ fn main() {
         .expect("No examples found");
     let section_width = 7;
 
-    // TODO: We do not currently print out .rodata's size. Currently, the linker
-    // script embeds .rodata in .text, so we don't see it as a separate section
-    // here. We should modify the linker script to put .rodata in its own
-    // section. Until that is done, .rodata's size will be counted as part of
-    // .text, so we'll just print .text's size for now.
     println!(
-        "{0:1$} {2:3$} {4:>7$} {5:>7$} {6:>7$}",
-        "Example", name_width, "Architecture", arch_width, ".bss", ".data", ".text", section_width
+        "{0:1$} {2:3$} {4:>8$} {5:>8$} {6:>8$} {7:>8$}",
+        "Example",
+        name_width,
+        "Architecture",
+        arch_width,
+        ".bss",
+        ".data",
+        ".text",
+        ".rodata",
+        section_width
     );
     for data in example_data {
         println!(
-            "{0:1$} {2:3$} {4:7$} {5:7$} {6:7$}",
+            "{0:1$} {2:3$} {4:8$} {5:8$} {6:8$} {7:8$}",
             data.name,
             name_width,
             data.arch,
@@ -136,6 +139,7 @@ fn main() {
             data.sizes.bss,
             data.sizes.data,
             data.sizes.text,
+            data.sizes.rodata,
             section_width
         );
     }

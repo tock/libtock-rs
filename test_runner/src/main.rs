@@ -53,8 +53,8 @@ fn process_output(stdout: ChildStdout) -> Result<(), Box<dyn std::error::Error>>
 }
 
 fn test_succeeded(input: String, failed_tests: &mut Vec<String>) -> Option<bool> {
-    let success = input.find("[      OK ]").is_some();
-    let failure = input.find("[ FAILURE ]").is_some();
+    let success = input.contains("[      OK ]");
+    let failure = input.contains("[ FAILURE ]");
     let input = input.replace("[      OK ]", "");
     let input = input.replace("[ FAILURE ]", "");
     let input = input.trim();
