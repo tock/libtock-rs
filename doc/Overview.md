@@ -18,14 +18,10 @@ drivers `libtock-rs` provides, and provides usable defaults for panic handling
 and memory allocation. It should be easy to build a Tock application that only
 has one direct dependency: `libtock`.
 
-In order to be easy to use, `libtock` lacks some functionality that the other
-`libtock-rs` crates provide. In particular, you should depend on the other
-crates directly if you want any of the following:
-
-* The ability to unit test your code.
-* The ability to customize panic handling.
-* The ability to run without dynamic memory allocation or with an alternative
-  memory allocator.
+In order to be easy to use, `libtock` has a hard dependency on
+`libtock_runtime`, and therefore cannot be used in a unit test environment. If
+you want to unit test code that uses `libtock-rs`, you should depend on the
+individual libraries rather than `libtock`.
 
 ## Naming convention note
 
@@ -47,7 +43,7 @@ consists primarily of the `Syscalls` trait and supporting machinery.
 
 ## Syscall implementations: `libtock_runtime` and `libtock_unittest`
 
-In order to `libtock-rs` code, you need a `libtock_platform::Syscalls`
+In order to run `libtock-rs` code, you need a `libtock_platform::Syscalls`
 implementation. Multiple implementations exist that work in different
 environments:
 
