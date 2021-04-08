@@ -18,4 +18,3 @@ version = "0.8.7"
 
 [dependencies]
 libtock_codegen = { path = "../codegen" }
-libtock_platform = { path = "platform" }
