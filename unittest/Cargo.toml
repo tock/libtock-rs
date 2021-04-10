@@ -1,0 +1,12 @@
+[package]
+authors = ["Tock Project Developers <tock-dev@googlegroups.com>"]
+description = """libtock-rs unit test support. Provides a fake Tock kernel as \
+                 well as the test_component! macro."""
+edition = "2018"
+license = "Apache-2.0 OR MIT"
+name = "libtock_unittest"
+repository = "https://www.github.com/tock/libtock-rs"
+version = "0.1.0"
+
+[dependencies]
+libtock_platform = { path = "../platform" }
