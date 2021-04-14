@@ -9,12 +9,17 @@ pub(crate) fn build_and_link(out_dir: &str) {
     // Identify the toolchain configurations to try for the target architecture.
     // We support trying multiple toolchains because not all toolchains are
     // available on every OS that we want to support development on.
-    let build_configs = match arch.as_str() {
+    let build_configs: &[AsmBuildConfig] = match arch.as_str() {
+        "arm" => &[AsmBuildConfig {
+            prefix: "arm-none-eabi",
+            as_extra_args: &[],
+            strip: false,
+        }],
         "riscv32" => &[
             // First try riscv64-unknown-elf, as it is the toolchain used by
             // libtock-c and the toolchain used in the CI environment.
             AsmBuildConfig {
-                triple: "riscv64-unknown-elf",
+                prefix: "riscv64-unknown-elf",
                 as_extra_args: &["-march=rv32imc"],
                 strip: true,
             },
@@ -22,13 +27,13 @@ pub(crate) fn build_and_link(out_dir: &str) {
             // risc-v targets, but is not as widely available (and has not been
             // tested with libtock-rs yet).
             AsmBuildConfig {
-                triple: "riscv32-unknown-elf",
+                prefix: "riscv32-unknown-elf",
                 as_extra_args: &[],
                 strip: false, // Untested, may need to change.
             },
             // Last try riscv64-linux-gnu, as it is the only option on Debian 10
             AsmBuildConfig {
-                triple: "riscv64-linux-gnu",
+                prefix: "riscv64-linux-gnu",
                 as_extra_args: &["-march=rv32imc"],
                 strip: true,
             },
@@ -48,8 +53,8 @@ pub(crate) fn build_and_link(out_dir: &str) {
 
 #[derive(Clone, Copy)]
 struct AsmBuildConfig {
-    // Triple name, which is prepended to the command names.
-    triple: &'static str,
+    // Prefix, which is prepended to the command names.
+    prefix: &'static str,
 
     // Extra arguments to pass to the assembler.
     as_extra_args: &'static [&'static str],
@@ -75,7 +80,7 @@ fn try_build(
     let asm_source = &format!("asm/asm_{}.S", arch);
     let obj_file_path = [out_dir, "libtock_rt_asm.o"].iter().collect::<PathBuf>();
     let obj_file = obj_file_path.to_str().expect("Non-Unicode obj_file_path");
-    let as_result = Command::new(format!("{}-as", build_config.triple))
+    let as_result = Command::new(format!("{}-as", build_config.prefix))
         .args(build_config.as_extra_args)
         .args(&[asm_source, "-o", obj_file])
         .status();
@@ -102,7 +107,7 @@ fn try_build(
 
     // Run `strip` if necessary.
     if build_config.strip {
-        let strip_cmd = format!("{}-strip", build_config.triple);
+        let strip_cmd = format!("{}-strip", build_config.prefix);
         let status = Command::new(&strip_cmd)
             .args(&["-K", "start", "-K", "rust_start", obj_file])
             .status()
@@ -123,7 +128,7 @@ fn try_build(
     }
 
     // Create the library archive.
-    let ar_cmd = format!("{}-ar", build_config.triple);
+    let ar_cmd = format!("{}-ar", build_config.prefix);
     let archive = archive_path.to_str().expect("Non-Unicode archive_path");
     let status = std::process::Command::new(&ar_cmd)
         // c == Do not complain if archive needs to be created.
