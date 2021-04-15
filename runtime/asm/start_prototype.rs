@@ -22,9 +22,15 @@ struct RtHeader {
     bss_start: *mut u8,
 }
 
+mod class_id {
+    pub const COMMAND: usize = 2;
+    pub const MEMOP: usize = 5;
+    pub const EXIT: usize = 6;
+}
+
 #[link_section = ".start"]
 #[no_mangle]
-extern fn start_prototype(
+extern "C" fn start_prototype(
     rt_header: &RtHeader,
     _memory_start: usize,
     _memory_len: usize,
@@ -44,14 +50,21 @@ extern fn start_prototype(
         // Binary is in an incorrect location: report an error via
         // LowLevelDebug then exit.
         unsafe {
-            TockSyscalls::syscall4::<2>([8 as *mut (), 1 as *mut (), 2 as *mut (), 0 as *mut ()]);
-            TockSyscalls::syscall2::<6>([0 as *mut (), 0 as *mut ()]);
+            TockSyscalls::syscall4::<class_id::COMMAND>([
+                8 as *mut (),
+                1 as *mut (),
+                2 as *mut (),
+                0 as *mut (),
+            ]);
+            TockSyscalls::syscall2::<class_id::EXIT>([0 as *mut (), 0 as *mut ()]);
         }
     }
 
     // Set the app break.
     // TODO: Replace with Syscalls::memop_brk() when that is implemented.
-    unsafe { TockSyscalls::syscall2::<5>([0 as *mut (), rt_header.initial_break]); }
+    unsafe {
+        TockSyscalls::syscall2::<class_id::MEMOP>([0 as *mut (), rt_header.initial_break]);
+    }
 
     // Set the stack pointer.
     unsafe {
@@ -87,9 +100,11 @@ extern fn start_prototype(
         remaining -= 1;
     }
 
-    extern {
+    extern "C" {
         fn rust_start() -> !;
     }
 
-    unsafe { rust_start(); }
+    unsafe {
+        rust_start();
+    }
 }
