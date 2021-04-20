@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/tock/libtock-rs.svg?branch=master)](https://travis-ci.org/tock/libtock-rs)
+![Build Status](https://github.com/tock/libtock-rs/workflows/ci/badge.svg)
 
 # libtock-rs
 
