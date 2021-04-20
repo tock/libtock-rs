@@ -5,6 +5,7 @@ mod async_traits;
 mod command_return;
 mod error_code;
 mod raw_syscalls;
+pub mod register;
 pub mod return_variant;
 mod syscalls;
 mod syscalls_impl;
