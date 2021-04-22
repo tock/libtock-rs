@@ -117,7 +117,7 @@ libtock-rs is licensed under either of
 
 at your option.
 
-Submodules have their own licenses.
+Submodules, as well as the code in the `ufmt` directory, have their own licenses.
 
 ### Contribution
 
