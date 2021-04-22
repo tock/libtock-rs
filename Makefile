@@ -91,6 +91,9 @@ EXCLUDE_RUNTIME := --exclude libtock_runtime
 
 .PHONY: test
 test: examples test-qemu-hifive
+	# TODO: Remove the libtock_runtime build when we have a code example for the
+	# 2.0 crates.
+	LIBTOCK_PLATFORM=nrf52 cargo build --release --target=thumbv7em-none-eabi -p libtock_runtime
 	LIBTOCK_PLATFORM=nrf52 PLATFORM=nrf52 cargo fmt --all -- --check
 	PLATFORM=nrf52 cargo clippy --all-targets --exclude libtock_runtime --workspace
 	LIBTOCK_PLATFORM=hifive1 cargo clippy --target=riscv32imac-unknown-none-elf -p libtock_runtime

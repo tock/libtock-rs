@@ -13,7 +13,7 @@
 #[repr(C)]
 struct RtHeader {
     start: usize,
-    initial_break: usize,
+    initial_break: *mut (),
     stack_top: usize,
     data_size: usize,
     data_flash_start: *const u32,
@@ -22,41 +22,55 @@ struct RtHeader {
     bss_start: *mut u8,
 }
 
+mod class_id {
+    pub const COMMAND: usize = 2;
+    pub const MEMOP: usize = 5;
+    pub const EXIT: usize = 6;
+}
+
 #[link_section = ".start"]
 #[no_mangle]
-extern fn start_prototype(
+extern "C" fn start_prototype(
     rt_header: &RtHeader,
     _memory_start: usize,
     _memory_len: usize,
     _app_break: usize,
 ) -> ! {
     use crate::TockSyscalls;
-    use libtock_platform::{OneArgMemop, RawSyscalls, YieldType};
+    use libtock_platform::RawSyscalls;
 
     let pc: usize;
-    #[cfg(target_arch = "riscv32")]
     unsafe {
+        #[cfg(target_arch = "arm")]
+        asm!("mov {}, pc", lateout(reg) pc, options(nomem, nostack, preserves_flags));
+        #[cfg(target_arch = "riscv32")]
         asm!("auipc {}, 0", lateout(reg) pc, options(nomem, nostack, preserves_flags));
     }
     if pc != rt_header.start {
         // Binary is in an incorrect location: report an error via
-        // LowLevelDebug.
+        // LowLevelDebug then exit.
         unsafe {
-            TockSyscalls::four_arg_syscall(8, 1, 2, 0, 2);
-        }
-        // TODO: Replace with an Exit call when exit is implemented.
-        loop {
-            TockSyscalls::raw_yield(YieldType::Wait);
+            TockSyscalls::syscall4::<class_id::COMMAND>([
+                8 as *mut (),
+                1 as *mut (),
+                2 as *mut (),
+                0 as *mut (),
+            ]);
+            TockSyscalls::syscall2::<class_id::EXIT>([0 as *mut (), 0 as *mut ()]);
         }
     }
 
     // Set the app break.
     // TODO: Replace with Syscalls::memop_brk() when that is implemented.
-    TockSyscalls::one_arg_memop(OneArgMemop::Brk, rt_header.initial_break);
+    unsafe {
+        TockSyscalls::syscall2::<class_id::MEMOP>([0 as *mut (), rt_header.initial_break]);
+    }
 
     // Set the stack pointer.
-    #[cfg(target_arch = "riscv32")]
     unsafe {
+        #[cfg(target_arch = "arm")]
+        asm!("mov sp, {}", in(reg) rt_header.stack_top, options(nomem, preserves_flags));
+        #[cfg(target_arch = "riscv32")]
         asm!("mv sp, {}", in(reg) rt_header.stack_top, options(nomem, preserves_flags));
     }
 
@@ -86,9 +100,11 @@ extern fn start_prototype(
         remaining -= 1;
     }
 
-    extern {
+    extern "C" {
         fn rust_start() -> !;
     }
 
-    unsafe { rust_start(); }
+    unsafe {
+        rust_start();
+    }
 }
