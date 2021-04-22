@@ -1,0 +1,14 @@
+[package]
+authors = ["Tock Project Developers <tock-dev@googlegroups.com>"]
+categories = ["embedded", "no-std", "os"]
+description = """Tock Rust userspace library collection. Provides all the \
+                 tools needed to create a Tock Rust process binary."""
+edition = "2018"
+license = "Apache-2.0 OR MIT"
+name = "libtock2"
+repository = "https://www.github.com/tock/libtock-rs"
+version = "0.1.0"
+
+[dependencies]
+libtock_platform = { path = "../platform" }
+libtock_runtime = { path = "../runtime" }

@@ -86,6 +86,7 @@ exclude = [ "tock" ]
 members = [
     "codegen",
     "core",
+    "libtock2",
     "platform",
     "runtime",
     "test_runner",
