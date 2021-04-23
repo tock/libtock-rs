@@ -190,6 +190,9 @@
 //! This crate is guaranteed to compile on stable Rust 1.34 and up. It *might* compile on older
 //! versions but that may change in any new patch release.
 
+// Added when we vendored ufmt into libtock-rs to avoid needing to immediately
+// make many changes.
+#![allow(clippy::all)]
 #![cfg_attr(not(feature = "std"), no_std)]
 #![deny(missing_docs)]
 #![deny(rust_2018_compatibility)]

@@ -1,5 +1,8 @@
 //! `μfmt` macros
 
+// Added when we vendored ufmt into libtock-rs to avoid needing to immediately
+// make many changes.
+#![allow(clippy::all)]
 #![deny(warnings)]
 
 extern crate proc_macro;

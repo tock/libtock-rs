@@ -1,3 +1,34 @@
+# Tock fork of `ufmt`
+
+**This is a fork of the [ufmt](https://github.com/japaric/ufmt) crate.** We are
+currently evaluating whether `libtock-rs` should use `ufmt` for its debug
+formatting functionality. Because `ufmt` has unfixed bugs (and appears to be
+unmaintained), we have forked it here are making bugfixes.
+
+This fork is temporary and will be removed when one of the following happens:
+
+1. We decide that `ufmt` is the right solution for `libtock-rs`. If this
+   happens, we will work to restore the maintenance of `ufmt`.
+2. We decide that `ufmt` is not the right solution for `libtock-rs`, at which
+   point we will replace it with an alternative.
+
+We did the following to create this fork:
+
+1. `wget 'https://github.com/japaric/ufmt/archive/fe817a3cd5d1a3f4edaf8828193519069f2901ec.zip'`
+1. `unzip fe817a3cd5d1a3f4edaf8828193519069f2901ec.zip`
+1. `mv ufmt-fe817a3cd5d1a3f4edaf8828193519069f2901ec ufmt`
+1. Changed the wording of the License section of `libtock-rs`' `README.md` to
+   mention that `ufmt` has its own license.
+1. cd `ufmt`
+1. Removed CI infrastructure and tools that aren't used now that this is in a
+   subdirectory of `libtock-rs`:
+   `rm -r cg.png ci .github .gitignore nopanic .travis.yml`
+1. Committed, creating commit
+   [5163051a2d7fefbe4c9b1c6ba62b79fa07c324e7](https://github.com/tock/libtock-rs/commit/5163051a2d7fefbe4c9b1c6ba62b79fa07c324e7).
+
+Further changes beyond the commit mentioned above are in separate commits so
+their diffs are readable.
+
 # `μfmt`
 
 > A (6-40x) smaller, (2-9x) faster and panic-free alternative to `core::fmt`

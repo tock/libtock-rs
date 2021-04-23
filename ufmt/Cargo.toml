@@ -25,10 +25,3 @@ std = ["ufmt-write/std"]
 [[test]]
 name = "vs-std-write"
 required-features = ["std"]
-
-[workspace]
-members = [
-  "macros",
-  "utils",
-  "write",
-]
