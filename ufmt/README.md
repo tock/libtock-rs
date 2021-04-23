@@ -3,7 +3,7 @@
 **This is a fork of the [ufmt](https://github.com/japaric/ufmt) crate.** We are
 currently evaluating whether `libtock-rs` should use `ufmt` for its debug
 formatting functionality. Because `ufmt` has unfixed bugs (and appears to be
-unmaintained), we have forked it here are making bugfixes.
+unmaintained), we have forked it here and are making bugfixes.
 
 This fork is temporary and will be removed when one of the following happens:
 
