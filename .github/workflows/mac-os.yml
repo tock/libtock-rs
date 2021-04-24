@@ -2,8 +2,8 @@
 
 name: ci-mac-os
 
-# We run this workflow during pull request review, but not for Bors merges, as
-# it takes over an hour to run.
+# We run this workflow during pull request review, but not for Bors merges. We
+# can change this if the workflow is reasonably quick and reliable.
 on: pull_request
 
 jobs:
@@ -14,14 +14,15 @@ jobs:
       # Clones a single commit from the libtock-rs repository. The commit cloned
       # is a merge commit between the PR's target branch and the PR's source.
       - name: Clone repository
-        uses: actions/checkout@v2.3.0
+        uses: actions/checkout@v2
 
-      # Install the toolchains we need, then run `cargo build`.
+      - name: Install arm-none-eabi-gcc
+        uses: fiam/arm-none-eabi-gcc@v1
+        with:
+          release: '10-2020-q4'
+
       - name: Build and Test
         run: |
-          brew tap riscv/riscv
-          brew update
-          brew install riscv-gnu-toolchain --with-multilib
           cd "${GITHUB_WORKSPACE}"
-          LIBTOCK_PLATFORM=hifive1 cargo build -p libtock_runtime \
-            --target=riscv32imac-unknown-none-elf
+          LIBTOCK_PLATFORM=nrf52 cargo build -p libtock_runtime \
+            --target=thumbv7em-none-eabi
