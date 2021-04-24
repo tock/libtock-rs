@@ -16,16 +16,10 @@ jobs:
       - name: Clone repository
         uses: actions/checkout@v2
 
-      # The brew commands are spread out over multiple steps so we can see the
-      # timings for each step in GitHub Actions' dashboard.
-      - name: Brew tap ARMmbed
-        run: brew tap ARMmbed/homebrew-formulae
-
-      - name: Brew update
-        run: brew update
-
-      - name: Brew install
-        run: brew install arm-none-eabi-gcc
+      - name: Install arm-none-eabi-gcc
+        uses: fiam/arm-none-eabi-gcc@v1
+        with:
+          release: '10-2020-q4'
 
       - name: Build and Test
         run: |
