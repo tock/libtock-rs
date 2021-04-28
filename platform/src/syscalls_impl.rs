@@ -19,7 +19,7 @@ impl<S: RawSyscalls> Syscalls for S {
             // Flag can be uninitialized here because the kernel promises to
             // only write to it, not read from it. MaybeUninit guarantees that
             // it is safe to write a YieldNoWaitReturn into it.
-            Self::yield2([yield_op::NO_WAIT as *mut (), flag.as_mut_ptr() as *mut ()]);
+            Self::yield2([yield_op::NO_WAIT.into(), flag.as_mut_ptr().into()]);
 
             // yield-no-wait guarantees it sets (initializes) flag before
             // returning.
@@ -32,7 +32,7 @@ impl<S: RawSyscalls> Syscalls for S {
         // requirement. The yield-wait system call cannot trigger undefined
         // behavior on its own in any other way.
         unsafe {
-            Self::yield1([yield_op::WAIT as *mut ()]);
+            Self::yield1([yield_op::WAIT.into()]);
         }
     }
 }

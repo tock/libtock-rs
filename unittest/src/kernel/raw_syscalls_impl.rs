@@ -1,3 +1,5 @@
+use libtock_platform::{RawSyscalls, Register};
+
 mod class_id {
     pub const SUBSCRIBE: usize = 1;
     pub const COMMAND: usize = 2;
@@ -7,23 +9,25 @@ mod class_id {
     pub const EXIT: usize = 6;
 }
 
-unsafe impl libtock_platform::RawSyscalls for super::Kernel {
-    unsafe fn yield1([_r0]: [*mut (); 1]) {
+unsafe impl RawSyscalls for super::Kernel {
+    unsafe fn yield1([Register(_r0)]: [Register; 1]) {
         // TODO: Add Yield.
     }
 
-    unsafe fn yield2([_r0, _r1]: [*mut (); 2]) {
+    unsafe fn yield2([Register(_r0), Register(_r1)]: [Register; 2]) {
         // TODO: Add Yield.
     }
 
-    unsafe fn syscall1<const CLASS: usize>([_r0]: [*mut (); 1]) -> [*mut (); 2] {
+    unsafe fn syscall1<const CLASS: usize>([Register(_r0)]: [Register; 1]) -> [Register; 2] {
         match CLASS {
             class_id::MEMOP => unimplemented!("TODO: Add Memop"),
             _ => panic!("Unknown syscall1 call. Class: {}", CLASS),
         }
     }
 
-    unsafe fn syscall2<const CLASS: usize>([_r0, _r1]: [*mut (); 2]) -> [*mut (); 2] {
+    unsafe fn syscall2<const CLASS: usize>(
+        [Register(_r0), Register(_r1)]: [Register; 2],
+    ) -> [Register; 2] {
         match CLASS {
             class_id::MEMOP => unimplemented!("TODO: Add Memop"),
             class_id::EXIT => unimplemented!("TODO: Add Exit"),
@@ -31,7 +35,9 @@ unsafe impl libtock_platform::RawSyscalls for super::Kernel {
         }
     }
 
-    unsafe fn syscall4<const CLASS: usize>([_r0, _r1, _r2, _r3]: [*mut (); 4]) -> [*mut (); 4] {
+    unsafe fn syscall4<const CLASS: usize>(
+        [Register(_r0), Register(_r1), Register(_r2), Register(_r3)]: [Register; 4],
+    ) -> [Register; 4] {
         match CLASS {
             class_id::SUBSCRIBE => unimplemented!("TODO: Add Subscribe"),
             class_id::COMMAND => unimplemented!("TODO: Add Command"),
