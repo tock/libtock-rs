@@ -42,7 +42,8 @@ jobs:
       # relocation.
       - name: Build and Test
         run: |
-          sudo apt-get install binutils-riscv64-unknown-elf
+          sudo apt-get install binutils-arm-none-eabi \
+            binutils-riscv64-unknown-elf
           cd "${GITHUB_WORKSPACE}"
           echo "[target.'cfg(all())']" >> .cargo/config
           echo 'rustflags = ["-D", "warnings"]' >> .cargo/config
