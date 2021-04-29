@@ -1,0 +1,8 @@
+[package]
+edition = "2018"
+name = "syscalls_tests"
+version = "0.1.0"
+
+[dependencies]
+libtock_platform = { path = "../platform" }
+libtock_unittest = { path = "../unittest" }
