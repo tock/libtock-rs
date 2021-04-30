@@ -91,5 +91,6 @@ members = [
     "runtime",
     "test_runner",
     "tools/print_sizes",
+    "ufmt",
     "unittest",
 ]

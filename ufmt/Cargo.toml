@@ -1,0 +1,27 @@
+[package]
+authors = ["Jorge Aparicio <jorge@japaric.io>"]
+categories = ["embedded", "no-std"]
+description = "A (6-40x) smaller, (2-9x) faster and panic-free alternative to `core::fmt`"
+documentation = "https://docs.rs/ufmt"
+edition = "2018"
+keywords = ["Debug", "Display", "Write", "format"]
+license = "MIT OR Apache-2.0"
+name = "ufmt"
+readme = "README.md"
+repository = "https://github.com/japaric/ufmt"
+version = "0.1.0"
+
+[dependencies]
+proc-macro-hack = "0.5.11"
+ufmt-macros = { path = "macros", version = "0.1.0" }
+ufmt-write = { path = "write", version = "0.1.0" }
+
+# NOTE do NOT add an `alloc` feature before the alloc crate can be used in
+# no-std BINARIES
+[features]
+# NOTE do NOT turn `std` into a default feature; this is a no-std first crate
+std = ["ufmt-write/std"]
+
+[[test]]
+name = "vs-std-write"
+required-features = ["std"]
