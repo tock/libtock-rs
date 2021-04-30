@@ -86,17 +86,30 @@ examples:
 
 # Arguments to pass to cargo to exclude libtock_runtime and crates that depend
 # on libtock_runtime. Used when we need to build a crate for the host OS, as
-# libtock_runtime only suppors running on Tock.
-EXCLUDE_RUNTIME := --exclude libtock_runtime
+# libtock_runtime only supports running on Tock.
+EXCLUDE_RUNTIME := --exclude libtock2 --exclude libtock_runtime
+
+# Arguments to pass to cargo to exclude `std` and crates that depend on it. Used
+# when we build a crate for an embedded target, as those targets lack `std`.
+EXCLUDE_STD := --exclude libtock_unittest --exclude print_sizes --exclude test_runner
 
 .PHONY: test
 test: examples test-qemu-hifive
-	# TODO: Remove the libtock_runtime build when we have a code example for the
-	# 2.0 crates.
-	LIBTOCK_PLATFORM=nrf52 cargo build --release --target=thumbv7em-none-eabi -p libtock_runtime
+	# TODO: When we have a working embedded test harness, change the libtock2
+	# builds to --all-targets rather than --examples.
+	# Build libtock2 on both a RISC-V target and an ARM target. We pick
+	# opentitan as the RISC-V target because it lacks atomics.
+	LIBTOCK_PLATFORM=opentitan cargo build --examples --release \
+		--target=riscv32imc-unknown-none-elf -p libtock2
+	LIBTOCK_PLATFORM=nrf52 cargo build --examples --release \
+		--target=thumbv7em-none-eabi -p libtock2
 	LIBTOCK_PLATFORM=nrf52 PLATFORM=nrf52 cargo fmt --all -- --check
-	PLATFORM=nrf52 cargo clippy --all-targets --exclude libtock_runtime --workspace
-	LIBTOCK_PLATFORM=hifive1 cargo clippy --target=riscv32imac-unknown-none-elf -p libtock_runtime
+	PLATFORM=nrf52 cargo clippy --all-targets $(EXCLUDE_RUNTIME) --workspace
+	# TODO: Add a clippy invocation for an ARM platform, once the Tock 1.0
+	# crates are removed. It is omitted because the Tock 1.0 crates don't
+	# currently pass clippy on ARM.
+	LIBTOCK_PLATFORM=hifive1 PLATFORM=hifive1 cargo clippy $(EXCLUDE_STD) \
+		--target=riscv32imac-unknown-none-elf --workspace
 	PLATFORM=nrf52 cargo miri test $(EXCLUDE_RUNTIME) --workspace
 	MIRIFLAGS="-Zmiri-symbolic-alignment-check -Zmiri-track-raw-pointers" \
 		PLATFORM=nrf52 cargo miri test $(EXCLUDE_RUNTIME) --workspace
