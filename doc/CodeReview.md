@@ -15,9 +15,8 @@ PR to `libtock-rs` can be divided into two categories:
 
 The owners of `libtock-rs` (listed [below](#owners)) determine whether a PR is
 an upkeep PR or a significant PR. PRs should be merged by the `libtock-rs`
-owners rather than the PR's author. PRs authored by `libtock-rs` owners should
-be merged by a reviewer rather than their author. In general, PRs should be
-merged using a `bors r+` command rather than the GitHub UI (see the [bors
+owners rather than the PR's author. In general, PRs should be merged using a
+`bors r+` command rather than the GitHub UI (see the [bors
 documentation](https://bors.tech/documentation/) for more information on bors).
 
 A PR may only be merged when all of the following are true:
