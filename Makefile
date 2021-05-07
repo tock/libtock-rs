@@ -91,7 +91,8 @@ EXCLUDE_RUNTIME := --exclude libtock2 --exclude libtock_runtime
 
 # Arguments to pass to cargo to exclude `std` and crates that depend on it. Used
 # when we build a crate for an embedded target, as those targets lack `std`.
-EXCLUDE_STD := --exclude libtock_unittest --exclude print_sizes --exclude test_runner
+EXCLUDE_STD := --exclude libtock_unittest --exclude print_sizes \
+               --exclude syscalls_tests --exclude test_runner
 
 .PHONY: test
 test: examples test-qemu-hifive
