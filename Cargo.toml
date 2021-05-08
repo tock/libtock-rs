@@ -89,6 +89,7 @@ members = [
     "libtock2",
     "platform",
     "runtime",
+    "syscalls_tests",
     "test_runner",
     "tools/print_sizes",
     "ufmt",
