@@ -2,6 +2,9 @@
 //! point) and linking it into the process binary. Requires out_dir to be added
 //! to rustc's link search path.
 
+/// Compiles the external assembly and tells cargo/rustc to link the resulting
+/// library into the crate. Panics if it is unable to find a working assembly
+/// toolchain or if the assembly fails to compile.
 pub(crate) fn build_and_link(out_dir: &str) {
     use std::env::var;
     let arch = var("CARGO_CFG_TARGET_ARCH").expect("Unable to read CARGO_CFG_TARGET_ARCH");
@@ -49,6 +52,8 @@ pub(crate) fn build_and_link(out_dir: &str) {
             return;
         }
     }
+
+    panic!("Unable to find a toolchain for architecture {}", arch);
 }
 
 #[derive(Clone, Copy)]
