@@ -7,7 +7,7 @@ use crate::gpio::GpioDriverFactory;
 use crate::hmac::HmacDriverFactory;
 use crate::i2c_master::I2cDriverFactory;
 use crate::i2c_master_slave::I2cMSDriverFactory;
-use crate::leds::LedsDriverFactory;
+use crate::led::LedsDriverFactory;
 use crate::result::OtherError;
 use crate::result::TockError;
 use crate::rng::RngDriver;
@@ -25,7 +25,7 @@ use core::cell::Cell;
 pub struct Drivers {
     pub console: ConsoleDriver,
     pub ctap: CtapDriverFactory,
-    pub leds: LedsDriverFactory,
+    pub led: LedsDriverFactory,
     pub alarm: DriverContext,
     pub gpio: GpioDriverFactory,
     pub hmac: HmacDriverFactory,
@@ -75,7 +75,7 @@ const DRIVERS: Drivers = Drivers {
     buttons: ButtonsDriverFactory,
     console: ConsoleDriver,
     ctap: CtapDriverFactory,
-    leds: LedsDriverFactory,
+    led: LedsDriverFactory,
     alarm: DriverContext {
         active_timer: Cell::new(None),
     },
