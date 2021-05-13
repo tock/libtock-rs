@@ -1,10 +1,10 @@
 #![no_std]
 
 use core::cell::Cell;
+use libtock::alarm::Duration;
 use libtock::buttons::ButtonState;
 use libtock::println;
 use libtock::result::TockResult;
-use libtock::timer::Duration;
 
 libtock_core::stack_size! {0x800}
 
@@ -13,7 +13,7 @@ async fn main() -> TockResult<()> {
     let mut drivers = libtock::retrieve_drivers()?;
 
     let buttons_driver = drivers.buttons.init_driver()?;
-    let mut timer_driver = drivers.timer.create_timer_driver();
+    let mut timer_driver = drivers.alarm.create_timer_driver();
     let timer_driver = timer_driver.activate()?;
     drivers.console.create_console();
 

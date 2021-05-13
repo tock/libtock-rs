@@ -1,12 +1,12 @@
 #![no_std]
+use libtock::alarm::DriverContext;
+use libtock::alarm::Duration;
 use libtock::println;
 /**
  * This example shows a repeated timer combined with reading and displaying the current time in
  * clock ticks.
  **/
 use libtock::result::TockResult;
-use libtock::timer::DriverContext;
-use libtock::timer::Duration;
 
 libtock_core::stack_size! {0x800}
 
@@ -21,8 +21,8 @@ async fn main() -> TockResult<()> {
     let mut previous_ticks = None;
 
     for i in 0.. {
-        print_now(&mut drivers.timer, &mut previous_ticks, i)?;
-        let mut timer_driver = drivers.timer.create_timer_driver();
+        print_now(&mut drivers.alarm, &mut previous_ticks, i)?;
+        let mut timer_driver = drivers.alarm.create_timer_driver();
         let timer_driver = timer_driver.activate()?;
 
         timer_driver.sleep(Duration::from_ms(DELAY_MS)).await?;

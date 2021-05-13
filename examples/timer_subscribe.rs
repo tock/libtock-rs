@@ -1,9 +1,9 @@
 #![no_std]
 
 use futures::future;
+use libtock::alarm::Duration;
 use libtock::println;
 use libtock::result::TockResult;
-use libtock::timer::Duration;
 
 libtock_core::stack_size! {0x800}
 
@@ -13,7 +13,7 @@ async fn main() -> TockResult<()> {
 
     drivers.console.create_console();
 
-    let mut with_callback = drivers.timer.with_callback(|_, _| {
+    let mut with_callback = drivers.alarm.with_callback(|_, _| {
         println!("This line is printed 2 seconds after the start of the program.");
     });
 

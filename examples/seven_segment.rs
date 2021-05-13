@@ -1,8 +1,8 @@
 #![no_std]
 
+use libtock::alarm::Duration;
 use libtock::electronics::ShiftRegister;
 use libtock::result::TockResult;
-use libtock::timer::Duration;
 
 libtock_core::stack_size! {0x800}
 
@@ -37,7 +37,7 @@ async fn main() -> TockResult<()> {
     let gpio2 = gpio2.enable_output()?;
     let mut shift_register = ShiftRegister::new(&gpio0, &gpio1, &gpio2);
 
-    let mut driver = drivers.timer.create_timer_driver();
+    let mut driver = drivers.alarm.create_timer_driver();
     let timer_driver = driver.activate()?;
 
     let mut i = 0;

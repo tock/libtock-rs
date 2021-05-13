@@ -1,4 +1,5 @@
 use crate::adc::AdcDriverFactory;
+use crate::alarm::DriverContext;
 use crate::buttons::ButtonsDriverFactory;
 use crate::console::ConsoleDriver;
 use crate::ctap::CtapDriverFactory;
@@ -17,7 +18,6 @@ use crate::sensors::TemperatureSensor;
 use crate::simple_ble::BleAdvertisingDriverFactory;
 use crate::simple_ble::BleScanningDriverFactory;
 use crate::temperature::TemperatureDriverFactory;
-use crate::timer::DriverContext;
 use core::cell::Cell;
 
 /// Struct containing all drivers constructible through [retrieve_drivers()]
@@ -26,7 +26,7 @@ pub struct Drivers {
     pub console: ConsoleDriver,
     pub ctap: CtapDriverFactory,
     pub leds: LedsDriverFactory,
-    pub timer: DriverContext,
+    pub alarm: DriverContext,
     pub gpio: GpioDriverFactory,
     pub hmac: HmacDriverFactory,
     pub temperature: TemperatureDriverFactory,
@@ -76,7 +76,7 @@ const DRIVERS: Drivers = Drivers {
     console: ConsoleDriver,
     ctap: CtapDriverFactory,
     leds: LedsDriverFactory,
-    timer: DriverContext {
+    alarm: DriverContext {
         active_timer: Cell::new(None),
     },
     gpio: GpioDriverFactory,

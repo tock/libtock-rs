@@ -1,6 +1,7 @@
 #![cfg_attr(not(test), no_std)]
 
 pub mod adc;
+pub mod alarm;
 pub mod ble_composer;
 pub mod ble_parser;
 pub mod buttons;
@@ -21,7 +22,6 @@ pub mod rng;
 pub mod sensors;
 pub mod simple_ble;
 pub mod temperature;
-pub mod timer;
 
 pub use drivers::retrieve_drivers;
 pub use libtock_codegen::main;
