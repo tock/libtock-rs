@@ -22,3 +22,6 @@ pub use yield_types::YieldNoWaitReturn;
 
 #[cfg(test)]
 mod command_return_tests;
+
+#[cfg(test)]
+mod error_code_tests;
