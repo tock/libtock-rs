@@ -1,11 +1,6 @@
 //! Implements `Syscalls` for all types that implement `RawSyscalls`.
 
-use crate::{RawSyscalls, Syscalls, YieldNoWaitReturn};
-
-mod yield_op {
-    pub const NO_WAIT: u32 = 0;
-    pub const WAIT: u32 = 1;
-}
+use crate::{yield_op, RawSyscalls, Syscalls, YieldNoWaitReturn};
 
 impl<S: RawSyscalls> Syscalls for S {
     // -------------------------------------------------------------------------

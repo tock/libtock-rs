@@ -1,13 +1,4 @@
-use libtock_platform::{RawSyscalls, Register};
-
-mod class_id {
-    pub const SUBSCRIBE: usize = 1;
-    pub const COMMAND: usize = 2;
-    pub const RW_ALLOW: usize = 3;
-    pub const RO_ALLOW: usize = 4;
-    pub const MEMOP: usize = 5;
-    pub const EXIT: usize = 6;
-}
+use libtock_platform::{syscall_class, RawSyscalls, Register};
 
 unsafe impl RawSyscalls for super::Kernel {
     unsafe fn yield1([Register(_r0)]: [Register; 1]) {
@@ -20,7 +11,7 @@ unsafe impl RawSyscalls for super::Kernel {
 
     unsafe fn syscall1<const CLASS: usize>([Register(_r0)]: [Register; 1]) -> [Register; 2] {
         match CLASS {
-            class_id::MEMOP => unimplemented!("TODO: Add Memop"),
+            syscall_class::MEMOP => unimplemented!("TODO: Add Memop"),
             _ => panic!("Unknown syscall1 call. Class: {}", CLASS),
         }
     }
@@ -29,8 +20,8 @@ unsafe impl RawSyscalls for super::Kernel {
         [Register(_r0), Register(_r1)]: [Register; 2],
     ) -> [Register; 2] {
         match CLASS {
-            class_id::MEMOP => unimplemented!("TODO: Add Memop"),
-            class_id::EXIT => unimplemented!("TODO: Add Exit"),
+            syscall_class::MEMOP => unimplemented!("TODO: Add Memop"),
+            syscall_class::EXIT => unimplemented!("TODO: Add Exit"),
             _ => panic!("Unknown syscall2 call. Class: {}", CLASS),
         }
     }
@@ -39,10 +30,10 @@ unsafe impl RawSyscalls for super::Kernel {
         [Register(_r0), Register(_r1), Register(_r2), Register(_r3)]: [Register; 4],
     ) -> [Register; 4] {
         match CLASS {
-            class_id::SUBSCRIBE => unimplemented!("TODO: Add Subscribe"),
-            class_id::COMMAND => unimplemented!("TODO: Add Command"),
-            class_id::RW_ALLOW => unimplemented!("TODO: Add Allow"),
-            class_id::RO_ALLOW => unimplemented!("TODO: Add Allow"),
+            syscall_class::SUBSCRIBE => unimplemented!("TODO: Add Subscribe"),
+            syscall_class::COMMAND => unimplemented!("TODO: Add Command"),
+            syscall_class::RW_ALLOW => unimplemented!("TODO: Add Allow"),
+            syscall_class::RO_ALLOW => unimplemented!("TODO: Add Allow"),
             _ => panic!("Unknown syscall4 call. Class: {}", CLASS),
         }
     }
