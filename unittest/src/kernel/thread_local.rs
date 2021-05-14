@@ -83,7 +83,7 @@ mod tests {
     #[test]
     fn normal_test() {
         assert!(get_kernel().is_none());
-        let rc_kernel = Kernel::new("normal_test");
+        let rc_kernel = Kernel::new();
         assert!(Rc::ptr_eq(
             &get_kernel().expect("get_kernel returned None"),
             &rc_kernel
@@ -97,20 +97,21 @@ mod tests {
     #[test]
     fn duplicate_kernel() {
         assert!(get_kernel().is_none());
-        let rc_kernel_1 = Kernel::new("duplicate_kernel_1");
+        #[rustfmt::skip]
+        let (rc_kernel_1, new_location) = (Kernel::new(), std::panic::Location::caller());
         assert!(Rc::ptr_eq(
             &get_kernel().expect("get_kernel returned None"),
             &rc_kernel_1
         ));
         let result = std::panic::catch_unwind(|| {
-            Kernel::new("duplicate_kernel_2");
+            Kernel::new();
         });
         let panic_arg = result.expect_err("Setting a duplicate kernel did not panic");
         let message = panic_arg
             .downcast_ref::<String>()
             .expect("Wrong panic payload type");
         // Verify the panic message mentions the correct kernel.
-        assert!(message.contains("duplicate_kernel_1"));
+        assert!(message.contains(&format!("{}:{}", new_location.file(), new_location.line())));
     }
 
     // Verifies that ThreadKernelRef's Drop implementations detects a leaked
@@ -123,7 +124,7 @@ mod tests {
             let thread_ref = ThreadKernelRef::new();
             // Create a kernel, loading it into THREAD_KERNEL, then use
             // Cell::replace() to move the kernel reference into thread_ref.
-            let _rc_kernel = Kernel::new("thread_drop_leak");
+            let _rc_kernel = Kernel::new();
             thread_ref
                 .kernel
                 .replace(THREAD_KERNEL.with(|tk| tk.kernel.replace(Weak::new())));
@@ -134,7 +135,7 @@ mod tests {
         let message = panic_arg
             .downcast_ref::<String>()
             .expect("Wrong panic payload type");
-        // Verify the panic message mentions the correct kernel.
-        assert!(message.contains("thread_drop_leak"));
+        // Verify the panic message is from Kernel::report_leaked.
+        assert!(message.contains("perhaps a Rc<Kernel> was leaked"));
     }
 }
