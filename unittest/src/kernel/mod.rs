@@ -2,7 +2,12 @@ use crate::{ExpectedSyscall, SyscallLogEntry};
 use std::cell::Cell;
 
 // TODO: Add Allow.
-// TODO: Add Command.
+
+mod command_impl;
+
+#[cfg(test)]
+mod command_impl_tests;
+
 // TODO: Add Exit.
 // TODO: Add Memop.
 // TODO: Add Subscribe.

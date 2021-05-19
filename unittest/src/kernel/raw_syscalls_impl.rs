@@ -35,12 +35,11 @@ unsafe impl RawSyscalls for super::Kernel {
         }
     }
 
-    unsafe fn syscall4<const CLASS: usize>(
-        [Register(_r0), Register(_r1), Register(_r2), Register(_r3)]: [Register; 4],
-    ) -> [Register; 4] {
+    unsafe fn syscall4<const CLASS: usize>([r0, r1, r2, r3]: [Register; 4]) -> [Register; 4] {
+        assert_valid((r0, r1, r2, r3));
         match CLASS {
             class_id::SUBSCRIBE => unimplemented!("TODO: Add Subscribe"),
-            class_id::COMMAND => unimplemented!("TODO: Add Command"),
+            class_id::COMMAND => super::command_impl::command(r0, r1, r2, r3),
             class_id::RW_ALLOW => unimplemented!("TODO: Add Allow"),
             class_id::RO_ALLOW => unimplemented!("TODO: Add Allow"),
             _ => panic!("Unknown syscall4 call. Class: {}", CLASS),
