@@ -5,7 +5,7 @@ fn failure() {
     let command_return = unsafe {
         CommandReturn::new(
             return_variant::FAILURE,
-            ErrorCode::Reserve as usize,
+            ErrorCode::Reserve as u32,
             1002,
             1003,
         )
@@ -29,6 +29,10 @@ fn failure() {
     assert_eq!(command_return.get_success_u64(), None);
     assert_eq!(command_return.get_success_3_u32(), None);
     assert_eq!(command_return.get_success_u32_u64(), None);
+    assert_eq!(
+        command_return.raw_values(),
+        (return_variant::FAILURE, 5, 1002, 1003)
+    );
     assert_eq!(command_return.return_variant(), return_variant::FAILURE);
 }
 
@@ -37,7 +41,7 @@ fn failure_u32() {
     let command_return = unsafe {
         CommandReturn::new(
             return_variant::FAILURE_U32,
-            ErrorCode::Off as usize,
+            ErrorCode::Off as u32,
             1002,
             1003,
         )
@@ -64,6 +68,10 @@ fn failure_u32() {
     assert_eq!(command_return.get_success_u64(), None);
     assert_eq!(command_return.get_success_3_u32(), None);
     assert_eq!(command_return.get_success_u32_u64(), None);
+    assert_eq!(
+        command_return.raw_values(),
+        (return_variant::FAILURE_U32, 4, 1002, 1003)
+    );
     assert_eq!(command_return.return_variant(), return_variant::FAILURE_U32);
 }
 
@@ -72,7 +80,7 @@ fn failure_2_u32() {
     let command_return = unsafe {
         CommandReturn::new(
             return_variant::FAILURE_2_U32,
-            ErrorCode::Already as usize,
+            ErrorCode::Already as u32,
             1002,
             1003,
         )
@@ -100,6 +108,10 @@ fn failure_2_u32() {
     assert_eq!(command_return.get_success_3_u32(), None);
     assert_eq!(command_return.get_success_u32_u64(), None);
     assert_eq!(
+        command_return.raw_values(),
+        (return_variant::FAILURE_2_U32, 3, 1002, 1003)
+    );
+    assert_eq!(
         command_return.return_variant(),
         return_variant::FAILURE_2_U32
     );
@@ -110,7 +122,7 @@ fn failure_u64() {
     let command_return = unsafe {
         CommandReturn::new(
             return_variant::FAILURE_U64,
-            ErrorCode::Busy as usize,
+            ErrorCode::Busy as u32,
             0x1002,
             0x1003,
         )
@@ -137,6 +149,10 @@ fn failure_u64() {
     assert_eq!(command_return.get_success_u64(), None);
     assert_eq!(command_return.get_success_3_u32(), None);
     assert_eq!(command_return.get_success_u32_u64(), None);
+    assert_eq!(
+        command_return.raw_values(),
+        (return_variant::FAILURE_U64, 2, 0x1002, 0x1003)
+    );
     assert_eq!(command_return.return_variant(), return_variant::FAILURE_U64);
 }
 
@@ -162,6 +178,10 @@ fn success() {
     assert_eq!(command_return.get_success_u64(), None);
     assert_eq!(command_return.get_success_3_u32(), None);
     assert_eq!(command_return.get_success_u32_u64(), None);
+    assert_eq!(
+        command_return.raw_values(),
+        (return_variant::SUCCESS, 1001, 1002, 1003)
+    );
     assert_eq!(command_return.return_variant(), return_variant::SUCCESS);
 }
 
@@ -188,6 +208,10 @@ fn success_u32() {
     assert_eq!(command_return.get_success_u64(), None);
     assert_eq!(command_return.get_success_3_u32(), None);
     assert_eq!(command_return.get_success_u32_u64(), None);
+    assert_eq!(
+        command_return.raw_values(),
+        (return_variant::SUCCESS_U32, 1001, 1002, 1003)
+    );
     assert_eq!(command_return.return_variant(), return_variant::SUCCESS_U32);
 }
 
@@ -214,6 +238,10 @@ fn success_2_u32() {
     assert_eq!(command_return.get_success_u64(), None);
     assert_eq!(command_return.get_success_3_u32(), None);
     assert_eq!(command_return.get_success_u32_u64(), None);
+    assert_eq!(
+        command_return.raw_values(),
+        (return_variant::SUCCESS_2_U32, 1001, 1002, 1003)
+    );
     assert_eq!(
         command_return.return_variant(),
         return_variant::SUCCESS_2_U32
@@ -246,6 +274,10 @@ fn success_u64() {
     );
     assert_eq!(command_return.get_success_3_u32(), None);
     assert_eq!(command_return.get_success_u32_u64(), None);
+    assert_eq!(
+        command_return.raw_values(),
+        (return_variant::SUCCESS_U64, 0x1001, 0x1002, 1003)
+    );
     assert_eq!(command_return.return_variant(), return_variant::SUCCESS_U64);
 }
 
@@ -272,6 +304,10 @@ fn success_3_u32() {
     assert_eq!(command_return.get_success_u64(), None);
     assert_eq!(command_return.get_success_3_u32(), Some((1001, 1002, 1003)));
     assert_eq!(command_return.get_success_u32_u64(), None);
+    assert_eq!(
+        command_return.raw_values(),
+        (return_variant::SUCCESS_3_U32, 1001, 1002, 1003)
+    );
     assert_eq!(
         command_return.return_variant(),
         return_variant::SUCCESS_3_U32
@@ -303,6 +339,10 @@ fn success_u32_u64() {
     assert_eq!(
         command_return.get_success_u32_u64(),
         Some((1001, 0x0000_1003_0000_1002))
+    );
+    assert_eq!(
+        command_return.raw_values(),
+        (return_variant::SUCCESS_U32_U64, 1001, 0x1002, 0x1003)
     );
     assert_eq!(
         command_return.return_variant(),

@@ -3,6 +3,7 @@
 
 #![deny(unsafe_op_in_unsafe_fn)]
 
+pub mod command_return;
 mod expected_syscall;
 mod kernel;
 mod syscall_log;

@@ -1,11 +1,7 @@
 /// `ReturnVariant` describes what value type the kernel has returned.
 // ReturnVariant is not an enum so that it can be converted from a u32 for free.
-// TODO: derive(Debug) is currently only enabled for test builds, which is
-// necessary so it can be used in assert_eq!. We should develop a lighter-weight
-// Debug implementation and see if it is small enough to enable on non-Debug
-// builds.
-#[cfg_attr(test, derive(Debug))]
-#[derive(Clone, Copy, PartialEq, Eq)]
+// TODO: Add a ufmt debug implementation for use by process binaries.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct ReturnVariant(u32);
 
 impl From<u32> for ReturnVariant {
