@@ -19,7 +19,7 @@ fn yield_no_wait_test() {
         .expect("wrong panic payload type")
         .contains("no fake::Kernel"));
 
-    let kernel = fake::Kernel::new("yield_no_wait_test");
+    let kernel = fake::Kernel::new();
 
     // Test yield_no_wait with an empty upcall queue and empty expected syscall
     // queue.
@@ -69,7 +69,7 @@ fn yield_wait_test() {
         .expect("wrong panic payload type")
         .contains("no fake::Kernel"));
 
-    let kernel = fake::Kernel::new("yield_wait_test");
+    let kernel = fake::Kernel::new();
 
     // Test yield_wait with a mismatched expected syscall.
     kernel.add_expected_syscall(ExpectedSyscall::YieldNoWait {
@@ -93,7 +93,7 @@ fn yield_wait_test() {
 
 #[test]
 fn yield1() {
-    let kernel = fake::Kernel::new("yield1");
+    let kernel = fake::Kernel::new();
 
     #[cfg(target_pointer_width = "64")]
     {
@@ -133,7 +133,7 @@ fn yield1() {
 // Tests RawSyscalls::yield2's handling of bad yield IDs.
 #[test]
 fn yield2() {
-    let kernel = fake::Kernel::new("yield2");
+    let kernel = fake::Kernel::new();
 
     #[cfg(target_pointer_width = "64")]
     {

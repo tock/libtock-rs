@@ -27,19 +27,23 @@ mod yield_impl_tests;
 // Kernel.
 pub struct Kernel {
     expected_syscalls: Cell<std::collections::VecDeque<ExpectedSyscall>>,
-    name: &'static str,
+
+    // The location of the call to `new`. Used by report_leaked() to tell the
+    // user which kernel they leaked in a unit test.
+    new_location: &'static std::panic::Location<'static>,
+
     syscall_log: Cell<Vec<SyscallLogEntry>>,
 }
 
 impl Kernel {
     /// Creates a `Kernel` for this thread and returns a reference to it. This
     /// instance should be dropped at the end of the test, before this thread
-    /// creates another `Kernel`. `name` should be a string identifying the test
-    /// case, and is used to provide better diagnostics.
-    pub fn new(name: &'static str) -> std::rc::Rc<Kernel> {
+    /// creates another `Kernel`.
+    #[track_caller]
+    pub fn new() -> std::rc::Rc<Kernel> {
         let rc = std::rc::Rc::new(Kernel {
             expected_syscalls: Default::default(),
-            name,
+            new_location: std::panic::Location::caller(),
             syscall_log: Default::default(),
         });
         thread_local::set_kernel(&rc);
@@ -108,9 +112,11 @@ impl Kernel {
     // well-named the panic message should indicate where the leak occurred.
     fn report_leaked(&self) -> ! {
         panic!(
-            "The fake::Kernel with name '{}' was never cleaned up; \
-                perhaps a Rc<Kernel> was leaked?",
-            self.name
+            "The fake::Kernel initialized at {}:{}:{} was not cleaned up; \
+             perhaps a Rc<Kernel> was leaked?",
+            self.new_location.file(),
+            self.new_location.line(),
+            self.new_location.column()
         );
     }
 }
@@ -119,18 +125,19 @@ impl Kernel {
 mod tests {
     use super::*;
 
-    // Verifies the name propagates correctly into the report_leaked() error
+    // Verifies the location propagates correctly into the report_leaked() error
     // message.
     #[test]
     fn name_to_report_leaked() {
-        let result = std::panic::catch_unwind(|| {
-            Kernel::new("name_to_report_leaked").report_leaked();
-        });
+        use std::panic::{catch_unwind, AssertUnwindSafe, Location};
+        #[rustfmt::skip]
+        let (kernel, new_location) = (Kernel::new(), Location::caller());
+        let result = catch_unwind(AssertUnwindSafe(|| kernel.report_leaked()));
         let panic_arg = result.expect_err("Kernel::report_leaked did not panic");
         let message = panic_arg
             .downcast_ref::<String>()
             .expect("Wrong panic payload type");
-        assert!(message.contains("name_to_report_leaked"));
+        assert!(message.contains(&format!("{}:{}", new_location.file(), new_location.line())));
     }
 
     // TODO: We cannot currently test the expected syscall queue or the syscall
