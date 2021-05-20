@@ -4,33 +4,21 @@ use core::mem::transmute;
 
 /// The response type from `command`. Can represent a successful value or a
 /// failure.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub struct CommandReturn {
     return_variant: ReturnVariant,
-    // r1, r2, and r3 should only contain 32-bit values. However, these are
-    // converted directly from usizes returned by RawSyscalls::four_arg_syscall.
-    // To avoid casting twice (both when converting to a Command Return and when
-    // calling a get_*() function), we store the usizes directly. Then using the
-    // CommandReturn only involves one conversion for each of r1, r2, and r3,
-    // performed in the get_*() functions.
 
     // Safety invariant on r1: If return_variant is failure variant, r1 must be
     // a valid ErrorCode.
-    r1: usize,
-    r2: usize,
-    r3: usize,
+    r1: u32,
+    r2: u32,
+    r3: u32,
 }
 
 impl CommandReturn {
     /// # Safety
     /// If return_variant is a failure variant, r1 must be a valid ErrorCode.
-    #[cfg(test)] // Will be removed when command() is implemented.
-    pub(crate) unsafe fn new(
-        return_variant: ReturnVariant,
-        r1: usize,
-        r2: usize,
-        r3: usize,
-    ) -> Self {
+    pub unsafe fn new(return_variant: ReturnVariant, r1: u32, r2: u32, r3: u32) -> Self {
         CommandReturn {
             return_variant,
             r1,
@@ -115,7 +103,7 @@ impl CommandReturn {
         if !self.is_failure_u32() {
             return None;
         }
-        Some((unsafe { transmute(self.r1 as u16) }, self.r2 as u32))
+        Some((unsafe { transmute(self.r1 as u16) }, self.r2))
     }
 
     /// Returns the error code and return values if this CommandReturn is of
@@ -124,11 +112,7 @@ impl CommandReturn {
         if !self.is_failure_2_u32() {
             return None;
         }
-        Some((
-            unsafe { transmute(self.r1 as u16) },
-            self.r2 as u32,
-            self.r3 as u32,
-        ))
+        Some((unsafe { transmute(self.r1 as u16) }, self.r2, self.r3))
     }
 
     /// Returns the error code and return value if this CommandReturn is of type
@@ -148,7 +132,7 @@ impl CommandReturn {
         if !self.is_success_u32() {
             return None;
         }
-        Some(self.r1 as u32)
+        Some(self.r1)
     }
 
     /// Returns the values if this CommandReturn is of type Success with 2 u32.
@@ -156,7 +140,7 @@ impl CommandReturn {
         if !self.is_success_2_u32() {
             return None;
         }
-        Some((self.r1 as u32, self.r2 as u32))
+        Some((self.r1, self.r2))
     }
 
     /// Returns the value if this CommandReturn is of type Success with u64.
@@ -172,7 +156,7 @@ impl CommandReturn {
         if !self.is_success_3_u32() {
             return None;
         }
-        Some((self.r1 as u32, self.r2 as u32, self.r3 as u32))
+        Some((self.r1, self.r2, self.r3))
     }
 
     /// Returns the values if this CommandReturn is of type Success with u32 and
@@ -181,7 +165,12 @@ impl CommandReturn {
         if !self.is_success_u32_u64() {
             return None;
         }
-        Some((self.r1 as u32, self.r2 as u64 + ((self.r3 as u64) << 32)))
+        Some((self.r1, self.r2 as u64 + ((self.r3 as u64) << 32)))
+    }
+
+    /// Returns the register values used to create this command.
+    pub fn raw_values(&self) -> (ReturnVariant, u32, u32, u32) {
+        (self.return_variant, self.r1, self.r2, self.r3)
     }
 
     /// Returns the return variant of this command.

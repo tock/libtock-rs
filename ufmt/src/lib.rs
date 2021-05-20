@@ -248,11 +248,6 @@ pub mod derive {
     pub use ufmt_macros::uDebug;
 }
 
-#[allow(deprecated)]
-unsafe fn uninitialized<T>() -> T {
-    core::mem::uninitialized()
-}
-
 /// Just like `core::fmt::Debug`
 #[allow(non_camel_case_types)]
 pub trait uDebug {

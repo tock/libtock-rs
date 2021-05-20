@@ -1,10 +1,6 @@
 /// An error code returned by the kernel.
-// TODO: derive(Debug) is currently only enabled for test builds, which is
-// necessary so it can be used in assert_eq!. We should develop a lighter-weight
-// Debug implementation and see if it is small enough to enable on non-Debug
-// builds.
-#[cfg_attr(test, derive(Debug))]
-#[derive(Clone, Copy, PartialEq, Eq)]
+// TODO: Add a ufmt debug implementation for process binaries to use.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(u16)]  // To facilitate use with transmute() in CommandReturn
 #[rustfmt::skip]
 pub enum ErrorCode {

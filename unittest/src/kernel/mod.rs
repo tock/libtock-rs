@@ -8,7 +8,10 @@ use std::cell::Cell;
 // TODO: Add Subscribe.
 mod raw_syscalls_impl;
 mod thread_local;
-// TODO: Add Yield.
+mod yield_impl;
+
+#[cfg(test)]
+mod yield_impl_tests;
 
 /// A fake implementation of the Tock kernel. Provides
 /// `libtock_platform::Syscalls` by implementing
