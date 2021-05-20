@@ -9,7 +9,7 @@ pub mod syscall_class {
     pub const EXIT: usize = 6;
 }
 
-pub mod yield_op {
+pub mod yield_id {
     pub const NO_WAIT: u32 = 0;
     pub const WAIT: u32 = 1;
 }
