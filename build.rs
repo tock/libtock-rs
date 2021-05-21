@@ -1,8 +1,5 @@
 use std::env;
 use std::fs;
-use std::fs::File;
-use std::io::BufRead;
-use std::io::BufReader;
 use std::path::{Path, PathBuf};
 use std::process;
 
@@ -11,19 +8,16 @@ static LAYOUT_GENERIC_FILENAME: &str = "layout_generic.ld";
 
 fn main() {
     static PLATFORM_ENV_VAR: &str = "PLATFORM";
-    static PLATFORM_FILE_NAME: &str = "platform";
     static APP_HEAP_SIZE: &str = "APP_HEAP_SIZE";
     static KERNEL_HEAP_SIZE: &str = "KERNEL_HEAP_SIZE";
 
     println!("cargo:rerun-if-env-changed={}", PLATFORM_ENV_VAR);
     println!("cargo:rerun-if-env-changed={}", APP_HEAP_SIZE);
     println!("cargo:rerun-if-env-changed={}", KERNEL_HEAP_SIZE);
-    println!("cargo:rerun-if-changed={}", PLATFORM_FILE_NAME);
     println!("cargo:rerun-if-changed={}", LAYOUT_FILE_NAME);
     println!("cargo:rerun-if-changed={}", LAYOUT_GENERIC_FILENAME);
 
-    let platform_name =
-        read_env_var(PLATFORM_ENV_VAR).or_else(|| read_board_name_from_file(PLATFORM_FILE_NAME));
+    let platform_name = read_env_var(PLATFORM_ENV_VAR);
     if let Some(platform_name) = platform_name {
         println!("cargo:rustc-env={}={}", PLATFORM_ENV_VAR, platform_name);
         copy_linker_file(platform_name.trim());
@@ -49,20 +43,6 @@ fn set_default_env(env_var: &str, default: &str) {
 
 fn read_env_var(env_var: &str) -> Option<String> {
     env::var_os(env_var).map(|os_string| os_string.into_string().unwrap())
-}
-
-fn read_board_name_from_file(file_name: &str) -> Option<String> {
-    let path = Path::new(file_name);
-    if !path.exists() {
-        return None;
-    }
-
-    let board_file = File::open(path).unwrap();
-    let mut board_name = String::new();
-    BufReader::new(board_file)
-        .read_line(&mut board_name)
-        .unwrap();
-    Some(board_name)
 }
 
 fn copy_linker_file(platform_name: &str) {
