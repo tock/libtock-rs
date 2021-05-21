@@ -33,9 +33,6 @@
 //! implemented by `libtock_runtime::static_component!` (in real Tock apps) and
 //! `libtock_unittest::test_component!` (in unit tests), rather than directly by
 //! user code.
-// TODO: At the time of this writing, neither `libtock_runtime` nor
-// `libtock_unittest` are implemented. Remove this TODO when they are
-// implemented.
 
 /// `FreeCallback` is the callback equivalent of a free function: it does not
 /// have access to the client component's data. `FreeCallback` is used by
