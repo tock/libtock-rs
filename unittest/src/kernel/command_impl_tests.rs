@@ -1,6 +1,6 @@
 use super::command_impl::*;
 use crate::{command_return, fake, ExpectedSyscall, SyscallLogEntry};
-use libtock_platform::{return_variant, RawSyscalls, ReturnVariant};
+use libtock_platform::{return_variant, syscall_class, RawSyscalls, ReturnVariant};
 use std::convert::TryInto;
 use std::panic::catch_unwind;
 
@@ -10,7 +10,7 @@ use std::panic::catch_unwind;
 // Tests command with expected syscalls that don't match this command call.
 #[test]
 fn expected_wrong_command() {
-    let kernel = fake::Kernel::new("expected_wrong_command");
+    let kernel = fake::Kernel::new();
     let expected_syscall = ExpectedSyscall::Command {
         driver_id: 1,
         command_id: 1,
@@ -68,7 +68,7 @@ fn no_kernel() {
 
 #[test]
 fn override_return() {
-    let kernel = fake::Kernel::new("override_return");
+    let kernel = fake::Kernel::new();
     kernel.add_expected_syscall(ExpectedSyscall::Command {
         driver_id: 1,
         command_id: 2,
@@ -94,9 +94,14 @@ fn override_return() {
 // completed, to avoid git conflicts.
 #[test]
 fn syscall4() {
-    let kernel = fake::Kernel::new("syscall4");
+    let kernel = fake::Kernel::new();
     unsafe {
-        fake::Kernel::syscall4::<2>([1u32.into(), 2u32.into(), 3u32.into(), 4u32.into()]);
+        fake::Kernel::syscall4::<{ syscall_class::COMMAND }>([
+            1u32.into(),
+            2u32.into(),
+            3u32.into(),
+            4u32.into(),
+        ]);
     }
     assert_eq!(
         kernel.take_syscall_log(),
@@ -112,7 +117,7 @@ fn syscall4() {
 #[cfg(target_pointer_width = "64")]
 #[test]
 fn too_large_argument0() {
-    let _kernel = fake::Kernel::new("too_large_argument0");
+    let _kernel = fake::Kernel::new();
     let result = catch_unwind(|| {
         command(
             1u32.into(),
@@ -131,7 +136,7 @@ fn too_large_argument0() {
 #[cfg(target_pointer_width = "64")]
 #[test]
 fn too_large_argument1() {
-    let _kernel = fake::Kernel::new("too_large_argument1");
+    let _kernel = fake::Kernel::new();
     let result = catch_unwind(|| {
         command(
             1u32.into(),
@@ -150,7 +155,7 @@ fn too_large_argument1() {
 #[cfg(target_pointer_width = "64")]
 #[test]
 fn too_large_command_id() {
-    let _kernel = fake::Kernel::new("too_large_command_id");
+    let _kernel = fake::Kernel::new();
     let result = catch_unwind(|| {
         command(
             1u32.into(),
@@ -169,7 +174,7 @@ fn too_large_command_id() {
 #[cfg(target_pointer_width = "64")]
 #[test]
 fn too_large_driver_id() {
-    let _kernel = fake::Kernel::new("too_large_driver_id");
+    let _kernel = fake::Kernel::new();
     let result = catch_unwind(|| {
         command(
             (u32::MAX as usize + 1).into(),

@@ -36,7 +36,6 @@ pub enum ExpectedSyscall {
         // return value.
         override_return: Option<libtock_platform::CommandReturn>,
     },
-
     // TODO: Add Allow.
     // TODO: Add Memop.
     // TODO: Add Exit.
