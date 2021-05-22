@@ -10,6 +10,6 @@
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 #[repr(u8)]
 pub enum YieldNoWaitReturn {
-    NoCallback = 0,
-    Callback = 1,
+    NoUpcall = 0,
+    Upcall = 1,
 }

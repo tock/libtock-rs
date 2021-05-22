@@ -4,7 +4,21 @@
 /// order to test error handling code.
 #[derive(Clone, Copy, Debug)]
 pub enum ExpectedSyscall {
-    // TODO: Add Yield.
+    // -------------------------------------------------------------------------
+    // Yield
+    // -------------------------------------------------------------------------
+    YieldNoWait {
+        /// If not `None`, `yield-no-wait` will set the return value to the
+        /// specified value. If `None`, `yield-no-wait` will set the return
+        /// value based on whether or not an upcall was run.
+        override_return: Option<libtock_platform::YieldNoWaitReturn>,
+    },
+
+    YieldWait {
+        /// If true, yield_wait will skip executing a upcall.
+        skip_upcall: bool,
+    },
+
     // TODO: Add Subscribe.
 
     // -------------------------------------------------------------------------
@@ -22,6 +36,7 @@ pub enum ExpectedSyscall {
         // return value.
         override_return: Option<libtock_platform::CommandReturn>,
     },
+
     // TODO: Add Allow.
     // TODO: Add Memop.
     // TODO: Add Exit.
@@ -31,7 +46,6 @@ impl ExpectedSyscall {
     // Panics with a message describing that the named system call was called
     // instead of the expected system call. Used by fake::Kernel to report
     // incorrect system calls.
-    #[allow(unused)] // TODO: Remove when a system call is implemented.
     pub(crate) fn panic_wrong_call(&self, called: &str) -> ! {
         // TODO: Implement Display for ExpectedSyscall and replace {:?} with {}
         panic!(
