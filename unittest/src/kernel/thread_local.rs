@@ -13,7 +13,6 @@ pub fn clear_kernel() {
 }
 
 // Retrieves this thread's Kernel instance, if one is available.
-#[allow(unused)] // TODO: Remove when a system call is implemented.
 pub fn get_kernel() -> Option<Rc<Kernel>> {
     let clone = THREAD_KERNEL.with(|thread_kernel| {
         let weak = thread_kernel.kernel.replace(Weak::new());
