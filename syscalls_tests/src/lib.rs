@@ -20,4 +20,5 @@
 
 // TODO: Add Subscribe.
 
-// TODO: Add Yield.
+#[cfg(test)]
+mod yield_tests;
