@@ -95,7 +95,6 @@ impl Drop for Kernel {
 
 impl Kernel {
     // Appends a log entry to the system call queue.
-    #[allow(unused)] // TODO: Remove when a system call is implemented.
     fn log_syscall(&self, syscall: SyscallLogEntry) {
         let mut log = self.syscall_log.take();
         log.push(syscall);
@@ -104,7 +103,6 @@ impl Kernel {
 
     // Retrieves the first syscall in the expected syscalls queue, removing it
     // from the queue. Returns None if the queue was empty.
-    #[allow(unused)] // TODO: Remove when a system call is implemented.
     fn pop_expected_syscall(&self) -> Option<ExpectedSyscall> {
         let mut queue = self.expected_syscalls.take();
         let expected_syscall = queue.pop_front();
@@ -130,6 +128,51 @@ impl Kernel {
 mod tests {
     use super::*;
 
+    #[test]
+    fn expected_syscall_queue() {
+        use libtock_platform::YieldNoWaitReturn::Upcall;
+        use ExpectedSyscall::{YieldNoWait, YieldWait};
+        let kernel = Kernel::new();
+        assert_eq!(kernel.pop_expected_syscall(), None);
+        kernel.add_expected_syscall(YieldNoWait {
+            override_return: None,
+        });
+        kernel.add_expected_syscall(YieldNoWait {
+            override_return: Some(Upcall),
+        });
+        assert_eq!(
+            kernel.pop_expected_syscall(),
+            Some(YieldNoWait {
+                override_return: None
+            })
+        );
+        kernel.add_expected_syscall(YieldWait { skip_upcall: false });
+        assert_eq!(
+            kernel.pop_expected_syscall(),
+            Some(YieldNoWait {
+                override_return: Some(Upcall)
+            })
+        );
+        assert_eq!(
+            kernel.pop_expected_syscall(),
+            Some(YieldWait { skip_upcall: false })
+        );
+        assert_eq!(kernel.pop_expected_syscall(), None);
+    }
+
+    #[test]
+    fn syscall_log() {
+        use SyscallLogEntry::{YieldNoWait, YieldWait};
+        let kernel = Kernel::new();
+        assert_eq!(kernel.take_syscall_log(), []);
+        kernel.log_syscall(YieldNoWait);
+        kernel.log_syscall(YieldWait);
+        assert_eq!(kernel.take_syscall_log(), [YieldNoWait, YieldWait]);
+        kernel.log_syscall(YieldNoWait);
+        assert_eq!(kernel.take_syscall_log(), [YieldNoWait]);
+        assert_eq!(kernel.take_syscall_log(), []);
+    }
+
     // Verifies the location propagates correctly into the report_leaked() error
     // message.
     #[test]
@@ -144,9 +187,4 @@ mod tests {
             .expect("Wrong panic payload type");
         assert!(message.contains(&format!("{}:{}", new_location.file(), new_location.line())));
     }
-
-    // TODO: We cannot currently test the expected syscall queue or the syscall
-    // log, because ExpectedSyscall and SyscallLogEntry are currently
-    // uninhabited types. When we implement a system call, we should add tests
-    // for that functionality as well.
 }

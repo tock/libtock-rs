@@ -1,6 +1,3 @@
-// TODO: Implement `libtock_unittest`, which is referenced in the comment on
-// `RawSyscalls`.
-
 use crate::Register;
 
 /// `RawSyscalls` allows a fake Tock kernel to be injected into components for
