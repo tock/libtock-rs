@@ -2,7 +2,7 @@
 /// a particular system call. An example use case is error injection: unit tests
 /// can add a `ExpectedSyscall` to the fake kernel's queue to insert errors in
 /// order to test error handling code.
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub enum ExpectedSyscall {
     // -------------------------------------------------------------------------
     // Yield
@@ -18,8 +18,24 @@ pub enum ExpectedSyscall {
         /// If true, yield_wait will skip executing a upcall.
         skip_upcall: bool,
     },
+
     // TODO: Add Subscribe.
-    // TODO: Add Command.
+
+    // -------------------------------------------------------------------------
+    // Command
+    // -------------------------------------------------------------------------
+    Command {
+        // Matched values: the command must give the specified driver_id,
+        // command_id, argument0, and argument1 values.
+        driver_id: u32,
+        command_id: u32,
+        argument0: u32,
+        argument1: u32,
+
+        // If not None, the output of the driver will be replaced with the given
+        // return value.
+        override_return: Option<libtock_platform::CommandReturn>,
+    },
     // TODO: Add Allow.
     // TODO: Add Memop.
     // TODO: Add Exit.

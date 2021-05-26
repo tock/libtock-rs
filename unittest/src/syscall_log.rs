@@ -7,8 +7,18 @@ pub enum SyscallLogEntry {
     YieldNoWait,
 
     YieldWait,
+
     // TODO: Add Subscribe.
-    // TODO: Add Command.
+
+    // -------------------------------------------------------------------------
+    // Command
+    // -------------------------------------------------------------------------
+    Command {
+        driver_id: u32,
+        command_id: u32,
+        argument0: u32,
+        argument1: u32,
+    },
     // TODO: Add Allow.
     // TODO: Add Memop.
     // TODO: Add Exit.
