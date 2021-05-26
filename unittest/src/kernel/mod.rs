@@ -131,33 +131,34 @@ mod tests {
     #[test]
     fn expected_syscall_queue() {
         use libtock_platform::YieldNoWaitReturn::Upcall;
+        use std::matches;
         use ExpectedSyscall::{YieldNoWait, YieldWait};
         let kernel = Kernel::new();
-        assert_eq!(kernel.pop_expected_syscall(), None);
+        assert!(matches!(kernel.pop_expected_syscall(), None));
         kernel.add_expected_syscall(YieldNoWait {
             override_return: None,
         });
         kernel.add_expected_syscall(YieldNoWait {
             override_return: Some(Upcall),
         });
-        assert_eq!(
+        assert!(matches!(
             kernel.pop_expected_syscall(),
             Some(YieldNoWait {
                 override_return: None
             })
-        );
+        ));
         kernel.add_expected_syscall(YieldWait { skip_upcall: false });
-        assert_eq!(
+        assert!(matches!(
             kernel.pop_expected_syscall(),
             Some(YieldNoWait {
                 override_return: Some(Upcall)
             })
-        );
-        assert_eq!(
+        ));
+        assert!(matches!(
             kernel.pop_expected_syscall(),
             Some(YieldWait { skip_upcall: false })
-        );
-        assert_eq!(kernel.pop_expected_syscall(), None);
+        ));
+        assert!(matches!(kernel.pop_expected_syscall(), None));
     }
 
     #[test]
