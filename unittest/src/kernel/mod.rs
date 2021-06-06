@@ -28,9 +28,8 @@ mod yield_impl_tests;
 /// As such, test code is given a `Rc<Kernel>` rather than a `Kernel` instance
 /// directly. Because `Rc` is a shared reference, Kernel extensively uses
 /// internal mutability.
-// TODO: Define the `fake::Driver` trait and add support for fake drivers in
-// Kernel.
 pub struct Kernel {
+    drivers: Cell<std::collections::HashMap<u32, std::rc::Rc<dyn crate::fake::Driver>>>,
     expected_syscalls: Cell<std::collections::VecDeque<ExpectedSyscall>>,
 
     // The location of the call to `new`. Used by report_leaked() to tell the
@@ -47,12 +46,26 @@ impl Kernel {
     #[track_caller]
     pub fn new() -> std::rc::Rc<Kernel> {
         let rc = std::rc::Rc::new(Kernel {
+            drivers: Default::default(),
             expected_syscalls: Default::default(),
             new_location: std::panic::Location::caller(),
             syscall_log: Default::default(),
         });
         thread_local::set_kernel(&rc);
         rc
+    }
+
+    /// Adds a `fake::Driver` to this `fake::Kernel`. After the call, system
+    /// calls with this driver's ID will be routed to the driver.
+    pub fn add_driver<D: crate::fake::Driver>(&self, driver: &std::rc::Rc<D>) {
+        let id = driver.id();
+        let mut drivers = self.drivers.take();
+        assert!(
+            drivers.insert(id, driver.clone()).is_none(),
+            "Duplicate driver with ID {}",
+            id
+        );
+        self.drivers.set(drivers);
     }
 
     /// Adds an ExpectedSyscall to the expected syscall queue.
