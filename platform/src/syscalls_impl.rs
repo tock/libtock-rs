@@ -1,6 +1,6 @@
 //! Implements `Syscalls` for all types that implement `RawSyscalls`.
 
-use crate::{yield_id, RawSyscalls, Syscalls, YieldNoWaitReturn};
+use crate::{syscall_class, yield_id, CommandReturn, RawSyscalls, Syscalls, YieldNoWaitReturn};
 
 impl<S: RawSyscalls> Syscalls for S {
     // -------------------------------------------------------------------------
@@ -28,6 +28,29 @@ impl<S: RawSyscalls> Syscalls for S {
         // behavior on its own in any other way.
         unsafe {
             Self::yield1([yield_id::WAIT.into()]);
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Command
+    // -------------------------------------------------------------------------
+
+    fn command(driver_id: u32, command_id: u32, argument0: u32, argument1: u32) -> CommandReturn {
+        unsafe {
+            // syscall4's documentation indicates it can be used to call
+            // Command. The Command system call cannot trigger undefined
+            // behavior on its own.
+            let [r0, r1, r2, r3] = Self::syscall4::<{ syscall_class::COMMAND }>([
+                driver_id.into(),
+                command_id.into(),
+                argument0.into(),
+                argument1.into(),
+            ]);
+
+            // Because r0 and r1 are returned directly from the kernel, we are
+            // guaranteed that if r0 represents a failure variant then r1 is an
+            // error code.
+            CommandReturn::new(r0.as_u32().into(), r1.as_u32(), r2.as_u32(), r3.as_u32())
         }
     }
 }

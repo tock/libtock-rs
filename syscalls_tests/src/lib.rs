@@ -12,7 +12,8 @@
 
 // TODO: Add Allow.
 
-// TODO: Add Command.
+#[cfg(test)]
+mod command_tests;
 
 // TODO: Add Exit.
 
