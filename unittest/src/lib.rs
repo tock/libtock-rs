@@ -4,6 +4,7 @@
 #![deny(unsafe_op_in_unsafe_fn)]
 
 pub mod command_return;
+mod driver;
 mod expected_syscall;
 mod kernel;
 mod syscall_log;
@@ -19,6 +20,7 @@ mod syscall_log;
 /// `use libtock_unittest::fake` and refer to the type with the `fake::` prefix
 /// (e.g. `fake::Console`).
 pub mod fake {
+    pub use crate::driver::Driver;
     pub use crate::kernel::Kernel;
 }
 
