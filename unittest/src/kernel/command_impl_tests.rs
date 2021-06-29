@@ -1,11 +1,49 @@
 use super::command_impl::*;
 use crate::{command_return, fake, ExpectedSyscall, SyscallLogEntry};
-use libtock_platform::{return_variant, syscall_class, RawSyscalls, ReturnVariant};
+use libtock_platform::{
+    return_variant, syscall_class, CommandReturn, ErrorCode, RawSyscalls, ReturnVariant,
+};
 use std::convert::TryInto;
 use std::panic::catch_unwind;
 
 // TODO: When another system call is implemented, add a test for the case
 // where a different system call class is expected.
+
+#[test]
+fn driver_support() {
+    let kernel = fake::Kernel::new();
+
+    // Call command for a nonexistent driver.
+    let [r0, r1, _, _] = command(42u32.into(), 1u32.into(), 0u32.into(), 0u32.into());
+    assert_eq!(
+        r0.try_into(),
+        Ok(Into::<u32>::into(return_variant::FAILURE))
+    );
+    assert_eq!(r1.try_into(), Ok(ErrorCode::NoDevice as u32));
+
+    // A mock driver that returns a fixed value.
+    struct MockDriver;
+    impl fake::Driver for MockDriver {
+        fn id(&self) -> u32 {
+            42
+        }
+        fn command(&self, _command_id: u32, _argument0: u32, _argument1: u32) -> CommandReturn {
+            command_return::success_3_u32(1, 2, 3)
+        }
+    }
+
+    // Call command with the mock driver.
+    let driver = std::rc::Rc::new(MockDriver);
+    kernel.add_driver(&driver);
+    let [r0, r1, r2, r3] = command(42u32.into(), 0u32.into(), 0u32.into(), 0u32.into());
+    assert_eq!(
+        r0.try_into(),
+        Ok(Into::<u32>::into(return_variant::SUCCESS_3_U32))
+    );
+    assert_eq!(r1.try_into(), Ok(1u32));
+    assert_eq!(r2.try_into(), Ok(2u32));
+    assert_eq!(r3.try_into(), Ok(3u32));
+}
 
 // Tests command with expected syscalls that don't match this command call.
 #[test]
@@ -189,5 +227,3 @@ fn too_large_driver_id() {
         .expect("wrong panic payload type")
         .contains("Too large driver ID"));
 }
-
-// TODO: When driver support is added, add a test that tests driver support.
