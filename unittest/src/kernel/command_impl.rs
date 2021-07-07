@@ -58,8 +58,12 @@ pub(super) fn command(
         Some(expected_syscall) => expected_syscall.panic_wrong_call("Command"),
     };
 
-    // TODO: Add the Driver trait and implement driver support.
-    let driver_return = command_return::failure(ErrorCode::NoSupport);
+    // Call the driver if one is present. If not, return NoDevice as required by
+    // TRD 104.
+    let driver_return = match kernel.get_driver(driver_id) {
+        Some(driver) => driver.command(command_id, argument0, argument1),
+        None => command_return::failure(ErrorCode::NoDevice),
+    };
 
     // Convert the override return value (or the driver return value if no
     // override is present) into the representative register values.

@@ -107,6 +107,14 @@ impl Drop for Kernel {
 // -----------------------------------------------------------------------------
 
 impl Kernel {
+    // Returns the driver with the given ID, if one is installed.
+    fn get_driver(&self, driver_id: u32) -> Option<std::rc::Rc<dyn crate::fake::Driver>> {
+        let drivers = self.drivers.take();
+        let driver = drivers.get(&driver_id).cloned();
+        self.drivers.set(drivers);
+        driver
+    }
+
     // Appends a log entry to the system call queue.
     fn log_syscall(&self, syscall: SyscallLogEntry) {
         let mut log = self.syscall_log.take();
