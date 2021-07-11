@@ -7,6 +7,7 @@ pub mod command_return;
 mod driver;
 mod expected_syscall;
 mod kernel;
+mod kernel_data;
 mod syscall_log;
 
 /// `fake` contains fake implementations of Tock kernel components. Fake
