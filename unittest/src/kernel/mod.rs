@@ -1,4 +1,4 @@
-use crate::kernel_data::{with_kernel_data, KernelData, KERNEL_DATA};
+use crate::kernel_data::{with_kernel_data, DriverData, KernelData, KERNEL_DATA};
 use crate::{ExpectedSyscall, SyscallLogEntry};
 
 // TODO: Create a fake/ directory, and move this code into fake/kernel.rs.
@@ -56,6 +56,7 @@ impl Kernel {
                 drivers: Default::default(),
                 expected_syscalls: Default::default(),
                 syscall_log: Vec::new(),
+                upcall_queue: Default::default(),
             }))
         });
         if let Some(old_kernel_data) = old_option {
@@ -73,10 +74,17 @@ impl Kernel {
     // TODO: It's kind of weird to implicitly clone the RC by default. Instead,
     // we should probably take the Rc by value. Also, after making that change,
     // maybe we can take a Rc<dyn fake::Driver> instead of using generics?
+    // TODO: Add a test for add_driver.
     pub fn add_driver<D: crate::fake::Driver>(&self, driver: &std::rc::Rc<D>) {
         let id = driver.id();
+        let num_upcalls = driver.num_upcalls();
+        let driver_data = DriverData {
+            driver: driver.clone(),
+            num_upcalls,
+            upcalls: std::collections::HashMap::with_capacity(num_upcalls as usize),
+        };
         let insert_return =
-            with_kernel_data(|kernel_data| kernel_data.unwrap().drivers.insert(id, driver.clone()));
+            with_kernel_data(|kernel_data| kernel_data.unwrap().drivers.insert(id, driver_data));
         assert!(insert_return.is_none(), "Duplicate driver with ID {}", id);
     }
 

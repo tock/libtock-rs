@@ -12,7 +12,11 @@ pub trait Driver: 'static {
     // Subscribe
     // -------------------------------------------------------------------------
 
-    // TODO: Add a Subscribe API.
+    /// Like the real Tock kernel, `fake::Kernel` implements Subscribe for
+    /// drivers. Drivers must implement `num_upcalls` to tell `fake::Kernel` how
+    /// many upcalls to store. `fake::Kernel` will reject Subscribe calls for
+    /// any subscribe_number >= num_upcalls.
+    fn num_upcalls(&self) -> u32;
 
     // -------------------------------------------------------------------------
     // Command
