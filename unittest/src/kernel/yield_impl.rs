@@ -1,6 +1,6 @@
 //! Implementations of Yield system calls.
 
-use crate::kernel::thread_local::get_kernel;
+use crate::kernel_data::KERNEL_DATA;
 use crate::{ExpectedSyscall, SyscallLogEntry};
 
 /// # Safety
@@ -8,13 +8,20 @@ use crate::{ExpectedSyscall, SyscallLogEntry};
 /// value pointed to by `return_ptr`. When `yield_no_wait` returns, the value
 /// pointed to by `return_ptr` will be set.
 pub(super) unsafe fn yield_no_wait(return_ptr: *mut libtock_platform::YieldNoWaitReturn) {
-    let kernel = get_kernel().expect("yield-no-wait called but no fake::Kernel exists");
-    kernel.log_syscall(SyscallLogEntry::YieldNoWait);
-    let override_return = match kernel.pop_expected_syscall() {
-        None => None,
-        Some(ExpectedSyscall::YieldNoWait { override_return }) => override_return,
-        Some(expected_syscall) => expected_syscall.panic_wrong_call("yield-no-wait"),
-    };
+    let override_return = KERNEL_DATA.with(|refcell| {
+        let mut refmut = refcell.borrow_mut();
+        let kernel_data = refmut
+            .as_mut()
+            .expect("yield-no-wait called but no fake::Kernel exists");
+
+        kernel_data.syscall_log.push(SyscallLogEntry::YieldNoWait);
+
+        match kernel_data.expected_syscalls.pop_front() {
+            None => None,
+            Some(ExpectedSyscall::YieldNoWait { override_return }) => override_return,
+            Some(expected_syscall) => expected_syscall.panic_wrong_call("yield-no-wait"),
+        }
+    });
 
     // TODO: Add the Driver trait and implement driver support, including
     // upcalls.
@@ -26,13 +33,21 @@ pub(super) unsafe fn yield_no_wait(return_ptr: *mut libtock_platform::YieldNoWai
 }
 
 pub(super) fn yield_wait() {
-    let kernel = get_kernel().expect("yield-wait called but no fake::Kernel exists");
-    kernel.log_syscall(SyscallLogEntry::YieldWait);
-    let skip_upcall = match kernel.pop_expected_syscall() {
-        None => false,
-        Some(ExpectedSyscall::YieldWait { skip_upcall }) => skip_upcall,
-        Some(expected_syscall) => expected_syscall.panic_wrong_call("yield-wait"),
-    };
+    let skip_upcall = KERNEL_DATA.with(|refcell| {
+        let mut refmut = refcell.borrow_mut();
+        let kernel_data = refmut
+            .as_mut()
+            .expect("yield-wait called but no fake::Kernel exists");
+
+        kernel_data.syscall_log.push(SyscallLogEntry::YieldWait);
+
+        match kernel_data.expected_syscalls.pop_front() {
+            None => false,
+            Some(ExpectedSyscall::YieldWait { skip_upcall }) => skip_upcall,
+            Some(expected_syscall) => expected_syscall.panic_wrong_call("yield-wait"),
+        }
+    });
+
     if skip_upcall {
         return;
     }

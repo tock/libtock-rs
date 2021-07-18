@@ -1,5 +1,11 @@
+use crate::kernel_data::{with_kernel_data, KernelData, KERNEL_DATA};
 use crate::{ExpectedSyscall, SyscallLogEntry};
-use std::cell::Cell;
+
+// TODO: Create a fake/ directory, and move this code into fake/kernel.rs.
+// Create fake/syscalls/ and move the fake system call implementation into
+// fake/syscalls/. Move the system call implementation from `fake::Kernel` to a
+// new `fake::Syscalls` type.
+// See https://github.com/tock/libtock-rs/issues/313 for a better explanation.
 
 // TODO: Add Allow.
 
@@ -12,7 +18,6 @@ mod command_impl_tests;
 // TODO: Add Memop.
 // TODO: Add Subscribe.
 mod raw_syscalls_impl;
-mod thread_local;
 mod yield_impl;
 
 #[cfg(test)]
@@ -25,47 +30,54 @@ mod yield_impl_tests;
 ///
 /// Note that there can only be one `Kernel` instance per thread, as a
 /// thread-local variable is used to implement `libtock_platform::RawSyscalls`.
-/// As such, test code is given a `Rc<Kernel>` rather than a `Kernel` instance
-/// directly. Because `Rc` is a shared reference, Kernel extensively uses
-/// internal mutability.
+// Note: The kernel's data is actually stored in
+// crate::kernel_data::KERNEL_DATA. See the kernel_data module comment for an
+// explanation.
 pub struct Kernel {
-    drivers: Cell<std::collections::HashMap<u32, std::rc::Rc<dyn crate::fake::Driver>>>,
-    expected_syscalls: Cell<std::collections::VecDeque<ExpectedSyscall>>,
-
-    // The location of the call to `new`. Used by report_leaked() to tell the
-    // user which kernel they leaked in a unit test.
-    new_location: &'static std::panic::Location<'static>,
-
-    syscall_log: Cell<Vec<SyscallLogEntry>>,
+    // Prevents user code from constructing a Kernel directly, in order to force
+    // construction via new().
+    _private: (),
 }
 
 impl Kernel {
-    /// Creates a `Kernel` for this thread and returns a reference to it. This
-    /// instance should be dropped at the end of the test, before this thread
-    /// creates another `Kernel`.
+    /// Creates a `Kernel` for this thread and returns it. The returned `Kernel`
+    /// should be dropped at the end of the test, before this thread creates
+    /// another `Kernel`.
+    // Clippy suggests we implement Default instead of having new. However,
+    // using Default implies the newly-created instance isn't special, but it is
+    // (as only one can exist per thread). Also, Default::default is not
+    // #[track_caller].
+    #[allow(clippy::new_without_default)]
     #[track_caller]
-    pub fn new() -> std::rc::Rc<Kernel> {
-        let rc = std::rc::Rc::new(Kernel {
-            drivers: Default::default(),
-            expected_syscalls: Default::default(),
-            new_location: std::panic::Location::caller(),
-            syscall_log: Default::default(),
+    pub fn new() -> Kernel {
+        let old_option = KERNEL_DATA.with(|kernel_data| {
+            kernel_data.replace(Some(KernelData {
+                create_location: std::panic::Location::caller(),
+                drivers: Default::default(),
+                expected_syscalls: Default::default(),
+                syscall_log: Vec::new(),
+            }))
         });
-        thread_local::set_kernel(&rc);
-        rc
+        if let Some(old_kernel_data) = old_option {
+            panic!(
+                "New fake::Kernel created before the previous fake::Kernel \
+                 was dropped. The previous fake::Kernel was created at {}.",
+                old_kernel_data.create_location
+            );
+        }
+        Kernel { _private: () }
     }
 
     /// Adds a `fake::Driver` to this `fake::Kernel`. After the call, system
     /// calls with this driver's ID will be routed to the driver.
+    // TODO: It's kind of weird to implicitly clone the RC by default. Instead,
+    // we should probably take the Rc by value. Also, after making that change,
+    // maybe we can take a Rc<dyn fake::Driver> instead of using generics?
     pub fn add_driver<D: crate::fake::Driver>(&self, driver: &std::rc::Rc<D>) {
         let id = driver.id();
-        let mut drivers = self.drivers.take();
-        assert!(
-            drivers.insert(id, driver.clone()).is_none(),
-            "Duplicate driver with ID {}",
-            id
-        );
-        self.drivers.set(drivers);
+        let insert_return =
+            with_kernel_data(|kernel_data| kernel_data.unwrap().drivers.insert(id, driver.clone()));
+        assert!(insert_return.is_none(), "Duplicate driver with ID {}", id);
     }
 
     /// Adds an ExpectedSyscall to the expected syscall queue.
@@ -85,65 +97,31 @@ impl Kernel {
     /// expected syscall is taken. If the call does not match, the call panics
     /// (to make the unit test fail).
     pub fn add_expected_syscall(&self, expected_syscall: ExpectedSyscall) {
-        let mut queue = self.expected_syscalls.take();
-        queue.push_back(expected_syscall);
-        self.expected_syscalls.set(queue);
+        with_kernel_data(|kernel_data| {
+            kernel_data
+                .unwrap()
+                .expected_syscalls
+                .push_back(expected_syscall)
+        });
     }
 
     /// Returns the system call log and empties it.
     pub fn take_syscall_log(&self) -> Vec<SyscallLogEntry> {
-        self.syscall_log.take()
+        with_kernel_data(|kernel_data| {
+            std::mem::replace(&mut kernel_data.unwrap().syscall_log, Vec::new())
+        })
     }
 }
 
 impl Drop for Kernel {
     fn drop(&mut self) {
-        thread_local::clear_kernel();
+        KERNEL_DATA.with(|kernel_data| kernel_data.replace(None));
     }
 }
 
 // -----------------------------------------------------------------------------
 // Crate implementation details below.
 // -----------------------------------------------------------------------------
-
-impl Kernel {
-    // Returns the driver with the given ID, if one is installed.
-    fn get_driver(&self, driver_id: u32) -> Option<std::rc::Rc<dyn crate::fake::Driver>> {
-        let drivers = self.drivers.take();
-        let driver = drivers.get(&driver_id).cloned();
-        self.drivers.set(drivers);
-        driver
-    }
-
-    // Appends a log entry to the system call queue.
-    fn log_syscall(&self, syscall: SyscallLogEntry) {
-        let mut log = self.syscall_log.take();
-        log.push(syscall);
-        self.syscall_log.set(log);
-    }
-
-    // Retrieves the first syscall in the expected syscalls queue, removing it
-    // from the queue. Returns None if the queue was empty.
-    fn pop_expected_syscall(&self) -> Option<ExpectedSyscall> {
-        let mut queue = self.expected_syscalls.take();
-        let expected_syscall = queue.pop_front();
-        self.expected_syscalls.set(queue);
-        expected_syscall
-    }
-
-    // Panics, indicating that this Kernel was leaked. It is unlikely that this
-    // panic will cause the correct test case to fail, but if this Kernel is
-    // well-named the panic message should indicate where the leak occurred.
-    fn report_leaked(&self) -> ! {
-        panic!(
-            "The fake::Kernel initialized at {}:{}:{} was not cleaned up; \
-             perhaps a Rc<Kernel> was leaked?",
-            self.new_location.file(),
-            self.new_location.line(),
-            self.new_location.column()
-        );
-    }
-}
 
 #[cfg(test)]
 mod tests {
@@ -153,33 +131,31 @@ mod tests {
     fn expected_syscall_queue() {
         use libtock_platform::YieldNoWaitReturn::Upcall;
         use std::matches;
-        use ExpectedSyscall::{YieldNoWait, YieldWait};
+        use ExpectedSyscall::YieldNoWait;
         let kernel = Kernel::new();
-        assert!(matches!(kernel.pop_expected_syscall(), None));
+        with_kernel_data(|kernel_data| assert!(kernel_data.unwrap().expected_syscalls.is_empty()));
         kernel.add_expected_syscall(YieldNoWait {
             override_return: None,
         });
         kernel.add_expected_syscall(YieldNoWait {
             override_return: Some(Upcall),
         });
-        assert!(matches!(
-            kernel.pop_expected_syscall(),
-            Some(YieldNoWait {
-                override_return: None
-            })
-        ));
-        kernel.add_expected_syscall(YieldWait { skip_upcall: false });
-        assert!(matches!(
-            kernel.pop_expected_syscall(),
-            Some(YieldNoWait {
-                override_return: Some(Upcall)
-            })
-        ));
-        assert!(matches!(
-            kernel.pop_expected_syscall(),
-            Some(YieldWait { skip_upcall: false })
-        ));
-        assert!(matches!(kernel.pop_expected_syscall(), None));
+        with_kernel_data(|kernel_data| {
+            let expected_syscalls = &mut kernel_data.unwrap().expected_syscalls;
+            assert!(matches!(
+                expected_syscalls.pop_front(),
+                Some(YieldNoWait {
+                    override_return: None
+                })
+            ));
+            assert!(matches!(
+                expected_syscalls.pop_front(),
+                Some(YieldNoWait {
+                    override_return: Some(Upcall)
+                })
+            ));
+            assert!(expected_syscalls.is_empty());
+        });
     }
 
     #[test]
@@ -187,26 +163,12 @@ mod tests {
         use SyscallLogEntry::{YieldNoWait, YieldWait};
         let kernel = Kernel::new();
         assert_eq!(kernel.take_syscall_log(), []);
-        kernel.log_syscall(YieldNoWait);
-        kernel.log_syscall(YieldWait);
+        with_kernel_data(|kernel_data| {
+            let syscall_log = &mut kernel_data.unwrap().syscall_log;
+            syscall_log.push(YieldNoWait);
+            syscall_log.push(YieldWait);
+        });
         assert_eq!(kernel.take_syscall_log(), [YieldNoWait, YieldWait]);
-        kernel.log_syscall(YieldNoWait);
-        assert_eq!(kernel.take_syscall_log(), [YieldNoWait]);
         assert_eq!(kernel.take_syscall_log(), []);
-    }
-
-    // Verifies the location propagates correctly into the report_leaked() error
-    // message.
-    #[test]
-    fn name_to_report_leaked() {
-        use std::panic::{catch_unwind, AssertUnwindSafe, Location};
-        #[rustfmt::skip]
-        let (kernel, new_location) = (Kernel::new(), Location::caller());
-        let result = catch_unwind(AssertUnwindSafe(|| kernel.report_leaked()));
-        let panic_arg = result.expect_err("Kernel::report_leaked did not panic");
-        let message = panic_arg
-            .downcast_ref::<String>()
-            .expect("Wrong panic payload type");
-        assert!(message.contains(&format!("{}:{}", new_location.file(), new_location.line())));
     }
 }
