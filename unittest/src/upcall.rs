@@ -25,7 +25,7 @@ pub fn schedule(
             None => return Ok(()),
         };
         // Don't bother queueing a null upcall, as they don't do anything when
-        // invoked anyway.
+        // invoked anyway, and the core kernel does not queue them either.
         if upcall.is_null() {
             return Ok(());
         }
@@ -181,7 +181,7 @@ mod tests {
         crate::kernel_data::with_kernel_data(|kernel_data| {
             let kernel_data = kernel_data.unwrap();
 
-            // Very the upcall was queued.
+            // Verify the upcall was queued.
             assert_eq!(kernel_data.upcall_queue.len(), 1);
             let upcall_queue_entry = kernel_data.upcall_queue.front().expect("Upcall not queued");
             assert_eq!(upcall_queue_entry.args, (3, 4, 5));
