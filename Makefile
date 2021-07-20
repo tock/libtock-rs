@@ -94,8 +94,17 @@ EXCLUDE_RUNTIME := --exclude libtock2 --exclude libtock_runtime
 EXCLUDE_STD := --exclude libtock_unittest --exclude print_sizes \
                --exclude syscalls_tests --exclude test_runner
 
+# Some of our crates should build with a stable toolchain. This verifies those
+# crates don't depend on unstable features by using cargo check. We specify a
+# different target directory so this doesn't flush the cargo cache of the
+# primary toolchain.
+.PHONY: test-stable
+test-stable:
+	CARGO_TARGET_DIR="target/stable-toolchain" cargo +stable check --workspace \
+		$(EXCLUDE_RUNTIME) --exclude libtock --exclude libtock_core
+
 .PHONY: test
-test: examples test-qemu-hifive
+test: examples test-qemu-hifive test-stable
 	# TODO: When we have a working embedded test harness, change the libtock2
 	# builds to --all-targets rather than --examples.
 	# Build libtock2 on both a RISC-V target and an ARM target. We pick
