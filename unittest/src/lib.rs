@@ -3,6 +3,7 @@
 
 #![deny(unsafe_op_in_unsafe_fn)]
 
+mod allow_db;
 pub mod command_return;
 mod driver;
 mod expected_syscall;
@@ -26,5 +27,9 @@ pub mod fake {
     pub use crate::kernel::Kernel;
 }
 
+pub use allow_db::{RoAllowBuffer, RwAllowBuffer};
 pub use expected_syscall::ExpectedSyscall;
 pub use syscall_log::SyscallLogEntry;
+
+#[cfg(test)]
+mod allow_db_test;
