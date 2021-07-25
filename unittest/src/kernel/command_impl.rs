@@ -61,7 +61,10 @@ pub(super) fn command(
             Some(expected_syscall) => expected_syscall.panic_wrong_call("Command"),
         };
 
-        let driver = kernel_data.drivers.get(&driver_id).cloned();
+        let driver = kernel_data
+            .drivers
+            .get(&driver_id)
+            .map(|driver_data| driver_data.driver.clone());
 
         (driver, override_return)
     });

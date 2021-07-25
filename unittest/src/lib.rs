@@ -9,6 +9,7 @@ mod expected_syscall;
 mod kernel;
 mod kernel_data;
 mod syscall_log;
+pub mod upcall;
 
 /// `fake` contains fake implementations of Tock kernel components. Fake
 /// components emulate the behavior of the real Tock kernel components, but in

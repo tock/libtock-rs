@@ -22,10 +22,17 @@ fn driver_support() {
     assert_eq!(r1.try_into(), Ok(ErrorCode::NoDevice as u32));
 
     // A mock driver that returns a fixed value.
+    // TODO: This is growing every time we add a new required method to Driver.
+    // Once we have fake driver inside `crate::fake` (e.g. a fake LowLevelDebug
+    // driver), we should remove MockDriver and replace it with the fake driver,
+    // so we have 1 fewer Driver implementations to maintain.
     struct MockDriver;
     impl fake::Driver for MockDriver {
         fn id(&self) -> u32 {
             42
+        }
+        fn num_upcalls(&self) -> u32 {
+            0
         }
         fn command(&self, _command_id: u32, _argument0: u32, _argument1: u32) -> CommandReturn {
             command_return::success_3_u32(1, 2, 3)

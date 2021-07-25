@@ -4,7 +4,10 @@
 /// type. `Register` wraps a raw pointer type that keeps that tags around. User
 /// code should not depend on the particular type of pointer that `Register`
 /// wraps, but instead use the conversion functions in this module.
+// Register is repr(transparent) so that an upcall's application data can be
+// soundly passed as a Register.
 #[derive(Clone, Copy, Debug)]
+#[repr(transparent)]
 pub struct Register(pub *mut ());
 
 // -----------------------------------------------------------------------------

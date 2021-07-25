@@ -169,7 +169,7 @@ pub unsafe trait RawSyscalls {
     //            noreturn  (all these system calls are expected to return)
     //
     // For subscribe(), the callback pointer should be either 0 (for the null
-    // callback) or an `unsafe extern fn(u32, u32, u32, Userdata)`.
+    // callback) or an `unsafe extern fn(u32, u32, u32, Register)`.
     /// `syscall4` should only be called by `libtock_platform`.
     ///
     /// # Safety
