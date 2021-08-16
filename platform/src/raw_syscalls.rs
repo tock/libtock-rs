@@ -173,8 +173,23 @@ pub unsafe trait RawSyscalls {
     /// `syscall4` should only be called by `libtock_platform`.
     ///
     /// # Safety
-    /// `syscall4` must NOT be used to invoke yield. Otherwise, it has the same
-    /// safety invariants as the underlying system call, which varies depending
-    /// on the system call class.
+    /// `syscall4` must NOT be used to invoke yield. It inherits all safety
+    /// invariants from the underlying system call as described in TRD 104,
+    /// which varies depending on the system call class.
+    ///
+    /// For the Allow system calls, there are some invariants that are stricter
+    /// than TRD 104. These invariants are explicitly allowed by TRD 104.
+    ///
+    /// For Read-Only Allow, the aliasing invariants on the buffer are
+    /// equivalent to passing a `&[u8]` reference across the system call
+    /// boundary. In particular, that means there MUST NOT be a `&mut [u8]`
+    /// reference overlapping the passed buffer, until the buffer has been
+    /// returned by a Read-Only Allow call.
+    ///
+    /// For Read-Write Allow, the aliasing invariants on the buffer are
+    /// equivalent to passing a `&mut [u8]` reference across the system call
+    /// boundary. In particular, that means there MUST NOT be a reference
+    /// overlapping the passed buffer, until the buffer has been returned by a
+    /// Read-Write Allow call.
     unsafe fn syscall4<const CLASS: usize>(_: [Register; 4]) -> [Register; 4];
 }

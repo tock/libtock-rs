@@ -157,7 +157,8 @@ pub struct OverlapError;
 #[derive(Debug)]
 pub struct RoAllowBuffer {
     // Safety invariant: Either length is 0, or address and length can be
-    // soundly converted to a &'static [u8].
+    // soundly converted to a &'static [u8]. Note: that means that no &mut [u8]
+    // references may overlap the slice described by address and len.
     address: *const u8,
     len: usize,
 }
@@ -182,8 +183,9 @@ impl std::ops::Deref for RoAllowBuffer {
 /// references to the buffer have been destroyed.
 #[derive(Debug)]
 pub struct RwAllowBuffer {
-    // Safety invariant: Either length is 0, or address and length can be safely
-    // converted to a &'static mut [u8].
+    // Safety invariant: Either length is 0, or address and length can be
+    // soundly converted to a &'static mut [u8]. Note: that means that no
+    // references may overlap the slice described by address and len.
     address: *mut u8,
     len: usize,
 }
