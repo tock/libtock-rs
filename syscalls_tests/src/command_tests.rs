@@ -15,7 +15,7 @@ fn command() {
         override_return: Some(command_return::success_3_u32(1, 2, 3)),
     });
     assert_eq!(
-        fake::Kernel::command(1, 2, 3, 4).get_success_3_u32(),
+        fake::Syscalls::command(1, 2, 3, 4).get_success_3_u32(),
         Some((1, 2, 3))
     );
     assert_eq!(

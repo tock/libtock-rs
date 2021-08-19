@@ -1,8 +1,8 @@
-use crate::kernel::raw_syscalls_impl::assert_valid;
-use crate::kernel::yield_impl::*;
 use crate::{fake, ExpectedSyscall, SyscallLogEntry};
 use libtock_platform::{RawSyscalls, YieldNoWaitReturn};
 use std::panic::catch_unwind;
+
+use fake::syscalls::yield_impl::*;
 
 #[test]
 fn yield_no_wait_test() {
@@ -28,7 +28,7 @@ fn yield_no_wait_test() {
         yield_no_wait(return_value.as_mut_ptr());
     }
     let return_value = unsafe { return_value.assume_init() };
-    assert_valid(return_value);
+    fake::syscalls::assert_valid(return_value);
     assert_eq!(return_value, YieldNoWaitReturn::NoUpcall);
     assert_eq!(kernel.take_syscall_log(), [SyscallLogEntry::YieldNoWait]);
 
@@ -41,7 +41,7 @@ fn yield_no_wait_test() {
         yield_no_wait(return_value.as_mut_ptr());
     }
     let return_value = unsafe { return_value.assume_init() };
-    assert_valid(return_value);
+    fake::syscalls::assert_valid(return_value);
     assert_eq!(return_value, YieldNoWaitReturn::Upcall);
     assert_eq!(kernel.take_syscall_log(), [SyscallLogEntry::YieldNoWait]);
 
@@ -98,7 +98,7 @@ fn yield1() {
     #[cfg(target_pointer_width = "64")]
     {
         let result =
-            catch_unwind(|| unsafe { fake::Kernel::yield1([(u32::MAX as usize + 1).into()]) });
+            catch_unwind(|| unsafe { fake::Syscalls::yield1([(u32::MAX as usize + 1).into()]) });
         assert!(result
             .expect_err("failed to catch too large yield ID")
             .downcast_ref::<String>()
@@ -107,7 +107,7 @@ fn yield1() {
     }
 
     // Call yield-no-wait through yield1, which is not valid.
-    let result = catch_unwind(|| unsafe { fake::Kernel::yield1([0u32.into()]) });
+    let result = catch_unwind(|| unsafe { fake::Syscalls::yield1([0u32.into()]) });
     assert!(result
         .expect_err("failed to catch yield-no-wait without arg")
         .downcast_ref::<&'static str>()
@@ -117,12 +117,12 @@ fn yield1() {
     // Test a successful invocation of yield-wait.
     kernel.add_expected_syscall(ExpectedSyscall::YieldWait { skip_upcall: true });
     unsafe {
-        fake::Kernel::yield1([1u32.into()]);
+        fake::Syscalls::yield1([1u32.into()]);
     }
     assert_eq!(kernel.take_syscall_log(), [SyscallLogEntry::YieldWait]);
 
     // Call yield1 with a yield ID that is unknown but which fits in a u32.
-    let result = catch_unwind(|| unsafe { fake::Kernel::yield1([2u32.into()]) });
+    let result = catch_unwind(|| unsafe { fake::Syscalls::yield1([2u32.into()]) });
     assert!(result
         .expect_err("failed to catch incorrect yield ID -- new ID added?")
         .downcast_ref::<String>()
@@ -138,7 +138,7 @@ fn yield2() {
     #[cfg(target_pointer_width = "64")]
     {
         let result = catch_unwind(|| unsafe {
-            fake::Kernel::yield2([(u32::MAX as usize + 1).into(), 0u32.into()])
+            fake::Syscalls::yield2([(u32::MAX as usize + 1).into(), 0u32.into()])
         });
         assert!(result
             .expect_err("failed to catch too large yield ID")
@@ -153,15 +153,15 @@ fn yield2() {
     });
     let mut return_value = core::mem::MaybeUninit::<YieldNoWaitReturn>::uninit();
     unsafe {
-        fake::Kernel::yield2([0u32.into(), return_value.as_mut_ptr().into()]);
+        fake::Syscalls::yield2([0u32.into(), return_value.as_mut_ptr().into()]);
     }
     let return_value = unsafe { return_value.assume_init() };
-    assert_valid(return_value);
+    fake::syscalls::assert_valid(return_value);
     assert_eq!(kernel.take_syscall_log(), [SyscallLogEntry::YieldNoWait]);
     assert_eq!(return_value, YieldNoWaitReturn::Upcall);
 
     // Call yield-wait through yield2, which should be rejected.
-    let result = catch_unwind(|| unsafe { fake::Kernel::yield2([1u32.into(), 0u32.into()]) });
+    let result = catch_unwind(|| unsafe { fake::Syscalls::yield2([1u32.into(), 0u32.into()]) });
     assert!(result
         .expect_err("failed to catch yield-wait with arg")
         .downcast_ref::<&'static str>()
@@ -169,7 +169,7 @@ fn yield2() {
         .contains("yield-wait called with an argument"));
 
     // Call yield2 with a yield ID that is unknown but which fits in a u32.
-    let result = catch_unwind(|| unsafe { fake::Kernel::yield2([2u32.into(), 0u32.into()]) });
+    let result = catch_unwind(|| unsafe { fake::Syscalls::yield2([2u32.into(), 0u32.into()]) });
     assert!(result
         .expect_err("failed to catch incorrect yield ID -- new ID added?")
         .downcast_ref::<String>()

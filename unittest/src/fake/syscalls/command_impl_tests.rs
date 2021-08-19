@@ -141,7 +141,7 @@ fn override_return() {
 fn syscall4() {
     let kernel = fake::Kernel::new();
     unsafe {
-        fake::Kernel::syscall4::<{ syscall_class::COMMAND }>([
+        fake::Syscalls::syscall4::<{ syscall_class::COMMAND }>([
             1u32.into(),
             2u32.into(),
             3u32.into(),

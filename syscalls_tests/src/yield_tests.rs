@@ -12,7 +12,7 @@ fn no_wait_upcall() {
     kernel.add_expected_syscall(ExpectedSyscall::YieldNoWait {
         override_return: Some(Upcall),
     });
-    assert_eq!(fake::Kernel::yield_no_wait(), Upcall);
+    assert_eq!(fake::Syscalls::yield_no_wait(), Upcall);
     assert_eq!(kernel.take_syscall_log(), [SyscallLogEntry::YieldNoWait]);
 }
 
@@ -24,7 +24,7 @@ fn no_wait_no_upcall() {
     kernel.add_expected_syscall(ExpectedSyscall::YieldNoWait {
         override_return: Some(NoUpcall),
     });
-    assert_eq!(fake::Kernel::yield_no_wait(), NoUpcall);
+    assert_eq!(fake::Syscalls::yield_no_wait(), NoUpcall);
     assert_eq!(kernel.take_syscall_log(), [SyscallLogEntry::YieldNoWait]);
 }
 
@@ -33,6 +33,6 @@ fn no_wait_no_upcall() {
 fn wait() {
     let kernel = fake::Kernel::new();
     kernel.add_expected_syscall(ExpectedSyscall::YieldWait { skip_upcall: true });
-    fake::Kernel::yield_wait();
+    fake::Syscalls::yield_wait();
     assert_eq!(kernel.take_syscall_log(), [SyscallLogEntry::YieldWait]);
 }
