@@ -30,6 +30,7 @@ impl Kernel {
     pub fn new() -> Kernel {
         let old_option = KERNEL_DATA.with(|kernel_data| {
             kernel_data.replace(Some(KernelData {
+                allow_db: Default::default(),
                 create_location: std::panic::Location::caller(),
                 drivers: Default::default(),
                 expected_syscalls: Default::default(),

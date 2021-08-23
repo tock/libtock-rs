@@ -1,3 +1,4 @@
+mod allow_ro_impl;
 mod command_impl;
 mod raw_syscalls_impl;
 mod yield_impl;
@@ -8,7 +9,11 @@ mod yield_impl;
 pub struct Syscalls;
 
 #[cfg(test)]
+mod allow_ro_impl_tests;
+#[cfg(test)]
 mod command_impl_tests;
+#[cfg(test)]
+mod raw_syscalls_impl_tests;
 #[cfg(test)]
 mod yield_impl_tests;
 

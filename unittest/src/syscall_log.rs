@@ -19,7 +19,16 @@ pub enum SyscallLogEntry {
         argument0: u32,
         argument1: u32,
     },
-    // TODO: Add Allow.
+
+    // -------------------------------------------------------------------------
+    // Read-Only Allow
+    // -------------------------------------------------------------------------
+    AllowRo {
+        driver_number: u32,
+        buffer_number: u32,
+        len: usize,
+    },
+    // TODO: Add Read-Write Allow.
     // TODO: Add Memop.
     // TODO: Add Exit.
 }
