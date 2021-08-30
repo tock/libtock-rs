@@ -1,9 +1,9 @@
 use libtock_platform::{syscall_class, yield_id, RawSyscalls, Register};
 use std::convert::TryInto;
 
-unsafe impl RawSyscalls for super::Kernel {
+unsafe impl RawSyscalls for crate::fake::Syscalls {
     unsafe fn yield1([r0]: [Register; 1]) {
-        assert_valid(r0);
+        crate::fake::syscalls::assert_valid(r0);
         match r0.try_into().expect("too-large Yield ID passed") {
             yield_id::NO_WAIT => panic!("yield-no-wait called without an argument"),
             yield_id::WAIT => super::yield_impl::yield_wait(),
@@ -12,7 +12,7 @@ unsafe impl RawSyscalls for super::Kernel {
     }
 
     unsafe fn yield2([r0, r1]: [Register; 2]) {
-        assert_valid((r0, r1));
+        crate::fake::syscalls::assert_valid((r0, r1));
         match r0.try_into().expect("too-large Yield ID passed") {
             yield_id::NO_WAIT => unsafe { super::yield_impl::yield_no_wait(r1.into()) },
             yield_id::WAIT => {
@@ -43,7 +43,7 @@ unsafe impl RawSyscalls for super::Kernel {
     }
 
     unsafe fn syscall4<const CLASS: usize>([r0, r1, r2, r3]: [Register; 4]) -> [Register; 4] {
-        assert_valid((r0, r1, r2, r3));
+        crate::fake::syscalls::assert_valid((r0, r1, r2, r3));
         match CLASS {
             syscall_class::SUBSCRIBE => unimplemented!("TODO: Add Subscribe"),
             syscall_class::COMMAND => super::command_impl::command(r0, r1, r2, r3),
@@ -52,13 +52,4 @@ unsafe impl RawSyscalls for super::Kernel {
             _ => panic!("Unknown syscall4 call. Class: {}", CLASS),
         }
     }
-}
-
-// Miri does not always check that values are valid (see `doc/MiriTips.md` in
-// the root of this repository). This function uses a hack to verify a value is
-// valid. If the value is invalid, Miri will detect undefined behavior when it
-// executes this.
-pub(crate) fn assert_valid<T: core::fmt::Debug>(_value: T) {
-    #[cfg(miri)]
-    format!("{:?}", _value);
 }

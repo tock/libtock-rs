@@ -1,35 +1,13 @@
 use crate::kernel_data::{with_kernel_data, DriverData, KernelData, KERNEL_DATA};
 use crate::{ExpectedSyscall, SyscallLogEntry};
 
-// TODO: Create a fake/ directory, and move this code into fake/kernel.rs.
-// Create fake/syscalls/ and move the fake system call implementation into
-// fake/syscalls/. Move the system call implementation from `fake::Kernel` to a
-// new `fake::Syscalls` type.
-// See https://github.com/tock/libtock-rs/issues/313 for a better explanation.
-
-// TODO: Add Allow.
-
-mod command_impl;
-
-#[cfg(test)]
-mod command_impl_tests;
-
-// TODO: Add Exit.
-// TODO: Add Memop.
-// TODO: Add Subscribe.
-mod raw_syscalls_impl;
-mod yield_impl;
-
-#[cfg(test)]
-mod yield_impl_tests;
-
-/// A fake implementation of the Tock kernel. Provides
-/// `libtock_platform::Syscalls` by implementing
-/// `libtock_platform::RawSyscalls`. Allows `fake::Driver`s to be attached, and
-/// routes system calls to the correct fake driver.
+/// A fake implementation of the Tock kernel. Used with `fake::Syscalls`, which
+/// provides system calls that are routed to this kernel. `fake::Driver`s may be
+/// attached to a `fake::Kernel`, and the `fake::Kernel` will route system calls
+/// to the correct fake driver.
 ///
-/// Note that there can only be one `Kernel` instance per thread, as a
-/// thread-local variable is used to implement `libtock_platform::RawSyscalls`.
+/// Note that there can only be one `fake::Kernel` instance per thread, as
+/// `fake::Syscalls` uses a thread-local variable to locate the `fake::Kernel`.
 // Note: The kernel's data is actually stored in
 // crate::kernel_data::KERNEL_DATA. See the kernel_data module comment for an
 // explanation.
@@ -124,59 +102,5 @@ impl Kernel {
 impl Drop for Kernel {
     fn drop(&mut self) {
         KERNEL_DATA.with(|kernel_data| kernel_data.replace(None));
-    }
-}
-
-// -----------------------------------------------------------------------------
-// Crate implementation details below.
-// -----------------------------------------------------------------------------
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn expected_syscall_queue() {
-        use libtock_platform::YieldNoWaitReturn::Upcall;
-        use std::matches;
-        use ExpectedSyscall::YieldNoWait;
-        let kernel = Kernel::new();
-        with_kernel_data(|kernel_data| assert!(kernel_data.unwrap().expected_syscalls.is_empty()));
-        kernel.add_expected_syscall(YieldNoWait {
-            override_return: None,
-        });
-        kernel.add_expected_syscall(YieldNoWait {
-            override_return: Some(Upcall),
-        });
-        with_kernel_data(|kernel_data| {
-            let expected_syscalls = &mut kernel_data.unwrap().expected_syscalls;
-            assert!(matches!(
-                expected_syscalls.pop_front(),
-                Some(YieldNoWait {
-                    override_return: None
-                })
-            ));
-            assert!(matches!(
-                expected_syscalls.pop_front(),
-                Some(YieldNoWait {
-                    override_return: Some(Upcall)
-                })
-            ));
-            assert!(expected_syscalls.is_empty());
-        });
-    }
-
-    #[test]
-    fn syscall_log() {
-        use SyscallLogEntry::{YieldNoWait, YieldWait};
-        let kernel = Kernel::new();
-        assert_eq!(kernel.take_syscall_log(), []);
-        with_kernel_data(|kernel_data| {
-            let syscall_log = &mut kernel_data.unwrap().syscall_log;
-            syscall_log.push(YieldNoWait);
-            syscall_log.push(YieldWait);
-        });
-        assert_eq!(kernel.take_syscall_log(), [YieldNoWait, YieldWait]);
-        assert_eq!(kernel.take_syscall_log(), []);
     }
 }
