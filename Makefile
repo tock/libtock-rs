@@ -145,6 +145,10 @@ hail:
 flash-hail:
 	PLATFORM=hail cargo run $(release) --target=thumbv7em-none-eabi --example $(EXAMPLE) $(features)
 
+.PHONY: flash-imix
+flash-imix:
+	PLATFORM=imix cargo run $(release) --target=thumbv7em-none-eabi --example $(EXAMPLE) $(features)
+
 .PHONY: nucleo_f429zi
 nucleo_f429zi:
 	PLATFORM=nucleo_f429zi cargo build $(release) --target=thumbv7em-none-eabi --examples $(features)

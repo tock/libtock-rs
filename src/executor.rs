@@ -18,7 +18,7 @@ pub unsafe fn block_on<T>(mut future: impl Future<Output = T>) -> T {
 
     loop {
         match poll(pinned_future.as_mut()) {
-            Poll::Pending => syscalls::raw::yieldk(),
+            Poll::Pending => syscalls::raw::yield_wait(),
             Poll::Ready(value) => {
                 return value;
             }

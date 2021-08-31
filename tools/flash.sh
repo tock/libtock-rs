@@ -40,6 +40,11 @@ case "${PLATFORM}" in
         binary_name=rv32imac.elf
         tockload=n
         ;;
+    "imix")
+        tockloader_flags=""
+        binary_name=cortex-m4.elf
+        tockload=y
+        ;;
     "imxrt1050")
         tockloader_flags=""
         binary_name=cortex-m7.elf

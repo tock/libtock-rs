@@ -1,22 +1,22 @@
-use crate::adc::AdcDriverFactory;
-use crate::buttons::ButtonsDriverFactory;
+//use crate::adc::AdcDriverFactory;
+//use crate::buttons::ButtonsDriverFactory;
 use crate::console::ConsoleDriver;
-use crate::ctap::CtapDriverFactory;
-use crate::gpio::GpioDriverFactory;
-use crate::hmac::HmacDriverFactory;
-use crate::i2c_master::I2cDriverFactory;
-use crate::i2c_master_slave::I2cMSDriverFactory;
+//use crate::ctap::CtapDriverFactory;
+//use crate::gpio::GpioDriverFactory;
+//use crate::hmac::HmacDriverFactory;
+//use crate::i2c_master::I2cDriverFactory;
+//use crate::i2c_master_slave::I2cMSDriverFactory;
 use crate::leds::LedsDriverFactory;
 use crate::result::OtherError;
 use crate::result::TockError;
-use crate::rng::RngDriver;
-use crate::sensors::ninedof::NinedofDriver;
-use crate::sensors::AmbientLightSensor;
-use crate::sensors::HumiditySensor;
-use crate::sensors::TemperatureSensor;
-use crate::simple_ble::BleAdvertisingDriverFactory;
-use crate::simple_ble::BleScanningDriverFactory;
-use crate::temperature::TemperatureDriverFactory;
+//use crate::rng::RngDriver;
+//use crate::sensors::ninedof::NinedofDriver;
+//use crate::sensors::AmbientLightSensor;
+//use crate::sensors::HumiditySensor;
+//use crate::sensors::TemperatureSensor;
+//use crate::simple_ble::BleAdvertisingDriverFactory;
+//use crate::simple_ble::BleScanningDriverFactory;
+//use crate::temperature::TemperatureDriverFactory;
 use crate::timer::DriverContext;
 use core::cell::Cell;
 
@@ -24,23 +24,23 @@ use core::cell::Cell;
 #[non_exhaustive]
 pub struct Drivers {
     pub console: ConsoleDriver,
-    pub ctap: CtapDriverFactory,
+    //    pub ctap: CtapDriverFactory,
     pub leds: LedsDriverFactory,
     pub timer: DriverContext,
-    pub gpio: GpioDriverFactory,
-    pub hmac: HmacDriverFactory,
-    pub temperature: TemperatureDriverFactory,
-    pub buttons: ButtonsDriverFactory,
-    pub adc: AdcDriverFactory,
-    pub i2c_ms: I2cMSDriverFactory,
-    pub i2c: I2cDriverFactory,
-    pub rng: RngDriver,
-    pub ble_advertising: BleAdvertisingDriverFactory,
-    pub ble_scanning: BleScanningDriverFactory,
-    pub ambient_light_sensor: AmbientLightSensor,
-    pub temperature_sensor: TemperatureSensor,
-    pub humidity_sensor: HumiditySensor,
-    pub ninedof: NinedofDriver,
+    //    pub gpio: GpioDriverFactory,
+    //    pub hmac: HmacDriverFactory,
+    //    pub temperature: TemperatureDriverFactory,
+    //    pub buttons: ButtonsDriverFactory,
+    //    pub adc: AdcDriverFactory,
+    //    pub i2c_ms: I2cMSDriverFactory,
+    //    pub i2c: I2cDriverFactory,
+    //    pub rng: RngDriver,
+    //    pub ble_advertising: BleAdvertisingDriverFactory,
+    //    pub ble_scanning: BleScanningDriverFactory,
+    //    pub ambient_light_sensor: AmbientLightSensor,
+    //    pub temperature_sensor: TemperatureSensor,
+    //    pub humidity_sensor: HumiditySensor,
+    //    pub ninedof: NinedofDriver,
 }
 
 /// Retrieve [Drivers] struct. Returns struct only once.
@@ -69,26 +69,26 @@ pub unsafe fn retrieve_drivers_unsafe() -> Drivers {
 
 #[allow(clippy::declare_interior_mutable_const)]
 const DRIVERS: Drivers = Drivers {
-    adc: AdcDriverFactory,
-    ble_advertising: BleAdvertisingDriverFactory,
-    ble_scanning: BleScanningDriverFactory,
-    buttons: ButtonsDriverFactory,
+    //    adc: AdcDriverFactory,
+    //    ble_advertising: BleAdvertisingDriverFactory,
+    //    ble_scanning: BleScanningDriverFactory,
+    //    buttons: ButtonsDriverFactory,
     console: ConsoleDriver,
-    ctap: CtapDriverFactory,
+    //    ctap: CtapDriverFactory,
     leds: LedsDriverFactory,
     timer: DriverContext {
         active_timer: Cell::new(None),
     },
-    gpio: GpioDriverFactory,
-    hmac: HmacDriverFactory,
-    i2c_ms: I2cMSDriverFactory,
-    i2c: I2cDriverFactory,
-    temperature: TemperatureDriverFactory,
-    rng: RngDriver,
-    ambient_light_sensor: AmbientLightSensor,
-    temperature_sensor: TemperatureSensor,
-    humidity_sensor: HumiditySensor,
-    ninedof: NinedofDriver,
+    //    gpio: GpioDriverFactory,
+    //    hmac: HmacDriverFactory,
+    //    i2c_ms: I2cMSDriverFactory,
+    //    i2c: I2cDriverFactory,
+    //    temperature: TemperatureDriverFactory,
+    //    rng: RngDriver,
+    //    ambient_light_sensor: AmbientLightSensor,
+    //    temperature_sensor: TemperatureSensor,
+    //    humidity_sensor: HumiditySensor,
+    //    ninedof: NinedofDriver,
 };
 
 pub struct DriversAlreadyTakenError;

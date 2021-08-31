@@ -4,99 +4,66 @@
 #[no_mangle]
 #[naked]
 #[link_section = ".start"]
-pub unsafe extern "C" fn _start() -> ! {
+pub unsafe extern "C" fn start() -> ! {
     asm!(
         "
-        // Because ROPI-RWPI support in LLVM/rustc is incomplete, Rust
-        // applications must be statically linked. An offset between the
-        // location the program is linked at and its actual location in flash
-        // would cause references in .data and .rodata to point to the wrong
-        // data. To mitigate this, this section checks that .text (and .start)
-        // are loaded at the correct location. If the application was linked and
-        // loaded correctly, the location of the first instruction (read using
-        // the Program Counter) will match the intended location of .start. We
-        // don't have an easy way to signal an error, so for now we just yield
-        // if the location is wrong.
-        subw r4, pc, #4    // r4 = pc
-        ldr r5, =.start   // r5 = address of .start
-        cmp r4, r5
-        beq .Lstack_init  // Jump to stack initialization if pc was correct
-        movw r0, #8       // LowLevelDebug driver number
-        movw r1, #1       // LowLevelDebug 'print status code' command
-        movw r2, #2       // LowLevelDebug relocation failed status code
-        svc 2             // command() syscall
-        .Lyield_loop:
-        svc 0             // yield() syscall (in infinite loop)
-        b .Lyield_loop
+	/* First, verify the process binary was loaded at the correct address. The
+	 * check is performed by comparing the program counter at the start to the
+	 * address of `start`, which is stored in rt_header. */
+	mov r4, pc        /* r4 = address of .start + 4 (Thumb bit unset) */
+	mov r5, r0        /* Save rt_header; we use r0 for syscalls */
+	ldr r0, [r5, #0]  /* r0 = rt_header.start */
+	add r0, #3        /* r0 = rt_header.start + 4 - 1 (for Thumb bit) */
+	cmp r0, r4
+	beq .Lset_brk     /* Skip error handling if pc correct */
+	/* If the beq on the previous line did not jump, then the binary is not at
+	 * the correct location. Report the error via LowLevelDebug then exit. */
+	mov r0, #8  /* LowLevelDebug driver number */
+	mov r1, #1  /* Command: print alert code */
+	mov r2, #2  /* Alert code 2 (incorrect location */
+	svc 2       /* Execute `command` */
+	mov r0, #0  /* Operation: exit-terminate */
+	svc 6       /* Execute `exit` */
 
-        .Lstack_init:
-        // Compute the stacktop (stack_start). The stacktop is computed as
-        // stack_size + mem_start plus padding to align the stack to a multiple
-        // of 8 bytes. The 8 byte alignment is to follow ARM AAPCS:
-        // http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.faqs/ka4127.html
-        ldr r4, [r0, #36]  // r4 = app_start->stack_size
-        add r4, r4, r1     // r4 = app_start->stack_size + mem_start
-        add r4, #7         // r4 = app_start->stack_size + mem_start + 7
-        bic r4, r4, #7     // r4 = (app_start->stack_size + mem_start + 7) & ~0x7
-        mov sp, r4         // sp = r4
+.Lset_brk:
+	/* memop(): set brk to rt_header's initial break value */
+	mov r0, #0        /* operation: set break */
+	ldr r1, [r5, #4]  /* rt_header`s initial process break */
+	svc 5             /* call `memop` */
 
-        // We need to pass app_start, stacktop and app_heap_break to rust_start.
-        // Temporarily store them in r6, r7 and r8
-        mov r6, r0
-        mov r7, sp
+	/* Set the stack pointer */
+	ldr r0, [r5, #8]  /* r0 = rt_header._stack_top */
+	mov sp, r0
 
-        // Debug support, tell the kernel the stack location
-        //
-        // memop(10, stacktop)
-        // r7 contains stacktop
-        mov r0, #10
-        mov r1, r7
-        svc 4
+	/* Copy .data into place */
+	ldr r0, [r5, #12]          /* remaining = rt_header.data_size */
+	cbz r0, .Lzero_bss         /* Jump to zero_bss if remaining == 0 */
+	ldr r1, [r5, #16]          /* src = rt_header.data_flash_start */
+	ldr r2, [r5, #20]          /* dest = rt_header.data_ram_start */
+.Ldata_loop_body:
+	ldr r3, [r1]               /* r3 = *src */
+	str r3, [r2]               /* *(dest) = r3 */
+	sub r0, #4                 /* remaining -= 4 */
+	add r1, #4                 /* src += 4 */
+	add r2, #4                 /* dest += 4 */
+	cmp r0, #0
+	bne .Ldata_loop_body       /* Iterate again if remaining != 0 */
 
-        // Debug support, tell the kernel the heap_start location
-        mov r0, r6
-        ldr r4, [r0, #24] // r4 = app_start->bss_start
-        ldr r5, [r0, #28] // r5 = app_start->bss_size
-        add r4, r4, r5    // r4 = bss_start + bss_size
-        //
-        // memop(11, r4)
-        mov r0, #11
-        mov r1, r4
-        svc 4
+.Lzero_bss:
+	ldr r0, [r5, #24]          /* remaining = rt_header.bss_size */
+	cbz r0, .Lcall_rust_start  /* Jump to call_rust_start if remaining == 0 */
+	ldr r1, [r5, #28]          /* dest = rt_header.bss_start */
+	mov r2, #0                 /* r2 = 0 */
+.Lbss_loop_body:
+	strb r2, [r1]              /* *(dest) = r2 = 0 */
+	sub r0, #1                 /* remaining -= 1 */
+	add r1, #1                 /* dest += 1 */
+	cmp r0, #0
+	bne .Lbss_loop_body        /* Iterate again if remaining != 0 */
 
-        // Store heap_start (and soon to be app_heap_break) in r8
-        mov r8, r4
-
-        // There is a possibility that stack + .data + .bss is greater than
-        // 3072. Therefore setup the initial app_heap_break to heap_start (that
-        // is zero initial heap) and let rust_start determine where the actual
-        // app_heap_break should go.
-        //
-        // Also, because app_heap_break is where the unprivileged MPU region
-        // ends, in case mem_start + stack + .data + .bss is greater than
-        // initial app_heap_break (mem_start + 3072), we will get a memory fault
-        // in rust_start when initializing .data and .bss. Setting
-        // app_heap_break to heap_start avoids that.
-
-        // memop(0, r8)
-        mov r0, #0
-        mov r1, r8
-        svc 4
-
-        // NOTE: If there is a hard-fault before this point, then
-        //       process_detail_fmt in kernel/src/process.rs panics which
-        //       will result in us losing the PC of the instruction
-        //       generating the hard-fault. Therefore any code before
-        //       this point is critical code
-
-        // Setup parameters needed by rust_start
-        // r6 (app_start), r7 (stacktop), r8 (app_heap_break)
-        mov r0, r6
-        mov r1, r7
-        mov r2, r8
-
-        // Call rust_start
-        bl rust_start",
+.Lcall_rust_start:
+	bl rust_start
+        ",
         // No clobbers because we don't return.
         options(noreturn),
     )

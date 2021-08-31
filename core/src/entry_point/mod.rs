@@ -1,4 +1,3 @@
-use crate::memop;
 use crate::syscalls;
 use core::ptr;
 
@@ -59,78 +58,34 @@ use core::ptr;
 #[cfg_attr(target_arch = "arm", path = "start_item_arm.rs")]
 mod start_item;
 
-/// The header encoded at the beginning of .text by the linker script. It is
-/// accessed by rust_start() using its app_start parameter.
-#[repr(C)]
-struct LayoutHeader {
-    got_sym_start: usize,
-    got_start: usize,
-    got_size: usize,
-    data_sym_start: usize,
-    data_start: usize,
-    data_size: usize,
-    bss_start: usize,
-    bss_size: usize,
-    reldata_start: usize,
-    stack_size: usize,
-}
-
 //Procedural macro to generate a function to read APP_HEAP_SIZE
 libtock_codegen::make_read_env_var!("APP_HEAP_SIZE");
 
-/// Rust setup, called by _start. Uses the extern "C" calling convention so that
-/// the assembly in _start knows how to call it (the Rust ABI is not defined).
-/// Sets up the data segment (including relocations) and the heap, then calls
-/// into the rustc-generated main(). This cannot use mutable global variables or
-/// global references to globals until it is done setting up the data segment.
+// rust_start is the first Rust code to execute in the process. It is called
+// from start, which is written directly in assembly.
 #[no_mangle]
-unsafe extern "C" fn rust_start(app_start: usize, stacktop: usize, app_heap_start: usize) -> ! {
+extern "C" fn rust_start() -> ! {
+    // TODO: Call memop() to inform the kernel of the stack and heap sizes +
+    // locations. Also, perhaps we should support calling a heap initialization
+    // function?
+
     extern "C" {
         // This function is created internally by `rustc`. See
         // `src/lang_items.rs` for more details.
         fn main(argc: isize, argv: *const *const u8) -> isize;
     }
-
-    // Copy .data into its final location in RAM (determined by the linker
-    // script -- should be immediately above the stack).
-    let layout_header: &LayoutHeader = core::mem::transmute(app_start);
-
-    let data_flash_start_addr = app_start + layout_header.data_sym_start;
-
-    ptr::copy_nonoverlapping(
-        data_flash_start_addr as *const u8,
-        stacktop as *mut u8,
-        layout_header.data_size,
-    );
-
-    // Zero .bss (specified by the linker script).
-    let bss_start = layout_header.bss_start as *mut u8;
-    core::ptr::write_bytes(bss_start, 0u8, layout_header.bss_size);
-
-    // TODO: Wait for rustc to have working ROPI-RWPI relocation support, then
-    // implement dynamic relocations here. At the moment, rustc does not have
-    // working ROPI-RWPI support, and it is not clear what that support would
-    // look like at the LLVM level. Once we know what the relocation strategy
-    // looks like we can write the dynamic linker.
-
-    // Initialize the heap. Unlike libtock-c's newlib allocator, which can use
-    // `sbrk` system call to dynamically request heap memory from the kernel, we
-    // need to tell `linked_list_allocator` where the heap starts and ends.
-    //
-    // We get this from the environment to make it easy to set per compile.
-    let app_heap_size: usize = read_APP_HEAP_SIZE();
-
-    let app_heap_end = app_heap_start + app_heap_size;
-
-    // Tell the kernel the new app heap break.
-    memop::set_brk(app_heap_end as *const u8);
-
-    #[cfg(feature = "alloc_init")]
-    crate::libtock_alloc_init(app_heap_start, app_heap_size);
-
-    main(0, ptr::null());
-
-    loop {
-        syscalls::raw::yieldk();
+    unsafe {
+        main(0, ptr::null());
     }
+    loop {
+        syscalls::raw::yield_wait();
+    }
+    /*
+    extern "Rust" {
+        fn libtock_unsafe_main() -> !;
+    }
+    unsafe {
+        libtock_unsafe_main();
+    }
+    */
 }

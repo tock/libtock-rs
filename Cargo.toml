@@ -17,6 +17,7 @@ __internal_disable_timer_in_integration_test = []
 
 [dependencies]
 libtock_core = { path = "core" }
+libtock_platform = { path = "platform" }
 libtock_codegen = { path = "codegen" }
 futures = { version = "0.3.1", default-features = false, features = ["unstable", "cfg-target-has-atomic"] }
 

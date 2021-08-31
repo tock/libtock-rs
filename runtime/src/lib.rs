@@ -22,7 +22,7 @@
 #![no_std]
 #![warn(unsafe_op_in_unsafe_fn)]
 
-mod startup;
+//mod startup; // comment in to use libtock2 startup routine.
 
 /// TockSyscalls implements `libtock_platform::Syscalls`.
 pub struct TockSyscalls;

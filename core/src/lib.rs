@@ -4,7 +4,6 @@
 
 #[cfg(feature = "alloc")]
 mod alloc;
-mod entry_point;
 #[cfg(any(target_arch = "arm", target_arch = "riscv32"))]
 mod lang_items;
 
@@ -15,6 +14,7 @@ extern "Rust" {
 
 pub mod callback;
 pub mod debug;
+mod entry_point;
 pub mod memop;
 pub mod result;
 pub mod shared_memory;

@@ -12,6 +12,7 @@ use core::cell::Cell;
 use core::isize;
 use core::marker::PhantomData;
 use core::ops::{Add, AddAssign, Sub};
+use crate::result::CommandError;
 
 const DRIVER_NUMBER: usize = 0x00000;
 
@@ -20,7 +21,7 @@ mod command_nr {
     pub const GET_CLOCK_FREQUENCY: usize = 1;
     pub const GET_CLOCK_VALUE: usize = 2;
     pub const STOP_ALARM: usize = 3;
-    pub const SET_ALARM: usize = 4;
+    pub const SET_ALARM_WITH_REF: usize = 6;
 }
 
 mod subscribe_nr {
@@ -49,11 +50,10 @@ impl<CB: FnMut(ClockValue, Alarm)> Consumer<WithCallback<'_, CB>> for TimerEvent
 
 impl<'a, CB: FnMut(ClockValue, Alarm)> WithCallback<'a, CB> {
     pub fn init(&'a mut self) -> TockResult<Timer<'a>> {
-        let num_notifications =
-            syscalls::command(DRIVER_NUMBER, command_nr::IS_DRIVER_AVAILABLE, 0, 0)?;
+            syscalls::command_noval(DRIVER_NUMBER, command_nr::IS_DRIVER_AVAILABLE, 0, 0)?;
 
         let clock_frequency =
-            syscalls::command(DRIVER_NUMBER, command_nr::GET_CLOCK_FREQUENCY, 0, 0)?;
+            syscalls::command_u32(DRIVER_NUMBER, command_nr::GET_CLOCK_FREQUENCY, 0, 0)? as usize;
 
         if clock_frequency == 0 {
             return Err(OtherError::TimerDriverErroneousClockFrequency.into());
@@ -70,7 +70,6 @@ impl<'a, CB: FnMut(ClockValue, Alarm)> WithCallback<'a, CB> {
         )?;
 
         Ok(Timer {
-            num_notifications,
             clock_frequency,
             subscription,
         })
@@ -78,31 +77,26 @@ impl<'a, CB: FnMut(ClockValue, Alarm)> WithCallback<'a, CB> {
 }
 
 pub struct Timer<'a> {
-    num_notifications: usize,
     clock_frequency: ClockFrequency,
     #[allow(dead_code)] // Used in drop
     subscription: CallbackSubscription<'a>,
 }
 
 impl<'a> Timer<'a> {
-    pub fn num_notifications(&self) -> usize {
-        self.num_notifications
-    }
-
     pub fn clock_frequency(&self) -> ClockFrequency {
         self.clock_frequency
     }
 
     pub fn get_current_clock(&self) -> TockResult<ClockValue> {
         Ok(ClockValue {
-            num_ticks: syscalls::command(DRIVER_NUMBER, command_nr::GET_CLOCK_VALUE, 0, 0)?
+            num_ticks: syscalls::command_u32(DRIVER_NUMBER, command_nr::GET_CLOCK_VALUE, 0, 0)?
                 as isize,
             clock_frequency: self.clock_frequency,
         })
     }
 
     pub fn stop_alarm(&mut self, alarm: Alarm) -> TockResult<()> {
-        syscalls::command(DRIVER_NUMBER, command_nr::STOP_ALARM, alarm.alarm_id, 0)?;
+        syscalls::command_noval(DRIVER_NUMBER, command_nr::STOP_ALARM, alarm.alarm_id, 0)?;
         Ok(())
     }
 
@@ -128,9 +122,7 @@ impl<'a> Timer<'a> {
                 }
             }
         };
-        let alarm_instant = now.num_ticks() as usize + ticks;
-
-        let alarm_id = syscalls::command(DRIVER_NUMBER, command_nr::SET_ALARM, alarm_instant, 0)?;
+        let alarm_id = syscalls::command_u32(DRIVER_NUMBER, command_nr::SET_ALARM_WITH_REF, now.num_ticks() as usize, ticks)? as usize;
 
         Ok(Alarm { alarm_id })
     }
@@ -401,8 +393,8 @@ impl<'a> ParallelSleepDriver<'a> {
     }
 
     fn activate_timer(&self, timer: ActiveTimer) -> TockResult<()> {
-        set_alarm_at(timer.instant as usize)?;
         let now = get_current_ticks()?;
+        set_alarm_at(now, timer.instant as usize - now)?;
         if !is_over(timer, now as u32) {
             self.context.active_timer.set(Some(timer));
         } else {
@@ -421,7 +413,7 @@ impl<'a> ParallelSleepDriver<'a> {
                 instant: now as u32 + i,
                 set_at: now as u32,
             };
-            set_alarm_at(next_timer.instant as usize)?;
+            set_alarm_at(now, i as usize)?;
             let now = get_current_ticks()?;
             if !is_over(next_timer, now as u32) {
                 break;
@@ -492,26 +484,25 @@ impl<'a> ParallelSleepDriver<'a> {
 }
 
 fn get_current_ticks() -> TockResult<usize> {
-    syscalls::command(DRIVER_NUMBER, command_nr::GET_CLOCK_VALUE, 0, 0).map_err(|err| err.into())
+    syscalls::command_u32(DRIVER_NUMBER, command_nr::GET_CLOCK_VALUE, 0, 0).map(|s| s as usize).map_err(|e| e.into())
 }
-fn set_alarm_at(instant: usize) -> TockResult<()> {
-    syscalls::command(DRIVER_NUMBER, command_nr::SET_ALARM, instant, 0)
-        .map(|_| ())
-        .map_err(|err| err.into())
+
+fn set_alarm_at(reference: usize, dt: usize) -> TockResult<()> {
+    syscalls::command_u32(DRIVER_NUMBER, command_nr::SET_ALARM_WITH_REF, reference, dt).map(|_| ()).map_err(|e| e.into())
 }
 
 fn stop_alarm_at(instant: usize) -> TockResult<()> {
-    match syscalls::command(DRIVER_NUMBER, command_nr::STOP_ALARM, instant, 0) {
+    match syscalls::command_noval(DRIVER_NUMBER, command_nr::STOP_ALARM, instant, 0) {
         Ok(_) => Ok(()),
-        Err(error) => match error.return_code {
-            EALREADY => Ok(()),
+        Err(error) => match error {
+            CommandError { return_code: EALREADY, ..} => Ok(()),
             _ => Err(TockError::Command(error)),
         },
     }
 }
 
 fn get_clock_frequency() -> TockResult<usize> {
-    syscalls::command(DRIVER_NUMBER, command_nr::GET_CLOCK_FREQUENCY, 0, 0)
+    syscalls::command_u32(DRIVER_NUMBER, command_nr::GET_CLOCK_FREQUENCY, 0, 0).map(|s| s as usize)
         .map_err(|err| err.into())
 }
 

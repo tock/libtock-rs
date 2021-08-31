@@ -4,6 +4,7 @@ use crate::result::OtherError;
 use crate::result::TockResult;
 use crate::syscalls;
 use core::marker::PhantomData;
+use platform::CommandReturn;
 
 const DRIVER_NUMBER: usize = 0x00004;
 
@@ -29,8 +30,11 @@ pub struct GpioDriverFactory;
 
 impl GpioDriverFactory {
     pub fn init_driver(&mut self) -> TockResult<GpioDriver> {
+        let ret = syscalls::command(DRIVER_NUMBER, command_nr::COUNT, 0, 0);
         let driver = GpioDriver {
-            num_gpios: syscalls::command(DRIVER_NUMBER, command_nr::COUNT, 0, 0)?,
+            num_gpios: num_gpios
+                .get_success_u32()
+                .ok_or(TockError::Command2(ret))?,
             lifetime: PhantomData,
         };
         Ok(driver)
@@ -136,7 +140,8 @@ pub struct Gpio<'a> {
 
 impl<'a> Gpio<'a> {
     pub fn enable_output(&mut self) -> TockResult<GpioWrite> {
-        syscalls::command(DRIVER_NUMBER, command_nr::ENABLE_OUTPUT, self.gpio_num, 0)?;
+        syscalls::command(DRIVER_NUMBER, command_nr::ENABLE_OUTPUT, self.gpio_num, 0)
+            .get_success()?;
         let gpio_write = GpioWrite {
             gpio_num: self.gpio_num,
             lifetime: PhantomData,

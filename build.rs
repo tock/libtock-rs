@@ -4,7 +4,7 @@ use std::path::{Path, PathBuf};
 use std::process;
 
 static LAYOUT_FILE_NAME: &str = "layout.ld";
-static LAYOUT_GENERIC_FILENAME: &str = "layout_generic.ld";
+static LAYOUT_GENERIC_FILENAME: &str = "libtock_layout.ld";
 
 fn main() {
     static PLATFORM_ENV_VAR: &str = "PLATFORM";
@@ -46,7 +46,7 @@ fn read_env_var(env_var: &str) -> Option<String> {
 }
 
 fn copy_linker_file(platform_name: &str) {
-    let linker_file_name = format!("boards/layout_{}.ld", platform_name);
+    let linker_file_name = format!("runtime/layouts/{}.ld", platform_name);
     let path = Path::new(&linker_file_name);
     if !path.exists() {
         println!("Cannot find layout file {:?}", path);
@@ -67,6 +67,6 @@ fn copy_linker_file(platform_name: &str) {
     // Copy the generic layout file into OUT_DIR.
     let out_layout_generic: PathBuf = [out_dir, LAYOUT_GENERIC_FILENAME].iter().collect();
     fs::copy(LAYOUT_GENERIC_FILENAME, out_layout_generic)
-        .expect("Unable to copy layout_generic.ld into OUT_DIR");
+        .expect("Unable to copy libtock_layout.ld into OUT_DIR");
     println!("cargo:rustc-link-search={}", out_dir);
 }

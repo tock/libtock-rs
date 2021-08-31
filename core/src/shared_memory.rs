@@ -1,5 +1,5 @@
-use crate::syscalls;
-use core::ptr;
+use libtock_platform::RawSyscalls;
+use libtock_runtime::TockSyscalls;
 
 #[must_use = "Shared memory risks being dropped too early. Drop it manually."]
 pub struct SharedMemory<'a> {
@@ -33,7 +33,13 @@ impl<'a> SharedMemory<'a> {
 impl<'a> Drop for SharedMemory<'a> {
     fn drop(&mut self) {
         unsafe {
-            syscalls::raw::allow(self.driver_number, self.allow_number, ptr::null_mut(), 0);
+            TockSyscalls::syscall4::<3>([
+                self.driver_number.into(),
+                self.allow_number.into(),
+                //(ptr::null_mut() as u32).into(), // rust gets mad
+                (0 as u32).into(),
+                (0 as u32).into(),
+            ]);
         }
     }
 }

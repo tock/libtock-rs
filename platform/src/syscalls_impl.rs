@@ -53,4 +53,28 @@ impl<S: RawSyscalls> Syscalls for S {
             CommandReturn::new(r0.as_u32().into(), r1.as_u32(), r2.as_u32(), r3.as_u32())
         }
     }
+
+    // -------------------------------------------------------------------------
+    // Memop
+    // -------------------------------------------------------------------------
+    // Note: for now just exposing the old interface and handling conversions to
+    // the new API internally.
+    fn memop(arg0: usize, arg1: usize) -> isize {
+        unsafe {
+            let [r0, r1] = Self::syscall2::<5>([arg0.into(), arg1.into()]);
+            match r0.as_u32() {
+                TOCK_SYSCALL_SUCCESS => 0,
+                TOCK_SYSCALL_SUCCESS_U32 => {
+                    let ret = r1.as_u32();
+                    ret as isize
+                }
+                TOCK_SYSCALL_FAILURE => r1.as_u32() as isize * -1, //convert to return code
+                _ => panic!("BADRVAL"),
+            }
+        }
+    }
 }
+// TODO: put these somewhere central
+const TOCK_SYSCALL_SUCCESS: u32 = 128;
+const TOCK_SYSCALL_SUCCESS_U32: u32 = 129;
+const TOCK_SYSCALL_FAILURE: u32 = 0;

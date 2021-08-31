@@ -1,7 +1,3 @@
-#[cfg_attr(target_arch = "riscv32", path = "platform_riscv32.rs")]
-#[cfg_attr(target_arch = "arm", path = "platform_arm.rs")]
-mod platform;
-
 use crate::callback::CallbackSubscription;
 use crate::callback::Consumer;
 use crate::result::AllowError;
@@ -9,8 +5,18 @@ use crate::result::CommandError;
 use crate::result::SubscribeError;
 use crate::shared_memory::SharedMemory;
 
+use libtock_platform::{RawSyscalls, Syscalls};
+use libtock_runtime::TockSyscalls;
+
 pub mod raw {
-    pub use super::platform::*;
+    use libtock_platform::Syscalls;
+    use libtock_runtime::TockSyscalls;
+    pub unsafe fn memop(arg0: usize, arg1: usize) -> isize {
+        TockSyscalls::memop(arg0, arg1)
+    }
+    pub fn yield_wait() {
+        TockSyscalls::yield_wait();
+    }
 }
 
 pub fn subscribe<C: Consumer<T>, T>(
@@ -37,106 +43,141 @@ pub fn subscribe<C: Consumer<T>, T>(
     .map(|_| CallbackSubscription::new(driver_number, subscribe_number))
 }
 
+const TOCK_SYSCALL_SUCCESS_U32_U32: u32 = 130;
+const TOCK_SYSCALL_FAILURE_U32_U32: u32 = 2;
+
 pub fn subscribe_fn(
     driver_number: usize,
     subscribe_number: usize,
     callback: extern "C" fn(usize, usize, usize, usize),
     userdata: usize,
 ) -> Result<(), SubscribeError> {
-    let return_code = unsafe {
-        raw::subscribe(
-            driver_number,
-            subscribe_number,
-            callback as *const _,
-            userdata,
-        )
+    let [r0, _r1, _r2, r3] = unsafe {
+        TockSyscalls::syscall4::<1>([
+            (driver_number as u32).into(),
+            (subscribe_number as u32).into(),
+            (callback as *const u32).into(),
+            userdata.into(),
+        ])
     };
-
-    if return_code == 0 {
-        Ok(())
-    } else {
-        Err(SubscribeError {
+    match r0.as_u32() {
+        TOCK_SYSCALL_SUCCESS_U32_U32 => {
+            //for now, ignore the returned callback / userdata, same as old iface
+            Ok(())
+        }
+        TOCK_SYSCALL_FAILURE_U32_U32 => Err(SubscribeError {
             driver_number,
             subscribe_number,
-            return_code,
-        })
+            return_code: r3.as_u32() as isize * -1,
+        }),
+        _ => panic!("BADRVAL"),
     }
 }
 
-pub fn command(
+pub fn command_noval(
     driver_number: usize,
     command_number: usize,
     arg1: usize,
     arg2: usize,
-) -> Result<usize, CommandError> {
-    let return_code = unsafe { raw::command(driver_number, command_number, arg1, arg2) };
-    if return_code >= 0 {
-        Ok(return_code as usize)
-    } else {
-        Err(CommandError {
-            driver_number,
-            command_number,
-            arg1,
-            arg2,
-            return_code,
-        })
-    }
+) -> Result<(), CommandError> {
+    TockSyscalls::command(
+        driver_number as u32,
+        command_number as u32,
+        arg1 as u32,
+        arg2 as u32,
+    )
+    .get_success_or_failure()
+    .map_err(|e| CommandError {
+        driver_number,
+        command_number,
+        arg1,
+        arg2,
+        return_code: (e as isize) * -1,
+    })
 }
 
-/// [command1_insecure()] is a variant of [command()] that only sets the first
-/// argument in the system call interface. It has the benefit of generating
-/// simpler assembly than [command()], but it leaves the second argument's register
-/// as-is which leaks it to the kernel driver being called. Prefer to use
-/// [command()] instead of [command1_insecure()], unless the benefit of generating
-/// simpler assembly outweighs the drawbacks of potentially leaking arbitrary
-/// information to the driver you are calling.
-///
-/// At the moment, the only suitable use case for [command1_insecure()] is the low
-/// level debug interface.
-pub fn command1_insecure(
+pub fn command_u32(
     driver_number: usize,
     command_number: usize,
-    arg: usize,
-) -> Result<usize, CommandError> {
-    let return_code = unsafe { raw::command1(driver_number, command_number, arg) };
-    if return_code >= 0 {
-        Ok(return_code as usize)
-    } else {
-        Err(CommandError {
-            driver_number,
-            command_number,
-            arg1: arg,
-            arg2: 0,
-            return_code,
-        })
-    }
+    arg1: usize,
+    arg2: usize,
+) -> Result<u32, CommandError> {
+    TockSyscalls::command(
+        driver_number as u32,
+        command_number as u32,
+        arg1 as u32,
+        arg2 as u32,
+    )
+    .get_success_u32_or_failure()
+    .map_err(|e| CommandError {
+        driver_number,
+        command_number,
+        arg1,
+        arg2,
+        return_code: (e as isize) * -1,
+    })
 }
 
-pub fn allow(
+pub fn allow_readwrite(
     driver_number: usize,
     allow_number: usize,
     buffer_to_share: &mut [u8],
 ) -> Result<SharedMemory, AllowError> {
     let len = buffer_to_share.len();
-    let return_code = unsafe {
-        raw::allow(
-            driver_number,
-            allow_number,
-            buffer_to_share.as_mut_ptr(),
-            len,
-        )
+    let [r0, _r1, _r2, r3] = unsafe {
+        TockSyscalls::syscall4::<3>([
+            driver_number.into(),
+            allow_number.into(),
+            (buffer_to_share.as_mut_ptr() as u32).into(),
+            len.into(),
+        ])
     };
-    if return_code == 0 {
-        Ok(SharedMemory::new(
+    match r0.as_u32() {
+        TOCK_SYSCALL_SUCCESS_U32_U32 => {
+            // for now, continue to drop whatever is returned?
+            Ok(SharedMemory::new(
+                driver_number,
+                allow_number,
+                buffer_to_share,
+            ))
+        }
+        TOCK_SYSCALL_FAILURE_U32_U32 => Err(AllowError {
             driver_number,
             allow_number,
-            buffer_to_share,
-        ))
-    } else {
-        Err(AllowError {
+            return_code: r3.as_u32() as isize * -1,
+        }),
+        _ => panic!("BADRVAL"),
+    }
+}
+
+// For now, just drop the returned buffer. Caller maintains read access
+// to the shared slice anyway. Problem is, we really should have a way to
+// indicate the lifetime of this borrow...
+pub fn allow_readonly(
+    driver_number: usize,
+    allow_number: usize,
+    buffer_to_share: &[u8],
+) -> Result<(), AllowError> {
+    let len = buffer_to_share.len();
+    let [r0, _r1, _r2, r3] = unsafe {
+        TockSyscalls::syscall4::<4>([
+            driver_number.into(),
+            allow_number.into(),
+            (buffer_to_share.as_ptr() as u32).into(),
+            len.into(),
+        ])
+    };
+    match r0.as_u32() {
+        TOCK_SYSCALL_SUCCESS_U32_U32 => {
+            // for now, continue to drop whatever is returned?
+            Ok(())
+        }
+        // shared error with rw allow for now
+        TOCK_SYSCALL_FAILURE_U32_U32 => Err(AllowError {
             driver_number,
             allow_number,
-            return_code,
-        })
+            return_code: r3.as_u32() as isize * -1,
+        }),
+        _ => panic!("BADRVAL"),
     }
 }

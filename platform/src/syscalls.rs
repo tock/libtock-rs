@@ -29,5 +29,6 @@ pub trait Syscalls {
 
     // TODO: Add a read-only allow interface.
 
-    // TODO: Add memop() methods.
+    // TODO: Expose interface better suited for 2.0
+    fn memop(arg0: usize, arg1: usize) -> isize;
 }

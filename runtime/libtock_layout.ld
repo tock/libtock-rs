@@ -56,7 +56,7 @@ SECTIONS {
     /* Runtime header. Contains values the linker knows that the runtime needs
      * to look up.
      */
-    .rt_header : {
+    .start ALIGN(4) : {
         rt_header = .;
         LONG(start);
         LONG(ADDR(.bss) + SIZEOF(.bss)); /* Initial process break */
@@ -66,17 +66,18 @@ SECTIONS {
         LONG(ADDR(.data));
         LONG(SIZEOF(.bss));
         LONG(ADDR(.bss));
+
+        *(.start)
     } > FLASH
 
     /* Text section -- the application's code. */
-    .text ALIGN(4) : {
-        *(.start)
-        *(.text)
+    .text : {
+        *(.text.*)
     } > FLASH
 
     /* Read-only data section. Contains strings and other global constants. */
     .rodata ALIGN(4) : {
-        *(.rodata)
+        *(.rodata.*)
         /* .data is placed after .rodata in flash. data_flash_start is used by
          * AT() to place .data in flash as well as in rt_header.
          */
@@ -91,6 +92,7 @@ SECTIONS {
      * https://riscv.org/wp-content/uploads/2015/01/riscv-calling.pdf
      */
     .stack (NOLOAD) : {
+        _sram_origin = .;
         KEEP(*(.stack_buffer))
         . = ALIGN(16);
         _stack_top = .;  /* Used in rt_header */
@@ -116,7 +118,7 @@ SECTIONS {
      */
     .bss ALIGN(4) (NOLOAD) : {
         /* .sbss is the RISC-V small data section */
-        *(.sbss .bss)
+        *(.sbss .bss.*)
     } > RAM
 
     _heap_start = ADDR(.bss) + SIZEOF(.bss);  /* Used by rt_header */

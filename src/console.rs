@@ -72,7 +72,7 @@ impl Console {
     }
 
     fn flush(&mut self, num_bytes_to_print: usize) -> TockResult<()> {
-        let shared_memory = syscalls::allow(
+        let shared_memory = syscalls::allow_readonly(
             DRIVER_NUMBER,
             allow_nr::SHARE_BUFFER,
             &mut self.allow_buffer[..num_bytes_to_print],
@@ -86,7 +86,7 @@ impl Console {
             &mut is_written_alarm,
         )?;
 
-        syscalls::command(DRIVER_NUMBER, command_nr::WRITE, num_bytes_to_print, 0)?;
+        syscalls::command_noval(DRIVER_NUMBER, command_nr::WRITE, num_bytes_to_print, 0)?;
 
         unsafe { executor::block_on(futures::wait_until(|| is_written.get())) };
 

@@ -97,6 +97,24 @@ impl CommandReturn {
         Some(unsafe { transmute(self.r1 as u16) })
     }
 
+    pub fn get_success_or_failure(&self) -> Result<(), ErrorCode> {
+        if !self.is_failure_u32() {
+            return Ok(());
+        }
+        Err(unsafe { transmute(self.r1 as u16) })
+    }
+
+    pub fn get_success_u32_or_failure(&self) -> Result<u32, ErrorCode> {
+        if !self.is_failure_u32() {
+            if self.is_success_u32() {
+                return Ok(unsafe { transmute(self.r1 as u32) });
+            } else {
+                panic!("BADRVAL");
+            }
+        }
+        Err(unsafe { transmute(self.r1 as u16) })
+    }
+
     /// Returns the error code and value if this CommandReturn is of type
     /// Failure with u32.
     pub fn get_failure_u32(&self) -> Option<(ErrorCode, u32)> {

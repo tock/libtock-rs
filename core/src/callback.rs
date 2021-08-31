@@ -1,6 +1,6 @@
-use crate::syscalls;
 use core::marker::PhantomData;
-use core::ptr;
+use libtock_platform::RawSyscalls;
+use libtock_runtime::TockSyscalls;
 
 pub trait Consumer<T> {
     fn consume(data: &mut T, arg1: usize, arg2: usize, arg3: usize);
@@ -58,7 +58,14 @@ impl<'a> CallbackSubscription<'a> {
 impl<'a> Drop for CallbackSubscription<'a> {
     fn drop(&mut self) {
         unsafe {
-            syscalls::raw::subscribe(self.driver_number, self.subscribe_number, ptr::null(), 0);
+            // This returns the old callback pointer, which we drop immediately for now
+            // to maintain the old interface
+            TockSyscalls::syscall4::<1>([
+                self.driver_number.into(),
+                self.subscribe_number.into(),
+                (0 as u32).into(), //TODO really this should be ptr::null, right
+                (0 as u32).into(),
+            ]);
         }
     }
 }

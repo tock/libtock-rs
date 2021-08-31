@@ -1,6 +1,6 @@
 use crate::result::OutOfRangeError;
 use crate::result::TockResult;
-use crate::syscalls::command;
+use crate::syscalls::{command_noval, command_u32};
 use core::marker::PhantomData;
 
 const DRIVER_NUMBER: usize = 0x00002;
@@ -18,7 +18,7 @@ pub struct LedsDriverFactory;
 impl LedsDriverFactory {
     pub fn init_driver(&mut self) -> TockResult<LedsDriver> {
         let driver = LedsDriver {
-            num_leds: command(DRIVER_NUMBER, command_nr::COUNT, 0, 0)?,
+            num_leds: command_u32(DRIVER_NUMBER, command_nr::COUNT, 0, 0)? as usize,
             lifetime: PhantomData,
         };
         Ok(driver)
@@ -97,17 +97,17 @@ impl<'a> Led<'a> {
     }
 
     pub fn on(&self) -> TockResult<()> {
-        command(DRIVER_NUMBER, command_nr::ON, self.led_num, 0)?;
+        command_noval(DRIVER_NUMBER, command_nr::ON, self.led_num, 0)?;
         Ok(())
     }
 
     pub fn off(&self) -> TockResult<()> {
-        command(DRIVER_NUMBER, command_nr::OFF, self.led_num, 0)?;
+        command_noval(DRIVER_NUMBER, command_nr::OFF, self.led_num, 0)?;
         Ok(())
     }
 
     pub fn toggle(&self) -> TockResult<()> {
-        command(DRIVER_NUMBER, command_nr::TOGGLE, self.led_num, 0)?;
+        command_noval(DRIVER_NUMBER, command_nr::TOGGLE, self.led_num, 0)?;
         Ok(())
     }
 }

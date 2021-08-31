@@ -55,9 +55,9 @@ unsafe fn panic_handler(_info: &core::panic::PanicInfo) -> ! {
 
 unsafe fn report_panic() -> ! {
     // Signal a panic using the LowLevelDebug capsule (if available).
-    let _ = syscalls::command1_insecure(8, 1, 1);
+    let _ = syscalls::command_noval(8, 1, 1, 0);
 
     loop {
-        syscalls::raw::yieldk();
+        syscalls::raw::yield_wait();
     }
 }
