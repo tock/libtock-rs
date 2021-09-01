@@ -11,14 +11,14 @@
 //    app_heap_break: usize,
 // Due to Rust issue: https://github.com/rust-lang/rust/issues/42779 we can't have
 // args to the function
-pub unsafe extern "C" fn _start() -> ! {
+pub unsafe extern "C" fn start() -> ! {
     asm!(
         "
 	/* First, verify the process binary was loaded at the correct address. The
 	 * check is performed by comparing the program counter at the start to the
 	 * address of `start`, which is stored in rt_header. */
 	auipc s0, 0            /* s0 = pc */
-	mv a5, a0              /* Save rt_header so syscalls don't overwrite it */
+	mv a5, a0
 	lw s1, 0(a5)           /* s1 = rt_header.start */
 	beq s0, s1, .Lset_brk  /* Skip error handling code if pc is correct */
 	/* If the beq on the previous line did not jump, then the binary is not at
@@ -82,7 +82,7 @@ pub extern "C" fn abort() {
     unsafe {
         llvm_asm! ("
             // Simply go back to the start as if we had just booted.
-            j    _start
+            j    start
         "
         :
         :

@@ -28,6 +28,6 @@ unsafe fn alloc_error_handler(_: Layout) -> ! {
         println!("alloc_error_handler called");
     }
     loop {
-        syscalls::raw::yieldk();
+        syscalls::raw::yield_wait();
     }
 }

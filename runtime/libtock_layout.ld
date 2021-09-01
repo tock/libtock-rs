@@ -10,7 +10,7 @@
  *         FLASH (X) : ORIGIN = 0x10000, LENGTH = 0x10000
  *         RAM   (W) : ORIGIN = 0x20000, LENGTH = 0x10000
  *     }
- *     TBF_HEADER_SIZE = 0x40;
+ *     TBF_HEADER_SIZE = 0x44;
  *     INCLUDE ../libtock-rs/layout.ld
  *
  * FLASH refers to the area the process binary occupies in flash, including TBF
@@ -71,7 +71,7 @@ SECTIONS {
     } > FLASH
 
     /* Text section -- the application's code. */
-    .text : {
+    .text ALIGN(4) : {
         *(.text.*)
     } > FLASH
 

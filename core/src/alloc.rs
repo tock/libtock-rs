@@ -34,12 +34,12 @@ unsafe fn alloc_error_handler(_: Layout) -> ! {
     use crate::syscalls;
 
     // Print 0x01 using the LowLevelDebug capsule (if available).
-    let _ = syscalls::command1_insecure(8, 2, 0x01);
+    let _ = syscalls::command_noval(8, 2, 0x01, 0);
 
     // Signal a panic using the LowLevelDebug capsule (if available).
-    let _ = syscalls::command1_insecure(8, 1, 0x01);
+    let _ = syscalls::command_noval(8, 1, 0x01, 0);
 
     loop {
-        syscalls::raw::yieldk();
+        syscalls::raw::yield_wait();
     }
 }

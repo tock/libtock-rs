@@ -38,7 +38,7 @@ endif
 
 .PHONY: setup
 setup: setup-qemu
-	cargo install elf2tab --version 0.6.0
+	cargo install elf2tab --version 0.8.0
 	cargo install stack-sizes
 	cargo miri setup
 

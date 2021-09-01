@@ -4,7 +4,7 @@ use std::process::{ChildStdout, Command, Stdio};
 use std::time::Duration;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let mut tests = Command::new("tock/tools/qemu-build/riscv32-softmmu/qemu-system-riscv32")
+    let mut tests = Command::new("tock/tools/qemu/build/riscv32-softmmu/qemu-system-riscv32")
         .arg("-M")
         .arg("sifive_e,revb=true")
         .arg("-kernel")

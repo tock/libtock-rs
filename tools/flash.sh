@@ -2,6 +2,10 @@
 
 set -eux
 
+# Set default required kernel version
+KERNEL_MAJOR_VERSION=${KERNEL_MAJOR_VERSION:-2}
+KERNEL_MINOR_VERSION=${KERNEL_MINOR_VERSION:-0}
+
 artifact="$(basename $1)"
 rust_target_folder="$(cd $(dirname $1)/../.. && pwd -P)"
 if [ -z $APP_HEAP_SIZE ]; then
@@ -75,7 +79,7 @@ cp "$1" "${elf_file_name}"
 
 STACK_SIZE=$(nm --print-size --size-sort --radix=d "${elf_file_name}" | grep STACK_MEMORY | cut -d " " -f 2)
 
-elf2tab -n "${artifact}" -o "${tab_file_name}" "${elf_file_name}" --stack ${STACK_SIZE} --app-heap $APP_HEAP_SIZE --kernel-heap $KERNEL_HEAP_SIZE --protected-region-size=64
+elf2tab -n "${artifact}" -o "${tab_file_name}" "${elf_file_name}" --stack ${STACK_SIZE} --app-heap $APP_HEAP_SIZE --kernel-heap $KERNEL_HEAP_SIZE --protected-region-size=68 --kernel-major ${KERNEL_MAJOR_VERSION} --kernel-minor ${KERNEL_MINOR_VERSION}
 
 if [ $tockload == "n" ]; then
 	echo "Skipping flashing for platform \"${PLATFORM}\""

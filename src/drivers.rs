@@ -2,7 +2,7 @@
 //use crate::buttons::ButtonsDriverFactory;
 use crate::console::ConsoleDriver;
 //use crate::ctap::CtapDriverFactory;
-//use crate::gpio::GpioDriverFactory;
+use crate::gpio::GpioDriverFactory;
 //use crate::hmac::HmacDriverFactory;
 //use crate::i2c_master::I2cDriverFactory;
 //use crate::i2c_master_slave::I2cMSDriverFactory;
@@ -27,7 +27,7 @@ pub struct Drivers {
     //    pub ctap: CtapDriverFactory,
     pub leds: LedsDriverFactory,
     pub timer: DriverContext,
-    //    pub gpio: GpioDriverFactory,
+    pub gpio: GpioDriverFactory,
     //    pub hmac: HmacDriverFactory,
     //    pub temperature: TemperatureDriverFactory,
     //    pub buttons: ButtonsDriverFactory,
@@ -79,7 +79,7 @@ const DRIVERS: Drivers = Drivers {
     timer: DriverContext {
         active_timer: Cell::new(None),
     },
-    //    gpio: GpioDriverFactory,
+    gpio: GpioDriverFactory,
     //    hmac: HmacDriverFactory,
     //    i2c_ms: I2cMSDriverFactory,
     //    i2c: I2cDriverFactory,

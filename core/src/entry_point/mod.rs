@@ -3,9 +3,8 @@ use core::ptr;
 
 // _start and rust_start are the first two procedures executed when a Tock
 // application starts. _start is invoked directly by the Tock kernel; it
-// performs stack setup then calls rust_start. rust_start performs data
-// relocation and sets up the heap before calling the rustc-generated main.
-// rust_start and _start are tightly coupled.
+// performs stack setup and data relocation and then calls rust_start.
+// rust_start calls the rustc-generated main.
 //
 // The memory layout is controlled by the linker script.
 //
@@ -65,27 +64,25 @@ libtock_codegen::make_read_env_var!("APP_HEAP_SIZE");
 // from start, which is written directly in assembly.
 #[no_mangle]
 extern "C" fn rust_start() -> ! {
-    // TODO: Call memop() to inform the kernel of the stack and heap sizes +
-    // locations. Also, perhaps we should support calling a heap initialization
-    // function?
-
+    // TODO: Call memop() to inform the kernel of the stack size +
+    // location. Only needed for debugging.
     extern "C" {
         // This function is created internally by `rustc`. See
         // `src/lang_items.rs` for more details.
         fn main(argc: isize, argv: *const *const u8) -> isize;
     }
+    let app_heap_size: usize = read_APP_HEAP_SIZE();
     unsafe {
+        let _app_heap_start = super::memop::get_brk();
+        // Tell the kernel the new app heap break.
+        super::memop::increment_brk(app_heap_size);
+
+        #[cfg(feature = "alloc_init")]
+        crate::libtock_alloc_init(_app_heap_start as usize, app_heap_size);
+
         main(0, ptr::null());
     }
     loop {
         syscalls::raw::yield_wait();
     }
-    /*
-    extern "Rust" {
-        fn libtock_unsafe_main() -> !;
-    }
-    unsafe {
-        libtock_unsafe_main();
-    }
-    */
 }

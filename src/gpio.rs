@@ -4,7 +4,6 @@ use crate::result::OtherError;
 use crate::result::TockResult;
 use crate::syscalls;
 use core::marker::PhantomData;
-use platform::CommandReturn;
 
 const DRIVER_NUMBER: usize = 0x00004;
 
@@ -30,11 +29,9 @@ pub struct GpioDriverFactory;
 
 impl GpioDriverFactory {
     pub fn init_driver(&mut self) -> TockResult<GpioDriver> {
-        let ret = syscalls::command(DRIVER_NUMBER, command_nr::COUNT, 0, 0);
+        let num_gpios = syscalls::command_u32(DRIVER_NUMBER, command_nr::COUNT, 0, 0)? as usize;
         let driver = GpioDriver {
-            num_gpios: num_gpios
-                .get_success_u32()
-                .ok_or(TockError::Command2(ret))?,
+            num_gpios,
             lifetime: PhantomData,
         };
         Ok(driver)
@@ -140,8 +137,7 @@ pub struct Gpio<'a> {
 
 impl<'a> Gpio<'a> {
     pub fn enable_output(&mut self) -> TockResult<GpioWrite> {
-        syscalls::command(DRIVER_NUMBER, command_nr::ENABLE_OUTPUT, self.gpio_num, 0)
-            .get_success()?;
+        syscalls::command_noval(DRIVER_NUMBER, command_nr::ENABLE_OUTPUT, self.gpio_num, 0)?;
         let gpio_write = GpioWrite {
             gpio_num: self.gpio_num,
             lifetime: PhantomData,
@@ -150,7 +146,7 @@ impl<'a> Gpio<'a> {
     }
 
     pub fn enable_input(&mut self, resistor_mode: ResistorMode) -> TockResult<GpioRead> {
-        syscalls::command(
+        syscalls::command_noval(
             DRIVER_NUMBER,
             command_nr::ENABLE_INPUT,
             self.gpio_num,
@@ -182,24 +178,24 @@ impl<'a> GpioWrite<'a> {
     }
 
     pub fn set_low(&self) -> TockResult<()> {
-        syscalls::command(DRIVER_NUMBER, command_nr::SET_LOW, self.gpio_num, 0)?;
+        syscalls::command_noval(DRIVER_NUMBER, command_nr::SET_LOW, self.gpio_num, 0)?;
         Ok(())
     }
 
     pub fn set_high(&self) -> TockResult<()> {
-        syscalls::command(DRIVER_NUMBER, command_nr::SET_HIGH, self.gpio_num, 0)?;
+        syscalls::command_noval(DRIVER_NUMBER, command_nr::SET_HIGH, self.gpio_num, 0)?;
         Ok(())
     }
 
     pub fn toggle(&self) -> TockResult<()> {
-        syscalls::command(DRIVER_NUMBER, command_nr::TOGGLE, self.gpio_num, 0)?;
+        syscalls::command_noval(DRIVER_NUMBER, command_nr::TOGGLE, self.gpio_num, 0)?;
         Ok(())
     }
 }
 
 impl<'a> Drop for GpioWrite<'a> {
     fn drop(&mut self) {
-        let _ = syscalls::command(DRIVER_NUMBER, command_nr::DISABLE, self.gpio_num, 0);
+        let _ = syscalls::command_noval(DRIVER_NUMBER, command_nr::DISABLE, self.gpio_num, 0);
     }
 }
 
@@ -214,7 +210,8 @@ impl<'a> GpioRead<'a> {
     }
 
     pub fn read(&self) -> TockResult<GpioState> {
-        let button_state = syscalls::command(DRIVER_NUMBER, command_nr::READ, self.gpio_num, 0)?;
+        let button_state =
+            syscalls::command_u32(DRIVER_NUMBER, command_nr::READ, self.gpio_num, 0)?;
         match button_state {
             0 => Ok(GpioState::Low),
             1 => Ok(GpioState::High),
@@ -223,7 +220,7 @@ impl<'a> GpioRead<'a> {
     }
 
     pub fn enable_interrupt(&self, trigger_type: TriggerType) -> TockResult<()> {
-        syscalls::command(
+        syscalls::command_noval(
             DRIVER_NUMBER,
             command_nr::ENABLE_INTERRUPT,
             self.gpio_num,
@@ -233,7 +230,7 @@ impl<'a> GpioRead<'a> {
     }
 
     pub fn disable_interrupt(&self, trigger_type: TriggerType) -> TockResult<()> {
-        syscalls::command(
+        syscalls::command_noval(
             DRIVER_NUMBER,
             command_nr::DISABLE_INTERRUPT,
             self.gpio_num,
@@ -245,7 +242,7 @@ impl<'a> GpioRead<'a> {
 
 impl<'a> Drop for GpioRead<'a> {
     fn drop(&mut self) {
-        let _ = syscalls::command(DRIVER_NUMBER, command_nr::DISABLE, self.gpio_num, 0);
+        let _ = syscalls::command_noval(DRIVER_NUMBER, command_nr::DISABLE, self.gpio_num, 0);
     }
 }
 
