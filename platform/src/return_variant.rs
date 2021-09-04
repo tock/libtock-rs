@@ -1,3 +1,7 @@
+// TODO: Re-evaluate whether u32 is the correct type to wrap. Maybe it should
+// wrap a Register instead? Also, double-check that ReturnVariant is providing
+// useful type-safety.
+
 /// `ReturnVariant` describes what value type the kernel has returned.
 // ReturnVariant is not an enum so that it can be converted from a u32 for free.
 // TODO: Add a ufmt debug implementation for use by process binaries.
@@ -7,6 +11,12 @@ pub struct ReturnVariant(u32);
 impl From<u32> for ReturnVariant {
     fn from(value: u32) -> ReturnVariant {
         ReturnVariant(value)
+    }
+}
+
+impl From<ReturnVariant> for crate::Register {
+    fn from(return_variant: ReturnVariant) -> crate::Register {
+        return_variant.0.into()
     }
 }
 

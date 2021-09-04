@@ -1,5 +1,6 @@
 mod command_impl;
 mod raw_syscalls_impl;
+mod subscribe_impl;
 mod yield_impl;
 
 /// `fake::Syscalls` implements `libtock_platform::Syscalls` by forwarding the
@@ -9,6 +10,8 @@ pub struct Syscalls;
 
 #[cfg(test)]
 mod command_impl_tests;
+#[cfg(test)]
+mod subscribe_impl_tests;
 #[cfg(test)]
 mod yield_impl_tests;
 

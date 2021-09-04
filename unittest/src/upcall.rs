@@ -95,8 +95,8 @@ pub(crate) struct UpcallQueueEntry {
 
 #[derive(Debug, Eq, Hash, PartialEq)]
 pub(crate) struct UpcallId {
-    driver_number: u32,
-    subscribe_number: u32,
+    pub driver_number: u32,
+    pub subscribe_number: u32,
 }
 
 #[cfg(test)]

@@ -19,7 +19,17 @@ pub enum ExpectedSyscall {
         skip_upcall: bool,
     },
 
-    // TODO: Add Subscribe.
+    // -------------------------------------------------------------------------
+    // Subscribe
+    // -------------------------------------------------------------------------
+    Subscribe {
+        driver_number: u32,
+        subscribe_number: u32,
+
+        /// If not None, the Subscribe call will be skipped and the provided
+        /// error code will be returned (along with the passed upcall).
+        skip_with_error: Option<libtock_platform::ErrorCode>,
+    },
 
     // -------------------------------------------------------------------------
     // Command
