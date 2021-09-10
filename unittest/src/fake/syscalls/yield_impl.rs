@@ -23,7 +23,10 @@ pub(super) unsafe fn yield_no_wait(return_ptr: *mut libtock_platform::YieldNoWai
         }
     });
 
-    let upcall_ran = invoke_next_upcall();
+    let upcall_ran = match invoke_next_upcall() {
+        true => libtock_platform::YieldNoWaitReturn::Upcall,
+        false => libtock_platform::YieldNoWaitReturn::NoUpcall,
+    };
 
     unsafe {
         core::ptr::write(return_ptr, override_return.unwrap_or(upcall_ran));
@@ -50,30 +53,30 @@ pub(super) fn yield_wait() {
         return;
     }
 
-    if invoke_next_upcall() == libtock_platform::YieldNoWaitReturn::NoUpcall {
-        // yield-wait was called but there is no upcall queued. In a real Tock
-        // system, this process would be put to sleep until an upcall was queued
-        // (e.g. by an interrupt). However, in this single-threaded test
-        // environment, there is no possibility a new upcall will be enqueued
-        // while we wait. Therefore we instead panic; tests and code under test
-        // should never call yield-wait with no upcall queued.
-        panic!("yield-wait called with no queued upcall");
-    }
+    // In a real Tock system, a process that calls yield-wait with no queued
+    // upcalls would be put to sleep until an upcall was queued (e.g. by an
+    // interrupt). However, in this single-threaded test environment, there is
+    // no possibility a new upcall will be enqueued while we wait. Panicing is
+    // friendlier than hanging, so we panic if there's no upcall.
+    assert!(
+        invoke_next_upcall(),
+        "yield-wait called with no queued upcall"
+    );
 }
 
 // Pops the next upcall off the kernel data's upcall queue and invokes it, or
 // does nothing if the upcall queue was entry. The return value indicates
 // whether an upcall was run. Panics if no kernel data is present.
-fn invoke_next_upcall() -> libtock_platform::YieldNoWaitReturn {
+fn invoke_next_upcall() -> bool {
     let option_queue_entry =
         with_kernel_data(|option_kernel_data| option_kernel_data.unwrap().upcall_queue.pop_front());
     match option_queue_entry {
-        None => libtock_platform::YieldNoWaitReturn::NoUpcall,
+        None => false,
         Some(queue_entry) => {
             unsafe {
                 queue_entry.upcall.invoke(queue_entry.args);
             }
-            libtock_platform::YieldNoWaitReturn::Upcall
+            true
         }
     }
 }
