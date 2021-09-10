@@ -12,6 +12,8 @@
 use std::cell::RefCell;
 
 pub(crate) struct KernelData {
+    pub allow_db: crate::allow_db::AllowDb,
+
     // The location of the call to `fake::Kernel::new`. Used in the event a
     // duplicate `fake::Kernel` is created to tell the user which kernel they
     // did not clean up in a unit test.

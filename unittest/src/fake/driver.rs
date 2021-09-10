@@ -1,4 +1,5 @@
-use libtock_platform::CommandReturn;
+use crate::RoAllowBuffer;
+use libtock_platform::{CommandReturn, ErrorCode};
 
 /// The `fake::Driver` trait is implemented by fake versions of Tock's kernel
 /// APIs. It is used by `fake::Kernel` to route system calls to the fake kernel
@@ -30,5 +31,17 @@ pub trait Driver: 'static {
     // Allow
     // -------------------------------------------------------------------------
 
-    // TODO: Add an Allow API.
+    /// Process a Read-Only Allow call. Because not all Driver implementations
+    /// need to support Read-Only Allow, a default implementation is provided
+    /// that rejects all Read-Only Allow calls.
+    fn allow_readonly(
+        &self,
+        buffer_number: u32,
+        buffer: RoAllowBuffer,
+    ) -> Result<RoAllowBuffer, (RoAllowBuffer, ErrorCode)> {
+        let _ = buffer_number; // Silences the unused variable warning.
+        Err((buffer, ErrorCode::NoSupport))
+    }
+
+    // TODO: Add a Read-Write Allow API.
 }
