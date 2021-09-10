@@ -48,7 +48,18 @@ pub enum ExpectedSyscall {
         // invoked and the provided error will be returned instead.
         return_error: Option<libtock_platform::ErrorCode>,
     },
-    // TODO: Add Read-Write Allow.
+
+    // -------------------------------------------------------------------------
+    // Read-Write Allow
+    // -------------------------------------------------------------------------
+    AllowRw {
+        driver_number: u32,
+        buffer_number: u32,
+
+        // If set to Some(_), the driver's allow_readwrite method will not be
+        // invoked and the provided error will be returned instead.
+        return_error: Option<libtock_platform::ErrorCode>,
+    },
     // TODO: Add Memop.
     // TODO: Add Exit.
 }

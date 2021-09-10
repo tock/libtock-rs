@@ -107,7 +107,6 @@ impl AllowDb {
     /// # Safety
     /// `address` and `len` must be valid as specified in TRD 104: either `len`
     /// is 0 or `address` and `len` represent a valid slice.
-    #[allow(unused)] // TODO: Remove when RW Allow is implemented.
     pub unsafe fn insert_rw_buffer(
         &mut self,
         address: Register,
@@ -140,7 +139,6 @@ impl AllowDb {
     ///
     /// The returned value is the tuple (address, len) passed into the
     /// insert_rw_buffer call that created the RwAllowBuffer.
-    #[allow(unused)] // TODO: Remove when RW Allow is implemented.
     pub fn remove_rw_buffer(&mut self, buffer: RwAllowBuffer) -> (Register, Register) {
         self.buffers.remove(&buffer.address);
         (buffer.address.into(), buffer.len.into())
@@ -197,6 +195,15 @@ pub struct RwAllowBuffer {
     // references may overlap the slice described by address and len.
     address: *mut u8,
     len: usize,
+}
+
+impl Default for RwAllowBuffer {
+    fn default() -> RwAllowBuffer {
+        RwAllowBuffer {
+            address: core::ptr::null_mut(),
+            len: 0,
+        }
+    }
 }
 
 // Allows access to the pointed-to-buffer. The returned reference has the same

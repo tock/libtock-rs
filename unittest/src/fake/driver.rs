@@ -1,4 +1,4 @@
-use crate::RoAllowBuffer;
+use crate::{RoAllowBuffer, RwAllowBuffer};
 use libtock_platform::{CommandReturn, ErrorCode};
 
 /// The `fake::Driver` trait is implemented by fake versions of Tock's kernel
@@ -43,5 +43,15 @@ pub trait Driver: 'static {
         Err((buffer, ErrorCode::NoSupport))
     }
 
-    // TODO: Add a Read-Write Allow API.
+    /// Process a Read-Write Allow call. Because not all Driver implementations
+    /// need to support Read-Write Allow, a default implementation is provided
+    /// that rejects all Read-Write Allow calls.
+    fn allow_readwrite(
+        &self,
+        buffer_number: u32,
+        buffer: RwAllowBuffer,
+    ) -> Result<RwAllowBuffer, (RwAllowBuffer, ErrorCode)> {
+        let _ = buffer_number; // Silences the unused variable warning.
+        Err((buffer, ErrorCode::NoSupport))
+    }
 }
