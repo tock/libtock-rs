@@ -11,10 +11,12 @@
 
 mod driver;
 mod kernel;
+mod low_level_debug;
 mod syscalls;
 
 pub use driver::Driver;
 pub use kernel::Kernel;
+pub use low_level_debug::{LowLevelDebug, Message};
 pub use syscalls::Syscalls;
 
 #[cfg(test)]
