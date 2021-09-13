@@ -1,6 +1,8 @@
 //! Implements `Syscalls` for all types that implement `RawSyscalls`.
 
-use crate::{syscall_class, yield_id, CommandReturn, RawSyscalls, Syscalls, YieldNoWaitReturn};
+use crate::{
+    exit_id, syscall_class, yield_id, CommandReturn, RawSyscalls, Syscalls, YieldNoWaitReturn,
+};
 
 impl<S: RawSyscalls> Syscalls for S {
     // -------------------------------------------------------------------------
@@ -51,6 +53,37 @@ impl<S: RawSyscalls> Syscalls for S {
             // guaranteed that if r0 represents a failure variant then r1 is an
             // error code.
             CommandReturn::new(r0.as_u32().into(), r1.as_u32(), r2.as_u32(), r3.as_u32())
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Exit
+    // -------------------------------------------------------------------------
+
+    fn exit_terminate(exit_code: u32) -> ! {
+        unsafe {
+            // syscall2's documentation indicates it can be used to call Exit.
+            // The exit system call cannot trigger undefined behavior on its
+            // own.
+            Self::syscall2::<{ syscall_class::EXIT }>([
+                exit_id::TERMINATE.into(),
+                exit_code.into(),
+            ]);
+            // TRD104 indicates that exit-terminate MUST always succeed and so
+            // never return.
+            core::hint::unreachable_unchecked()
+        }
+    }
+
+    fn exit_restart(exit_code: u32) -> ! {
+        unsafe {
+            // syscall2's documentation indicates it can be used to call Exit.
+            // The exit system call cannot trigger undefined behavior on its
+            // own.
+            Self::syscall2::<{ syscall_class::EXIT }>([exit_id::RESTART.into(), exit_code.into()]);
+            // TRD104 indicates that exit-restart MUST always succeed and so
+            // never return.
+            core::hint::unreachable_unchecked()
         }
     }
 }

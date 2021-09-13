@@ -30,4 +30,8 @@ pub trait Syscalls {
     // TODO: Add a read-only allow interface.
 
     // TODO: Add memop() methods.
+
+    fn exit_terminate(exit_code: u32) -> !;
+
+    fn exit_restart(exit_code: u32) -> !;
 }

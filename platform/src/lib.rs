@@ -14,7 +14,7 @@ mod yield_types;
 
 pub use async_traits::{CallbackContext, FreeCallback, Locator, MethodCallback};
 pub use command_return::CommandReturn;
-pub use constants::{syscall_class, yield_id};
+pub use constants::{exit_id, syscall_class, yield_id};
 pub use error_code::ErrorCode;
 pub use raw_syscalls::RawSyscalls;
 pub use register::Register;
