@@ -14,6 +14,12 @@ pub struct Register(pub *mut ());
 // Conversions to Register
 // -----------------------------------------------------------------------------
 
+impl From<crate::ErrorCode> for Register {
+    fn from(value: crate::ErrorCode) -> Register {
+        Register(value as u16 as *mut ())
+    }
+}
+
 impl From<u32> for Register {
     fn from(value: u32) -> Register {
         Register(value as *mut ())

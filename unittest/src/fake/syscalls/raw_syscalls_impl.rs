@@ -45,7 +45,7 @@ unsafe impl RawSyscalls for crate::fake::Syscalls {
     unsafe fn syscall4<const CLASS: usize>([r0, r1, r2, r3]: [Register; 4]) -> [Register; 4] {
         crate::fake::syscalls::assert_valid((r0, r1, r2, r3));
         match CLASS {
-            syscall_class::SUBSCRIBE => unimplemented!("TODO: Add Subscribe"),
+            syscall_class::SUBSCRIBE => unsafe { super::subscribe_impl::subscribe(r0, r1, r2, r3) },
             syscall_class::COMMAND => super::command_impl::command(r0, r1, r2, r3),
             syscall_class::ALLOW_RW => unimplemented!("TODO: Add Allow"),
             syscall_class::ALLOW_RO => unsafe { super::allow_ro_impl::allow_ro(r0, r1, r2, r3) },
