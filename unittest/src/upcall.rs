@@ -66,6 +66,19 @@ impl Upcall {
     pub fn is_null(&self) -> bool {
         self.fn_pointer.is_none()
     }
+
+    /// # Safety
+    /// An upcall may only be invoked if it is still active. As described in TRD
+    /// 104, an upcall is still active if it has not been replaced by another
+    /// Subscribe call with the same upcall ID. All upcalls in the upcall queue
+    /// in KernelData are active.
+    pub unsafe fn invoke(&self, args: (u32, u32, u32)) {
+        if let Some(fn_pointer) = self.fn_pointer {
+            unsafe {
+                fn_pointer(args.0, args.1, args.2, self.data);
+            }
+        }
+    }
 }
 
 // The type of the upcall queue in KernelData. Contains queued upcalls, which
@@ -93,7 +106,7 @@ pub(crate) struct UpcallQueueEntry {
     pub upcall: Upcall,
 }
 
-#[derive(Debug, Eq, Hash, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub(crate) struct UpcallId {
     pub driver_number: u32,
     pub subscribe_number: u32,

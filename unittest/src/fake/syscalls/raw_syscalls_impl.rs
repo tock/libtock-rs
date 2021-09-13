@@ -47,8 +47,8 @@ unsafe impl RawSyscalls for crate::fake::Syscalls {
         match CLASS {
             syscall_class::SUBSCRIBE => unsafe { super::subscribe_impl::subscribe(r0, r1, r2, r3) },
             syscall_class::COMMAND => super::command_impl::command(r0, r1, r2, r3),
-            syscall_class::RW_ALLOW => unimplemented!("TODO: Add Allow"),
-            syscall_class::RO_ALLOW => unimplemented!("TODO: Add Allow"),
+            syscall_class::ALLOW_RW => unimplemented!("TODO: Add Allow"),
+            syscall_class::ALLOW_RO => unsafe { super::allow_ro_impl::allow_ro(r0, r1, r2, r3) },
             _ => panic!("Unknown syscall4 call. Class: {}", CLASS),
         }
     }

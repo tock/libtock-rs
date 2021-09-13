@@ -3,8 +3,8 @@
 pub mod syscall_class {
     pub const SUBSCRIBE: usize = 1;
     pub const COMMAND: usize = 2;
-    pub const RW_ALLOW: usize = 3;
-    pub const RO_ALLOW: usize = 4;
+    pub const ALLOW_RW: usize = 3;
+    pub const ALLOW_RO: usize = 4;
     pub const MEMOP: usize = 5;
     pub const EXIT: usize = 6;
 }

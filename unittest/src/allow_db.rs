@@ -21,7 +21,6 @@ use libtock_platform::Register;
 // Therefore AllowDb does not need to check for overlaps with zero-sized
 // buffers.
 #[derive(Default)]
-#[allow(dead_code)] // TODO: Remove when used
 pub struct AllowDb {
     // List of all active buffers, excluding zero-sized buffers. Contains both
     // read-only buffers and read-write buffers.
@@ -33,7 +32,6 @@ pub struct AllowDb {
     buffers: std::collections::BTreeMap<*mut u8, NonZeroUsize>,
 }
 
-#[allow(dead_code)] // TODO: Remove when used
 impl AllowDb {
     // Adds a new buffer, or returns an error if it overlaps with any existing
     // buffers. Requires that address and len represent a valid slice.
@@ -109,6 +107,7 @@ impl AllowDb {
     /// # Safety
     /// `address` and `len` must be valid as specified in TRD 104: either `len`
     /// is 0 or `address` and `len` represent a valid slice.
+    #[allow(unused)] // TODO: Remove when RW Allow is implemented.
     pub unsafe fn insert_rw_buffer(
         &mut self,
         address: Register,
@@ -141,6 +140,7 @@ impl AllowDb {
     ///
     /// The returned value is the tuple (address, len) passed into the
     /// insert_rw_buffer call that created the RwAllowBuffer.
+    #[allow(unused)] // TODO: Remove when RW Allow is implemented.
     pub fn remove_rw_buffer(&mut self, buffer: RwAllowBuffer) -> (Register, Register) {
         self.buffers.remove(&buffer.address);
         (buffer.address.into(), buffer.len.into())
@@ -161,6 +161,15 @@ pub struct RoAllowBuffer {
     // references may overlap the slice described by address and len.
     address: *const u8,
     len: usize,
+}
+
+impl Default for RoAllowBuffer {
+    fn default() -> RoAllowBuffer {
+        RoAllowBuffer {
+            address: core::ptr::null(),
+            len: 0,
+        }
+    }
 }
 
 // Allows access to the pointed-to-buffer. The returned reference has the same
