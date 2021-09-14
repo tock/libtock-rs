@@ -10,6 +10,7 @@ mod register;
 pub mod return_variant;
 mod syscalls;
 mod syscalls_impl;
+mod termination;
 mod yield_types;
 
 pub use async_traits::{CallbackContext, FreeCallback, Locator, MethodCallback};
@@ -20,6 +21,7 @@ pub use raw_syscalls::RawSyscalls;
 pub use register::Register;
 pub use return_variant::ReturnVariant;
 pub use syscalls::Syscalls;
+pub use termination::Termination;
 pub use yield_types::YieldNoWaitReturn;
 
 #[cfg(test)]
