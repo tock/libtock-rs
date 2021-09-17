@@ -1,4 +1,5 @@
 mod allow_ro_impl;
+mod allow_rw_impl;
 mod command_impl;
 mod raw_syscalls_impl;
 mod subscribe_impl;
@@ -11,6 +12,8 @@ pub struct Syscalls;
 
 #[cfg(test)]
 mod allow_ro_impl_tests;
+#[cfg(test)]
+mod allow_rw_impl_tests;
 #[cfg(test)]
 mod command_impl_tests;
 #[cfg(test)]
