@@ -1,6 +1,14 @@
 Code Review
 ===========
 
+**Temporary change in code review timeline while the Tock 2.0-compatible
+`libtock-rs` crates are under development.** Until the Tock 2.0-compatible
+crates are ready, we are shortening the timeline for merging significant pull
+requests. If a single `libtock-rs` owner has approved a PR, it may be merged in
+3 days rather than 7. If two `libtock-rs` owners have approved a PR, it may be
+merged immediately. This temporary change was decided by the Tock core WG, and
+will be reversed when the Tock 2.0 `libtock-rs` crates are ready.
+
 ## Code Review Practices
 
 PR to `libtock-rs` can be divided into two categories:
