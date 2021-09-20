@@ -189,8 +189,17 @@ flash-opentitan:
 hifive1:
 	PLATFORM=hifive1 cargo build $(release) --target=riscv32imac-unknown-none-elf --examples $(features)
 
+# identical to hifive1 when it comes to memory layout
+.PHONY: redv
+redv:
+	PLATFORM=hifive1 cargo build $(release) --target=riscv32imac-unknown-none-elf --examples $(features)
+
 .PHONY: flash-hifive1
 flash-hifive1:
+	PLATFORM=hifive1 cargo run $(release) --target=riscv32imac-unknown-none-elf --example $(EXAMPLE) $(features)
+
+.PHONY: flash-redv
+flash-redv:
 	PLATFORM=hifive1 cargo run $(release) --target=riscv32imac-unknown-none-elf --example $(EXAMPLE) $(features)
 
 .PHONY: nrf52
