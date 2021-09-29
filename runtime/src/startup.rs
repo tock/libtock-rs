@@ -2,13 +2,14 @@
 
 /// `set_main!` is used to tell `libtock_runtime` where the process binary's
 /// `main` function is. The process binary's `main` function must have the
-/// signature `FnOnce() -> !`.
+/// signature `FnOnce() -> T`, where T is some concrete type that implements
+/// `libtock_platform::Termination`.
 ///
 /// # Example
 /// ```
 /// libtock_runtime::set_main!{main};
 ///
-/// fn main() -> ! { /* Omitted */ }
+/// fn main() -> () { /* Omitted */ }
 /// ```
 // set_main! generates a function called `libtock_unsafe_main`, which is called
 // by `rust_start`. The function has `unsafe` in its name because implementing
@@ -21,7 +22,10 @@ macro_rules! set_main {
     {$name:ident} => {
         #[no_mangle]
         fn libtock_unsafe_main() -> ! {
-            $name()
+            use libtock_runtime::TockSyscalls;
+            let res = $name();
+            #[allow(unreachable_code)] // so that fn main() -> ! does not produce a warning.
+            libtock_platform::Termination::complete::<TockSyscalls>(res)
         }
     }
 }
