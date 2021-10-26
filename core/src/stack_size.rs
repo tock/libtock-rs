@@ -1,6 +1,6 @@
 //! Executables must specify their stack size by using the `stack_size!` macro.
 //! It takes a single argument, the desired stack size in bytes. Example:
-//! ```
+//! ```ignore
 //! stack_size!{0x400}
 //! ```
 

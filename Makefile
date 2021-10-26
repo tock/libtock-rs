@@ -89,6 +89,12 @@ examples:
 # libtock_runtime only supports running on Tock.
 EXCLUDE_RUNTIME := --exclude libtock2 --exclude libtock_runtime
 
+# Arguments to pass to cargo to exclude crates that cannot be tested by Miri. In
+# addition to excluding libtock_runtime, Miri also cannot test proc macro crates
+# (and in fact will generate broken data that causes cargo test to fail).
+EXCLUDE_MIRI := $(EXCLUDE_RUNTIME) --exclude libtock_codegen \
+                --exclude ufmt-macros
+
 # Arguments to pass to cargo to exclude `std` and crates that depend on it. Used
 # when we build a crate for an embedded target, as those targets lack `std`.
 EXCLUDE_STD := --exclude libtock_unittest --exclude print_sizes \
@@ -105,6 +111,7 @@ test-stable:
 
 .PHONY: test
 test: examples test-qemu-hifive test-stable
+	PLATFORM=nrf52 cargo test $(EXCLUDE_RUNTIME) --workspace
 	# TODO: When we have a working embedded test harness, change the libtock2
 	# builds to --all-targets rather than --examples.
 	# Build libtock2 on both a RISC-V target and an ARM target. We pick
@@ -120,9 +127,9 @@ test: examples test-qemu-hifive test-stable
 	# currently pass clippy on ARM.
 	LIBTOCK_PLATFORM=hifive1 PLATFORM=hifive1 cargo clippy $(EXCLUDE_STD) \
 		--target=riscv32imac-unknown-none-elf --workspace
-	PLATFORM=nrf52 cargo miri test $(EXCLUDE_RUNTIME) --workspace
+	PLATFORM=nrf52 cargo miri test $(EXCLUDE_MIRI) --workspace
 	MIRIFLAGS="-Zmiri-symbolic-alignment-check -Zmiri-track-raw-pointers" \
-		PLATFORM=nrf52 cargo miri test $(EXCLUDE_RUNTIME) --workspace
+		PLATFORM=nrf52 cargo miri test $(EXCLUDE_MIRI) --workspace
 	echo '[ SUCCESS ] libtock-rs tests pass'
 
 .PHONY: analyse-stack-sizes
