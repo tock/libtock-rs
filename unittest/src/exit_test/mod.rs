@@ -157,7 +157,8 @@ impl std::str::FromStr for ExitMessage {
 // subprocess, only executing the test specified by test_name.
 #[track_caller]
 fn spawn_test(test_name: &str) -> ExitCall {
-    let output = std::process::Command::new(std::env::current_exe().unwrap())
+    let current_exe = std::env::current_exe().expect("Unable to find test executable");
+    let output = std::process::Command::new(current_exe)
         .args(std::env::args_os())
         .arg("--nocapture")
         .arg("--exact")
