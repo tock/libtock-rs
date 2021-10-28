@@ -12,7 +12,7 @@ with the Tock kernel, and for the purposes of this document can be represented
 by the following interface:
 
 ```rust
-trait Callback<const ID: u32> {
+trait Callback {
     fn callback(&self, args: [u32; 3]);
 }
 
@@ -20,7 +20,7 @@ struct InvalidIdError;
 
 // Safety requirement: The process must call kernel_unsubscribe for this ID
 // before the `callback` argument becomes invalid.
-unsafe fn kernel_subscribe<CB: Callback<ID>, const ID: u32>(callback: &CB)
+unsafe fn kernel_subscribe<CB: Callback>(callback: &CB, id: u32)
     -> Result<(), InvalidIdError>;
 
 fn kernel_unsubscribe(id: u32) -> Result<(), InvalidIdError>;
@@ -109,7 +109,7 @@ impl<'callback, const ID: u32> SubscribeHandle<'callback, ID> {
 
 ```rust
 impl<'callback, const ID: u32> SubscribeHandle<'callback, ID> {
-    fn subscribe<CB: Callback<ID>>(self, callback: &'callback CB)
+    fn subscribe<CB: Callback>(self, callback: &'callback CB)
         -> Result<(), InvalidIdError>
     {
         unsafe {
@@ -117,7 +117,7 @@ impl<'callback, const ID: u32> SubscribeHandle<'callback, ID> {
             // before callback becomes invalid, which happens at the end of the
             // 'callback lifetime. That is guaranteed by the type invariant of
             // SubscribeHandle.
-            kernel_subscribe(callback)
+            kernel_subscribe(callback, ID)
         }
     }
 }
@@ -145,7 +145,7 @@ Here is an example of how the Subscribe API would be used:
 ```rust
 struct App;
 
-impl Callback<1> for App {
+impl Callback for App {
     fn callback(&self, args: [u32; 3]) {
         // Insert callback logic here.
     }
