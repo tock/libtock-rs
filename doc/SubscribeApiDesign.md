@@ -18,8 +18,11 @@ trait Callback {
 
 struct InvalidIdError;
 
-// Safety requirement: The process must call kernel_unsubscribe for this ID
-// before the `callback` argument becomes invalid.
+// Safety requirement: The process must do one of the following before the
+// `callback` argument becomes invalid:
+// 1. Overwrite this callback using another `kernel_subscribe` call with the
+//    same ID.
+// 2. Erase this callback using a `kernel_unsubscribe` call with the same ID.
 unsafe fn kernel_subscribe<CB: Callback>(callback: &CB, id: u32)
     -> Result<(), InvalidIdError>;
 
@@ -27,7 +30,7 @@ fn kernel_unsubscribe(id: u32) -> Result<(), InvalidIdError>;
 ```
 
 Callbacks are not preemptive: they are only invoked when the process requests
-they be invoked (via a separate system call), removing most (all?) thread-safety
+they be invoked (via the Yield system call), removing most (all?) thread-safety
 concerns from the design.
 
 Each ID represents a particular event the process can subscribe to, and not all
