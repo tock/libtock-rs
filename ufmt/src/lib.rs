@@ -40,7 +40,7 @@
 //!
 //! - `uwrite!` / `uwriteln!`
 //!
-//! ```
+//! ```ignore
 //! use ufmt::{derive::uDebug, uwrite};
 //!
 //! #[derive(uDebug)]
