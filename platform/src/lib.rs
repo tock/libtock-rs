@@ -1,4 +1,4 @@
-#![no_std]
+#![cfg_attr(not(test), no_std)]
 #![warn(unsafe_op_in_unsafe_fn)]
 
 mod async_traits;
@@ -8,6 +8,7 @@ mod error_code;
 mod raw_syscalls;
 mod register;
 pub mod return_variant;
+mod syscall_scope;
 mod syscalls;
 mod syscalls_impl;
 mod termination;
@@ -20,6 +21,7 @@ pub use error_code::ErrorCode;
 pub use raw_syscalls::RawSyscalls;
 pub use register::Register;
 pub use return_variant::ReturnVariant;
+pub use syscall_scope::syscall_scope;
 pub use syscalls::Syscalls;
 pub use termination::Termination;
 pub use yield_types::YieldNoWaitReturn;
