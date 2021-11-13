@@ -15,11 +15,15 @@
 #[cfg(test)]
 mod command_tests;
 
+#[cfg(test)]
+mod exit_on_drop;
+
 // TODO: Add Exit.
 
 // TODO: Add Memop.
 
-// TODO: Add Subscribe.
+#[cfg(test)]
+mod subscribe_tests;
 
 #[cfg(test)]
 mod yield_tests;

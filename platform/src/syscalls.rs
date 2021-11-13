@@ -1,9 +1,11 @@
-use crate::{CommandReturn, YieldNoWaitReturn};
+use crate::{
+    subscribe, CommandReturn, ErrorCode, RawSyscalls, Subscribe, Upcall, YieldNoWaitReturn,
+};
 
 /// `Syscalls` provides safe abstractions over Tock's system calls. It is
 /// implemented for `libtock_runtime::TockSyscalls` and
 /// `libtock_unittest::fake::Kernel` (by way of `RawSyscalls`).
-pub trait Syscalls {
+pub trait Syscalls: RawSyscalls + Sized {
     // -------------------------------------------------------------------------
     // Yield
     // -------------------------------------------------------------------------
@@ -17,7 +19,26 @@ pub trait Syscalls {
     /// callback, then returns.
     fn yield_wait();
 
-    // TODO: Add a subscribe interface.
+    // -------------------------------------------------------------------------
+    // Subscribe
+    // -------------------------------------------------------------------------
+
+    /// Registers an upcall with the kernel.
+    fn subscribe<
+        'scope,
+        IDS: subscribe::SupportsId<DRIVER_NUM, SUBSCRIBE_NUM>,
+        U: Upcall<IDS>,
+        CONFIG: subscribe::Config,
+        const DRIVER_NUM: u32,
+        const SUBSCRIBE_NUM: u32,
+    >(
+        subscribe: &Subscribe<'scope, Self, DRIVER_NUM, SUBSCRIBE_NUM>,
+        upcall: &'scope U,
+    ) -> Result<(), ErrorCode>;
+
+    /// Unregisters the upcall with the given ID. If no upcall is registered
+    /// with the given ID, `unsubscribe` does nothing.
+    fn unsubscribe(driver_num: u32, subscribe_num: u32);
 
     // -------------------------------------------------------------------------
     // Command
@@ -30,6 +51,10 @@ pub trait Syscalls {
     // TODO: Add a read-only allow interface.
 
     // TODO: Add memop() methods.
+
+    // -------------------------------------------------------------------------
+    // Exit
+    // -------------------------------------------------------------------------
 
     fn exit_terminate(exit_code: u32) -> !;
 
