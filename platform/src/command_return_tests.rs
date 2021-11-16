@@ -10,16 +10,16 @@ fn failure() {
             1003,
         )
     };
-    assert_eq!(command_return.is_failure(), true);
-    assert_eq!(command_return.is_failure_u32(), false);
-    assert_eq!(command_return.is_failure_2_u32(), false);
-    assert_eq!(command_return.is_failure_u64(), false);
-    assert_eq!(command_return.is_success(), false);
-    assert_eq!(command_return.is_success_u32(), false);
-    assert_eq!(command_return.is_success_2_u32(), false);
-    assert_eq!(command_return.is_success_u64(), false);
-    assert_eq!(command_return.is_success_3_u32(), false);
-    assert_eq!(command_return.is_success_u32_u64(), false);
+    assert!(command_return.is_failure());
+    assert!(!command_return.is_failure_u32());
+    assert!(!command_return.is_failure_2_u32());
+    assert!(!command_return.is_failure_u64());
+    assert!(!command_return.is_success());
+    assert!(!command_return.is_success_u32());
+    assert!(!command_return.is_success_2_u32());
+    assert!(!command_return.is_success_u64());
+    assert!(!command_return.is_success_3_u32());
+    assert!(!command_return.is_success_u32_u64());
     assert_eq!(command_return.get_failure(), Some(ErrorCode::Reserve));
     assert_eq!(command_return.get_failure_u32(), None);
     assert_eq!(command_return.get_failure_2_u32(), None);
@@ -46,16 +46,16 @@ fn failure_u32() {
             1003,
         )
     };
-    assert_eq!(command_return.is_failure(), false);
-    assert_eq!(command_return.is_failure_u32(), true);
-    assert_eq!(command_return.is_failure_2_u32(), false);
-    assert_eq!(command_return.is_failure_u64(), false);
-    assert_eq!(command_return.is_success(), false);
-    assert_eq!(command_return.is_success_u32(), false);
-    assert_eq!(command_return.is_success_2_u32(), false);
-    assert_eq!(command_return.is_success_u64(), false);
-    assert_eq!(command_return.is_success_3_u32(), false);
-    assert_eq!(command_return.is_success_u32_u64(), false);
+    assert!(!command_return.is_failure());
+    assert!(command_return.is_failure_u32());
+    assert!(!command_return.is_failure_2_u32());
+    assert!(!command_return.is_failure_u64());
+    assert!(!command_return.is_success());
+    assert!(!command_return.is_success_u32());
+    assert!(!command_return.is_success_2_u32());
+    assert!(!command_return.is_success_u64());
+    assert!(!command_return.is_success_3_u32());
+    assert!(!command_return.is_success_u32_u64());
     assert_eq!(command_return.get_failure(), None);
     assert_eq!(
         command_return.get_failure_u32(),
@@ -85,16 +85,16 @@ fn failure_2_u32() {
             1003,
         )
     };
-    assert_eq!(command_return.is_failure(), false);
-    assert_eq!(command_return.is_failure_u32(), false);
-    assert_eq!(command_return.is_failure_2_u32(), true);
-    assert_eq!(command_return.is_failure_u64(), false);
-    assert_eq!(command_return.is_success(), false);
-    assert_eq!(command_return.is_success_u32(), false);
-    assert_eq!(command_return.is_success_2_u32(), false);
-    assert_eq!(command_return.is_success_u64(), false);
-    assert_eq!(command_return.is_success_3_u32(), false);
-    assert_eq!(command_return.is_success_u32_u64(), false);
+    assert!(!command_return.is_failure());
+    assert!(!command_return.is_failure_u32());
+    assert!(command_return.is_failure_2_u32());
+    assert!(!command_return.is_failure_u64());
+    assert!(!command_return.is_success());
+    assert!(!command_return.is_success_u32());
+    assert!(!command_return.is_success_2_u32());
+    assert!(!command_return.is_success_u64());
+    assert!(!command_return.is_success_3_u32());
+    assert!(!command_return.is_success_u32_u64());
     assert_eq!(command_return.get_failure(), None);
     assert_eq!(command_return.get_failure_u32(), None);
     assert_eq!(
@@ -127,16 +127,16 @@ fn failure_u64() {
             0x1003,
         )
     };
-    assert_eq!(command_return.is_failure(), false);
-    assert_eq!(command_return.is_failure_u32(), false);
-    assert_eq!(command_return.is_failure_2_u32(), false);
-    assert_eq!(command_return.is_failure_u64(), true);
-    assert_eq!(command_return.is_success(), false);
-    assert_eq!(command_return.is_success_u32(), false);
-    assert_eq!(command_return.is_success_2_u32(), false);
-    assert_eq!(command_return.is_success_u64(), false);
-    assert_eq!(command_return.is_success_3_u32(), false);
-    assert_eq!(command_return.is_success_u32_u64(), false);
+    assert!(!command_return.is_failure());
+    assert!(!command_return.is_failure_u32());
+    assert!(!command_return.is_failure_2_u32());
+    assert!(command_return.is_failure_u64());
+    assert!(!command_return.is_success());
+    assert!(!command_return.is_success_u32());
+    assert!(!command_return.is_success_2_u32());
+    assert!(!command_return.is_success_u64());
+    assert!(!command_return.is_success_3_u32());
+    assert!(!command_return.is_success_u32_u64());
     assert_eq!(command_return.get_failure(), None);
     assert_eq!(command_return.get_failure_u32(), None);
     assert_eq!(command_return.get_failure_2_u32(), None);
@@ -159,16 +159,16 @@ fn failure_u64() {
 #[test]
 fn success() {
     let command_return = unsafe { CommandReturn::new(return_variant::SUCCESS, 1001, 1002, 1003) };
-    assert_eq!(command_return.is_failure(), false);
-    assert_eq!(command_return.is_failure_u32(), false);
-    assert_eq!(command_return.is_failure_2_u32(), false);
-    assert_eq!(command_return.is_failure_u64(), false);
-    assert_eq!(command_return.is_success(), true);
-    assert_eq!(command_return.is_success_u32(), false);
-    assert_eq!(command_return.is_success_2_u32(), false);
-    assert_eq!(command_return.is_success_u64(), false);
-    assert_eq!(command_return.is_success_3_u32(), false);
-    assert_eq!(command_return.is_success_u32_u64(), false);
+    assert!(!command_return.is_failure());
+    assert!(!command_return.is_failure_u32());
+    assert!(!command_return.is_failure_2_u32());
+    assert!(!command_return.is_failure_u64());
+    assert!(command_return.is_success());
+    assert!(!command_return.is_success_u32());
+    assert!(!command_return.is_success_2_u32());
+    assert!(!command_return.is_success_u64());
+    assert!(!command_return.is_success_3_u32());
+    assert!(!command_return.is_success_u32_u64());
     assert_eq!(command_return.get_failure(), None);
     assert_eq!(command_return.get_failure_u32(), None);
     assert_eq!(command_return.get_failure_2_u32(), None);
@@ -189,16 +189,16 @@ fn success() {
 fn success_u32() {
     let command_return =
         unsafe { CommandReturn::new(return_variant::SUCCESS_U32, 1001, 1002, 1003) };
-    assert_eq!(command_return.is_failure(), false);
-    assert_eq!(command_return.is_failure_u32(), false);
-    assert_eq!(command_return.is_failure_2_u32(), false);
-    assert_eq!(command_return.is_failure_u64(), false);
-    assert_eq!(command_return.is_success(), false);
-    assert_eq!(command_return.is_success_u32(), true);
-    assert_eq!(command_return.is_success_2_u32(), false);
-    assert_eq!(command_return.is_success_u64(), false);
-    assert_eq!(command_return.is_success_3_u32(), false);
-    assert_eq!(command_return.is_success_u32_u64(), false);
+    assert!(!command_return.is_failure());
+    assert!(!command_return.is_failure_u32());
+    assert!(!command_return.is_failure_2_u32());
+    assert!(!command_return.is_failure_u64());
+    assert!(!command_return.is_success());
+    assert!(command_return.is_success_u32());
+    assert!(!command_return.is_success_2_u32());
+    assert!(!command_return.is_success_u64());
+    assert!(!command_return.is_success_3_u32());
+    assert!(!command_return.is_success_u32_u64());
     assert_eq!(command_return.get_failure(), None);
     assert_eq!(command_return.get_failure_u32(), None);
     assert_eq!(command_return.get_failure_2_u32(), None);
@@ -219,16 +219,16 @@ fn success_u32() {
 fn success_2_u32() {
     let command_return =
         unsafe { CommandReturn::new(return_variant::SUCCESS_2_U32, 1001, 1002, 1003) };
-    assert_eq!(command_return.is_failure(), false);
-    assert_eq!(command_return.is_failure_u32(), false);
-    assert_eq!(command_return.is_failure_2_u32(), false);
-    assert_eq!(command_return.is_failure_u64(), false);
-    assert_eq!(command_return.is_success(), false);
-    assert_eq!(command_return.is_success_u32(), false);
-    assert_eq!(command_return.is_success_2_u32(), true);
-    assert_eq!(command_return.is_success_u64(), false);
-    assert_eq!(command_return.is_success_3_u32(), false);
-    assert_eq!(command_return.is_success_u32_u64(), false);
+    assert!(!command_return.is_failure());
+    assert!(!command_return.is_failure_u32());
+    assert!(!command_return.is_failure_2_u32());
+    assert!(!command_return.is_failure_u64());
+    assert!(!command_return.is_success());
+    assert!(!command_return.is_success_u32());
+    assert!(command_return.is_success_2_u32());
+    assert!(!command_return.is_success_u64());
+    assert!(!command_return.is_success_3_u32());
+    assert!(!command_return.is_success_u32_u64());
     assert_eq!(command_return.get_failure(), None);
     assert_eq!(command_return.get_failure_u32(), None);
     assert_eq!(command_return.get_failure_2_u32(), None);
@@ -252,16 +252,16 @@ fn success_2_u32() {
 fn success_u64() {
     let command_return =
         unsafe { CommandReturn::new(return_variant::SUCCESS_U64, 0x1001, 0x1002, 1003) };
-    assert_eq!(command_return.is_failure(), false);
-    assert_eq!(command_return.is_failure_u32(), false);
-    assert_eq!(command_return.is_failure_2_u32(), false);
-    assert_eq!(command_return.is_failure_u64(), false);
-    assert_eq!(command_return.is_success(), false);
-    assert_eq!(command_return.is_success_u32(), false);
-    assert_eq!(command_return.is_success_2_u32(), false);
-    assert_eq!(command_return.is_success_u64(), true);
-    assert_eq!(command_return.is_success_3_u32(), false);
-    assert_eq!(command_return.is_success_u32_u64(), false);
+    assert!(!command_return.is_failure());
+    assert!(!command_return.is_failure_u32());
+    assert!(!command_return.is_failure_2_u32());
+    assert!(!command_return.is_failure_u64());
+    assert!(!command_return.is_success());
+    assert!(!command_return.is_success_u32());
+    assert!(!command_return.is_success_2_u32());
+    assert!(command_return.is_success_u64());
+    assert!(!command_return.is_success_3_u32());
+    assert!(!command_return.is_success_u32_u64());
     assert_eq!(command_return.get_failure(), None);
     assert_eq!(command_return.get_failure_u32(), None);
     assert_eq!(command_return.get_failure_2_u32(), None);
@@ -285,16 +285,16 @@ fn success_u64() {
 fn success_3_u32() {
     let command_return =
         unsafe { CommandReturn::new(return_variant::SUCCESS_3_U32, 1001, 1002, 1003) };
-    assert_eq!(command_return.is_failure(), false);
-    assert_eq!(command_return.is_failure_u32(), false);
-    assert_eq!(command_return.is_failure_2_u32(), false);
-    assert_eq!(command_return.is_failure_u64(), false);
-    assert_eq!(command_return.is_success(), false);
-    assert_eq!(command_return.is_success_u32(), false);
-    assert_eq!(command_return.is_success_2_u32(), false);
-    assert_eq!(command_return.is_success_u64(), false);
-    assert_eq!(command_return.is_success_3_u32(), true);
-    assert_eq!(command_return.is_success_u32_u64(), false);
+    assert!(!command_return.is_failure());
+    assert!(!command_return.is_failure_u32());
+    assert!(!command_return.is_failure_2_u32());
+    assert!(!command_return.is_failure_u64());
+    assert!(!command_return.is_success());
+    assert!(!command_return.is_success_u32());
+    assert!(!command_return.is_success_2_u32());
+    assert!(!command_return.is_success_u64());
+    assert!(command_return.is_success_3_u32());
+    assert!(!command_return.is_success_u32_u64());
     assert_eq!(command_return.get_failure(), None);
     assert_eq!(command_return.get_failure_u32(), None);
     assert_eq!(command_return.get_failure_2_u32(), None);
@@ -318,16 +318,16 @@ fn success_3_u32() {
 fn success_u32_u64() {
     let command_return =
         unsafe { CommandReturn::new(return_variant::SUCCESS_U32_U64, 1001, 0x1002, 0x1003) };
-    assert_eq!(command_return.is_failure(), false);
-    assert_eq!(command_return.is_failure_u32(), false);
-    assert_eq!(command_return.is_failure_2_u32(), false);
-    assert_eq!(command_return.is_failure_u64(), false);
-    assert_eq!(command_return.is_success(), false);
-    assert_eq!(command_return.is_success_u32(), false);
-    assert_eq!(command_return.is_success_2_u32(), false);
-    assert_eq!(command_return.is_success_u64(), false);
-    assert_eq!(command_return.is_success_3_u32(), false);
-    assert_eq!(command_return.is_success_u32_u64(), true);
+    assert!(!command_return.is_failure());
+    assert!(!command_return.is_failure_u32());
+    assert!(!command_return.is_failure_2_u32());
+    assert!(!command_return.is_failure_u64());
+    assert!(!command_return.is_success());
+    assert!(!command_return.is_success_u32());
+    assert!(!command_return.is_success_2_u32());
+    assert!(!command_return.is_success_u64());
+    assert!(!command_return.is_success_3_u32());
+    assert!(command_return.is_success_u32_u64());
     assert_eq!(command_return.get_failure(), None);
     assert_eq!(command_return.get_failure_u32(), None);
     assert_eq!(command_return.get_failure_2_u32(), None);

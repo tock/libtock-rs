@@ -570,72 +570,57 @@ mod test {
 
     #[test]
     pub fn alarm_before_systick_wrap_expired() {
-        assert_eq!(
-            super::is_over(
-                super::ActiveTimer {
-                    instant: 2u32,
-                    set_at: 1u32
-                },
-                3u32
-            ),
-            true
-        );
+        assert!(super::is_over(
+            super::ActiveTimer {
+                instant: 2u32,
+                set_at: 1u32
+            },
+            3u32
+        ));
     }
 
     #[test]
     pub fn alarm_before_systick_wrap_not_expired() {
-        assert_eq!(
-            super::is_over(
-                super::ActiveTimer {
-                    instant: 3u32,
-                    set_at: 1u32
-                },
-                2u32
-            ),
-            false
-        );
+        assert!(!super::is_over(
+            super::ActiveTimer {
+                instant: 3u32,
+                set_at: 1u32
+            },
+            2u32
+        ));
     }
 
     #[test]
     pub fn alarm_after_systick_wrap_expired() {
-        assert_eq!(
-            super::is_over(
-                super::ActiveTimer {
-                    instant: 1u32,
-                    set_at: 3u32
-                },
-                2u32
-            ),
-            true
-        );
+        assert!(super::is_over(
+            super::ActiveTimer {
+                instant: 1u32,
+                set_at: 3u32
+            },
+            2u32
+        ));
     }
 
     #[test]
     pub fn alarm_after_systick_wrap_time_before_systick_wrap_not_expired() {
-        assert_eq!(
-            super::is_over(
-                super::ActiveTimer {
-                    instant: 1u32,
-                    set_at: 3u32
-                },
-                4u32
-            ),
-            false
-        );
+        assert!(!super::is_over(
+            super::ActiveTimer {
+                instant: 1u32,
+                set_at: 3u32
+            },
+            4u32
+        ));
     }
 
     #[test]
     pub fn alarm_after_systick_wrap_time_after_systick_wrap_not_expired() {
-        assert_eq!(
-            super::is_over(
-                super::ActiveTimer {
-                    instant: 1u32,
-                    set_at: 3u32
-                },
-                0u32
-            ),
-            false
-        );
+        assert!(!super::is_over(
+            super::ActiveTimer {
+                instant: 1u32,
+                set_at: 3u32
+            },
+            0u32
+        ));
     }
 
     #[test]
@@ -648,7 +633,7 @@ mod test {
             instant: 2u32,
             set_at: 1u32,
         };
-        assert_eq!(super::left_is_later(later, earlier), true);
+        assert!(super::left_is_later(later, earlier));
     }
 
     #[test]
@@ -661,7 +646,7 @@ mod test {
             instant: 3u32,
             set_at: 1u32,
         };
-        assert_eq!(super::left_is_later(later, earlier), false);
+        assert!(!super::left_is_later(later, earlier));
     }
 
     #[test]
@@ -674,7 +659,7 @@ mod test {
             instant: 2u32,
             set_at: 1u32,
         };
-        assert_eq!(super::left_is_later(later, earlier), true);
+        assert!(super::left_is_later(later, earlier));
     }
 
     #[test]
@@ -687,7 +672,7 @@ mod test {
             instant: 1u32,
             set_at: 3u32,
         };
-        assert_eq!(super::left_is_later(later, earlier), false);
+        assert!(!super::left_is_later(later, earlier));
     }
 
     #[test]
@@ -700,7 +685,7 @@ mod test {
             instant: 1u32,
             set_at: 3u32,
         };
-        assert_eq!(super::left_is_later(later, earlier), true);
+        assert!(super::left_is_later(later, earlier));
     }
 
     #[test]
@@ -713,7 +698,7 @@ mod test {
             instant: 2u32,
             set_at: 3u32,
         };
-        assert_eq!(super::left_is_later(later, earlier), false);
+        assert!(!super::left_is_later(later, earlier));
     }
 
     #[test]
@@ -726,7 +711,7 @@ mod test {
             instant: 2u32,
             set_at: 1u32,
         };
-        assert_eq!(super::left_is_later(later, earlier), false);
+        assert!(!super::left_is_later(later, earlier));
     }
 
     #[test]
@@ -739,6 +724,6 @@ mod test {
             instant: 1u32,
             set_at: 2u32,
         };
-        assert_eq!(super::left_is_later(later, earlier), false);
+        assert!(!super::left_is_later(later, earlier));
     }
 }
