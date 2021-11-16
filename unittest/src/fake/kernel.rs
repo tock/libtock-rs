@@ -94,9 +94,7 @@ impl Kernel {
 
     /// Returns the system call log and empties it.
     pub fn take_syscall_log(&self) -> Vec<SyscallLogEntry> {
-        with_kernel_data(|kernel_data| {
-            std::mem::replace(&mut kernel_data.unwrap().syscall_log, Vec::new())
-        })
+        with_kernel_data(|kernel_data| std::mem::take(&mut kernel_data.unwrap().syscall_log))
     }
 }
 

@@ -10,7 +10,6 @@ libtock_core::stack_size! {0x800}
 #[derive(Deserialize)]
 struct LedCommand {
     pub nr: u8,
-    pub st: bool,
 }
 
 #[libtock::main]

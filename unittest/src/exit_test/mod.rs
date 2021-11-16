@@ -13,12 +13,19 @@ use std::panic::{catch_unwind, Location, UnwindSafe};
 /// is used as follows (inside a unit test case):
 ///
 /// ```
-/// use libtock_platform::Syscalls;
-/// let _kernel = libtock_unittest::fake::Kernel::new();
-/// let exit = libtock_unittest::exit_test("tests::foo", || {
-///     libtock_unittest::fake::Syscalls::exit_terminate(0);
-/// });
-/// assert_eq!(exit, libtock_unittest::ExitCall::Terminate(0));
+/// // Note: exit_test is not available in Miri
+/// #[cfg(miri)]
+/// fn main() {}
+///
+/// #[cfg(not(miri))]
+/// fn main() {
+///     use libtock_platform::Syscalls;
+///     let _kernel = libtock_unittest::fake::Kernel::new();
+///     let exit = libtock_unittest::exit_test("tests::foo", || {
+///         libtock_unittest::fake::Syscalls::exit_terminate(0);
+///     });
+///     assert_eq!(exit, libtock_unittest::ExitCall::Terminate(0));
+/// }
 /// ```
 ///
 /// `exit_test` will panic (to fail the test case) if the code does not call
