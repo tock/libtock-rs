@@ -16,7 +16,7 @@ pub struct Subscribe<'scope, S: Syscalls, const DRIVER_NUM: u32, const SUBSCRIBE
     //
     // Covariance would be unsound, as that would allow code with a
     // `Subscribe<'static, ...>` to register an upcall that lasts for a shorter
-    // lifetime, resulting in use-after-free if the upcall in invoked.
+    // lifetime, resulting in use-after-free if the upcall is invoked.
     // Contravariance would be sound, but is not necessary and may be confusing.
     //
     // Additionally, we want to have at least one private member of this struct
