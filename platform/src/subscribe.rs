@@ -36,6 +36,9 @@ impl<'scope, S: Syscalls, const DRIVER_NUM: u32, const SUBSCRIBE_NUM: u32> Drop
 impl<'scope, S: Syscalls, const DRIVER_NUM: u32, const SUBSCRIBE_NUM: u32> ShareList<'scope>
     for Subscribe<'scope, S, DRIVER_NUM, SUBSCRIBE_NUM>
 {
+    // Safety: The safety invariant is inherited from the ShareList trait's
+    // definition. The caller must guarantee that Drop::drop is called on this
+    // Subscribe before the 'scope lifetime ends.
     unsafe fn new() -> Subscribe<'scope, S, DRIVER_NUM, SUBSCRIBE_NUM> {
         Subscribe {
             _syscalls: core::marker::PhantomData,

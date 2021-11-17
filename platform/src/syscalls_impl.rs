@@ -110,6 +110,8 @@ impl<S: RawSyscalls> Syscalls for S {
                 // We're relying on the optimizer to remove this branch if
                 // returned_nonnull_upcall is a no-op.
                 let returned_upcall: *const () = r1.into();
+                // Note: TRD 104 specifies that the null upcall has address 0,
+                // not necessarily a null pointer.
                 #[allow(clippy::zero_ptr)]
                 if returned_upcall != 0 as *const () {
                     CONFIG::returned_nonnull_upcall(driver_num, subscribe_num);
