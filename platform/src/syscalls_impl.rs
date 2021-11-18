@@ -59,8 +59,8 @@ impl<S: RawSyscalls> Syscalls for S {
             arg2: u32,
             data: Register,
         ) {
-            let upcall: *const U = data.into();
             let exit: exit_on_drop::ExitOnDrop<S> = Default::default();
+            let upcall: *const U = data.into();
             unsafe { &*upcall }.upcall(arg0, arg1, arg2);
             core::mem::forget(exit);
         }
@@ -98,26 +98,40 @@ impl<S: RawSyscalls> Syscalls for S {
             };
 
             let return_variant: ReturnVariant = r0.as_u32().into();
+            // TRD 104 guarantees that Subscribe returns either Success with 2
+            // U32 or Failure with 2 U32. We check the return variant by
+            // comparing against Failure with 2 U32 for 2 reasons:
+            //
+            //   1. On RISC-V with compressed instructions, it generates smaller
+            //      code. FAILURE_2_U32 has value 2, which can be loaded into a
+            //      register with a single compressed instruction, whereas
+            //      loading SUCCESS_2_U32 uses an uncompressed instruction.
+            //   2. In the event the kernel malfuctions and returns a different
+            //      return variant, the success path is actually safer than the
+            //      failure path. The failure path assumes that r1 contains an
+            //      ErrorCode, and produces UB if it has an out of range value.
+            //      Incorrectly assuming the call succeeded will not generate
+            //      unsoundness, and will likely lead to the application
+            //      hanging.
             if return_variant == return_variant::FAILURE_2_U32 {
                 // Safety: TRD 104 guarantees that if r0 is Failure with 2 U32,
                 // then r1 will contain a valid error code. ErrorCode is
                 // designed to be safely transmuted directly from a kernel error
                 // code.
-                Err(unsafe { core::mem::transmute(r1.as_u32() as u16) })
-            } else {
-                // r0 indicates Success with 2 u32s. Confirm the null upcall was
-                // returned, and it if wasn't then call the configured function.
-                // We're relying on the optimizer to remove this branch if
-                // returned_nonnull_upcall is a no-op.
-                let returned_upcall: *const () = r1.into();
-                // Note: TRD 104 specifies that the null upcall has address 0,
-                // not necessarily a null pointer.
-                #[allow(clippy::zero_ptr)]
-                if returned_upcall != 0 as *const () {
-                    CONFIG::returned_nonnull_upcall(driver_num, subscribe_num);
-                }
-                Ok(())
+                return Err(unsafe { core::mem::transmute(r1.as_u32() as u16) });
             }
+
+            // r0 indicates Success with 2 u32s. Confirm the null upcall was
+            // returned, and it if wasn't then call the configured function.
+            // We're relying on the optimizer to remove this branch if
+            // returned_nonnull_upcall is a no-op.
+            // Note: TRD 104 specifies that the null upcall has address 0,
+            // not necessarily a null pointer.
+            let returned_upcall: usize = r1.into();
+            if returned_upcall != 0usize {
+                CONFIG::returned_nonnull_upcall(driver_num, subscribe_num);
+            }
+            Ok(())
         }
 
         let upcall_fcn = (kernel_upcall::<S, IDS, U> as usize).into();
