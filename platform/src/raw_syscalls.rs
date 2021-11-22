@@ -59,7 +59,7 @@ use crate::Register;
 //
 // These system calls are refined further individually, which is documented on
 // a per-function basis.
-pub unsafe trait RawSyscalls {
+pub unsafe trait RawSyscalls: Sized {
     // yield1 can only be used to call `yield-wait`, which does not have a
     // return value. To simplify the assembly implementation, we remove its
     // return value.
