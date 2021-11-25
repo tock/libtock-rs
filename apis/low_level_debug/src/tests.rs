@@ -2,28 +2,32 @@ use super::*;
 use libtock_platform::ErrorCode;
 use libtock_unittest::{command_return, fake, ExpectedSyscall};
 
+type LowLevelDebug = super::LowLevelDebug<fake::Syscalls>;
+
+#[test]
+fn no_driver() {
+    let _kernel = fake::Kernel::new();
+    assert!(!LowLevelDebug::driver_check());
+}
+
 #[test]
 fn driver_check() {
-    // Create a new fake kernel for the current thread, replacing avy previous one.
     let kernel = fake::Kernel::new();
     let driver = fake::LowLevelDebug::new();
     kernel.add_driver(&driver);
 
-    assert!(LowLevelDebug::<fake::Syscalls>::driver_check().is_success());
+    assert!(LowLevelDebug::driver_check());
     assert_eq!(driver.take_messages(), []);
 }
 
 #[test]
 fn print_alert_code() {
-    // Create a new fake kernel for the current thread, replacing avy previous one.
     let kernel = fake::Kernel::new();
     let driver = fake::LowLevelDebug::new();
     kernel.add_driver(&driver);
 
-    assert!(LowLevelDebug::<fake::Syscalls>::print_alert_code(AlertCode::Panic).is_success());
-    assert!(
-        LowLevelDebug::<fake::Syscalls>::print_alert_code(AlertCode::WrongLocation).is_success()
-    );
+    LowLevelDebug::print_alert_code(AlertCode::Panic);
+    LowLevelDebug::print_alert_code(AlertCode::WrongLocation);
     assert_eq!(
         driver.take_messages(),
         [
@@ -35,24 +39,22 @@ fn print_alert_code() {
 
 #[test]
 fn print_1() {
-    // Create a new fake kernel for the current thread, replacing avy previous one.
     let kernel = fake::Kernel::new();
     let driver = fake::LowLevelDebug::new();
     kernel.add_driver(&driver);
 
-    assert!(LowLevelDebug::<fake::Syscalls>::print_1(42).is_success());
+    LowLevelDebug::print_1(42);
     assert_eq!(driver.take_messages(), [fake::Message::Print1(42)]);
 }
 
 #[test]
 fn print_2() {
-    // Create a new fake kernel for the current thread, replacing avy previous one.
     let kernel = fake::Kernel::new();
     let driver = fake::LowLevelDebug::new();
     kernel.add_driver(&driver);
 
-    assert!(LowLevelDebug::<fake::Syscalls>::print_2(42, 27).is_success());
-    assert!(LowLevelDebug::<fake::Syscalls>::print_2(29, 43).is_success());
+    LowLevelDebug::print_2(42, 27);
+    LowLevelDebug::print_2(29, 43);
     assert_eq!(
         driver.take_messages(),
         [fake::Message::Print2(42, 27), fake::Message::Print2(29, 43)]
@@ -61,7 +63,6 @@ fn print_2() {
 
 #[test]
 fn failed_print() {
-    // Create a new fake kernel for the current thread, replacing avy previous one.
     let kernel = fake::Kernel::new();
     let driver = fake::LowLevelDebug::new();
     kernel.add_driver(&driver);
@@ -73,7 +74,8 @@ fn failed_print() {
         override_return: Some(command_return::failure(ErrorCode::Fail)),
     });
 
-    assert!(LowLevelDebug::<fake::Syscalls>::print_1(72).is_failure());
+    // The error is explicitly silenced, and cannot be detected.
+    LowLevelDebug::print_1(72);
 
     // The fake driver still receives the command even if a fake error is injected.
     assert_eq!(driver.take_messages(), [fake::Message::Print1(72)]);
