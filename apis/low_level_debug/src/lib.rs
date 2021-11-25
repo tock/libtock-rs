@@ -21,9 +21,11 @@ use libtock_platform::Syscalls;
 pub struct LowLevelDebug<S: Syscalls>(S);
 
 impl<S: Syscalls> LowLevelDebug<S> {
-    /// Run a check against the low-level debug capsule to ensure it is working.
+    /// Run a check against the low-level debug capsule to ensure it is present.
     ///
-    /// Returns `true` if the driver was present and functional.
+    /// Returns `true` if the driver was present. This does not necessarily mean
+    /// that the driver is working, as it may still fail to allocate grant
+    /// memory.
     #[inline(always)]
     pub fn driver_check() -> bool {
         S::command(DRIVER_ID, DRIVER_CHECK, 0, 0).is_success()
