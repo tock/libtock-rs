@@ -18,24 +18,15 @@ __internal_disable_timer_in_integration_test = []
 [dependencies]
 libtock_core = { path = "core" }
 libtock_codegen = { path = "codegen" }
-futures = { version = "0.3.1", default-features = false, features = [
-    "unstable",
-    "cfg-target-has-atomic",
-] }
+futures = { version = "0.3.1", default-features = false, features = ["unstable", "cfg-target-has-atomic"] }
 
 [dev-dependencies]
 corepack = { version = "0.4.0", default-features = false, features = ["alloc"] }
 # We pin the serde version because newer serde versions may not be compatible
 # with the nightly toolchain used by libtock-rs.
-serde = { version = "=1.0.114", default-features = false, features = [
-    "derive",
-] }
+serde = { version = "=1.0.114", default-features = false, features = ["derive"] }
 ctap2-authenticator = { git = "https://gitlab.com/ctap2-authenticator/ctap2-authenticator.git" }
-p256 = { version = "0.7", default-features = false, features = [
-    "arithmetic",
-    "ecdsa",
-    "ecdsa-core",
-] }
+p256 = { version = "0.7" , default-features = false, features = ["arithmetic", "ecdsa", "ecdsa-core"] }
 # p256 depends transitively on bitvec 0.18. bitvec 0.18.5 depends on radium
 # 0.3.0, which does not work on platforms that lack atomics. This prevents cargo
 # from selecting bitvec 0.18.5, which avoids the radium 0.3.0 issue.
@@ -91,7 +82,7 @@ lto = true
 debug = true
 
 [workspace]
-exclude = ["tock"]
+exclude = [ "tock" ]
 members = [
     "apis/low_level_debug",
     "codegen",
