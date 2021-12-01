@@ -10,10 +10,7 @@ use libtock_platform::Syscalls;
 ///
 /// # Example
 /// ```ignore
-/// use libtock_runtime::TockSyscalls;
-///
-/// // Uses the real syscall implementation.
-/// type LowLevelDebug = libtock_low_level_debug::LowLevelDebug<TockSyscalls>;
+/// use libtock2::LowLevelDebug;
 ///
 /// // Prints 0x45 and the app which called it.
 /// LowLevelDebug::print_1(0x45);
