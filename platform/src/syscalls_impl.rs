@@ -1,8 +1,8 @@
 //! Implements `Syscalls` for all types that implement `RawSyscalls`.
 
 use crate::{
-    exit_id, exit_on_drop, return_variant, subscribe, syscall_class, yield_id, CommandReturn,
-    ErrorCode, RawSyscalls, Register, ReturnVariant, Subscribe, Syscalls, Upcall,
+    exit_id, exit_on_drop, return_variant, share, subscribe, syscall_class, yield_id,
+    CommandReturn, ErrorCode, RawSyscalls, Register, ReturnVariant, Subscribe, Syscalls, Upcall,
     YieldNoWaitReturn,
 };
 
@@ -40,15 +40,15 @@ impl<S: RawSyscalls> Syscalls for S {
     // -------------------------------------------------------------------------
 
     fn subscribe<
-        'scope,
+        'share,
         IDS: subscribe::SupportsId<DRIVER_NUM, SUBSCRIBE_NUM>,
         U: Upcall<IDS>,
         CONFIG: subscribe::Config,
         const DRIVER_NUM: u32,
         const SUBSCRIBE_NUM: u32,
     >(
-        _subscribe: &Subscribe<'scope, Self, DRIVER_NUM, SUBSCRIBE_NUM>,
-        upcall: &'scope U,
+        _subscribe: share::Handle<Subscribe<'share, Self, DRIVER_NUM, SUBSCRIBE_NUM>>,
+        upcall: &'share U,
     ) -> Result<(), ErrorCode> {
         // The upcall function passed to the Tock kernel.
         //

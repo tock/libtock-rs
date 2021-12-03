@@ -1,4 +1,4 @@
-use crate::syscall_scope::ShareList;
+use crate::share::List;
 use crate::Syscalls;
 
 // -----------------------------------------------------------------------------
@@ -6,13 +6,13 @@ use crate::Syscalls;
 // -----------------------------------------------------------------------------
 
 /// A `Subscribe` instance allows safe code to call Tock's Subscribe system
-/// call, by guaranteeing the upcall will be cleaned up before 'scope ends. It
-/// is generally used with the `syscall_scope` function, which offers a safe
+/// call, by guaranteeing the upcall will be cleaned up before 'share ends. It
+/// is generally used with the `share::scope` function, which offers a safe
 /// interface for constructing `Subscribe` instances.
-pub struct Subscribe<'scope, S: Syscalls, const DRIVER_NUM: u32, const SUBSCRIBE_NUM: u32> {
+pub struct Subscribe<'share, S: Syscalls, const DRIVER_NUM: u32, const SUBSCRIBE_NUM: u32> {
     _syscalls: core::marker::PhantomData<S>,
 
-    // Make this struct invariant with respect to the 'scope lifetime.
+    // Make this struct invariant with respect to the 'share lifetime.
     //
     // Covariance would be unsound, as that would allow code with a
     // `Subscribe<'static, ...>` to register an upcall that lasts for a shorter
@@ -22,29 +22,34 @@ pub struct Subscribe<'scope, S: Syscalls, const DRIVER_NUM: u32, const SUBSCRIBE
     // Additionally, we want to have at least one private member of this struct
     // so that code outside this module cannot construct a `Subscribe` without
     // calling `ShareList::new`.
-    _scope: core::marker::PhantomData<core::cell::Cell<&'scope ()>>,
+    _scope: core::marker::PhantomData<core::cell::Cell<&'share ()>>,
 }
 
-impl<'scope, S: Syscalls, const DRIVER_NUM: u32, const SUBSCRIBE_NUM: u32> Drop
-    for Subscribe<'scope, S, DRIVER_NUM, SUBSCRIBE_NUM>
+// We can't derive(Default) because S is not Default, and derive(Default)
+// generates a Default implementation that requires S to be Default. Instead, we
+// manually implement Default.
+impl<'share, S: Syscalls, const DRIVER_NUM: u32, const SUBSCRIBE_NUM: u32> Default
+    for Subscribe<'share, S, DRIVER_NUM, SUBSCRIBE_NUM>
+{
+    fn default() -> Self {
+        Self {
+            _syscalls: Default::default(),
+            _scope: Default::default(),
+        }
+    }
+}
+
+impl<'share, S: Syscalls, const DRIVER_NUM: u32, const SUBSCRIBE_NUM: u32> Drop
+    for Subscribe<'share, S, DRIVER_NUM, SUBSCRIBE_NUM>
 {
     fn drop(&mut self) {
         S::unsubscribe(DRIVER_NUM, SUBSCRIBE_NUM);
     }
 }
 
-impl<'scope, S: Syscalls, const DRIVER_NUM: u32, const SUBSCRIBE_NUM: u32> ShareList<'scope>
-    for Subscribe<'scope, S, DRIVER_NUM, SUBSCRIBE_NUM>
+impl<'share, S: Syscalls, const DRIVER_NUM: u32, const SUBSCRIBE_NUM: u32> List
+    for Subscribe<'share, S, DRIVER_NUM, SUBSCRIBE_NUM>
 {
-    // Safety: The safety invariant is inherited from the ShareList trait's
-    // definition. The caller must guarantee that Drop::drop is called on this
-    // Subscribe before the 'scope lifetime ends.
-    unsafe fn new() -> Subscribe<'scope, S, DRIVER_NUM, SUBSCRIBE_NUM> {
-        Subscribe {
-            _syscalls: core::marker::PhantomData,
-            _scope: core::marker::PhantomData,
-        }
-    }
 }
 
 // -----------------------------------------------------------------------------

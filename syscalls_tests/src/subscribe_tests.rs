@@ -1,5 +1,5 @@
 use libtock_platform::{
-    subscribe, syscall_scope, CommandReturn, DefaultConfig, ErrorCode, Syscalls, YieldNoWaitReturn,
+    share, subscribe, CommandReturn, DefaultConfig, ErrorCode, Syscalls, YieldNoWaitReturn,
 };
 use libtock_unittest::{command_return, fake, upcall, SyscallLogEntry};
 
@@ -39,7 +39,7 @@ fn config() {
     let kernel = fake::Kernel::new();
     kernel.add_driver(&std::rc::Rc::new(MockDriver));
     let called = core::cell::Cell::new(false);
-    syscall_scope(|subscribe| {
+    share::scope(|subscribe| {
         assert_eq!(
             fake::Syscalls::subscribe::<_, _, TestConfig, 1, 0>(subscribe, &called),
             Ok(())
@@ -60,7 +60,7 @@ fn config() {
 fn failed() {
     let _kernel = fake::Kernel::new();
     let done = core::cell::Cell::new(false);
-    syscall_scope(|subscribe| {
+    share::scope(|subscribe| {
         assert_eq!(
             fake::Syscalls::subscribe::<_, _, DefaultConfig, 1, 2>(subscribe, &done),
             Err(ErrorCode::NoMem)
@@ -73,7 +73,7 @@ fn success() {
     let kernel = fake::Kernel::new();
     kernel.add_driver(&std::rc::Rc::new(MockDriver));
     let called = core::cell::Cell::new(None);
-    syscall_scope(|subscribe| {
+    share::scope(|subscribe| {
         assert_eq!(
             fake::Syscalls::subscribe::<_, _, DefaultConfig, 1, 0>(subscribe, &called),
             Ok(())
@@ -118,7 +118,7 @@ fn unwinding_upcall() {
         let kernel = fake::Kernel::new();
         kernel.add_driver(&std::rc::Rc::new(MockDriver));
         let upcall = BadUpcall;
-        syscall_scope(|subscribe| {
+        share::scope(|subscribe| {
             assert_eq!(
                 fake::Syscalls::subscribe::<_, _, DefaultConfig, 1, 0>(subscribe, &upcall),
                 Ok(())
