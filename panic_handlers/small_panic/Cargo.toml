@@ -2,7 +2,7 @@
 name = "libtock_small_panic"
 authors = ["Tock Project Developers <tock-dev@googlegroups.com>"]
 version = "0.1.0"
-description = """Default panic handler for libtock. Calls low-level debug on panic and yields."""
+description = """Small and basic panic handler for libtock. Calls low-level debug on panic and terminates."""
 edition = "2018"
 license = "Apache-2.0 OR MIT"
 repository = "https://www.github.com/tock/libtock-rs"
