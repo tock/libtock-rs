@@ -47,7 +47,8 @@ impl<'handle, L: List> Handle<'handle, L> {
     /// # Safety
     /// The calling code must guarantee that an `Other` exists, and that
     /// `Drop::drop` will be called on the `Other` before the `Other` becomes
-    /// invalid.
+    /// invalid. In general, the `Other` should be contained inside the `L`, so
+    /// `Drop::drop` is executed on the `Other` when the `L` is dropped.
     pub unsafe fn change_type<Other: List>(self) -> Handle<'handle, Other> {
         Handle { _list: PhantomData }
     }

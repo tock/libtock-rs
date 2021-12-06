@@ -9,6 +9,9 @@ pub use handle::{Handle, SplittableHandle};
 /// Creates a scope in which objects may safely be shared with the kernel.
 pub fn scope<L: List, Output, F: FnOnce(Handle<L>) -> Output>(fcn: F) -> Output {
     let list = Default::default();
+    // Safety: We do not move the L out of the `list` variable. The `list`
+    // variable will be dropped at the end of the scope, immediately before the
+    // L becomes invalid.
     fcn(unsafe { Handle::new(&list) })
 }
 
