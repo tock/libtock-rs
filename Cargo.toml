@@ -88,6 +88,7 @@ members = [
     "codegen",
     "core",
     "libtock2",
+    "panic_handler",
     "platform",
     "runtime",
     "syscalls_tests",
