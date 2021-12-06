@@ -1,5 +1,5 @@
 [package]
-name = "panic_handler"
+name = "libtock_small_panic"
 authors = ["Tock Project Developers <tock-dev@googlegroups.com>"]
 version = "0.1.0"
 description = """Default panic handler for libtock. Calls low-level debug on panic and yields."""
@@ -7,7 +7,7 @@ edition = "2018"
 license = "Apache-2.0 OR MIT"
 repository = "https://www.github.com/tock/libtock-rs"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
-libtock2 = { path = "../libtock2" }
+libtock_low_level_debug = { path = "../../apis/low_level_debug" }
+libtock_platform = { path = "../../platform" }
+libtock_runtime = { path = "../../runtime" }
