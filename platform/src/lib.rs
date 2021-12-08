@@ -1,6 +1,7 @@
 #![cfg_attr(not(test), no_std)]
 #![warn(unsafe_op_in_unsafe_fn)]
 
+pub mod allow_ro;
 mod async_traits;
 mod command_return;
 mod constants;
@@ -17,6 +18,7 @@ mod syscalls_impl;
 mod termination;
 mod yield_types;
 
+pub use allow_ro::AllowRo;
 pub use async_traits::{CallbackContext, FreeCallback, Locator, MethodCallback};
 pub use command_return::CommandReturn;
 pub use constants::{exit_id, syscall_class, yield_id};
