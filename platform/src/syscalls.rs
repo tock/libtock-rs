@@ -1,5 +1,5 @@
 use crate::{
-    subscribe, CommandReturn, ErrorCode, RawSyscalls, Subscribe, Upcall, YieldNoWaitReturn,
+    share, subscribe, CommandReturn, ErrorCode, RawSyscalls, Subscribe, Upcall, YieldNoWaitReturn,
 };
 
 /// `Syscalls` provides safe abstractions over Tock's system calls. It is
@@ -25,15 +25,15 @@ pub trait Syscalls: RawSyscalls + Sized {
 
     /// Registers an upcall with the kernel.
     fn subscribe<
-        'scope,
+        'share,
         IDS: subscribe::SupportsId<DRIVER_NUM, SUBSCRIBE_NUM>,
         U: Upcall<IDS>,
         CONFIG: subscribe::Config,
         const DRIVER_NUM: u32,
         const SUBSCRIBE_NUM: u32,
     >(
-        subscribe: &Subscribe<'scope, Self, DRIVER_NUM, SUBSCRIBE_NUM>,
-        upcall: &'scope U,
+        subscribe: share::Handle<Subscribe<'share, Self, DRIVER_NUM, SUBSCRIBE_NUM>>,
+        upcall: &'share U,
     ) -> Result<(), ErrorCode>;
 
     /// Unregisters the upcall with the given ID. If no upcall is registered
