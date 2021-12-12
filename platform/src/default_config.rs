@@ -2,4 +2,5 @@
 /// default syscall config.
 pub struct DefaultConfig;
 
+impl crate::allow_rw::Config for DefaultConfig {}
 impl crate::subscribe::Config for DefaultConfig {}
