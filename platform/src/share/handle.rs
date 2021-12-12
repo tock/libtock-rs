@@ -24,7 +24,7 @@ pub struct Handle<'handle, L: List> {
 // those constraints, so we manually implement Clone and Copy.
 impl<'handle, L: List> Clone for Handle<'handle, L> {
     fn clone(&self) -> Self {
-        Handle { _list: PhantomData }
+        *self
     }
 }
 
