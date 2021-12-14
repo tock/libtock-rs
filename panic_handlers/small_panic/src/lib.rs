@@ -10,5 +10,7 @@ fn panic_handler(_info: &core::panic::PanicInfo) -> ! {
     LowLevelDebug::<TockSyscalls>::print_alert_code(AlertCode::Panic);
 
     // Exit with a non-zero exit code to indicate failure.
+    // TODO(kupiakos@google.com): Make this logic consistent with tock/tock#2914
+    // when it is merged.
     TockSyscalls::exit_terminate(ErrorCode::Fail as u32);
 }
