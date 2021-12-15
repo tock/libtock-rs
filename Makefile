@@ -84,10 +84,11 @@ examples:
 	# Important: This tests a platform without atomic instructions.
 	PLATFORM=opentitan cargo build --release --target=riscv32imc-unknown-none-elf --examples -p libtock -p libtock_core
 
-# Arguments to pass to cargo to exclude libtock_runtime and crates that depend
-# on libtock_runtime. Used when we need to build a crate for the host OS, as
-# libtock_runtime only supports running on Tock.
-EXCLUDE_RUNTIME := --exclude libtock2 --exclude libtock_runtime
+# Arguments to pass to cargo to exclude crates that require a Tock runtime.
+# This is largely libtock_runtime and crates that depend on libtock_runtime.
+# Used when we need to build a crate for the host OS, as libtock_runtime only
+# supports running on Tock.
+EXCLUDE_RUNTIME := --exclude libtock2 --exclude libtock_runtime --exclude libtock_small_panic
 
 # Arguments to pass to cargo to exclude crates that cannot be tested by Miri. In
 # addition to excluding libtock_runtime, Miri also cannot test proc macro crates

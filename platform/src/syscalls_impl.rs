@@ -1,9 +1,9 @@
 //! Implements `Syscalls` for all types that implement `RawSyscalls`.
 
 use crate::{
-    allow_rw, exit_id, exit_on_drop, return_variant, share, subscribe, syscall_class, yield_id,
-    AllowRw, CommandReturn, ErrorCode, RawSyscalls, Register, ReturnVariant, Subscribe, Syscalls,
-    Upcall, YieldNoWaitReturn,
+    allow_ro, allow_rw, exit_id, exit_on_drop, return_variant, share, subscribe, syscall_class,
+    yield_id, AllowRo, AllowRw, CommandReturn, ErrorCode, RawSyscalls, Register, ReturnVariant,
+    Subscribe, Syscalls, Upcall, YieldNoWaitReturn,
 };
 
 impl<S: RawSyscalls> Syscalls for S {
@@ -181,89 +181,176 @@ impl<S: RawSyscalls> Syscalls for S {
         }
     }
 
-#	// -------------------------------------------------------------------------
-#	// Read-Write Allow
-#	// -------------------------------------------------------------------------
-#
-#	fn allow_rw<'share, CONFIG: allow_rw::Config, const DRIVER_NUM: u32, const BUFFER_NUM: u32>(
-#		_allow_rw: share::Handle<AllowRw<'share, Self, DRIVER_NUM, BUFFER_NUM>>,
-#		buffer: &'share mut [u8],
-#	) -> Result<(), ErrorCode> {
-#		// Inner function that does the majority of the work. This is not
-#		// monomorphized over DRIVER_NUM and BUFFER_NUM to keep code size small.
-#		//
-#		// Safety: A share::Handle<AllowRw<'share, S, driver_num, buffer_num>>
-#		// must exist, and `buffer` must last for at least the 'share lifetime.
-#		unsafe fn inner<S: Syscalls, CONFIG: allow_rw::Config>(
-#			driver_num: u32,
-#			buffer_num: u32,
-#			buffer: &mut [u8],
-#		) -> Result<(), ErrorCode> {
-#			// Safety: syscall4's documentation indicates it can be used to call
-#			// Read-Write Allow. These arguments follow TRD104.
-#			let [r0, r1, r2, _] = unsafe {
-#				S::syscall4::<{ syscall_class::ALLOW_RW }>([
-#					driver_num.into(),
-#					buffer_num.into(),
-#					buffer.as_mut_ptr().into(),
-#					buffer.len().into(),
-#				])
-#			};
-#
-#			let return_variant: ReturnVariant = r0.as_u32().into();
-#			// TRD 104 guarantees that Read-Write Allow returns either Success
-#			// with 2 U32 or Failure with 2 U32. We check the return variant by
-#			// comparing against Failure with 2 U32 for 2 reasons:
-#			//
-#			//   1. On RISC-V with compressed instructions, it generates smaller
-#			//      code. FAILURE_2_U32 has value 2, which can be loaded into a
-#			//      register with a single compressed instruction, whereas
-#			//      loading SUCCESS_2_U32 uses an uncompressed instruction.
-#			//   2. In the event the kernel malfuctions and returns a different
-#			//      return variant, the success path is actually safer than the
-#			//      failure path. The failure path assumes that r1 contains an
-#			//      ErrorCode, and produces UB if it has an out of range value.
-#			//      Incorrectly assuming the call succeeded will not generate
-#			//      unsoundness, and will likely lead to the application
-#			//      panicing.
-#			if return_variant == return_variant::FAILURE_2_U32 {
-#				// Safety: TRD 104 guarantees that if r0 is Failure with 2 U32,
-#				// then r1 will contain a valid error code. ErrorCode is
-#				// designed to be safely transmuted directly from a kernel error
-#				// code.
-#				return Err(unsafe { core::mem::transmute(r1.as_u32() as u16) });
-#			}
-#
-#			// r0 indicates Success with 2 u32s. Confirm a zero buffer was
-#			// returned, and it if wasn't then call the configured function.
-#			// We're relying on the optimizer to remove this branch if
-#			// returned_nozero_buffer is a no-op.
-#			let returned_buffer: (usize, usize) = (r1.into(), r2.into());
-#			if returned_buffer != (0, 0) {
-#				CONFIG::returned_nonzero_buffer(driver_num, buffer_num);
-#			}
-#			Ok(())
-#		}
-#
-#		// Safety: The presence of the share::Handle<AllowRw<'share, ...>>
-#		// guarantees that an AllowRw exists and will clean up this Allow ID
-#		// before the 'share lifetime ends.
-#		unsafe { inner::<Self, CONFIG>(DRIVER_NUM, BUFFER_NUM, buffer) }
-#	}
-#
-#	fn unallow_rw(driver_num: u32, buffer_num: u32) {
-#		unsafe {
-#			// syscall4's documentation indicates it can be used to call
-#			// Read-Write Allow. The buffer passed has 0 length, which cannot
-#			// cause undefined behavior on its own.
-#			Self::syscall4::<{ syscall_class::ALLOW_RW }>([
-#				driver_num.into(),
-#				buffer_num.into(),
-#				0usize.into(),
-#				0usize.into(),
-#			]);
-#		}
-#	}
+    // -------------------------------------------------------------------------
+    // Read-Write Allow
+    // -------------------------------------------------------------------------
+
+    fn allow_rw<'share, CONFIG: allow_rw::Config, const DRIVER_NUM: u32, const BUFFER_NUM: u32>(
+        _allow_rw: share::Handle<AllowRw<'share, Self, DRIVER_NUM, BUFFER_NUM>>,
+        buffer: &'share mut [u8],
+    ) -> Result<(), ErrorCode> {
+        // Inner function that does the majority of the work. This is not
+        // monomorphized over DRIVER_NUM and BUFFER_NUM to keep code size small.
+        //
+        // Safety: A share::Handle<AllowRw<'share, S, driver_num, buffer_num>>
+        // must exist, and `buffer` must last for at least the 'share lifetime.
+        unsafe fn inner<S: Syscalls, CONFIG: allow_rw::Config>(
+            driver_num: u32,
+            buffer_num: u32,
+            buffer: &mut [u8],
+        ) -> Result<(), ErrorCode> {
+            // Safety: syscall4's documentation indicates it can be used to call
+            // Read-Write Allow. These arguments follow TRD104.
+            let [r0, r1, r2, _] = unsafe {
+                S::syscall4::<{ syscall_class::ALLOW_RW }>([
+                    driver_num.into(),
+                    buffer_num.into(),
+                    buffer.as_mut_ptr().into(),
+                    buffer.len().into(),
+                ])
+            };
+
+            let return_variant: ReturnVariant = r0.as_u32().into();
+            // TRD 104 guarantees that Read-Write Allow returns either Success
+            // with 2 U32 or Failure with 2 U32. We check the return variant by
+            // comparing against Failure with 2 U32 for 2 reasons:
+            //
+            //   1. On RISC-V with compressed instructions, it generates smaller
+            //      code. FAILURE_2_U32 has value 2, which can be loaded into a
+            //      register with a single compressed instruction, whereas
+            //      loading SUCCESS_2_U32 uses an uncompressed instruction.
+            //   2. In the event the kernel malfuctions and returns a different
+            //      return variant, the success path is actually safer than the
+            //      failure path. The failure path assumes that r1 contains an
+            //      ErrorCode, and produces UB if it has an out of range value.
+            //      Incorrectly assuming the call succeeded will not generate
+            //      unsoundness, and will likely lead to the application
+            //      panicing.
+            if return_variant == return_variant::FAILURE_2_U32 {
+                // Safety: TRD 104 guarantees that if r0 is Failure with 2 U32,
+                // then r1 will contain a valid error code. ErrorCode is
+                // designed to be safely transmuted directly from a kernel error
+                // code.
+                return Err(unsafe { core::mem::transmute(r1.as_u32() as u16) });
+            }
+
+            // r0 indicates Success with 2 u32s. Confirm a zero buffer was
+            // returned, and it if wasn't then call the configured function.
+            // We're relying on the optimizer to remove this branch if
+            // returned_nozero_buffer is a no-op.
+            let returned_buffer: (usize, usize) = (r1.into(), r2.into());
+            if returned_buffer != (0, 0) {
+                CONFIG::returned_nonzero_buffer(driver_num, buffer_num);
+            }
+            Ok(())
+        }
+
+        // Safety: The presence of the share::Handle<AllowRw<'share, ...>>
+        // guarantees that an AllowRw exists and will clean up this Allow ID
+        // before the 'share lifetime ends.
+        unsafe { inner::<Self, CONFIG>(DRIVER_NUM, BUFFER_NUM, buffer) }
+    }
+
+    fn unallow_rw(driver_num: u32, buffer_num: u32) {
+        unsafe {
+            // syscall4's documentation indicates it can be used to call
+            // Read-Write Allow. The buffer passed has 0 length, which cannot
+            // cause undefined behavior on its own.
+            Self::syscall4::<{ syscall_class::ALLOW_RW }>([
+                driver_num.into(),
+                buffer_num.into(),
+                0usize.into(),
+                0usize.into(),
+            ]);
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Read-Only Allow
+    // -------------------------------------------------------------------------
+
+    fn allow_ro<'share, CONFIG: allow_ro::Config, const DRIVER_NUM: u32, const BUFFER_NUM: u32>(
+        _allow_ro: share::Handle<AllowRo<'share, Self, DRIVER_NUM, BUFFER_NUM>>,
+        buffer: &'share [u8],
+    ) -> Result<(), ErrorCode> {
+        // Inner function that does the majority of the work. This is not
+        // monomorphized over DRIVER_NUM and BUFFER_NUM to keep code size small.
+        //
+        // Security note: The syscall driver will retain read-only access to
+        // `*buffer` until this Allow ID is unallowed or overwritten via another
+        // Allow call. Therefore the caller must ensure the Allow ID is
+        // unallowed or overwritten before `*buffer` is deallocated, to avoid
+        // leaking newly-allocated information at the same address as `*buffer`.
+        fn inner<S: Syscalls, CONFIG: allow_ro::Config>(
+            driver_num: u32,
+            buffer_num: u32,
+            buffer: &[u8],
+        ) -> Result<(), ErrorCode> {
+            // Safety: syscall4's documentation indicates it can be used to call
+            // Read-Only Allow. These arguments follow TRD104.
+            let [r0, r1, r2, _] = unsafe {
+                S::syscall4::<{ syscall_class::ALLOW_RO }>([
+                    driver_num.into(),
+                    buffer_num.into(),
+                    buffer.as_ptr().into(),
+                    buffer.len().into(),
+                ])
+            };
+
+            let return_variant: ReturnVariant = r0.as_u32().into();
+            // TRD 104 guarantees that Read-Only Allow returns either Success
+            // with 2 U32 or Failure with 2 U32. We check the return variant by
+            // comparing against Failure with 2 U32 for 2 reasons:
+            //
+            //   1. On RISC-V with compressed instructions, it generates smaller
+            //      code. FAILURE_2_U32 has value 2, which can be loaded into a
+            //      register with a single compressed instruction, whereas
+            //      loading SUCCESS_2_U32 uses an uncompressed instruction.
+            //   2. In the event the kernel malfuctions and returns a different
+            //      return variant, the success path is actually safer than the
+            //      failure path. The failure path assumes that r1 contains an
+            //      ErrorCode, and produces UB if it has an out of range value.
+            //      Incorrectly assuming the call succeeded will not generate
+            //      unsoundness, and will likely lead to the application
+            //      panicing.
+            if return_variant == return_variant::FAILURE_2_U32 {
+                // Safety: TRD 104 guarantees that if r0 is Failure with 2 U32,
+                // then r1 will contain a valid error code. ErrorCode is
+                // designed to be safely transmuted directly from a kernel error
+                // code.
+                return Err(unsafe { core::mem::transmute(r1.as_u32() as u16) });
+            }
+
+            // r0 indicates Success with 2 u32s. Confirm a zero buffer was
+            // returned, and it if wasn't then call the configured function.
+            // We're relying on the optimizer to remove this branch if
+            // returned_nozero_buffer is a no-op.
+            let returned_buffer: (usize, usize) = (r1.into(), r2.into());
+            if returned_buffer != (0, 0) {
+                CONFIG::returned_nonzero_buffer(driver_num, buffer_num);
+            }
+            Ok(())
+        }
+
+        // Security: The presence of the share::Handle<AllowRo<'share, ...>>
+        // guarantees that an AllowRo exists and will clean up this Allow ID
+        // before the 'share lifetime ends.
+        inner::<Self, CONFIG>(DRIVER_NUM, BUFFER_NUM, buffer)
+    }
+
+    fn unallow_ro(driver_num: u32, buffer_num: u32) {
+        unsafe {
+            // syscall4's documentation indicates it can be used to call
+            // Read-Only Allow. The buffer passed has 0 length, which cannot
+            // cause undefined behavior on its own.
+            Self::syscall4::<{ syscall_class::ALLOW_RO }>([
+                driver_num.into(),
+                buffer_num.into(),
+                0usize.into(),
+                0usize.into(),
+            ]);
+        }
+    }
 
     // -------------------------------------------------------------------------
     // Exit
