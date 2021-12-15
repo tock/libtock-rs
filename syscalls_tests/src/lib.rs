@@ -13,7 +13,8 @@
 #[cfg(test)]
 mod allow_ro;
 
-// TODO: Add Read-Write Allow.
+#[cfg(test)]
+mod allow_rw;
 
 #[cfg(test)]
 mod command_tests;

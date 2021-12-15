@@ -1,6 +1,6 @@
 use crate::{
-    allow_ro, share, subscribe, AllowRo, CommandReturn, ErrorCode, RawSyscalls, Subscribe, Upcall,
-    YieldNoWaitReturn,
+    allow_ro, allow_rw, share, subscribe, AllowRo, AllowRw, CommandReturn, ErrorCode, RawSyscalls,
+    Subscribe, Upcall, YieldNoWaitReturn,
 };
 
 /// `Syscalls` provides safe abstractions over Tock's system calls. It is
@@ -47,7 +47,20 @@ pub trait Syscalls: RawSyscalls + Sized {
 
     fn command(driver_id: u32, command_id: u32, argument0: u32, argument1: u32) -> CommandReturn;
 
-    // TODO: Add a read-write allow interface.
+    // -------------------------------------------------------------------------
+    // Read-Write Allow
+    // -------------------------------------------------------------------------
+
+    /// Shares a read-write buffer with the kernel.
+    fn allow_rw<'share, CONFIG: allow_rw::Config, const DRIVER_NUM: u32, const BUFFER_NUM: u32>(
+        allow_rw: share::Handle<AllowRw<'share, Self, DRIVER_NUM, BUFFER_NUM>>,
+        buffer: &'share mut [u8],
+    ) -> Result<(), ErrorCode>;
+
+    /// Revokes the kernel's access to the buffer with the given ID, overwriting
+    /// it with a zero buffer. If no buffer is shared with the given ID,
+    /// `unallow_rw` does nothing.
+    fn unallow_rw(driver_num: u32, buffer_num: u32);
 
     // -------------------------------------------------------------------------
     // Read-Only Allow
