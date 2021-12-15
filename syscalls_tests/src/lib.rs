@@ -10,7 +10,10 @@
 //! Mixing types from the two `libtock_platform` instantiations in tests results
 //! in confusing error messages, so instead those tests live in this crate.
 
-// TODO: Add Allow.
+#[cfg(test)]
+mod allow_ro;
+
+// TODO: Add Read-Write Allow.
 
 #[cfg(test)]
 mod command_tests;
