@@ -232,6 +232,7 @@ pub enum ErrorCode {
 }
 
 /// The provided value is not a recognized TRD 104 error code.
+#[derive(PartialEq, Eq)]
 pub struct NotAnErrorCode;
 
 impl fmt::Debug for NotAnErrorCode {
