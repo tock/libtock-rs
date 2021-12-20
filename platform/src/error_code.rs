@@ -1,7 +1,9 @@
-use core::{convert::TryFrom, fmt, mem::transmute};
+use core::{convert::TryFrom, mem::transmute};
 
 // TODO: Add a ufmt debug implementation for process binaries to use.
-/// A [TRD 104 error code][error-codes] returned by the kernel.
+/// An error code the Tock kernel may return, as specified in
+/// [TRD 104][error-codes]. Note that `BADRVAL` is not included, as it cannot be
+/// produced by the Tock kernel.
 /// 
 /// [error-codes]: https://github.com/tock/tock/blob/master/doc/reference/trd104-syscalls.md#33-error-codes
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -232,14 +234,8 @@ pub enum ErrorCode {
 }
 
 /// The provided value is not a recognized TRD 104 error code.
-#[derive(PartialEq, Eq)]
+#[derive(PartialEq, Eq, Debug)]
 pub struct NotAnErrorCode;
-
-impl fmt::Debug for NotAnErrorCode {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str("not an error code")
-    }
-}
 
 impl TryFrom<u32> for ErrorCode {
     type Error = NotAnErrorCode;
