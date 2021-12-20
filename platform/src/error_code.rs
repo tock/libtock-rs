@@ -1,5 +1,11 @@
-/// An error code returned by the kernel.
+use core::{convert::TryFrom, mem::transmute};
+
 // TODO: Add a ufmt debug implementation for process binaries to use.
+/// An error code the Tock kernel may return, as specified in
+/// [TRD 104][error-codes]. Note that `BADRVAL` is not included, as it cannot be
+/// produced by the Tock kernel.
+/// 
+/// [error-codes]: https://github.com/tock/tock/blob/master/doc/reference/trd104-syscalls.md#33-error-codes
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(u16)]  // To facilitate use with transmute() in CommandReturn
 #[rustfmt::skip]
@@ -225,4 +231,20 @@ pub enum ErrorCode {
     N01011 =  1011, N01012 =  1012, N01013 =  1013, N01014 =  1014, N01015 =  1015,
     N01016 =  1016, N01017 =  1017, N01018 =  1018, N01019 =  1019, N01020 =  1020,
     N01021 =  1021, N01022 =  1022, N01023 =  1023,
+}
+
+/// The provided value is not a recognized TRD 104 error code.
+#[derive(PartialEq, Eq, Debug)]
+pub struct NotAnErrorCode;
+
+impl TryFrom<u32> for ErrorCode {
+    type Error = NotAnErrorCode;
+
+    fn try_from(value: u32) -> Result<Self, Self::Error> {
+        if (1..=1023).contains(&value) {
+            Ok(unsafe { transmute(value as u16) })
+        } else {
+            Err(NotAnErrorCode)
+        }
+    }
 }
