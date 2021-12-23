@@ -4,7 +4,7 @@ use fake::low_level_debug::*;
 // Tests the command implementation.
 #[test]
 fn command() {
-    use fake::Driver;
+    use fake::SyscallDriver;
     let low_level_debug = LowLevelDebug::new();
     assert!(low_level_debug.command(DRIVER_CHECK, 1, 2).is_success());
     assert!(low_level_debug.command(PRINT_ALERT_CODE, 3, 4).is_success());

@@ -27,7 +27,7 @@ fn driver_support() {
     // driver), we should remove MockDriver and replace it with the fake driver,
     // so we have 1 fewer Driver implementations to maintain.
     struct MockDriver;
-    impl fake::Driver for MockDriver {
+    impl fake::SyscallDriver for MockDriver {
         fn id(&self) -> u32 {
             42
         }

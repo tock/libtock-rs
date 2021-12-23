@@ -41,7 +41,7 @@ trait libtock_platform::Syscalls<'a> { ... }
 
 struct libtock_console::Console<'a, S: Syscalls> { ... }
 
-trait libtock_unittest::fake::Driver<'a> { ... }
+trait libtock_unittest::fake::SyscallDriver<'a> { ... }
 struct libtock_unittest::fake::Kernel<'a> { ... }
 ```
 
@@ -101,21 +101,21 @@ storage. `fake::Kernel`, `fake::Syscalls`, and `schedule_upcall` all access
 and `fake::Kernel` much easier. The `KernelData` is created by
 `fake::Kernel::new` and cleaned up when the `fake::Kernel` is dropped.
 
-## How do we own `fake::Driver` instances?
+## How do we own `fake::SyscallDriver` instances?
 
-There are two things that need to access the `fake::Driver` instances: the unit
-test case (for configuration and inspection), and the fake kernel (for syscall
-implementations). Therefore, the `fake::Driver` instances must be accessed
-through shared references. This requires them to use interior mutability or be
-accessed through `RefCell`. We prioritize the understandability of test code
-over the implementation of `fake::Driver`, so `fake::Driver` uses interior
-mutability.
+There are two things that need to access the `fake::SyscallDriver` instances:
+the unit test case (for configuration and inspection), and the fake kernel (for
+syscall implementations). Therefore, the `fake::SyscallDriver` instances must be
+accessed through shared references. This requires them to use interior
+mutability or be accessed through `RefCell`. We prioritize the understandability
+of test code over the implementation of `fake::SyscallDriver`, so
+`fake::SyscallDriver` uses interior mutability.
 
-We could have the fake kernel own the `fake::Drivers`, but doing so requires a
-significant amount of `unsafe` code to satisfy the borrow checker (it really
-doesn't like returning references into a struct that could be replaced at any
-time). Instead, we use `Rc` to own the `fake::Drivers`. This results in the
-following ownership graph:
+We could have the fake kernel own the `fake::SyscallDrivers`, but doing so
+requires a significant amount of `unsafe` code to satisfy the borrow checker (it
+really doesn't like returning references into a struct that could be replaced at
+any time). Instead, we use `Rc` to own the `fake::SyscallDrivers`. This results
+in the following ownership graph:
 
 ```
 +-----------+  +------------+
@@ -123,12 +123,12 @@ following ownership graph:
 +-----------+  +------------+
          | Rc     | Rc
          V        V
-      +--------------+
-      | fake::Driver |
-      +--------------+
+   +---------------------+
+   | fake::SyscallDriver |
+   +---------------------+
 ```
 
-A drawback of this design is that it is difficult for `fake::Driver` instances
-to have references to other objects without adding cycles to this dependency
-graph. Fortunately, it should be rare for `fake::Driver` instances to have
-external dependencies.
+A drawback of this design is that it is difficult for `fake::SyscallDriver`
+instances to have references to other objects without adding cycles to this
+dependency graph. Fortunately, it should be rare for `fake::SyscallDriver`
+instances to have external dependencies.
