@@ -9,7 +9,7 @@ struct TestDriver {
     buffer_0: Cell<RwAllowBuffer>,
 }
 
-impl fake::Driver for TestDriver {
+impl fake::SyscallDriver for TestDriver {
     fn id(&self) -> u32 {
         42
     }

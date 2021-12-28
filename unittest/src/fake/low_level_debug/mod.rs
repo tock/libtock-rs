@@ -25,7 +25,7 @@ impl LowLevelDebug {
     }
 }
 
-impl crate::fake::Driver for LowLevelDebug {
+impl crate::fake::SyscallDriver for LowLevelDebug {
     fn id(&self) -> u32 {
         DRIVER_NUMBER
     }

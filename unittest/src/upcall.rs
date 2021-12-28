@@ -117,7 +117,7 @@ mod tests {
     use super::*;
 
     struct MockDriver;
-    impl crate::fake::Driver for MockDriver {
+    impl crate::fake::SyscallDriver for MockDriver {
         fn id(&self) -> u32 {
             1
         }
