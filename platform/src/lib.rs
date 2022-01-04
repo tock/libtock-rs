@@ -3,7 +3,6 @@
 
 pub mod allow_ro;
 pub mod allow_rw;
-mod async_traits;
 mod command_return;
 mod constants;
 mod default_config;
@@ -21,7 +20,6 @@ mod yield_types;
 
 pub use allow_ro::AllowRo;
 pub use allow_rw::AllowRw;
-pub use async_traits::{CallbackContext, FreeCallback, Locator, MethodCallback};
 pub use command_return::CommandReturn;
 pub use constants::{exit_id, syscall_class, yield_id};
 pub use default_config::DefaultConfig;
