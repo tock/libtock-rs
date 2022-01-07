@@ -43,6 +43,7 @@ fn main() {
     // in a location with a newline in it, or we have no way to pass
     // rustc-link-search to cargo.
     let out_dir = &std::env::var("OUT_DIR").expect("Unable to read OUT_DIR");
+    println!("cargo:rerun-if-changed={}", out_dir);
     assert!(
         !out_dir.contains('\n'),
         "Build path contains a newline, which is unsupported"
