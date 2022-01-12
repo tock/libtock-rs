@@ -1,5 +1,8 @@
 //! Runtime components related to process startup.
 
+use crate::TockSyscalls;
+use libtock_platform::RawSyscalls;
+
 /// `set_main!` is used to tell `libtock_runtime` where the process binary's
 /// `main` function is. The process binary's `main` function must have the
 /// signature `FnOnce() -> T`, where T is some concrete type that implements
@@ -52,14 +55,24 @@ macro_rules! stack_size {
 // from start, which is written directly in assembly.
 #[no_mangle]
 extern "C" fn rust_start() -> ! {
-    // TODO: Call memop() to inform the kernel of the stack and heap sizes +
-    // locations. Also, perhaps we should support calling a heap initialization
+    // TODO: Call memop() to inform the kernel of the stack and size +
+    // locations (for debugging).
+    // Also, perhaps we should support calling a heap initialization
     // function?
 
     extern "Rust" {
+        // This function is created by the set_main!() macro.
         fn libtock_unsafe_main() -> !;
     }
+    // TODO: Provide mechanism for dynamic heap size
+    let app_heap_size: usize = 1024;
     unsafe {
+        // TODO: Replace with non-raw syscalls once memop
+        // implemented.
+
+        // Tell the kernel the new app heap break.
+        TockSyscalls::syscall2::<5>([1u32.into(), app_heap_size.into()]);
+
         libtock_unsafe_main();
     }
 }

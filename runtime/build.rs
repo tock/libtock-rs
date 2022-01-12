@@ -1,5 +1,3 @@
-use std::fs::copy;
-use std::path::PathBuf;
 
 mod extern_asm;
 
@@ -9,6 +7,9 @@ mod extern_asm;
 // (using the rustflags cargo config).
 #[cfg(not(feature = "no_auto_layout"))]
 fn auto_layout(out_dir: &str) {
+    use std::fs::copy;
+    use std::path::PathBuf;
+
     const PLATFORM_CFG_VAR: &str = "LIBTOCK_PLATFORM";
     const LAYOUT_GENERIC_FILENAME: &str = "libtock_layout.ld";
 
