@@ -13,3 +13,7 @@ version = "0.1.0"
 libtock_platform = { path = "../platform" }
 libtock_runtime = { path = "../runtime" }
 libtock_low_level_debug = { path = "../apis/low_level_debug" }
+
+# TODO: Implement a panic handler with more debugging functionality, then
+# replace libtock_small_panic with the debug-heavy panic handler here.
+libtock_small_panic = { path = "../panic_handlers/small_panic" }
