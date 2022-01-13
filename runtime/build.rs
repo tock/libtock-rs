@@ -1,4 +1,3 @@
-
 mod extern_asm;
 
 // auto_layout() identifies the correct linker scripts to use based on the
