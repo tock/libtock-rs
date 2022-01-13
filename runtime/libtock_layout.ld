@@ -10,7 +10,7 @@
  *         FLASH (X) : ORIGIN = 0x10000, LENGTH = 0x10000
  *         RAM   (W) : ORIGIN = 0x20000, LENGTH = 0x10000
  *     }
- *     TBF_HEADER_SIZE = 0x40;
+ *     TBF_HEADER_SIZE = 0x48;
  *     INCLUDE ../libtock-rs/layout.ld
  *
  * FLASH refers to the area the process binary occupies in flash, including TBF
@@ -56,7 +56,10 @@ SECTIONS {
     /* Runtime header. Contains values the linker knows that the runtime needs
      * to look up.
      */
-    .rt_header : {
+    .start ALIGN(4) : {
+        /* We combine rt_header and _start into a single section. If we don't,
+         * elf2tab does not parse the ELF file correctly for unknown reasons.
+         */
         rt_header = .;
         LONG(start);
         LONG(ADDR(.bss) + SIZEOF(.bss)); /* Initial process break */
@@ -66,17 +69,18 @@ SECTIONS {
         LONG(ADDR(.data));
         LONG(SIZEOF(.bss));
         LONG(ADDR(.bss));
+
+        *(.start)
     } > FLASH
 
     /* Text section -- the application's code. */
     .text ALIGN(4) : {
-        *(.start)
-        *(.text)
+        *(.text.*)
     } > FLASH
 
     /* Read-only data section. Contains strings and other global constants. */
     .rodata ALIGN(4) : {
-        *(.rodata)
+        *(.rodata.*)
         /* .data is placed after .rodata in flash. data_flash_start is used by
          * AT() to place .data in flash as well as in rt_header.
          */
@@ -91,6 +95,10 @@ SECTIONS {
      * https://riscv.org/wp-content/uploads/2015/01/riscv-calling.pdf
      */
     .stack (NOLOAD) : {
+	/* _sram_origin is used by elf2tab:
+	 * https://github.com/tock/elf2tab/blob/master/src/main.rs#L301
+	 */
+        _sram_origin = .;
         KEEP(*(.stack_buffer))
         . = ALIGN(16);
         _stack_top = .;  /* Used in rt_header */
@@ -116,7 +124,7 @@ SECTIONS {
      */
     .bss ALIGN(4) (NOLOAD) : {
         /* .sbss is the RISC-V small data section */
-        *(.sbss .bss)
+        *(.sbss .bss.*)
     } > RAM
 
     _heap_start = ADDR(.bss) + SIZEOF(.bss);  /* Used by rt_header */

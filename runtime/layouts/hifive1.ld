@@ -5,8 +5,8 @@ MEMORY {
    * the kernel binary, check for the actual address of APP_MEMORY!
    */
   FLASH (X) : ORIGIN = 0x20040000, LENGTH = 32M
-  RAM   (W) : ORIGIN = 0x80002400, LENGTH = 0x1C00
+  RAM   (W) : ORIGIN = 0x80002800, LENGTH = 0x1800
 }
 
-TBF_HEADER_SIZE = 0x40;
+TBF_HEADER_SIZE = 0x48;
 INCLUDE libtock_layout.ld
