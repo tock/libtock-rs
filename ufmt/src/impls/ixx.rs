@@ -48,9 +48,13 @@ impl uDebug for i8 {
     where
         W: uWrite + ?Sized,
     {
-        let mut buf: [u8; 4] = [0; 4];
+        if f.hex {
+            <u8 as uDebug>::fmt(&(*self as u8), f)
+        } else {
+            let mut buf: [u8; 4] = [0; 4];
 
-        f.write_str(isize(isize::from(*self), &mut buf))
+            f.write_str(isize(isize::from(*self), &mut buf))
+        }
     }
 }
 
@@ -69,9 +73,13 @@ impl uDebug for i16 {
     where
         W: uWrite + ?Sized,
     {
-        let mut buf: [u8; 6] = [0; 6];
+        if f.hex {
+            <u16 as uDebug>::fmt(&(*self as u16), f)
+        } else {
+            let mut buf: [u8; 6] = [0; 6];
 
-        f.write_str(isize(isize::from(*self), &mut buf))
+            f.write_str(isize(isize::from(*self), &mut buf))
+        }
     }
 }
 
@@ -90,9 +98,13 @@ impl uDebug for i32 {
     where
         W: uWrite + ?Sized,
     {
-        let mut buf: [u8; 11] = [0; 11];
+        if f.hex {
+            <u32 as uDebug>::fmt(&(*self as u32), f)
+        } else {
+            let mut buf: [u8; 11] = [0; 11];
 
-        f.write_str(isize(*self as isize, &mut buf))
+            f.write_str(isize(*self as isize, &mut buf))
+        }
     }
 }
 
@@ -112,10 +124,14 @@ impl uDebug for i64 {
     where
         W: uWrite + ?Sized,
     {
-        let mut buf: [u8; 20] = [0; 20];
+        if f.hex {
+            <u64 as uDebug>::fmt(&(*self as u64), f)
+        } else {
+            let mut buf: [u8; 20] = [0; 20];
 
-        let s = ixx!(u64, *self, buf);
-        f.write_str(s)
+            let s = ixx!(u64, *self, buf);
+            f.write_str(s)
+        }
     }
 
     #[cfg(target_pointer_width = "64")]
@@ -123,9 +139,13 @@ impl uDebug for i64 {
     where
         W: uWrite + ?Sized,
     {
-        let mut buf: [u8; 20] = [0; 20];
+        if f.hex {
+            <u64 as uDebug>::fmt(&(*self as u64), f)
+        } else {
+            let mut buf: [u8; 20] = [0; 20];
 
-        f.write_str(isize(*self as isize, &mut buf))
+            f.write_str(isize(*self as isize, &mut buf))
+        }
     }
 }
 
@@ -144,10 +164,14 @@ impl uDebug for i128 {
     where
         W: uWrite + ?Sized,
     {
-        let mut buf: [u8; 40] = [0; 40];
+        if f.hex {
+            <u128 as uDebug>::fmt(&(*self as u128), f)
+        } else {
+            let mut buf: [u8; 40] = [0; 40];
 
-        let s = ixx!(u128, *self, buf);
-        f.write_str(s)
+            let s = ixx!(u128, *self, buf);
+            f.write_str(s)
+        }
     }
 }
 

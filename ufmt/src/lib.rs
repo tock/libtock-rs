@@ -223,6 +223,7 @@ pub use ufmt_write::uWrite;
 /// - `{}` - `uDisplay`
 /// - `{:?}` - `uDebug`
 /// - `{:#?}` - "pretty" `uDebug`
+/// - `{:x}` - hexadecimal for numbers
 ///
 /// Named parameters and "specified" positional parameters (`{0}`) are not supported.
 ///
@@ -274,6 +275,7 @@ where
 {
     indentation: u8,
     pretty: bool,
+    hex: bool,
     writer: &'w mut W,
 }
 
@@ -286,6 +288,7 @@ where
         Self {
             indentation: 0,
             pretty: false,
+            hex: false,
             writer,
         }
     }
@@ -299,6 +302,18 @@ where
         self.pretty = true;
         f(self)?;
         self.pretty = pretty;
+        Ok(())
+    }
+
+    /// Execute the closure with hex-printing enabled
+    pub fn hex(
+        &mut self,
+        f: impl FnOnce(&mut Self) -> Result<(), W::Error>,
+    ) -> Result<(), W::Error> {
+        let hex = self.hex;
+        self.hex = true;
+        f(self)?;
+        self.hex = hex;
         Ok(())
     }
 

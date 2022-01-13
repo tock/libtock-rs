@@ -233,8 +233,10 @@ fn write(input: TokenStream, newline: bool) -> TokenStream {
                     exprs.push(quote!(ufmt::uDisplay::fmt(#pat, f)?;));
                 }
 
-                Piece::Debug { pretty } => {
-                    exprs.push(if pretty {
+                Piece::Debug { pretty, hex } => {
+                    exprs.push(if hex {
+                        quote!(f.hex(|f| ufmt::uDebug::fmt(#pat, f))?;)
+                    } else if pretty {
                         quote!(f.pretty(|f| ufmt::uDebug::fmt(#pat, f))?;)
                     } else {
                         quote!(ufmt::uDebug::fmt(#pat, f)?;)
@@ -295,7 +297,7 @@ impl Parse for Input {
 
 #[derive(Debug, PartialEq)]
 enum Piece<'a> {
-    Debug { pretty: bool },
+    Debug { pretty: bool, hex: bool },
     Display,
     Str(Cow<'a, str>),
 }
@@ -375,6 +377,7 @@ fn parse<'l>(mut literal: &'l str, span: Span) -> parse::Result<Vec<Piece<'l>>> 
 
             (head, Some(tail)) => {
                 const DEBUG: &str = ":?}";
+                const DEBUG_HEX: &str = ":x}";
                 const DEBUG_PRETTY: &str = ":#?}";
                 const DISPLAY: &str = "}";
                 const ESCAPED_BRACE: &str = "{";
@@ -383,6 +386,7 @@ fn parse<'l>(mut literal: &'l str, span: Span) -> parse::Result<Vec<Piece<'l>>> 
                 if tail.starts_with(DEBUG)
                     || tail.starts_with(DEBUG_PRETTY)
                     || tail.starts_with(DISPLAY)
+                    || tail.starts_with(DEBUG_HEX)
                 {
                     if buf.is_empty() {
                         if !head.is_empty() {
@@ -398,13 +402,26 @@ fn parse<'l>(mut literal: &'l str, span: Span) -> parse::Result<Vec<Piece<'l>>> 
                     }
 
                     if tail.starts_with(DEBUG) {
-                        pieces.push(Piece::Debug { pretty: false });
+                        pieces.push(Piece::Debug {
+                            pretty: false,
+                            hex: false,
+                        });
 
                         literal = &tail[DEBUG.len()..];
                     } else if tail.starts_with(DEBUG_PRETTY) {
-                        pieces.push(Piece::Debug { pretty: true });
+                        pieces.push(Piece::Debug {
+                            pretty: true,
+                            hex: false,
+                        });
 
                         literal = &tail[DEBUG_PRETTY.len()..];
+                    } else if tail.starts_with(DEBUG_HEX) {
+                        pieces.push(Piece::Debug {
+                            pretty: true,
+                            hex: true,
+                        });
+
+                        literal = &tail[DEBUG_HEX.len()..];
                     } else {
                         pieces.push(Piece::Display);
 
@@ -418,7 +435,7 @@ fn parse<'l>(mut literal: &'l str, span: Span) -> parse::Result<Vec<Piece<'l>>> 
                 } else {
                     return Err(parse::Error::new(
                         span,
-                        "invalid format string: expected `{{`, `{}`, `{:?}` or `{:#?}`",
+                        "invalid format string: expected `{{`, `{}`, `{:?}` or `{:#?}` or `{:x}`",
                     ));
                 }
             }
@@ -451,12 +468,26 @@ mod tests {
 
         assert_eq!(
             super::parse("{:?}", span).ok(),
-            Some(vec![Piece::Debug { pretty: false }]),
+            Some(vec![Piece::Debug {
+                pretty: false,
+                hex: false
+            }]),
         );
 
         assert_eq!(
             super::parse("{:#?}", span).ok(),
-            Some(vec![Piece::Debug { pretty: true }]),
+            Some(vec![Piece::Debug {
+                pretty: true,
+                hex: false
+            }]),
+        );
+
+        assert_eq!(
+            super::parse("{:x}", span).ok(),
+            Some(vec![Piece::Debug {
+                pretty: true,
+                hex: true
+            }]),
         );
 
         // escaped braces
