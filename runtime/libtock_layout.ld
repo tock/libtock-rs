@@ -57,6 +57,9 @@ SECTIONS {
      * to look up.
      */
     .start ALIGN(4) : {
+        /* We combine rt_header and _start into a single section. If we don't,
+         * elf2tab does not parse the ELF file correctly for unknown reasons.
+         */
         rt_header = .;
         LONG(start);
         LONG(ADDR(.bss) + SIZEOF(.bss)); /* Initial process break */
