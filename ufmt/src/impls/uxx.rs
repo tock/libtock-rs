@@ -2,10 +2,89 @@ use core::str;
 
 use crate::{uDebug, uDisplay, uWrite, Formatter};
 
-macro_rules! uxx {
-    ($n:expr, $buf:expr) => {{
+macro_rules! uxx_hex_pad {
+    ($n:expr, $w:expr, $p:expr, $buf:expr, $pretty:expr, $lower:expr) => {{
         let mut n = $n;
-        let mut i = $buf.len() - 1;
+        let len = $buf.len();
+        let mut i = len - 1;
+        loop {
+            *$buf
+                .get_mut(i)
+                .unwrap_or_else(|| unsafe { assume_unreachable!() }) = {
+                let d = (n as u8) & 0xf;
+                if d < 10 {
+                    d + b'0'
+                } else {
+                    if $lower {
+                        (d - 10) + b'a'
+                    } else {
+                        (d - 10) + b'A'
+                    }
+                }
+            };
+            n = n >> 4;
+
+            if n == 0 {
+                break;
+            } else {
+                i -= 1;
+            }
+        }
+
+        // Now fill in padding up to the prescribed width.
+        // We do not support widths shorter than the value being
+        // printed, like core::fmt::format!()
+        // Also, we currently only support ' ' and '0' padding.
+        match ($w, $p) {
+            // For now, we default to left padding for all int-like values
+            (Some(mut w), pad) => {
+                // for space padding, pad before 0x. For 0 padding,
+                // pad after 0x
+                if $pretty && pad == ' ' {
+                    i -= 2;
+                    *$buf
+                        .get_mut(i + 1)
+                        .unwrap_or_else(|| unsafe { assume_unreachable!() }) = b'x';
+                    *$buf
+                        .get_mut(i)
+                        .unwrap_or_else(|| unsafe { assume_unreachable!() }) = b'0';
+                } else if $pretty {
+                    w -= 2;
+                }
+                while i > (len - (w as usize)) {
+                    i -= 1;
+                    let byte = match pad {
+                        '0' => b'0',
+                        _ => b' ',
+                    };
+
+                    *$buf
+                        .get_mut(i)
+                        .unwrap_or_else(|| unsafe { assume_unreachable!() }) = byte;
+                }
+            }
+            _ => {}
+        }
+
+        if $pretty && ($w.is_none() || $p != ' ') {
+            i -= 2;
+            *$buf
+                .get_mut(i + 1)
+                .unwrap_or_else(|| unsafe { assume_unreachable!() }) = b'x';
+            *$buf
+                .get_mut(i)
+                .unwrap_or_else(|| unsafe { assume_unreachable!() }) = b'0';
+        }
+
+        unsafe { str::from_utf8_unchecked($buf.get(i..).unwrap_or_else(|| assume_unreachable!())) }
+    }};
+}
+
+macro_rules! uxx_pad {
+    ($n:expr, $w: expr, $p:expr, $buf:expr) => {{
+        let mut n = $n;
+        let len = $buf.len();
+        let mut i = len - 1;
         loop {
             *$buf
                 .get_mut(i)
@@ -18,13 +97,46 @@ macro_rules! uxx {
                 i -= 1;
             }
         }
+        // Now fill in padding up to the prescribed width.
+        // We do not support widths shorter than the value being
+        // printed, like core::fmt::format!()
+        // Also, we currently only support ' ' and '0' padding.
+        match ($w, $p) {
+            // For now, we default to left padding for all int-like values
+            (Some(w), pad) => {
+                while i > (len - (w as usize)) {
+                    i -= 1;
+                    let byte = match pad {
+                        '0' => b'0',
+                        _ => b' ',
+                    };
+
+                    *$buf
+                        .get_mut(i)
+                        .unwrap_or_else(|| unsafe { assume_unreachable!() }) = byte;
+                }
+            }
+
+            _ => {}
+        }
 
         unsafe { str::from_utf8_unchecked($buf.get(i..).unwrap_or_else(|| assume_unreachable!())) }
     }};
 }
 
-fn usize(n: usize, buf: &mut [u8]) -> &str {
-    uxx!(n, buf)
+fn usize_pad(n: usize, width: Option<u8>, pad: char, buf: &mut [u8]) -> &str {
+    uxx_pad!(n, width, pad, buf)
+}
+
+fn usize_hex_pad(
+    n: usize,
+    width: Option<u8>,
+    pad: char,
+    buf: &mut [u8],
+    pretty: bool,
+    lower: bool,
+) -> &str {
+    uxx_hex_pad!(n, width, pad, buf, pretty, lower)
 }
 
 impl uDebug for u8 {
@@ -32,9 +144,19 @@ impl uDebug for u8 {
     where
         W: uWrite + ?Sized,
     {
-        let mut buf: [u8; 3] = [0; 3];
-
-        f.write_str(usize(usize::from(*self), &mut buf))
+        let mut buf: [u8; 18] = [0; 18];
+        if let Some(lower) = f.hex {
+            f.write_str(usize_hex_pad(
+                usize::from(*self),
+                f.width,
+                f.pad,
+                &mut buf,
+                f.pretty,
+                lower,
+            ))
+        } else {
+            f.write_str(usize_pad(usize::from(*self), f.width, f.pad, &mut buf))
+        }
     }
 }
 
@@ -53,9 +175,19 @@ impl uDebug for u16 {
     where
         W: uWrite + ?Sized,
     {
-        let mut buf: [u8; 5] = [0; 5];
-
-        f.write_str(usize(usize::from(*self), &mut buf))
+        let mut buf: [u8; 18] = [0; 18];
+        if let Some(lower) = f.hex {
+            f.write_str(usize_hex_pad(
+                usize::from(*self),
+                f.width,
+                f.pad,
+                &mut buf,
+                f.pretty,
+                lower,
+            ))
+        } else {
+            f.write_str(usize_pad(usize::from(*self), f.width, f.pad, &mut buf))
+        }
     }
 }
 
@@ -74,9 +206,19 @@ impl uDebug for u32 {
     where
         W: uWrite + ?Sized,
     {
-        let mut buf: [u8; 10] = [0; 10];
-
-        f.write_str(usize(*self as usize, &mut buf))
+        let mut buf: [u8; 20] = [0; 20];
+        if let Some(lower) = f.hex {
+            f.write_str(usize_hex_pad(
+                *self as usize,
+                f.width,
+                f.pad,
+                &mut buf,
+                f.pretty,
+                lower,
+            ))
+        } else {
+            f.write_str(usize_pad(*self as usize, f.width, f.pad, &mut buf))
+        }
     }
 }
 
@@ -96,9 +238,12 @@ impl uDebug for u64 {
     where
         W: uWrite + ?Sized,
     {
-        let mut buf: [u8; 20] = [0; 20];
-
-        let s = uxx!(*self, buf);
+        let mut buf: [u8; 28] = [0; 28];
+        let s = if let Some(lower) = f.hex {
+            uxx_hex_pad!(*self, f.width, f.pad, &mut buf, f.pretty, lower)
+        } else {
+            uxx_pad!(*self, f.width, f.pad, &mut buf)
+        };
         f.write_str(s)
     }
 
@@ -107,9 +252,19 @@ impl uDebug for u64 {
     where
         W: uWrite + ?Sized,
     {
-        let mut buf: [u8; 20] = [0; 20];
-
-        f.write_str(usize(*self as usize, &mut buf))
+        let mut buf: [u8; 30] = [0; 30];
+        if let Some(lower) = f.hex {
+            f.write_str(usize_hex_pad(
+                *self as usize,
+                f.width,
+                f.pad,
+                &mut buf,
+                f.pretty,
+                lower,
+            ))
+        } else {
+            f.write_str(usize_pad(*self as usize, f.width, f.pad, &mut buf))
+        }
     }
 }
 
@@ -128,9 +283,12 @@ impl uDebug for u128 {
     where
         W: uWrite + ?Sized,
     {
-        let mut buf: [u8; 39] = [0; 39];
-
-        let s = uxx!(*self, buf);
+        let mut buf: [u8; 49] = [0; 49];
+        let s = if let Some(lower) = f.hex {
+            uxx_hex_pad!(*self, f.width, f.pad, buf, f.pretty, lower)
+        } else {
+            uxx_pad!(*self, f.width, f.pad, buf)
+        };
         f.write_str(s)
     }
 }
