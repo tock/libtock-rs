@@ -234,8 +234,10 @@ fn write(input: TokenStream, newline: bool) -> TokenStream {
                 }
 
                 Piece::Debug { pretty, hex } => {
-                    exprs.push(if hex {
-                        quote!(f.hex(|f| ufmt::uDebug::fmt(#pat, f))?;)
+                    exprs.push(if hex && pretty {
+                        quote!(f.hex(true, |f| ufmt::uDebug::fmt(#pat, f))?;)
+                    } else if hex {
+                        quote!(f.hex(false, |f| ufmt::uDebug::fmt(#pat, f))?;)
                     } else if pretty {
                         quote!(f.pretty(|f| ufmt::uDebug::fmt(#pat, f))?;)
                     } else {
@@ -378,6 +380,7 @@ fn parse<'l>(mut literal: &'l str, span: Span) -> parse::Result<Vec<Piece<'l>>> 
             (head, Some(tail)) => {
                 const DEBUG: &str = ":?}";
                 const DEBUG_HEX: &str = ":x}";
+                const DEBUG_HEX_PRETTY: &str = ":#x}";
                 const DEBUG_PRETTY: &str = ":#?}";
                 const DISPLAY: &str = "}";
                 const ESCAPED_BRACE: &str = "{";
@@ -387,6 +390,7 @@ fn parse<'l>(mut literal: &'l str, span: Span) -> parse::Result<Vec<Piece<'l>>> 
                     || tail.starts_with(DEBUG_PRETTY)
                     || tail.starts_with(DISPLAY)
                     || tail.starts_with(DEBUG_HEX)
+                    || tail.starts_with(DEBUG_HEX_PRETTY)
                 {
                     if buf.is_empty() {
                         if !head.is_empty() {
@@ -417,11 +421,18 @@ fn parse<'l>(mut literal: &'l str, span: Span) -> parse::Result<Vec<Piece<'l>>> 
                         literal = &tail[DEBUG_PRETTY.len()..];
                     } else if tail.starts_with(DEBUG_HEX) {
                         pieces.push(Piece::Debug {
-                            pretty: true,
+                            pretty: false,
                             hex: true,
                         });
 
                         literal = &tail[DEBUG_HEX.len()..];
+                    } else if tail.starts_with(DEBUG_HEX_PRETTY) {
+                        pieces.push(Piece::Debug {
+                            pretty: true,
+                            hex: true,
+                        });
+
+                        literal = &tail[DEBUG_HEX_PRETTY.len()..];
                     } else {
                         pieces.push(Piece::Display);
 
@@ -435,7 +446,7 @@ fn parse<'l>(mut literal: &'l str, span: Span) -> parse::Result<Vec<Piece<'l>>> 
                 } else {
                     return Err(parse::Error::new(
                         span,
-                        "invalid format string: expected `{{`, `{}`, `{:?}` or `{:#?}` or `{:x}`",
+                        "invalid format string: expected `{{`, `{}`, `{:?}` or `{:#?}` or `{:x}` or `{:#x}`",
                     ));
                 }
             }

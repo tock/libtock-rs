@@ -308,12 +308,16 @@ where
     /// Execute the closure with hex-printing enabled
     pub fn hex(
         &mut self,
+        pretty: bool,
         f: impl FnOnce(&mut Self) -> Result<(), W::Error>,
     ) -> Result<(), W::Error> {
-        let hex = self.hex;
+        let old_hex = self.hex;
+        let old_pretty = self.pretty;
+        self.pretty = pretty;
         self.hex = true;
         f(self)?;
-        self.hex = hex;
+        self.hex = old_hex;
+        self.pretty = old_pretty;
         Ok(())
     }
 
