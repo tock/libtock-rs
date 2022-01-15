@@ -2,6 +2,8 @@
 
 set -eux
 
+TBF_HEADER=64
+
 artifact="$(basename $1)"
 rust_target_folder="$(cd $(dirname $1)/../.. && pwd -P)"
 if [ -z $APP_HEAP_SIZE ]; then
@@ -14,11 +16,23 @@ if [ -z $KERNEL_HEAP_SIZE ]; then
 	exit 1
 fi
 
+if [ ! -z $LIBTOCK_PLATFORM ]; then
+    # we are using libtock2
+	PLATFORM=$LIBTOCK_PLATFORM
+	TBF_HEADER=72
+    KERNEL_VERSION="--kernel-major 2 --kernel-minor 0"
+fi
+
 case "${PLATFORM}" in
     "apollo3")
         tockloader_flags=""
         binary_name=cortex-m4.elf
         tockload=n
+        ;;
+    "microbit_v2")
+        tockloader_flags="--bundle-apps"
+        binary_name=cortex-m4.elf
+        tockload=y
         ;;
     "nucleo_f429zi"|"nucleo_f446re")
         tockloader_flags=""
@@ -70,7 +84,7 @@ cp "$1" "${elf_file_name}"
 
 STACK_SIZE=$(nm --print-size --size-sort --radix=d "${elf_file_name}" | grep STACK_MEMORY | cut -d " " -f 2)
 
-elf2tab -n "${artifact}" -o "${tab_file_name}" "${elf_file_name}" --stack ${STACK_SIZE} --app-heap $APP_HEAP_SIZE --kernel-heap $KERNEL_HEAP_SIZE --protected-region-size=64
+elf2tab -n "${artifact}" -o "${tab_file_name}" "${elf_file_name}" --stack ${STACK_SIZE} --app-heap $APP_HEAP_SIZE --kernel-heap $KERNEL_HEAP_SIZE --protected-region-size=$TBF_HEADER $KERNEL_VERSION
 
 if [ $tockload == "n" ]; then
 	echo "Skipping flashing for platform \"${PLATFORM}\""
