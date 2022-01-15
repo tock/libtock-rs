@@ -1,8 +1,16 @@
 #!/usr/bin/env bash
 
-set -eux
-
 TBF_HEADER=64
+KERNEL_VERSION=""
+
+if [ ! -z $LIBTOCK_PLATFORM ]; then
+    # we are using libtock2
+	PLATFORM=$LIBTOCK_PLATFORM
+	TBF_HEADER=72
+    KERNEL_VERSION="--kernel-major 2 --kernel-minor 0"
+fi
+
+set -eux
 
 artifact="$(basename $1)"
 rust_target_folder="$(cd $(dirname $1)/../.. && pwd -P)"
@@ -14,13 +22,6 @@ fi
 if [ -z $KERNEL_HEAP_SIZE ]; then
 	echo "Set KERNEL_HEAP_SIZE to a value"
 	exit 1
-fi
-
-if [ ! -z $LIBTOCK_PLATFORM ]; then
-    # we are using libtock2
-	PLATFORM=$LIBTOCK_PLATFORM
-	TBF_HEADER=72
-    KERNEL_VERSION="--kernel-major 2 --kernel-minor 0"
 fi
 
 case "${PLATFORM}" in
