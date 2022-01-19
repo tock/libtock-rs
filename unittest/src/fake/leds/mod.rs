@@ -1,9 +1,9 @@
-//! Fake implementation of the LowLevelDebug API, documented here:
-//! https://github.com/tock/tock/blob/master/doc/syscalls/00008_low_level_debug.md
+//! Fake implementation of the LEDs API, documented here:
+//! https://github.com/tock/tock/blob/master/doc/syscalls/00002_leds.md
 //!
-//! Like the real API, `LowLevelDebug` prints each message it is commanded to
-//! print. It also keeps a log of the messages as `Message` instances, which can
-//! be retrieved via `take_messages` for use in unit tests.
+//! Like the real API, `Leds` controls a set of fake LEDs. It provides
+//! a function `get_led` used to retrieve the state of an LED.
+
 
 use core::cell::Cell;
 use libtock_platform::{CommandReturn, ErrorCode};
