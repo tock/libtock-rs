@@ -4,7 +4,6 @@
 //! Like the real API, `Leds` controls a set of fake LEDs. It provides
 //! a function `get_led` used to retrieve the state of an LED.
 
-
 use core::cell::Cell;
 use libtock_platform::{CommandReturn, ErrorCode};
 
