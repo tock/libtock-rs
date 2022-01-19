@@ -26,6 +26,7 @@ usage:
 	@echo "    Set the DEBUG flag to enable the debug build"
 	@echo "    Set the FEATURES flag to enable features"
 	@echo "Run 'make flash-<board> EXAMPLE=<>' to flash EXAMPLE to that board"
+	@echo "Run 'make qemu-example EXAMPLE=<>' to run EXAMPLE in QEMU"
 	@echo "Run 'make test' to test any local changes you have made"
 	@echo "Run 'make print-sizes' to print size data for the example binaries"
 
@@ -38,7 +39,7 @@ release=--release
 endif
 
 .PHONY: setup
-setup: setup-qemu
+setup: setup-qemu setup-qemu-2
 	cargo install elf2tab
 	cargo install stack-sizes
 	cargo miri setup
@@ -48,6 +49,12 @@ setup: setup-qemu
 .PHONY: setup-qemu
 setup-qemu:
 	CI=true $(MAKE) -C tock ci-setup-qemu
+
+# Sets up QEMU in the tock2/ directory. We use Tock's QEMU which may contain
+# patches to better support boards that Tock supports.
+.PHONY: setup-qemu-2
+setup-qemu-2:
+	CI=true $(MAKE) -C tock2 ci-setup-qemu
 
 # Builds a Tock kernel for the HiFive board for use by QEMU tests.
 .PHONY: kernel-hifive
@@ -67,6 +74,12 @@ kernel-hifive-2:
 .PHONY: print-sizes
 print-sizes: examples
 	cargo run --release -p print_sizes
+
+# Runs a libtock2 example in QEMU on a simulated HiFive board.
+.PHONY: qemu-example
+qemu-example: kernel-hifive-2
+	LIBTOCK_PLATFORM="hifive1" cargo run --example "$(EXAMPLE)" -p libtock2 \
+		--release --target=riscv32imac-unknown-none-elf -- --deploy qemu
 
 # Runs the libtock_test tests in QEMU on a simulated HiFive board.
 .PHONY: test-qemu-hifive
@@ -100,7 +113,7 @@ EXCLUDE_MIRI := $(EXCLUDE_RUNTIME) --exclude libtock_codegen \
 # Arguments to pass to cargo to exclude `std` and crates that depend on it. Used
 # when we build a crate for an embedded target, as those targets lack `std`.
 EXCLUDE_STD := --exclude libtock_unittest --exclude print_sizes \
-               --exclude syscalls_tests --exclude test_runner
+               --exclude runner --exclude syscalls_tests --exclude test_runner
 
 # Some of our crates should build with a stable toolchain. This verifies those
 # crates don't depend on unstable features by using cargo check. We specify a

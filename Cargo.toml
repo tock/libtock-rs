@@ -90,6 +90,7 @@ members = [
     "libtock2",
     "panic_handlers/small_panic",
     "platform",
+    "runner",
     "runtime",
     "syscalls_tests",
     "test_runner",
