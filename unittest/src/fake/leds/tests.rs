@@ -21,7 +21,7 @@ fn command() {
     assert_eq!(leds.get_led(0), Some(false));
 }
 
-// Integration test that verifies LowLevelDebug works with fake::Kernel and
+// Integration test that verifies Leds works with fake::Kernel and
 // libtock_platform::Syscalls.
 #[test]
 fn kernel_integration() {
