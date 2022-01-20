@@ -71,6 +71,12 @@ SECTIONS {
         LONG(ADDR(.bss));
 
         *(.start)
+
+        /* .text must be aligned to a multiple of 4 bytes. elf2tab always puts
+         * .text immediately after .start, even if the ELF file specifies a
+         * different address (with alignment padding). Therefore, we have to
+         * add the alignment padding into .start. */
+        . = ALIGN(4);
     } > FLASH
 
     /* Text section -- the application's code. */
