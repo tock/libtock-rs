@@ -78,10 +78,6 @@ const LED_TOGGLE: u32 = 3;
 
 impl<const NUM_LEDS: usize> Leds<NUM_LEDS> {
     pub fn get_led(&self, led: usize) -> Option<bool> {
-        if led < NUM_LEDS {
-            Some(self.leds[led].get())
-        } else {
-            None
-        }
+        self.leds.get(led).map(|led| led.get())
     }
 }
