@@ -1,5 +1,4 @@
-//! An extremely simple libtock-rs example. Just prints out a few numbers using
-//! the LowLevelDebug capsule then terminates.
+//! An extremely simple libtock-rs example. Just turns on all the LEDs.
 
 #![no_main]
 #![no_std]
@@ -11,5 +10,9 @@ set_main! {main}
 stack_size! {0x100}
 
 fn main() {
-    Leds::on(0);
+    if let Some(leds_count) = Leds::count() {
+        for led_index in 0..leds_count {
+            Leds::on(led_index as u32);
+        }
+    }
 }

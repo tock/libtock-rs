@@ -7,7 +7,6 @@ fn command() {
     use fake::SyscallDriver;
     let leds = Leds::<10>::new();
     let value = leds.command(DRIVER_CHECK, 1, 2);
-    assert!(value.is_success_u32());
     assert_eq!(value.get_success_u32(), Some(10));
     assert!(leds.command(LED_ON, 11, 0).is_failure());
     assert_eq!(leds.get_led(0), Some(false));

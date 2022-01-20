@@ -5,7 +5,7 @@ type Leds = super::Leds<fake::Syscalls>;
 #[test]
 fn no_driver() {
     let _kernel = fake::Kernel::new();
-    assert!(!Leds::driver_check());
+    assert!(Leds::count().is_none());
 }
 
 #[test]
@@ -14,7 +14,7 @@ fn driver_check() {
     let driver = fake::Leds::<10>::new();
     kernel.add_driver(&driver);
 
-    assert!(Leds::driver_check());
+    assert!(Leds::count().is_some());
     for led in 0..10 {
         assert_eq!(driver.get_led(led), Some(false));
     }
@@ -25,7 +25,7 @@ fn num_leds() {
     let kernel = fake::Kernel::new();
     let driver = fake::Leds::<10>::new();
     kernel.add_driver(&driver);
-    assert_eq!(Leds::count(), 10);
+    assert_eq!(Leds::count().unwrap_or_default(), 10);
 }
 
 #[test]
@@ -79,7 +79,7 @@ fn no_led() {
     kernel.add_driver(&driver);
 
     Leds::on(11);
-    for led in 0..Leds::count() {
+    for led in 0..Leds::count().unwrap_or_default() {
         assert_eq!(driver.get_led(led), Some(false));
     }
 }
