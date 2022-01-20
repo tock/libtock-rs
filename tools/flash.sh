@@ -30,6 +30,11 @@ case "${PLATFORM}" in
         binary_name=cortex-m4.elf
         tockload=n
         ;;
+    "esp32-c3-devkitM-1")
+        tockloader_flags=""
+        binary_name=rv32imac.elf
+        tockload=n
+        ;;
     "microbit_v2")
         tockloader_flags="--bundle-apps"
         binary_name=cortex-m4.elf
