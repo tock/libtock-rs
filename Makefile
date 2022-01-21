@@ -125,7 +125,7 @@ test-stable:
 		$(EXCLUDE_RUNTIME) --exclude libtock --exclude libtock_core
 
 .PHONY: test
-test: examples test-qemu-hifive test-stable
+test: examples test-stable
 	PLATFORM=nrf52 cargo test $(EXCLUDE_RUNTIME) --workspace
 	# TODO: When we have a working embedded test harness, change the libtock2
 	# builds to --all-targets rather than --examples.
@@ -251,3 +251,4 @@ flash-msp432:
 clean:
 	cargo clean
 	$(MAKE) -C tock clean
+	$(MAKE) -C tock2 clean

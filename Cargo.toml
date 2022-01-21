@@ -82,7 +82,7 @@ lto = true
 debug = true
 
 [workspace]
-exclude = [ "tock" ]
+exclude = ["tock", "tock2"]
 members = [
     "apis/low_level_debug",
     "codegen",
