@@ -5,7 +5,7 @@ type Leds = super::Leds<fake::Syscalls>;
 #[test]
 fn no_driver() {
     let _kernel = fake::Kernel::new();
-    assert!(Leds::count().is_none());
+    assert_eq!(Leds::count(), None);
 }
 
 #[test]

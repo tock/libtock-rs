@@ -1,5 +1,6 @@
 use crate::fake;
 use fake::leds::*;
+use libtock_platform::ErrorCode;
 
 // Tests the command implementation.
 #[test]
@@ -8,7 +9,10 @@ fn command() {
     let leds = Leds::<10>::new();
     let value = leds.command(DRIVER_CHECK, 1, 2);
     assert_eq!(value.get_success_u32(), Some(10));
-    assert!(leds.command(LED_ON, 11, 0).is_failure());
+    assert_eq!(
+        leds.command(LED_ON, 11, 0).get_failure(),
+        Some(ErrorCode::Invalid)
+    );
     assert_eq!(leds.get_led(0), Some(false));
     assert!(leds.command(LED_ON, 0, 0).is_success());
     assert_eq!(leds.get_led(0), Some(true));
@@ -31,7 +35,10 @@ fn kernel_integration() {
     let value = fake::Syscalls::command(DRIVER_NUMBER, DRIVER_CHECK, 1, 2);
     assert!(value.is_success_u32());
     assert_eq!(value.get_success_u32(), Some(10));
-    assert!(fake::Syscalls::command(DRIVER_NUMBER, LED_ON, 11, 0).is_failure());
+    assert_eq!(
+        fake::Syscalls::command(DRIVER_NUMBER, LED_ON, 11, 0).get_failure(),
+        Some(ErrorCode::Invalid)
+    );
     assert_eq!(leds.get_led(0), Some(false));
     assert!(fake::Syscalls::command(DRIVER_NUMBER, LED_ON, 0, 0).is_success());
     assert_eq!(leds.get_led(0), Some(true));
