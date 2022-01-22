@@ -10,11 +10,13 @@
 //! (e.g. `fake::Console`).
 
 mod kernel;
+mod leds;
 mod low_level_debug;
 mod syscall_driver;
 mod syscalls;
 
 pub use kernel::Kernel;
+pub use leds::Leds;
 pub use low_level_debug::{LowLevelDebug, Message};
 pub use syscall_driver::SyscallDriver;
 pub use syscalls::Syscalls;

@@ -84,6 +84,7 @@ debug = true
 [workspace]
 exclude = [ "tock" ]
 members = [
+    "apis/leds",
     "apis/low_level_debug",
     "codegen",
     "core",

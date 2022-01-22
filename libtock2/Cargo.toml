@@ -12,6 +12,7 @@ version = "0.1.0"
 [dependencies]
 libtock_platform = { path = "../platform" }
 libtock_runtime = { path = "../runtime" }
+libtock_leds = { path = "../apis/leds" }
 libtock_low_level_debug = { path = "../apis/low_level_debug" }
 
 # TODO: Implement a panic handler with more debugging functionality, then
