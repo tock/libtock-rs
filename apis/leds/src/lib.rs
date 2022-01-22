@@ -19,10 +19,10 @@ impl<S: Syscalls> Leds<S> {
     /// Returns `Some(number_of_leds)` if the driver was present. This does not necessarily mean
     /// that the driver is working, as it may still fail to allocate grant
     /// memory.
-    pub fn count() -> Option<usize> {
+    pub fn count() -> Option<u32> {
         S::command(DRIVER_ID, LEDS_COUNT, 0, 0)
             .get_success_u32()
-            .map(|leds_count| Some(leds_count as usize))
+            .map(|leds_count| Some(leds_count))
             .unwrap_or(None)
     }
 
