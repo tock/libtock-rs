@@ -20,10 +20,7 @@ impl<S: Syscalls> Leds<S> {
     /// that the driver is working, as it may still fail to allocate grant
     /// memory.
     pub fn count() -> Option<u32> {
-        S::command(DRIVER_ID, LEDS_COUNT, 0, 0)
-            .get_success_u32()
-            .map(|leds_count| Some(leds_count))
-            .unwrap_or(None)
+        S::command(DRIVER_ID, LEDS_COUNT, 0, 0).get_success_u32()
     }
 
     pub fn on(led: u32) {
