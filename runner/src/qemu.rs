@@ -19,12 +19,19 @@ pub fn deploy(cli: &Cli, tab_path: PathBuf) -> Child {
         "-kernel", "tock2/target/riscv32imac-unknown-none-elf/release/hifive1",
         "-M", "sifive_e,revb=true",
         "-nographic",
+        "-serial", "mon:stdio",
     ]);
-    // QEMU does something to its stdin that prevents Ctrl+C from generating
-    // SIGINT. If we set QEMU's stdin to be our stdin, then Ctrl+C will not
-    // close us. To prevent that, we set QEMU's stdin to null.
-    qemu.stdin(Stdio::null());
+    // If we let QEMU inherit its stdin from us, it will set it to raw mode,
+    // which prevents Ctrl+C from generating SIGINT. QEMU will not exit when
+    // Ctrl+C is entered, making our runner hard to close. Instead, we forward
+    // stdin to QEMU ourselves -- see output_processor.rs for more details.
+    qemu.stdin(Stdio::piped());
     qemu.stdout(Stdio::piped());
+    // Because we set the terminal to raw mode while running QEMU, but QEMU's
+    // stdin is not connected to a terminal, QEMU does not know it needs to use
+    // CRLF line endings when printing to stderr. To convert, we also pipe
+    // QEMU's stderr through us and output_processor converts the line endings.
+    qemu.stderr(Stdio::piped());
     if cli.verbose {
         println!("QEMU command: {:?}", qemu);
         println!("Spawning QEMU")

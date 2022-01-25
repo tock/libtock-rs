@@ -31,11 +31,9 @@ pub fn convert_elf(cli: &Cli) -> OutFiles {
     // elf2tab to create it, and later verify that it exists.
     if let Err(io_error) = remove_file(&tbf_path) {
         // Ignore file-no-found errors, panic on any other error.
-        assert_eq!(
-            io_error.kind(),
-            ErrorKind::NotFound,
-            "Unable to remove the TBF file"
-        );
+        if io_error.kind() != ErrorKind::NotFound {
+            panic!("Unable to remove the TBF file. Error: {}", io_error);
+        }
     }
 
     let mut command = Command::new("elf2tab");

@@ -11,4 +11,5 @@ version = "0.1.0"
 [dependencies]
 clap = { features = ["derive"], version = "3.0.10" }
 elf = "0.0.10"
-signal-hook = "0.3.13"
+libc = "0.2.113"
+termion = "1.5.6"
