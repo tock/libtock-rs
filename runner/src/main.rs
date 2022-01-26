@@ -4,6 +4,7 @@ mod qemu;
 mod tockloader;
 
 use clap::{ArgEnum, Parser};
+use std::env::{var, VarError};
 use std::path::PathBuf;
 
 /// Converts ELF binaries into Tock Binary Format binaries and runs them on a
@@ -23,7 +24,7 @@ pub struct Cli {
     verbose: bool,
 }
 
-#[derive(ArgEnum, Clone, Debug)]
+#[derive(ArgEnum, Clone, Copy, Debug)]
 pub enum Deploy {
     Qemu,
     Tockloader,
@@ -32,10 +33,25 @@ pub enum Deploy {
 fn main() {
     let cli = Cli::parse();
     let paths = elf2tab::convert_elf(&cli);
-    let child = match cli.deploy {
+    let deploy = match cli.deploy {
         None => return,
-        Some(Deploy::Qemu) => qemu::deploy(&cli, paths.tbf_path),
-        Some(Deploy::Tockloader) => tockloader::deploy(&cli, paths.tab_path),
+        Some(deploy) => deploy,
+    };
+    let platform = match var("LIBTOCK_PLATFORM") {
+        Err(VarError::NotPresent) => {
+            panic!("LIBTOCK_PLATFORM must be specified to deploy")
+        }
+        Err(VarError::NotUnicode(platform)) => {
+            panic!("Non-UTF-8 LIBTOCK_PLATFORM value: {:?}", platform)
+        }
+        Ok(platform) => platform,
+    };
+    if cli.verbose {
+        println!("Detected platform {}", platform);
+    }
+    let child = match deploy {
+        Deploy::Qemu => qemu::deploy(&cli, platform, paths.tbf_path),
+        Deploy::Tockloader => tockloader::deploy(&cli, platform, paths.tab_path),
     };
     output_processor::process(&cli, child);
 }

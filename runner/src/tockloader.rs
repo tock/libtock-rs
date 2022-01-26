@@ -1,5 +1,4 @@
 use super::Cli;
-use std::env::{var, VarError};
 use std::path::PathBuf;
 use std::process::{Child, Command, Stdio};
 
@@ -8,22 +7,7 @@ use std::process::{Child, Command, Stdio};
 // Note: This function is untested, as its author does not have hardware that
 // works with tockloader. If you use it, please report back on how it works so
 // we can fix it or remove this notice!
-pub fn deploy(cli: &Cli, tab_path: PathBuf) -> Child {
-    // The flags we pass to tockloader depend on the platform we are deploying
-    // to. Read the platform from the LIBTOCK_PLATFORM variable and look up the
-    // flags to use.
-    let platform = match var("LIBTOCK_PLATFORM") {
-        Err(VarError::NotPresent) => {
-            panic!("LIBTOCK_PLATFORM must be specified to deploy using tockloader")
-        }
-        Err(VarError::NotUnicode(platform)) => {
-            panic!("Non-UTF-8 LIBTOCK_PLATFORM value: {:?}", platform)
-        }
-        Ok(platform) => platform,
-    };
-    if cli.verbose {
-        println!("Detected platform {}", platform);
-    }
+pub fn deploy(cli: &Cli, platform: String, tab_path: PathBuf) -> Child {
     let flags: &[_] = match platform.as_str() {
         "hail" => &[],
         "microbit_v2" => &["--bundle-apps"],

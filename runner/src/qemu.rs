@@ -4,23 +4,19 @@ use std::process::{Child, Command, Stdio};
 
 // Spawns a QEMU VM with a simulated Tock system and the process binary. Returns
 // the handle for the spawned QEMU process.
-pub fn deploy(cli: &Cli, tab_path: PathBuf) -> Child {
+pub fn deploy(cli: &Cli, platform: String, tab_path: PathBuf) -> Child {
+    let platform_args = get_platform_args(platform);
     let device = format!(
-        "loader,file={},addr=0x20040000",
+        "loader,file={},addr={}",
         tab_path
             .into_os_string()
             .into_string()
-            .expect("Non-UTF-8 path")
+            .expect("Non-UTF-8 path"),
+        platform_args.process_binary_load_address,
     );
     let mut qemu = Command::new("tock2/tools/qemu/build/qemu-system-riscv32");
-    #[rustfmt::skip]
-    qemu.args([
-        "-device", &device,
-        "-kernel", "tock2/target/riscv32imac-unknown-none-elf/release/hifive1",
-        "-M", "sifive_e,revb=true",
-        "-nographic",
-        "-serial", "mon:stdio",
-    ]);
+    qemu.args(["-device", &device, "-nographic", "-serial", "mon:stdio"]);
+    qemu.args(platform_args.fixed_args);
     // If we let QEMU inherit its stdin from us, it will set it to raw mode,
     // which prevents Ctrl+C from generating SIGINT. QEMU will not exit when
     // Ctrl+C is entered, making our runner hard to close. Instead, we forward
@@ -37,4 +33,35 @@ pub fn deploy(cli: &Cli, tab_path: PathBuf) -> Child {
         println!("Spawning QEMU")
     }
     qemu.spawn().expect("failed to spawn QEMU")
+}
+
+// Returns the command line arguments for the given platform to qemu. Panics if
+// an unknown platform is passed.
+fn get_platform_args(platform: String) -> PlatformConfig {
+    match platform.as_str() {
+        "hifive1" => PlatformConfig {
+            #[rustfmt::skip]
+            fixed_args: &[
+                "-kernel", "tock2/target/riscv32imac-unknown-none-elf/release/hifive1",
+                "-M", "sifive_e,revb=true",
+            ],
+            process_binary_load_address: "0x20040000",
+        },
+        "opentitan" => PlatformConfig {
+            #[rustfmt::skip]
+            fixed_args: &[
+                "-bios", "tock2/tools/qemu-runner/opentitan-boot-rom.elf",
+                "-kernel", "tock2/target/riscv32imc-unknown-none-elf/release/earlgrey-cw310",
+                "-M", "opentitan",
+            ],
+            process_binary_load_address: "0x20030000",
+        },
+        _ => panic!("Cannot deploy to platform {} via QEMU.", platform),
+    }
+}
+
+// QEMU configuration information that is specific to each platform.
+struct PlatformConfig {
+    fixed_args: &'static [&'static str],
+    process_binary_load_address: &'static str,
 }
