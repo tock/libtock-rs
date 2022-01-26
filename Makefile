@@ -70,6 +70,14 @@ kernel-hifive-2:
 	$(MAKE) -C tock2/boards/hifive1 \
 		$(CURDIR)/tock2/target/riscv32imac-unknown-none-elf/release/hifive1.elf
 
+# Builds a Tock kernel for the OpenTitan board on the cw310 FPGA for use by QEMU
+# tests.
+.PHONY: kernel-opentitan
+kernel-opentitan:
+	CARGO_TARGET_RISCV32IMC_UNKNOWN_NONE_ELF_RUNNER="[]" \
+		$(MAKE) -C tock2/boards/opentitan/earlgrey-cw310 \
+		$(CURDIR)/tock2/target/riscv32imc-unknown-none-elf/release/earlgrey-cw310.elf
+
 # Prints out the sizes of the example binaries.
 .PHONY: print-sizes
 print-sizes: examples
