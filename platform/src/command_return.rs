@@ -260,6 +260,8 @@ mod sealed {
 
 /// Output from a successful `command` syscall.
 pub trait SuccessData: sealed::Sealed {
+    /// The return variant for this success type, stored in `r0` after
+    /// performing a `command` syscall.
     const RETURN_VARIANT: ReturnVariant;
 
     /// Constructs the success data given the raw register values.
@@ -274,8 +276,6 @@ impl SuccessData for () {
 }
 impl sealed::Sealed for u32 {}
 impl SuccessData for u32 {
-    /// The return variant for this success type, stored in `r0` after
-    /// performing a `command` syscall.
     const RETURN_VARIANT: ReturnVariant = return_variant::SUCCESS_U32;
 
     fn from_raw_values(r1: u32, _r2: u32, _r3: u32) -> Self {
