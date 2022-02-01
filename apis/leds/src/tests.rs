@@ -15,7 +15,7 @@ fn driver_check() {
     let driver = fake::Leds::<10>::new();
     kernel.add_driver(&driver);
 
-    assert!(Leds::count().is_ok());
+    assert_eq!(Leds::count(), Ok(10));
     for led in 0..10 {
         assert_eq!(driver.get_led(led), Some(false));
     }
@@ -35,7 +35,7 @@ fn on() {
     let driver = fake::Leds::<10>::new();
     kernel.add_driver(&driver);
 
-    assert!(Leds::on(0).is_ok());
+    assert_eq!(Leds::on(0), Ok(()));
     assert_eq!(driver.get_led(0), Some(true));
 }
 
@@ -45,7 +45,7 @@ fn off() {
     let driver = fake::Leds::<10>::new();
     kernel.add_driver(&driver);
 
-    assert!(Leds::off(0).is_ok());
+    assert_eq!(Leds::off(0), Ok(()));
     assert_eq!(driver.get_led(0), Some(false));
 }
 
@@ -55,9 +55,9 @@ fn toggle() {
     let driver = fake::Leds::<10>::new();
     kernel.add_driver(&driver);
 
-    assert!(Leds::toggle(0).is_ok());
+    assert_eq!(Leds::toggle(0), Ok(()));
     assert_eq!(driver.get_led(0), Some(true));
-    assert!(Leds::toggle(0).is_ok());
+    assert_eq!(Leds::toggle(0), Ok(()));
     assert_eq!(driver.get_led(0), Some(false));
 }
 
@@ -67,9 +67,9 @@ fn on_off() {
     let driver = fake::Leds::<10>::new();
     kernel.add_driver(&driver);
 
-    assert!(Leds::on(0).is_ok());
+    assert_eq!(Leds::on(0), Ok(()));
     assert_eq!(driver.get_led(0), Some(true));
-    assert!(Leds::off(0).is_ok());
+    assert_eq!(Leds::off(0), Ok(()));
     assert_eq!(driver.get_led(0), Some(false));
 }
 
@@ -79,7 +79,7 @@ fn no_led() {
     let driver = fake::Leds::<10>::new();
     kernel.add_driver(&driver);
 
-    assert!(Leds::on(11).is_err());
+    assert_eq!(Leds::on(11), Err(ErrorCode::Invalid));
     for led in 0..Leds::count().unwrap_or_default() {
         assert_eq!(driver.get_led(led), Some(false));
     }
