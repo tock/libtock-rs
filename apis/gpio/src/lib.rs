@@ -1,17 +1,18 @@
 #![no_std]
 
-use core::{convert::TryFrom, marker::PhantomData};
+use core::marker::PhantomData;
 
 use libtock_platform::{ErrorCode, Syscalls};
 
-/// The LEDs driver
+/// The Gpios driver
 ///
 /// # Example
 /// ```ignore
-/// use libtock2::Leds;
+/// use libtock2::Gpios;
 ///
 /// // Turn on led 0
-/// Leds::on(0);
+/// let pin = Gpios::get_pin(0)?;
+///
 /// ```
 pub struct Gpio<S: Syscalls>(S);
 
@@ -25,15 +26,68 @@ impl<S: Syscalls> Gpio<S> {
         S::command(DRIVER_ID, GPIO_COUNT, 0, 0).is_success_u32()
     }
 
-    pub fn gpios() -> Gpios<'static, S> {
-        let num_gpios = S::command(DRIVER_ID, GPIO_COUNT, 0, 0)
-            .get_success_u32()
-            .unwrap_or_default() as usize;
-        Gpios {
-            num_gpios,
-            current_gpio: 0,
-            _syscalls: &PhantomData,
+    fn enable_gpio_output(pin: u32) -> Result<(), ErrorCode> {
+        if let Some(error) = S::command(DRIVER_ID, GPIO_ENABLE_OUTPUT, pin, 0).get_failure() {
+            Err(error)
+        } else {
+            Ok(())
         }
+    }
+
+    fn enable_gpio_input(pin: u32, mode: u32) -> Result<(), ErrorCode> {
+        if let Some(error) = S::command(DRIVER_ID, GPIO_ENABLE_INPUT, pin, mode).get_failure() {
+            Err(error)
+        } else {
+            Ok(())
+        }
+    }
+
+    fn write(pin: u32, state: GpioState) -> Result<(), ErrorCode> {
+        let action = match state {
+            GpioState::Low => GPIO_CLEAR,
+            _ => GPIO_SET,
+        };
+        if let Some(error) = S::command(DRIVER_ID, action, pin, 0).get_failure() {
+            Err(error)
+        } else {
+            Ok(())
+        }
+    }
+
+    fn read(pin: u32) -> Result<GpioState, ErrorCode> {
+        let command_return = S::command(DRIVER_ID, GPIO_READ_INPUT, pin, 0);
+        if let Some(error) = command_return.get_failure() {
+            Err(error)
+        } else {
+            command_return
+                .get_success_u32()
+                .map(|v| Ok(v.into()))
+                .unwrap_or(Err(ErrorCode::Fail)) // TODO replace with BadRValue
+        }
+    }
+
+    fn toggle(pin: u32) -> Result<(), ErrorCode> {
+        if let Some(error) = S::command(DRIVER_ID, GPIO_TOGGLE, pin, 0).get_failure() {
+            Err(error)
+        } else {
+            Ok(())
+        }
+    }
+
+    fn disable(pin: u32) -> Result<(), ErrorCode> {
+        if let Some(error) = S::command(DRIVER_ID, GPIO_DISABLE, pin, 0).get_failure() {
+            Err(error)
+        } else {
+            Ok(())
+        }
+    }
+
+    pub fn get_pin(pin: u32) -> Result<Pin<S>, ErrorCode> {
+        Self::disable(pin)?;
+        Ok(Pin {
+            pin_number: pin,
+            _syscalls: PhantomData,
+        })
     }
 }
 
@@ -75,27 +129,19 @@ impl Pull for PullNone {
     const MODE: u32 = 0;
 }
 
-pub struct Pin<'a, S: Syscalls> {
+pub struct Pin<S: Syscalls> {
     pin_number: u32,
-    _gpio: &'a PhantomData<S>,
+    _syscalls: PhantomData<S>,
 }
 
-impl<'a, S: Syscalls> Pin<'a, S> {
-    pub(crate) fn make_output(&'a self) -> Result<OutputPin<'a, S>, ErrorCode> {
-        if let Some(error) =
-            S::command(DRIVER_ID, GPIO_ENABLE_OUTPUT, self.pin_number, 0).get_failure()
-        {
-            return Err(error);
-        }
+impl<S: Syscalls> Pin<S> {
+    pub fn make_output(&mut self) -> Result<OutputPin<S>, ErrorCode> {
+        Gpio::<S>::enable_gpio_output(self.pin_number)?;
         Ok(OutputPin { pin: self })
     }
 
-    pub(crate) fn make_input<P: Pull>(&'a self) -> Result<InputPin<'a, S, P>, ErrorCode> {
-        if let Some(error) =
-            S::command(DRIVER_ID, GPIO_ENABLE_INPUT, self.pin_number, P::MODE).get_failure()
-        {
-            return Err(error);
-        }
+    pub fn make_input<P: Pull>(&self) -> Result<InputPin<S, P>, ErrorCode> {
+        Gpio::<S>::enable_gpio_input(self.pin_number, P::MODE)?;
         Ok(InputPin {
             pin: self,
             _pull: PhantomData,
@@ -104,90 +150,39 @@ impl<'a, S: Syscalls> Pin<'a, S> {
 }
 
 pub struct OutputPin<'a, S: Syscalls> {
-    pin: &'a Pin<'a, S>,
+    pin: &'a Pin<S>,
 }
 
 impl<'a, S: Syscalls> OutputPin<'a, S> {
     pub fn toggle(&mut self) -> Result<(), ErrorCode> {
-        if let Some(error) =
-            S::command(DRIVER_ID, GPIO_TOGGLE, self.pin.pin_number, 0).get_failure()
-        {
-            Err(error)
-        } else {
-            Ok(())
-        }
+        Gpio::<S>::toggle(self.pin.pin_number)
     }
     pub fn set(&mut self) -> Result<(), ErrorCode> {
-        if let Some(error) = S::command(DRIVER_ID, GPIO_SET, self.pin.pin_number, 0).get_failure() {
-            Err(error)
-        } else {
-            Ok(())
-        }
+        Gpio::<S>::write(self.pin.pin_number, GpioState::High)
     }
     pub fn clear(&mut self) -> Result<(), ErrorCode> {
-        if let Some(error) = S::command(DRIVER_ID, GPIO_CLEAR, self.pin.pin_number, 0).get_failure()
-        {
-            Err(error)
-        } else {
-            Ok(())
-        }
+        Gpio::<S>::write(self.pin.pin_number, GpioState::Low)
     }
 }
 
 pub struct InputPin<'a, S: Syscalls, P: Pull> {
-    pin: &'a Pin<'a, S>,
+    pin: &'a Pin<S>,
     _pull: PhantomData<P>,
 }
 
 impl<'a, S: Syscalls, P: Pull> InputPin<'a, S, P> {
     pub fn read(&self) -> Option<GpioState> {
-        S::command(DRIVER_ID, GPIO_READ_INPUT, self.pin.pin_number, 0)
-            .get_success_u32()
-            .map(|v| v.into())
-    }
-}
-
-impl<'a, S: Syscalls> TryFrom<&'a Pin<'a, S>> for OutputPin<'a, S> {
-    type Error = ErrorCode;
-
-    fn try_from(pin: &'a Pin<'a, S>) -> Result<OutputPin<'a, S>, ErrorCode> {
-        pin.make_output()
-    }
-}
-
-impl<'a, S: Syscalls, P: Pull> TryFrom<&'a Pin<'a, S>> for InputPin<'a, S, P> {
-    type Error = ErrorCode;
-
-    fn try_from(pin: &'a Pin<'a, S>) -> Result<InputPin<'a, S, P>, ErrorCode> {
-        pin.make_input()
-    }
-}
-
-pub struct Gpios<'a, S: Syscalls> {
-    num_gpios: usize,
-    current_gpio: usize,
-    _syscalls: &'a PhantomData<S>,
-}
-
-impl<'a, S: Syscalls> Iterator for Gpios<'a, S> {
-    type Item = Pin<'a, S>;
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.current_gpio < self.num_gpios {
-            let pin_number = self.current_gpio as u32;
-            self.current_gpio += 1;
-            Some(Pin {
-                pin_number,
-                _gpio: &PhantomData,
-            })
+        if let Ok(state) = Gpio::<S>::read(self.pin.pin_number) {
+            Some(state)
         } else {
             None
         }
     }
 }
 
-impl<'a, S: Syscalls> Drop for Pin<'a, S> {
+impl<S: Syscalls> Drop for Pin<S> {
     fn drop(&mut self) {
-        S::command(DRIVER_ID, GPIO_DISABLE, self.pin_number, 0);
+        let _ = Gpio::<S>::disable(self.pin_number);
     }
 }
 

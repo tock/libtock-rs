@@ -1,4 +1,8 @@
+use core::convert::TryInto;
+
 use libtock_unittest::fake;
+
+use crate::{InputPin, OutputPin, PullNone};
 
 type Gpio = super::Gpio<fake::Syscalls>;
 
@@ -8,7 +12,7 @@ fn no_driver() {
     assert!(Gpio::driver_check());
 }
 
-// #[test]
+// // #[test]
 // fn driver_check() {
 //     let kernel = fake::Kernel::new();
 //     let driver = fake::Leds::<10>::new();
