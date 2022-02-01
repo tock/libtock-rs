@@ -1,9 +1,9 @@
 use core::{convert::TryFrom, mem::transmute};
 
 // TODO: Add a ufmt debug implementation for process binaries to use.
-/// An error code the Tock kernel may return, as specified in
-/// [TRD 104][error-codes]. Note that `BADRVAL` is not included, as it cannot be
-/// produced by the Tock kernel.
+/// An error code that libtock-rs APIs may return, as specified in
+/// [TRD 104][error-codes]. Note that while `BADRVAL` can never be produced by
+/// the kernel, it can be produced by userspace APIs.
 /// 
 /// [error-codes]: https://github.com/tock/tock/blob/master/doc/reference/trd104-syscalls.md#33-error-codes
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -23,6 +23,7 @@ pub enum ErrorCode {
     NoDevice = 11,
     Uninstalled = 12,
     NoAck = 13,
+    BadRVal = 1024,
 
     // Error codes reserved for future use. We have to include these for future
     // compatibility -- this allows process binaries compiled with this version
@@ -241,7 +242,7 @@ impl TryFrom<u32> for ErrorCode {
     type Error = NotAnErrorCode;
 
     fn try_from(value: u32) -> Result<Self, Self::Error> {
-        if (1..=1023).contains(&value) {
+        if (1..=1024).contains(&value) {
             Ok(unsafe { transmute(value as u16) })
         } else {
             Err(NotAnErrorCode)
