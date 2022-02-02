@@ -3,7 +3,7 @@
 
 pub mod allow_ro;
 pub mod allow_rw;
-mod command_return;
+pub mod command_return;
 mod constants;
 mod default_config;
 mod error_code;
