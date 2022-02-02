@@ -51,31 +51,12 @@ impl<S: Syscalls> Buttons<S> {
     /// that the driver is working, as it may still fail to allocate grant
     /// memory.
     pub fn count() -> Result<u32, ErrorCode> {
-        let command_return = S::command(DRIVER_ID, BUTTONS_COUNT, 0, 0);
-        if let Some(error) = command_return.get_failure() {
-            Err(error)
-        } else {
-            match command_return.get_success_u32() {
-                Some(value) => Ok(value.into()),
-                None => {
-                    unreachable!()
-                }
-            }
-        }
+        Ok(S::command(DRIVER_ID, BUTTONS_COUNT, 0, 0).to_result()?)
     }
 
     pub fn read(button: u32) -> Result<ButtonState, ErrorCode> {
-        let command_return = S::command(DRIVER_ID, BUTTONS_READ, button, 0);
-        if let Some(error) = command_return.get_failure() {
-            Err(error)
-        } else {
-            match command_return.get_success_u32() {
-                Some(value) => Ok(value.into()),
-                None => {
-                    unreachable!()
-                }
-            }
-        }
+        let button_state: u32 = S::command(DRIVER_ID, BUTTONS_READ, button, 0).to_result()?;
+        Ok(button_state.into())
     }
 
     pub fn is_pressed(button: u32) -> bool {
@@ -91,23 +72,11 @@ impl<S: Syscalls> Buttons<S> {
     }
 
     pub fn enable_interrupts(button: u32) -> Result<(), ErrorCode> {
-        if let Some(error) =
-            S::command(DRIVER_ID, BUTTONS_ENABLE_INTERRUPTS, button, 0).get_failure()
-        {
-            Err(error)
-        } else {
-            Ok(())
-        }
+        S::command(DRIVER_ID, BUTTONS_ENABLE_INTERRUPTS, button, 0).to_result()
     }
 
     pub fn disable_interrupts(button: u32) -> Result<(), ErrorCode> {
-        if let Some(error) =
-            S::command(DRIVER_ID, BUTTONS_DISABLE_INTERRUPTS, button, 0).get_failure()
-        {
-            Err(error)
-        } else {
-            Ok(())
-        }
+        S::command(DRIVER_ID, BUTTONS_DISABLE_INTERRUPTS, button, 0).to_result()
     }
 
     pub fn register_listener<'share, F: Fn(u32, ButtonState)>(
