@@ -259,6 +259,11 @@ mod sealed {
 }
 
 /// Output from a successful `command` syscall.
+///
+/// This trait is [sealed], meaning foreign implementations cannot be defined,
+/// even though it can be referenced by foreign crates.
+///
+/// [sealed]: https://rust-lang.github.io/api-guidelines/future-proofing.html#sealed-traits-protect-against-downstream-implementations-c-sealed
 pub trait SuccessData: sealed::Sealed {
     /// The return variant for this success type, stored in `r0` after
     /// performing a `command` syscall.
@@ -316,6 +321,11 @@ impl SuccessData for (u32, u32, u32) {
 }
 
 /// Output from a failed `command` syscall.
+///
+/// This trait is [sealed], meaning foreign implementations cannot be defined,
+/// even though it can be referenced by foreign crates.
+///
+/// [sealed]: https://rust-lang.github.io/api-guidelines/future-proofing.html#sealed-traits-protect-against-downstream-implementations-c-sealed
 pub unsafe trait FailureData: sealed::Sealed {
     /// The return variant for this failure type, stored in `r0` after
     /// performing a `command` syscall.
