@@ -1,8 +1,8 @@
 #![no_std]
 
-use core::cell::Cell;
-
-use libtock_platform::{share, subscribe::AnyId, DefaultConfig, ErrorCode, Syscalls, Upcall};
+use libtock_platform::{
+    share::Handle, subscribe::OneId, DefaultConfig, ErrorCode, Subscribe, Syscalls, Upcall,
+};
 
 /// The Buttonss driver
 ///
@@ -14,16 +14,20 @@ use libtock_platform::{share, subscribe::AnyId, DefaultConfig, ErrorCode, Syscal
 /// Buttons::is_pressed(0);
 ///
 /// // Register for events
-/// Buttons::register_for_events(
-///     |button, state| { // print state of button },
-///     || {
-///         // execute something while registered to receive events
+///
+/// let listener = ButtonListener(|button, state| {
+///     // make use of the button's state
+/// });
+///
+/// share::scope(|subscribe| {
+///     if let Ok(()) = Buttons::register_listener(&listener, subscribe) {
+///         // yield
 ///     }
-/// );
+/// });
 /// ```
 pub struct Buttons<S: Syscalls>(S);
 
-#[derive(PartialEq)]
+#[derive(Debug, PartialEq)]
 pub enum ButtonState {
     Pressed,
     Released,
@@ -40,24 +44,24 @@ impl From<u32> for ButtonState {
     }
 }
 
-struct ButtonUpcall<F: Fn(u32, ButtonState)> {
-    event: F,
-}
-
-impl<F: Fn(u32, ButtonState)> Upcall<AnyId> for ButtonUpcall<F> {
-    fn upcall(&self, button: u32, state: u32, _arg2: u32) {
-        (self.event)(button, state.into());
-    }
-}
-
 impl<S: Syscalls> Buttons<S> {
     /// Run a check against the buttons capsule to ensure it is present.
     ///
     /// Returns `Some(number_of_buttons)` if the driver was present. This does not necessarily mean
     /// that the driver is working, as it may still fail to allocate grant
     /// memory.
-    pub fn count() -> Option<u32> {
-        S::command(DRIVER_ID, BUTTONS_COUNT, 0, 0).get_success_u32()
+    pub fn count() -> Result<u32, ErrorCode> {
+        let command_return = S::command(DRIVER_ID, BUTTONS_COUNT, 0, 0);
+        if let Some(error) = command_return.get_failure() {
+            Err(error)
+        } else {
+            match command_return.get_success_u32() {
+                Some(value) => Ok(value.into()),
+                None => {
+                    unreachable!()
+                }
+            }
+        }
     }
 
     pub fn read(button: u32) -> Result<ButtonState, ErrorCode> {
@@ -106,73 +110,27 @@ impl<S: Syscalls> Buttons<S> {
         }
     }
 
-    pub async fn wait_for_pressed(button: u32) -> Result<(), ErrorCode> {
-        if Self::is_pressed(button) {
-            Ok(())
-        } else {
-            Self::wait_switch_pressed(button).await
-        }
+    pub fn register_listener<'share, F: Fn(u32, ButtonState)>(
+        listener: &'share ButtonListener<F>,
+        subscribe: Handle<Subscribe<'share, S, DRIVER_ID, 0>>,
+    ) -> Result<(), ErrorCode> {
+        S::subscribe::<_, _, DefaultConfig, DRIVER_ID, 0>(subscribe, listener)
     }
 
-    pub async fn wait_for_released(button: u32) -> Result<(), ErrorCode> {
-        if Self::is_released(button) {
-            Ok(())
-        } else {
-            Self::wait_switch_released(button).await
-        }
-    }
-
-    pub async fn wait_switch_pressed(button: u32) -> Result<(), ErrorCode> {
-        let called = Cell::<Option<(u32, u32)>>::new(None);
-        share::scope(|subscribe| {
-            Self::enable_interrupts(button)?;
-            S::subscribe::<_, _, DefaultConfig, DRIVER_ID, 0>(subscribe, &called)?;
-            // futures::wait_until(|| {
-            //     if let Some((pressed_button, 1)) = called.get() {
-            //         button == pressed_button
-            //     } else {
-            //         false
-            //     }
-            // })
-            // .await;
-            let _ = Self::disable_interrupts(button);
-            Ok(())
-        })
-    }
-
-    pub async fn wait_switch_released(button: u32) -> Result<(), ErrorCode> {
-        let called = Cell::<Option<(u32, u32)>>::new(None);
-        share::scope(|subscribe| {
-            Self::enable_interrupts(button)?;
-            S::subscribe::<_, _, DefaultConfig, DRIVER_ID, 0>(subscribe, &called)?;
-            // futures::wait_until(|| {
-            //     if let Some((released_button, 1)) = called.get() {
-            //         button == released_button
-            //     } else {
-            //         false
-            //     }
-            // })
-            // .await;
-            let _ = Self::disable_interrupts(button);
-            Ok(())
-        })
-    }
-
-    pub fn register_for_events<Fe, Fr>(event: Fe, run: Fr) -> Result<(), ErrorCode>
-    where
-        Fe: Fn(u32, ButtonState),
-        Fr: FnOnce(),
-    {
-        let called = ButtonUpcall { event };
-        share::scope(|subscribe| {
-            S::subscribe::<_, _, DefaultConfig, DRIVER_ID, 0>(subscribe, &called)?;
-            run();
-            Ok(())
-        })
+    pub fn unregister_listener() {
+        S::unsubscribe(DRIVER_ID, 0)
     }
 }
 
-const DRIVER_ID: u32 = 2;
+pub struct ButtonListener<F: Fn(u32, ButtonState)>(F);
+
+impl<F: Fn(u32, ButtonState)> Upcall<OneId<DRIVER_ID, 0>> for ButtonListener<F> {
+    fn upcall(&self, button_index: u32, state: u32, _arg2: u32) {
+        self.0(button_index, state.into())
+    }
+}
+
+const DRIVER_ID: u32 = 3;
 
 // Command IDs
 const BUTTONS_COUNT: u32 = 0;
