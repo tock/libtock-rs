@@ -88,7 +88,9 @@ pub struct OutFiles {
     pub tbf_path: PathBuf,
 }
 
-// The amount of space to reserve for the TBF header.
+// The amount of space to reserve for the TBF header. This must match the
+// TBF_HEADER_SIZE value in the layout file for the platform, which is currently
+// 0x48 for all platforms.
 const TBF_HEADER_SIZE: u32 = 0x48;
 
 // Reads the stack size, and returns it as a String for use on elf2tab's command

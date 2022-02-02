@@ -4,11 +4,11 @@ use std::process::{Child, Command, Stdio};
 
 // Spawns a QEMU VM with a simulated Tock system and the process binary. Returns
 // the handle for the spawned QEMU process.
-pub fn deploy(cli: &Cli, platform: String, tab_path: PathBuf) -> Child {
+pub fn deploy(cli: &Cli, platform: String, tbf_path: PathBuf) -> Child {
     let platform_args = get_platform_args(platform);
     let device = format!(
         "loader,file={},addr={}",
-        tab_path
+        tbf_path
             .into_os_string()
             .into_string()
             .expect("Non-UTF-8 path"),
