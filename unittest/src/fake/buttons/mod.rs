@@ -2,7 +2,10 @@
 //! https://github.com/tock/tock/blob/master/doc/syscalls/00003_buttons.md
 //!
 //! Like the real API, `Buttons` controls a set of fake buttons. It provides
-// //! a function `get_led` used to retrieve the state of an LED.
+//! a function `get_button_state` used to retrieve the state and interrupt
+//! status of a button.
+//!
+//! It also provides the function `set_pressed` that set the button's state.
 
 use core::cell::Cell;
 use libtock_platform::{CommandReturn, ErrorCode};
