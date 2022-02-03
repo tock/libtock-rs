@@ -1,5 +1,4 @@
-use core::convert::TryInto;
-
+use libtock_platform::ErrorCode;
 use libtock_unittest::fake;
 
 use crate::{InputPin, OutputPin, PullNone};
@@ -9,7 +8,7 @@ type Gpio = super::Gpio<fake::Syscalls>;
 #[test]
 fn no_driver() {
     let _kernel = fake::Kernel::new();
-    assert!(Gpio::driver_check());
+    assert_eq!(Gpio::count(), Err(ErrorCode::NoDevice));
 }
 
 // // #[test]
