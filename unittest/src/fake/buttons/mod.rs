@@ -10,6 +10,8 @@
 use core::cell::Cell;
 use libtock_platform::{CommandReturn, ErrorCode};
 
+use crate::upcall;
+
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub struct ButtonState {
     pub pressed: bool,
@@ -103,11 +105,17 @@ impl<const NUM_BUTTONS: usize> Buttons<NUM_BUTTONS> {
     pub fn set_pressed(&self, button: u32, pressed: bool) -> Result<(), ErrorCode> {
         self.buttons
             .get(button as usize)
-            .map(|button| {
-                button.set(ButtonState {
+            .map(|button_state| {
+                let original_button_state = button_state.get();
+                button_state.set(ButtonState {
                     pressed,
-                    ..button.get()
-                })
+                    ..original_button_state
+                });
+                if original_button_state.interrupt_enabled
+                    && original_button_state.pressed != pressed
+                {
+                    let _ = upcall::schedule(DRIVER_NUMBER, 0, (button, pressed as u32, 0));
+                }
             })
             .ok_or(ErrorCode::Invalid)
     }

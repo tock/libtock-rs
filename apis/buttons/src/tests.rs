@@ -73,27 +73,43 @@ fn subscribe() {
     });
     assert!(pressed_interrupt_fired.get());
 
-    let pressed_interrupt_fired: Cell<bool> = Cell::new(false);
+    let pressed_interrupt_fired: Cell<u32> = Cell::new(0);
+    let expected_button_state: Cell<ButtonState> = Cell::new(ButtonState::Released);
     let listener = ButtonListener(|button, state| {
         assert_eq!(button, 0);
-        assert_eq!(state, ButtonState::Released);
-        pressed_interrupt_fired.set(true);
+        assert_eq!(state, expected_button_state.get());
+        pressed_interrupt_fired.set(pressed_interrupt_fired.get() + 1);
     });
     share::scope(|subscribe| {
+        assert_eq!(Buttons::enable_interrupts(0), Ok(()));
         assert_eq!(Buttons::register_listener(&listener, subscribe), Ok(()));
-        upcall::schedule(DRIVER_ID, 0, (0, 0, 0)).unwrap();
+        expected_button_state.set(ButtonState::Pressed);
+        assert_eq!(driver.set_pressed(0, true), Ok(()));
         assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::Upcall);
+        assert_eq!(driver.set_pressed(0, true), Ok(()));
+        assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::NoUpcall);
+        expected_button_state.set(ButtonState::Released);
+        assert_eq!(driver.set_pressed(0, false), Ok(()));
+        assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::Upcall);
+        assert_eq!(driver.set_pressed(0, false), Ok(()));
+        assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::NoUpcall);
+
+        assert_eq!(Buttons::disable_interrupts(0), Ok(()));
+        assert_eq!(driver.set_pressed(0, true), Ok(()));
+        assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::NoUpcall);
+        assert_eq!(driver.set_pressed(0, false), Ok(()));
+        assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::NoUpcall);
     });
-    assert!(pressed_interrupt_fired.get());
+    assert_eq!(pressed_interrupt_fired.get(), 2);
 
     let pressed_interrupt_fired: Cell<bool> = Cell::new(false);
     let listener = ButtonListener(|_, _| {
         pressed_interrupt_fired.set(true);
     });
     share::scope(|subscribe| {
+        assert_eq!(Buttons::enable_interrupts(0), Ok(()));
         assert_eq!(Buttons::register_listener(&listener, subscribe), Ok(()));
         Buttons::unregister_listener();
-        upcall::schedule(DRIVER_ID, 0, (0, 1, 0)).unwrap();
         assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::NoUpcall);
     });
     assert!(!pressed_interrupt_fired.get());

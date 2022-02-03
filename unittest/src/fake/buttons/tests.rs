@@ -43,31 +43,31 @@ fn command() {
             .command(BUTTONS_ENABLE_INTERRUPTS, button_index, 0)
             .is_success());
         assert_eq!(
-            buttons.get_button_state(button_index).unwrap(),
-            ButtonState {
+            buttons.get_button_state(button_index),
+            Some(ButtonState {
                 pressed: false,
                 interrupt_enabled: true
-            }
+            })
         );
 
         assert!(buttons
             .command(BUTTONS_DISABLE_INTERRUPTS, button_index, 0)
             .is_success());
         assert_eq!(
-            buttons.get_button_state(button_index).unwrap(),
-            ButtonState {
+            buttons.get_button_state(button_index),
+            Some(ButtonState {
                 pressed: false,
                 interrupt_enabled: false
-            }
+            })
         );
 
         assert_eq!(buttons.set_pressed(button_index, true), Ok(()));
         assert_eq!(
-            buttons.get_button_state(button_index).unwrap(),
-            ButtonState {
+            buttons.get_button_state(button_index),
+            Some(ButtonState {
                 pressed: true,
                 interrupt_enabled: false
-            }
+            })
         );
 
         assert_eq!(buttons.set_pressed(button_index, false), Ok(()));

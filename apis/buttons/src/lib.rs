@@ -27,20 +27,16 @@ use libtock_platform::{
 /// ```
 pub struct Buttons<S: Syscalls>(S);
 
-#[derive(Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub enum ButtonState {
     Pressed,
     Released,
-    Unknown,
 }
 
-impl From<u32> for ButtonState {
-    fn from(original: u32) -> ButtonState {
-        match original {
-            0 => ButtonState::Released,
-            1 => ButtonState::Pressed,
-            _ => ButtonState::Unknown,
-        }
+pub fn convert(value: u32) -> ButtonState {
+    match value {
+        0 => ButtonState::Released,
+        _ => ButtonState::Pressed,
     }
 }
 
@@ -56,7 +52,7 @@ impl<S: Syscalls> Buttons<S> {
     /// Read the state of a button
     pub fn read(button: u32) -> Result<ButtonState, ErrorCode> {
         let button_state: u32 = S::command(DRIVER_ID, BUTTONS_READ, button, 0).to_result()?;
-        Ok(button_state.into())
+        Ok(convert(button_state))
     }
 
     /// Returns `true` if a button is pressed
@@ -114,11 +110,19 @@ impl<S: Syscalls> Buttons<S> {
     }
 }
 
+/// A wrapper around a closure to be registered and called when
+/// a button event occurs.
+///
+/// ```ignore
+/// let listener = ButtonListener(|button, state| {
+///     // make use of the button's state
+/// });
+/// ```
 pub struct ButtonListener<F: Fn(u32, ButtonState)>(pub F);
 
 impl<F: Fn(u32, ButtonState)> Upcall<OneId<DRIVER_ID, 0>> for ButtonListener<F> {
     fn upcall(&self, button_index: u32, state: u32, _arg2: u32) {
-        self.0(button_index, state.into())
+        self.0(button_index, convert(state))
     }
 }
 
