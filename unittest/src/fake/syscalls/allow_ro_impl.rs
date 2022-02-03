@@ -76,8 +76,8 @@ pub(super) unsafe fn allow_ro(
     };
 
     let (address_out, len_out) = with_kernel_data(|option_kernel_data| {
-        let kernel_data =
-            option_kernel_data.expect("fake::Kernel dropped during fake::Driver::allow_readonly");
+        let kernel_data = option_kernel_data
+            .expect("fake::Kernel dropped during fake::SyscallDriver::allow_readonly");
         kernel_data.allow_db.remove_ro_buffer(buffer_out)
     });
 

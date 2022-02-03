@@ -10,7 +10,7 @@ use libtock_unittest::{command_return, fake, upcall, SyscallLogEntry};
 // TODO: Replace with a real driver once a driver that accepts an upcall exists.
 struct MockDriver;
 
-impl fake::Driver for MockDriver {
+impl fake::SyscallDriver for MockDriver {
     fn id(&self) -> u32 {
         1
     }

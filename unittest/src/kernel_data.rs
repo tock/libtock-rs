@@ -36,7 +36,7 @@ pub(crate) fn with_kernel_data<F: FnOnce(Option<&mut KernelData>) -> R, R>(f: F)
 
 // Per-driver data stored in KernelData.
 pub struct DriverData {
-    pub driver: std::rc::Rc<dyn crate::fake::Driver>,
+    pub driver: std::rc::Rc<dyn crate::fake::SyscallDriver>,
     pub num_upcalls: u32,
 
     // Currently-valid upcalls passed to Subscribe. The key is the subscribe

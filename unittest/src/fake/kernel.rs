@@ -2,9 +2,9 @@ use crate::kernel_data::{with_kernel_data, DriverData, KernelData, KERNEL_DATA};
 use crate::{ExpectedSyscall, SyscallLogEntry};
 
 /// A fake implementation of the Tock kernel. Used with `fake::Syscalls`, which
-/// provides system calls that are routed to this kernel. `fake::Driver`s may be
-/// attached to a `fake::Kernel`, and the `fake::Kernel` will route system calls
-/// to the correct fake driver.
+/// provides system calls that are routed to this kernel. `fake::SyscallDriver`s
+/// may be attached to a `fake::Kernel`, and the `fake::Kernel` will route
+/// system calls to the correct fake driver.
 ///
 /// Note that there can only be one `fake::Kernel` instance per thread, as
 /// `fake::Syscalls` uses a thread-local variable to locate the `fake::Kernel`.
@@ -48,13 +48,14 @@ impl Kernel {
         Kernel { _private: () }
     }
 
-    /// Adds a `fake::Driver` to this `fake::Kernel`. After the call, system
-    /// calls with this driver's ID will be routed to the driver.
+    /// Adds a `fake::SyscallDriver` to this `fake::Kernel`. After the call,
+    /// system calls with this driver's ID will be routed to the driver.
     // TODO: It's kind of weird to implicitly clone the RC by default. Instead,
     // we should probably take the Rc by value. Also, after making that change,
-    // maybe we can take a Rc<dyn fake::Driver> instead of using generics?
+    // maybe we can take a Rc<dyn fake::SyscallDriver> instead of using
+    // generics?
     // TODO: Add a test for add_driver.
-    pub fn add_driver<D: crate::fake::Driver>(&self, driver: &std::rc::Rc<D>) {
+    pub fn add_driver<D: crate::fake::SyscallDriver>(&self, driver: &std::rc::Rc<D>) {
         let id = driver.id();
         let num_upcalls = driver.num_upcalls();
         let driver_data = DriverData {
@@ -74,7 +75,7 @@ impl Kernel {
     /// In addition to routing system calls to drivers, `Kernel` supports
     /// injecting artificial system call responses. The primary use case for
     /// this feature is to simulate errors without having to implement error
-    /// simulation in each `fake::Driver`.
+    /// simulation in each `fake::SyscallDriver`.
     ///
     /// The expected syscall queue is a FIFO queue containing anticipated
     /// upcoming system calls. It starts empty, and as long as it is empty, the

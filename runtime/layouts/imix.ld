@@ -1,4 +1,4 @@
-/* Layout for the Hail board, used by the examples in this repository. */
+/* Layout for the Imix board, used by the examples in this repository. */
 
 MEMORY {
   FLASH (X) : ORIGIN = 0x00040000, LENGTH = 0x00040000

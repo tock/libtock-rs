@@ -77,8 +77,8 @@ pub(super) unsafe fn allow_rw(
     };
 
     let (address_out, len_out) = with_kernel_data(|option_kernel_data| {
-        let kernel_data =
-            option_kernel_data.expect("fake::Kernel dropped during fake::Driver::allow_readwrite");
+        let kernel_data = option_kernel_data
+            .expect("fake::Kernel dropped during fake::SyscallDriver::allow_readwrite");
         kernel_data.allow_db.remove_rw_buffer(buffer_out)
     });
 

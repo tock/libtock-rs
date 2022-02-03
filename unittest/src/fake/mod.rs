@@ -9,14 +9,16 @@
 //! `use libtock_unittest::fake` and refer to the type with the `fake::` prefix
 //! (e.g. `fake::Console`).
 
-mod driver;
 mod kernel;
+mod leds;
 mod low_level_debug;
+mod syscall_driver;
 mod syscalls;
 
-pub use driver::Driver;
 pub use kernel::Kernel;
+pub use leds::Leds;
 pub use low_level_debug::{LowLevelDebug, Message};
+pub use syscall_driver::SyscallDriver;
 pub use syscalls::Syscalls;
 
 #[cfg(test)]

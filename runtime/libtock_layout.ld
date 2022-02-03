@@ -95,9 +95,9 @@ SECTIONS {
      * https://riscv.org/wp-content/uploads/2015/01/riscv-calling.pdf
      */
     .stack (NOLOAD) : {
-        /* _sram_origin is used by elf2tab:
-         * https://github.com/tock/elf2tab/blob/master/src/main.rs#L301
-        */
+	/* _sram_origin is used by elf2tab:
+	 * https://github.com/tock/elf2tab/blob/master/src/main.rs#L301
+	 */
         _sram_origin = .;
         KEEP(*(.stack_buffer))
         . = ALIGN(16);

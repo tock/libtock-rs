@@ -1,12 +1,12 @@
 use crate::{RoAllowBuffer, RwAllowBuffer};
 use libtock_platform::{CommandReturn, ErrorCode};
 
-/// The `fake::Driver` trait is implemented by fake versions of Tock's kernel
-/// APIs. It is used by `fake::Kernel` to route system calls to the fake kernel
-/// APIs.
-pub trait Driver: 'static {
+/// The `fake::SyscallDriver` trait is implemented by fake versions of Tock's
+/// kernel APIs. It is used by `fake::Kernel` to route system calls to the fake
+/// kernel APIs.
+pub trait SyscallDriver: 'static {
     /// Returns this driver's ID. Used by `fake::Kernel` to route syscalls to
-    /// the correct `fake::Driver` instance.
+    /// the correct `fake::SyscallDriver` instance.
     fn id(&self) -> u32;
 
     // -------------------------------------------------------------------------
@@ -31,9 +31,9 @@ pub trait Driver: 'static {
     // Allow
     // -------------------------------------------------------------------------
 
-    /// Process a Read-Only Allow call. Because not all Driver implementations
-    /// need to support Read-Only Allow, a default implementation is provided
-    /// that rejects all Read-Only Allow calls.
+    /// Process a Read-Only Allow call. Because not all `SyscallDriver`
+    /// implementations need to support Read-Only Allow, a default
+    /// implementation is provided that rejects all Read-Only Allow calls.
     fn allow_readonly(
         &self,
         buffer_number: u32,
@@ -43,9 +43,9 @@ pub trait Driver: 'static {
         Err((buffer, ErrorCode::NoSupport))
     }
 
-    /// Process a Read-Write Allow call. Because not all Driver implementations
-    /// need to support Read-Write Allow, a default implementation is provided
-    /// that rejects all Read-Write Allow calls.
+    /// Process a Read-Write Allow call. Because not all SyscallDriver
+    /// implementations need to support Read-Write Allow, a default
+    /// implementation is provided that rejects all Read-Write Allow calls.
     fn allow_readwrite(
         &self,
         buffer_number: u32,
