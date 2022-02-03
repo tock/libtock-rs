@@ -12,4 +12,4 @@ rustflags = [
     "-C", "relocation-model=static",
     "-C", "link-arg=-Tlayout.ld",
 ]
-runner = "./tools/flash.sh"
+runner = ["cargo", "run", "-p", "runner", "--release"]

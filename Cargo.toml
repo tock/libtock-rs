@@ -82,7 +82,7 @@ lto = true
 debug = true
 
 [workspace]
-exclude = [ "tock" ]
+exclude = ["tock", "tock2"]
 members = [
     "apis/leds",
     "apis/low_level_debug",
@@ -91,6 +91,7 @@ members = [
     "libtock2",
     "panic_handlers/small_panic",
     "platform",
+    "runner",
     "runtime",
     "syscalls_tests",
     "test_runner",
