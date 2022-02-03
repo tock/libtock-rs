@@ -4,7 +4,7 @@ use libtock_platform::{
     share::Handle, subscribe::OneId, DefaultConfig, ErrorCode, Subscribe, Syscalls, Upcall,
 };
 
-/// The Buttonss driver
+/// The Buttons driver
 ///
 /// # Example
 /// ```ignore
@@ -51,7 +51,7 @@ impl<S: Syscalls> Buttons<S> {
     /// that the driver is working, as it may still fail to allocate grant
     /// memory.
     pub fn count() -> Result<u32, ErrorCode> {
-        Ok(S::command(DRIVER_ID, BUTTONS_COUNT, 0, 0).to_result()?)
+        S::command(DRIVER_ID, BUTTONS_COUNT, 0, 0).to_result()
     }
 
     pub fn read(button: u32) -> Result<ButtonState, ErrorCode> {
@@ -91,7 +91,7 @@ impl<S: Syscalls> Buttons<S> {
     }
 }
 
-pub struct ButtonListener<F: Fn(u32, ButtonState)>(F);
+pub struct ButtonListener<F: Fn(u32, ButtonState)>(pub F);
 
 impl<F: Fn(u32, ButtonState)> Upcall<OneId<DRIVER_ID, 0>> for ButtonListener<F> {
     fn upcall(&self, button_index: u32, state: u32, _arg2: u32) {
