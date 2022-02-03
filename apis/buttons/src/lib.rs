@@ -47,38 +47,57 @@ impl From<u32> for ButtonState {
 impl<S: Syscalls> Buttons<S> {
     /// Run a check against the buttons capsule to ensure it is present.
     ///
-    /// Returns `Some(number_of_buttons)` if the driver was present. This does not necessarily mean
-    /// that the driver is working, as it may still fail to allocate grant
-    /// memory.
+    /// Returns `Ok(number_of_buttons)` if the driver was present. This does not necessarily mean
+    /// that the driver is working.
     pub fn count() -> Result<u32, ErrorCode> {
         S::command(DRIVER_ID, BUTTONS_COUNT, 0, 0).to_result()
     }
 
+    /// Read the state of a button
     pub fn read(button: u32) -> Result<ButtonState, ErrorCode> {
         let button_state: u32 = S::command(DRIVER_ID, BUTTONS_READ, button, 0).to_result()?;
         Ok(button_state.into())
     }
 
+    /// Returns `true` if a button is pressed
+    ///
+    /// This function returns `false` if:
+    /// - the button is released
+    /// - the button number is invalid
+    /// - there is an error
     pub fn is_pressed(button: u32) -> bool {
         Self::read(button)
             .map(|state| state == ButtonState::Pressed)
             .unwrap_or(false)
     }
 
+    /// Returns `true` if a button is released
+    ///
+    /// This function returns `false` if:
+    /// - the button is pressed
+    /// - the button number is invalid
+    /// - there is an error
     pub fn is_released(button: u32) -> bool {
         Self::read(button)
             .map(|state| state == ButtonState::Released)
             .unwrap_or(false)
     }
 
+    /// Enable events (interrupts) for a button
     pub fn enable_interrupts(button: u32) -> Result<(), ErrorCode> {
         S::command(DRIVER_ID, BUTTONS_ENABLE_INTERRUPTS, button, 0).to_result()
     }
 
+    /// Disable events (interrupts) for a button
     pub fn disable_interrupts(button: u32) -> Result<(), ErrorCode> {
         S::command(DRIVER_ID, BUTTONS_DISABLE_INTERRUPTS, button, 0).to_result()
     }
 
+    /// Register an events listener
+    ///
+    /// There can be only one single listener registered at a time.
+    /// Each time this function is used, it will replace the
+    /// previously registered listener.
     pub fn register_listener<'share, F: Fn(u32, ButtonState)>(
         listener: &'share ButtonListener<F>,
         subscribe: Handle<Subscribe<'share, S, DRIVER_ID, 0>>,
@@ -86,6 +105,10 @@ impl<S: Syscalls> Buttons<S> {
         S::subscribe::<_, _, DefaultConfig, DRIVER_ID, 0>(subscribe, listener)
     }
 
+    /// Unregister the events listener
+    ///
+    /// This function may be used even if there was no
+    /// previously registered listener.
     pub fn unregister_listener() {
         S::unsubscribe(DRIVER_ID, 0)
     }
