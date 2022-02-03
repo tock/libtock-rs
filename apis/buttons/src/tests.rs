@@ -45,10 +45,10 @@ fn interrupts() {
     kernel.add_driver(&driver);
 
     assert_eq!(Buttons::enable_interrupts(0), Ok(()));
-    assert_eq!(driver.get_button_state(0).unwrap().interrupt_enabled, true);
+    assert!(driver.get_button_state(0).unwrap().interrupt_enabled);
 
     assert_eq!(Buttons::disable_interrupts(0), Ok(()));
-    assert_eq!(driver.get_button_state(0).unwrap().interrupt_enabled, false);
+    assert!(!driver.get_button_state(0).unwrap().interrupt_enabled);
 
     assert_eq!(Buttons::enable_interrupts(11), Err(ErrorCode::Invalid));
     assert_eq!(Buttons::disable_interrupts(11), Err(ErrorCode::Invalid));
@@ -71,7 +71,7 @@ fn subscribe() {
         upcall::schedule(DRIVER_ID, 0, (0, 1, 0)).unwrap();
         assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::Upcall);
     });
-    assert_eq!(pressed_interrupt_fired.get(), true);
+    assert!(pressed_interrupt_fired.get());
 
     let pressed_interrupt_fired: Cell<bool> = Cell::new(false);
     let listener = ButtonListener(|button, state| {
@@ -84,7 +84,7 @@ fn subscribe() {
         upcall::schedule(DRIVER_ID, 0, (0, 0, 0)).unwrap();
         assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::Upcall);
     });
-    assert_eq!(pressed_interrupt_fired.get(), true);
+    assert!(pressed_interrupt_fired.get());
 
     let pressed_interrupt_fired: Cell<bool> = Cell::new(false);
     let listener = ButtonListener(|_, _| {
@@ -96,5 +96,5 @@ fn subscribe() {
         upcall::schedule(DRIVER_ID, 0, (0, 1, 0)).unwrap();
         assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::NoUpcall);
     });
-    assert_eq!(pressed_interrupt_fired.get(), false);
+    assert!(!pressed_interrupt_fired.get());
 }
