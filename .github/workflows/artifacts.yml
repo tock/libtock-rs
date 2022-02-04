@@ -12,37 +12,34 @@ jobs:
 
       - name: Install dependencies
         run: |
-          sudo apt-get install binutils-riscv64-unknown-elf
-          cargo install elf2tab --version 0.4.0
+          sudo apt-get install binutils-arm-none-eabi \
+            binutils-riscv64-unknown-elf
+          cargo install elf2tab
 
-      - name: Build Hello World
+      - name: Build LEDs
         run: |
-          FEATURES="alloc" make flash-apollo3  EXAMPLE=hello_world -j2
-          FEATURES="alloc" make flash-hail  EXAMPLE=hello_world -j2
-          FEATURES="alloc" make flash-nucleo_f429zi  EXAMPLE=hello_world -j2
-          FEATURES="alloc" make flash-nucleo_f446re  EXAMPLE=hello_world -j2
-          FEATURES="alloc" make flash-nrf52840  EXAMPLE=hello_world -j2
-          FEATURES="alloc" make flash-opentitan  EXAMPLE=hello_world -j2
-          FEATURES="alloc" make flash-hifive1  EXAMPLE=hello_world -j2
-          FEATURES="alloc" make flash-nrf52  EXAMPLE=hello_world -j2
+          make -j2 EXAMPLE=leds apollo3
+          make -j2 EXAMPLE=leds hail
+          make -j2 EXAMPLE=leds nucleo_f429zi
+          make -j2 EXAMPLE=leds nucleo_f446re
+          make -j2 EXAMPLE=leds nrf52840
+          make -j2 EXAMPLE=leds opentitan
+          make -j2 EXAMPLE=leds hifive1
+          make -j2 EXAMPLE=leds nrf52
 
-      - name: Build libtock-test
+      - name: Build Low Level Debug
         run: |
-          FEATURES="alloc" make flash-apollo3  EXAMPLE=libtock_test -j2
-          FEATURES="alloc" make flash-hail  EXAMPLE=libtock_test -j2
-          FEATURES="alloc" make flash-nucleo_f429zi  EXAMPLE=libtock_test -j2
-          FEATURES="alloc" make flash-nucleo_f446re  EXAMPLE=libtock_test -j2
-          FEATURES="alloc" make flash-nrf52840  EXAMPLE=libtock_test -j2
-          FEATURES="alloc" make flash-opentitan  EXAMPLE=libtock_test -j2
-          FEATURES="alloc" make flash-hifive1  EXAMPLE=libtock_test -j2
-          FEATURES="alloc" make flash-nrf52  EXAMPLE=libtock_test -j2
-
-      - name: Build extra tests
-        run: |
-          FEATURES="alloc" make flash-opentitan  EXAMPLE=hmac -j2
+          make -j2 EXAMPLE=low_level_debug apollo3
+          make -j2 EXAMPLE=low_level_debug hail
+          make -j2 EXAMPLE=low_level_debug nucleo_f429zi
+          make -j2 EXAMPLE=low_level_debug nucleo_f446re
+          make -j2 EXAMPLE=low_level_debug nrf52840
+          make -j2 EXAMPLE=low_level_debug opentitan
+          make -j2 EXAMPLE=low_level_debug hifive1
+          make -j2 EXAMPLE=low_level_debug nrf52
 
       - name: Archive artifacts
         uses: actions/upload-artifact@v2
         with:
           name: libtock-rs examples
-          path: target/*/tab/*/*/*.tbf
+          path: target/tbf
