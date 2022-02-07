@@ -1,7 +1,9 @@
-use libtock_platform::ErrorCode;
-use libtock_unittest::fake;
+use core::cell::Cell;
 
-use crate::{InputPin, OutputPin, PullNone};
+use libtock_platform::{share, ErrorCode, Syscalls, YieldNoWaitReturn};
+use libtock_unittest::fake::{self, GpioMode, InterruptEdge, PullMode};
+
+use crate::{GpioInterruptListener, GpioState, PullDown, PullNone, PullUp};
 
 type Gpio = super::Gpio<fake::Syscalls>;
 
@@ -11,78 +13,251 @@ fn no_driver() {
     assert_eq!(Gpio::count(), Err(ErrorCode::NoDevice));
 }
 
-// // #[test]
-// fn driver_check() {
-//     let kernel = fake::Kernel::new();
-//     let driver = fake::Leds::<10>::new();
-//     kernel.add_driver(&driver);
+#[test]
+fn num_gpio() {
+    let kernel = fake::Kernel::new();
+    let driver = fake::Gpio::<10>::new();
+    kernel.add_driver(&driver);
+    assert_eq!(Gpio::count(), Ok(10));
+}
 
-//     assert!(Leds::count().is_some());
-//     for led in 0..10 {
-//         assert_eq!(driver.get_led(led), Some(false));
-//     }
-// }
+// Tests the command implementation.
+#[test]
+fn output() {
+    let kernel = fake::Kernel::new();
+    let driver = fake::Gpio::<10>::new();
+    driver.set_missing_gpio(1);
+    kernel.add_driver(&driver);
 
-// #[test]
-// fn num_leds() {
-//     let kernel = fake::Kernel::new();
-//     let driver = fake::Leds::<10>::new();
-//     kernel.add_driver(&driver);
-//     assert_eq!(Leds::count().unwrap_or_default(), 10);
-// }
+    assert_eq!(Gpio::count(), Ok(10));
 
-// #[test]
-// fn on() {
-//     let kernel = fake::Kernel::new();
-//     let driver = fake::Leds::<10>::new();
-//     kernel.add_driver(&driver);
+    let pin_11 = Gpio::get_pin(11);
+    assert!(pin_11.is_err());
+    let _ = pin_11.map_err(|error| assert_eq!(error, ErrorCode::Invalid));
+    let pin_1 = Gpio::get_pin(1);
+    assert!(pin_1.is_err());
+    let _ = pin_1.map_err(|error| assert_eq!(error, ErrorCode::NoDevice));
 
-//     Leds::on(0);
-//     assert_eq!(driver.get_led(0), Some(true));
-// }
+    let pin_0 = Gpio::get_pin(0);
+    assert!(pin_0.is_ok());
 
-// #[test]
-// fn off() {
-//     let kernel = fake::Kernel::new();
-//     let driver = fake::Leds::<10>::new();
-//     kernel.add_driver(&driver);
+    let _ = pin_0.map(|mut pin| {
+        let output_pin = pin.make_output();
+        assert!(output_pin.is_ok());
+        assert_eq!(driver.get_gpio_state(0).unwrap().mode, GpioMode::Output);
+        let _ = output_pin.map(|mut pin| {
+            assert_eq!(pin.set(), Ok(()));
+            assert!(driver.get_gpio_state(0).unwrap().value);
+            assert_eq!(pin.clear(), Ok(()));
+            assert!(!driver.get_gpio_state(0).unwrap().value);
+            assert_eq!(pin.toggle(), Ok(()));
+            assert!(driver.get_gpio_state(0).unwrap().value);
+            assert_eq!(pin.toggle(), Ok(()));
+            assert!(!driver.get_gpio_state(0).unwrap().value);
+        });
+        assert_eq!(driver.get_gpio_state(0).unwrap().mode, GpioMode::Disable);
+    });
+}
 
-//     Leds::off(0);
-//     assert_eq!(driver.get_led(0), Some(false));
-// }
+// Tests the command implementation.
+#[test]
+fn input() {
+    let kernel = fake::Kernel::new();
+    let driver = fake::Gpio::<10>::new();
+    driver.set_missing_gpio(1);
+    kernel.add_driver(&driver);
 
-// #[test]
-// fn toggle() {
-//     let kernel = fake::Kernel::new();
-//     let driver = fake::Leds::<10>::new();
-//     kernel.add_driver(&driver);
+    assert_eq!(Gpio::count(), Ok(10));
 
-//     Leds::toggle(0);
-//     assert_eq!(driver.get_led(0), Some(true));
-//     Leds::toggle(0);
-//     assert_eq!(driver.get_led(0), Some(false));
-// }
+    let pin_11 = Gpio::get_pin(11);
+    assert!(pin_11.is_err());
+    let _ = pin_11.map_err(|error| assert_eq!(error, ErrorCode::Invalid));
+    let pin_1 = Gpio::get_pin(1);
+    assert!(pin_1.is_err());
+    let _ = pin_1.map_err(|error| assert_eq!(error, ErrorCode::NoDevice));
 
-// #[test]
-// fn on_off() {
-//     let kernel = fake::Kernel::new();
-//     let driver = fake::Leds::<10>::new();
-//     kernel.add_driver(&driver);
+    let pin_0 = Gpio::get_pin(0);
+    assert!(pin_0.is_ok());
 
-//     Leds::on(0);
-//     assert_eq!(driver.get_led(0), Some(true));
-//     Leds::off(0);
-//     assert_eq!(driver.get_led(0), Some(false));
-// }
+    let _ = pin_0.map(|pin| {
+        let input_pin = pin.make_input::<PullNone>();
+        assert!(input_pin.is_ok());
+        assert_eq!(
+            driver.get_gpio_state(0).unwrap().mode,
+            GpioMode::Input(PullMode::PullNone)
+        );
 
-// #[test]
-// fn no_led() {
-//     let kernel = fake::Kernel::new();
-//     let driver = fake::Leds::<10>::new();
-//     kernel.add_driver(&driver);
+        let input_pin = pin.make_input::<PullUp>();
+        assert!(input_pin.is_ok());
+        assert_eq!(
+            driver.get_gpio_state(0).unwrap().mode,
+            GpioMode::Input(PullMode::PullUp)
+        );
 
-//     Leds::on(11);
-//     for led in 0..Leds::count().unwrap_or_default() {
-//         assert_eq!(driver.get_led(led), Some(false));
-//     }
-// }
+        let input_pin = pin.make_input::<PullDown>();
+        assert!(input_pin.is_ok());
+        assert_eq!(
+            driver.get_gpio_state(0).unwrap().mode,
+            GpioMode::Input(PullMode::PullDown)
+        );
+
+        let _ = input_pin.map(|pin| {
+            assert_eq!(driver.set_value(0, true), Ok(()));
+            assert_eq!(pin.read(), Ok(GpioState::High));
+            assert_eq!(driver.set_value(0, false), Ok(()));
+            assert_eq!(pin.read(), Ok(GpioState::Low));
+        });
+        assert_eq!(driver.get_gpio_state(0).unwrap().mode, GpioMode::Disable);
+    });
+}
+
+// Tests the command implementation.
+#[test]
+fn interrupts() {
+    let kernel = fake::Kernel::new();
+    let driver = fake::Gpio::<10>::new();
+    driver.set_missing_gpio(1);
+    kernel.add_driver(&driver);
+
+    assert_eq!(Gpio::count(), Ok(10));
+
+    let pin_11 = Gpio::get_pin(11);
+    assert!(pin_11.is_err());
+    let _ = pin_11.map_err(|error| assert_eq!(error, ErrorCode::Invalid));
+    let pin_1 = Gpio::get_pin(1);
+    assert!(pin_1.is_err());
+    let _ = pin_1.map_err(|error| assert_eq!(error, ErrorCode::NoDevice));
+
+    let pin_0 = Gpio::get_pin(0);
+    assert!(pin_0.is_ok());
+
+    let _ = pin_0.map(|pin| {
+        // Either
+        let input_pin = pin.make_input::<PullNone>();
+        assert!(input_pin.is_ok());
+        assert_eq!(
+            driver.get_gpio_state(0).unwrap().mode,
+            GpioMode::Input(PullMode::PullNone)
+        );
+
+        let _ = input_pin.map(|pin| {
+            assert_eq!(
+                pin.enable_interrupts(crate::PinInterruptEdge::Either),
+                Ok(())
+            );
+            assert_eq!(
+                driver.get_gpio_state(0).unwrap().interrupt_enabled,
+                Some(InterruptEdge::Either)
+            );
+
+            assert_eq!(driver.set_value(0, false), Ok(()));
+
+            let gpio_state = Cell::<Option<GpioState>>::new(None);
+            let listener = GpioInterruptListener(|gpio, state| {
+                assert_eq!(gpio, 0);
+                gpio_state.set(Some(state));
+            });
+
+            share::scope(|subscribe| {
+                assert_eq!(Gpio::register_listener(&listener, subscribe), Ok(()));
+                assert_eq!(driver.set_value(0, true), Ok(()));
+                assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::Upcall);
+                assert_eq!(gpio_state.get(), Some(GpioState::High));
+                gpio_state.set(None);
+                assert_eq!(driver.set_value(0, false), Ok(()));
+                assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::Upcall);
+                assert_eq!(gpio_state.get(), Some(GpioState::Low));
+
+                assert_eq!(pin.disable_interrupts(), Ok(()));
+                assert_eq!(driver.set_value(0, true), Ok(()));
+                assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::NoUpcall);
+                assert_eq!(driver.set_value(0, false), Ok(()));
+                assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::NoUpcall);
+            });
+        });
+
+        // Rising
+        let input_pin = pin.make_input::<PullNone>();
+        assert!(input_pin.is_ok());
+        assert_eq!(
+            driver.get_gpio_state(0).unwrap().mode,
+            GpioMode::Input(PullMode::PullNone)
+        );
+
+        let _ = input_pin.map(|pin| {
+            assert_eq!(
+                pin.enable_interrupts(crate::PinInterruptEdge::Rising),
+                Ok(())
+            );
+            assert_eq!(
+                driver.get_gpio_state(0).unwrap().interrupt_enabled,
+                Some(InterruptEdge::Rising)
+            );
+
+            assert_eq!(driver.set_value(0, false), Ok(()));
+
+            let gpio_state = Cell::<Option<GpioState>>::new(None);
+            let listener = GpioInterruptListener(|gpio, state| {
+                assert_eq!(gpio, 0);
+                gpio_state.set(Some(state));
+            });
+
+            share::scope(|subscribe| {
+                assert_eq!(Gpio::register_listener(&listener, subscribe), Ok(()));
+                assert_eq!(driver.set_value(0, true), Ok(()));
+                assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::Upcall);
+                assert_eq!(gpio_state.get(), Some(GpioState::High));
+                assert_eq!(driver.set_value(0, false), Ok(()));
+                assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::NoUpcall);
+
+                assert_eq!(pin.disable_interrupts(), Ok(()));
+                assert_eq!(driver.set_value(0, true), Ok(()));
+                assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::NoUpcall);
+                assert_eq!(driver.set_value(0, false), Ok(()));
+                assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::NoUpcall);
+            });
+        });
+
+        // Falling
+        let input_pin = pin.make_input::<PullNone>();
+        assert!(input_pin.is_ok());
+        assert_eq!(
+            driver.get_gpio_state(0).unwrap().mode,
+            GpioMode::Input(PullMode::PullNone)
+        );
+
+        let _ = input_pin.map(|pin| {
+            assert_eq!(
+                pin.enable_interrupts(crate::PinInterruptEdge::Falling),
+                Ok(())
+            );
+            assert_eq!(
+                driver.get_gpio_state(0).unwrap().interrupt_enabled,
+                Some(InterruptEdge::Falling)
+            );
+
+            assert_eq!(driver.set_value(0, false), Ok(()));
+
+            let gpio_state = Cell::<Option<GpioState>>::new(None);
+            let listener = GpioInterruptListener(|gpio, state| {
+                assert_eq!(gpio, 0);
+                gpio_state.set(Some(state));
+            });
+
+            share::scope(|subscribe| {
+                assert_eq!(Gpio::register_listener(&listener, subscribe), Ok(()));
+                assert_eq!(driver.set_value(0, true), Ok(()));
+                assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::NoUpcall);
+                assert_eq!(driver.set_value(0, false), Ok(()));
+                assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::Upcall);
+                assert_eq!(gpio_state.get(), Some(GpioState::Low));
+
+                assert_eq!(pin.disable_interrupts(), Ok(()));
+                assert_eq!(driver.set_value(0, true), Ok(()));
+                assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::NoUpcall);
+                assert_eq!(driver.set_value(0, false), Ok(()));
+                assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::NoUpcall);
+            });
+        });
+    });
+}

@@ -16,7 +16,7 @@ mod low_level_debug;
 mod syscall_driver;
 mod syscalls;
 
-pub use gpio::Gpio;
+pub use gpio::{Gpio, GpioMode, InterruptEdge, PullMode};
 pub use kernel::Kernel;
 pub use leds::Leds;
 pub use low_level_debug::{LowLevelDebug, Message};
