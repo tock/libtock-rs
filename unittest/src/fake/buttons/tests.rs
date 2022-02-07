@@ -89,24 +89,24 @@ fn kernel_integration() {
     let kernel = fake::Kernel::new();
     let buttons = Buttons::<10>::new();
     kernel.add_driver(&buttons);
-    let value = fake::Syscalls::command(DRIVER_NUMBER, BUTTONS_COUNT, 1, 2);
+    let value = fake::Syscalls::command(DRIVER_NUM, BUTTONS_COUNT, 1, 2);
     assert_eq!(value.get_success_u32(), Some(10));
 
     assert_eq!(
-        fake::Syscalls::command(DRIVER_NUMBER, BUTTONS_READ, 11, 0).get_failure(),
+        fake::Syscalls::command(DRIVER_NUM, BUTTONS_READ, 11, 0).get_failure(),
         Some(ErrorCode::Invalid)
     );
-    assert!(fake::Syscalls::command(DRIVER_NUMBER, BUTTONS_READ, 0, 0).is_success_u32());
+    assert!(fake::Syscalls::command(DRIVER_NUM, BUTTONS_READ, 0, 0).is_success_u32());
 
     assert_eq!(
-        fake::Syscalls::command(DRIVER_NUMBER, BUTTONS_ENABLE_INTERRUPTS, 11, 0).get_failure(),
+        fake::Syscalls::command(DRIVER_NUM, BUTTONS_ENABLE_INTERRUPTS, 11, 0).get_failure(),
         Some(ErrorCode::Invalid)
     );
-    assert!(fake::Syscalls::command(DRIVER_NUMBER, BUTTONS_ENABLE_INTERRUPTS, 0, 0).is_success());
+    assert!(fake::Syscalls::command(DRIVER_NUM, BUTTONS_ENABLE_INTERRUPTS, 0, 0).is_success());
 
     assert_eq!(
-        fake::Syscalls::command(DRIVER_NUMBER, BUTTONS_DISABLE_INTERRUPTS, 11, 0).get_failure(),
+        fake::Syscalls::command(DRIVER_NUM, BUTTONS_DISABLE_INTERRUPTS, 11, 0).get_failure(),
         Some(ErrorCode::Invalid)
     );
-    assert!(fake::Syscalls::command(DRIVER_NUMBER, BUTTONS_DISABLE_INTERRUPTS, 0, 0).is_success());
+    assert!(fake::Syscalls::command(DRIVER_NUM, BUTTONS_DISABLE_INTERRUPTS, 0, 0).is_success());
 }

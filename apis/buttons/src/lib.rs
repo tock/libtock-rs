@@ -26,7 +26,7 @@ use libtock_platform::{
 /// });
 /// ```
 
-const DRIVER_ID: u32 = 3;
+const DRIVER_NUM: u32 = 3;
 
 // Command IDs
 const BUTTONS_COUNT: u32 = 0;
@@ -59,12 +59,12 @@ impl<S: Syscalls> Buttons<S> {
     /// Returns `Ok(number_of_buttons)` if the driver was present. This does not necessarily mean
     /// that the driver is working.
     pub fn count() -> Result<u32, ErrorCode> {
-        S::command(DRIVER_ID, BUTTONS_COUNT, 0, 0).to_result()
+        S::command(DRIVER_NUM, BUTTONS_COUNT, 0, 0).to_result()
     }
 
     /// Read the state of a button
     pub fn read(button: u32) -> Result<ButtonState, ErrorCode> {
-        let button_state: u32 = S::command(DRIVER_ID, BUTTONS_READ, button, 0).to_result()?;
+        let button_state: u32 = S::command(DRIVER_NUM, BUTTONS_READ, button, 0).to_result()?;
         Ok(button_state.into())
     }
 
@@ -94,12 +94,12 @@ impl<S: Syscalls> Buttons<S> {
 
     /// Enable events (interrupts) for a button
     pub fn enable_interrupts(button: u32) -> Result<(), ErrorCode> {
-        S::command(DRIVER_ID, BUTTONS_ENABLE_INTERRUPTS, button, 0).to_result()
+        S::command(DRIVER_NUM, BUTTONS_ENABLE_INTERRUPTS, button, 0).to_result()
     }
 
     /// Disable events (interrupts) for a button
     pub fn disable_interrupts(button: u32) -> Result<(), ErrorCode> {
-        S::command(DRIVER_ID, BUTTONS_DISABLE_INTERRUPTS, button, 0).to_result()
+        S::command(DRIVER_NUM, BUTTONS_DISABLE_INTERRUPTS, button, 0).to_result()
     }
 
     /// Register an events listener
@@ -109,9 +109,9 @@ impl<S: Syscalls> Buttons<S> {
     /// previously registered listener.
     pub fn register_listener<'share, F: Fn(u32, ButtonState)>(
         listener: &'share ButtonListener<F>,
-        subscribe: Handle<Subscribe<'share, S, DRIVER_ID, 0>>,
+        subscribe: Handle<Subscribe<'share, S, DRIVER_NUM, 0>>,
     ) -> Result<(), ErrorCode> {
-        S::subscribe::<_, _, DefaultConfig, DRIVER_ID, 0>(subscribe, listener)
+        S::subscribe::<_, _, DefaultConfig, DRIVER_NUM, 0>(subscribe, listener)
     }
 
     /// Unregister the events listener
@@ -119,7 +119,7 @@ impl<S: Syscalls> Buttons<S> {
     /// This function may be used even if there was no
     /// previously registered listener.
     pub fn unregister_listener() {
-        S::unsubscribe(DRIVER_ID, 0)
+        S::unsubscribe(DRIVER_NUM, 0)
     }
 }
 
@@ -133,7 +133,7 @@ impl<S: Syscalls> Buttons<S> {
 /// ```
 pub struct ButtonListener<F: Fn(u32, ButtonState)>(pub F);
 
-impl<F: Fn(u32, ButtonState)> Upcall<OneId<DRIVER_ID, 0>> for ButtonListener<F> {
+impl<F: Fn(u32, ButtonState)> Upcall<OneId<DRIVER_NUM, 0>> for ButtonListener<F> {
     fn upcall(&self, button_index: u32, state: u32, _arg2: u32) {
         self.0(button_index, state.into())
     }

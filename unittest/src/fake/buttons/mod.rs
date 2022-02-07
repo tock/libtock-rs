@@ -16,7 +16,7 @@ use crate::upcall;
 // Driver number and command IDs
 // -----------------------------------------------------------------------------
 
-const DRIVER_NUMBER: u32 = 3;
+const DRIVER_NUM: u32 = 3;
 
 // Command IDs
 const BUTTONS_COUNT: u32 = 0;
@@ -58,7 +58,7 @@ impl<const NUM_BUTTONS: usize> Buttons<NUM_BUTTONS> {
 
 impl<const NUM_BUTTONS: usize> crate::fake::SyscallDriver for Buttons<NUM_BUTTONS> {
     fn id(&self) -> u32 {
-        DRIVER_NUMBER
+        DRIVER_NUM
     }
     fn num_upcalls(&self) -> u32 {
         1
@@ -118,7 +118,7 @@ impl<const NUM_BUTTONS: usize> Buttons<NUM_BUTTONS> {
                 if original_button_state.interrupt_enabled
                     && original_button_state.pressed != pressed
                 {
-                    upcall::schedule(DRIVER_NUMBER, 0, (button, pressed as u32, 0))
+                    upcall::schedule(DRIVER_NUM, 0, (button, pressed as u32, 0))
                         .expect("Unable to schedule upcall {}");
                 }
             })

@@ -3,7 +3,7 @@ use core::cell::Cell;
 use libtock_platform::{share, ErrorCode, Syscalls, YieldNoWaitReturn};
 use libtock_unittest::{fake, upcall};
 
-use crate::{ButtonListener, DRIVER_ID};
+use crate::{ButtonListener, DRIVER_NUM};
 
 use super::ButtonState;
 
@@ -68,7 +68,7 @@ fn subscribe() {
     });
     share::scope(|subscribe| {
         assert_eq!(Buttons::register_listener(&listener, subscribe), Ok(()));
-        upcall::schedule(DRIVER_ID, 0, (0, 1, 0)).expect("Unable to schedule upcall");
+        upcall::schedule(DRIVER_NUM, 0, (0, 1, 0)).expect("Unable to schedule upcall");
         assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::Upcall);
     });
     assert!(pressed_interrupt_fired.get());
