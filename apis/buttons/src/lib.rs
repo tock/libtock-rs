@@ -25,6 +25,17 @@ use libtock_platform::{
 ///     }
 /// });
 /// ```
+
+const DRIVER_ID: u32 = 3;
+
+// Command IDs
+const BUTTONS_COUNT: u32 = 0;
+
+const BUTTONS_ENABLE_INTERRUPTS: u32 = 1;
+const BUTTONS_DISABLE_INTERRUPTS: u32 = 2;
+
+const BUTTONS_READ: u32 = 3;
+
 pub struct Buttons<S: Syscalls>(S);
 
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -33,10 +44,12 @@ pub enum ButtonState {
     Released,
 }
 
-pub fn convert(value: u32) -> ButtonState {
-    match value {
-        0 => ButtonState::Released,
-        _ => ButtonState::Pressed,
+impl From<u32> for ButtonState {
+    fn from(value: u32) -> ButtonState {
+        match value {
+            0 => ButtonState::Released,
+            _ => ButtonState::Pressed,
+        }
     }
 }
 
@@ -52,7 +65,7 @@ impl<S: Syscalls> Buttons<S> {
     /// Read the state of a button
     pub fn read(button: u32) -> Result<ButtonState, ErrorCode> {
         let button_state: u32 = S::command(DRIVER_ID, BUTTONS_READ, button, 0).to_result()?;
-        Ok(convert(button_state))
+        Ok(button_state.into())
     }
 
     /// Returns `true` if a button is pressed
@@ -122,19 +135,8 @@ pub struct ButtonListener<F: Fn(u32, ButtonState)>(pub F);
 
 impl<F: Fn(u32, ButtonState)> Upcall<OneId<DRIVER_ID, 0>> for ButtonListener<F> {
     fn upcall(&self, button_index: u32, state: u32, _arg2: u32) {
-        self.0(button_index, convert(state))
+        self.0(button_index, state.into())
     }
 }
-
-const DRIVER_ID: u32 = 3;
-
-// Command IDs
-const BUTTONS_COUNT: u32 = 0;
-
-const BUTTONS_ENABLE_INTERRUPTS: u32 = 1;
-const BUTTONS_DISABLE_INTERRUPTS: u32 = 2;
-
-const BUTTONS_READ: u32 = 3;
-
 #[cfg(test)]
 mod tests;

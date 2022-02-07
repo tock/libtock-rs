@@ -68,7 +68,7 @@ fn subscribe() {
     });
     share::scope(|subscribe| {
         assert_eq!(Buttons::register_listener(&listener, subscribe), Ok(()));
-        upcall::schedule(DRIVER_ID, 0, (0, 1, 0)).unwrap();
+        upcall::schedule(DRIVER_ID, 0, (0, 1, 0)).expect("Unable to schedule upcall");
         assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::Upcall);
     });
     assert!(pressed_interrupt_fired.get());
