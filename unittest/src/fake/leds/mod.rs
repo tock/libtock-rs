@@ -7,9 +7,25 @@
 use core::cell::Cell;
 use libtock_platform::{CommandReturn, ErrorCode};
 
+// -----------------------------------------------------------------------------
+// Driver number and command IDs
+// -----------------------------------------------------------------------------
+
+const DRIVER_NUMBER: u32 = 2;
+
+// Command numbers
+const DRIVER_CHECK: u32 = 0;
+const LED_ON: u32 = 1;
+const LED_OFF: u32 = 2;
+const LED_TOGGLE: u32 = 3;
+
 pub struct Leds<const LEDS_COUNT: usize> {
     leds: [Cell<bool>; LEDS_COUNT],
 }
+
+// -----------------------------------------------------------------------------
+// Implementation details below
+// -----------------------------------------------------------------------------
 
 impl<const LEDS_COUNT: usize> Leds<LEDS_COUNT> {
     pub fn new() -> std::rc::Rc<Leds<LEDS_COUNT>> {
@@ -61,23 +77,11 @@ impl<const LEDS_COUNT: usize> crate::fake::SyscallDriver for Leds<LEDS_COUNT> {
     }
 }
 
-// -----------------------------------------------------------------------------
-// Implementation details below
-// -----------------------------------------------------------------------------
-
-#[cfg(test)]
-mod tests;
-
-const DRIVER_NUMBER: u32 = 2;
-
-// Command numbers
-const DRIVER_CHECK: u32 = 0;
-const LED_ON: u32 = 1;
-const LED_OFF: u32 = 2;
-const LED_TOGGLE: u32 = 3;
-
 impl<const NUM_LEDS: usize> Leds<NUM_LEDS> {
     pub fn get_led(&self, led: u32) -> Option<bool> {
         self.leds.get(led as usize).map(|led| led.get())
     }
 }
+
+#[cfg(test)]
+mod tests;
