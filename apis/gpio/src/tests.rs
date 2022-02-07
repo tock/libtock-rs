@@ -1,9 +1,12 @@
 use core::cell::Cell;
 
 use libtock_platform::{share, ErrorCode, Syscalls, YieldNoWaitReturn};
-use libtock_unittest::fake::{self, GpioMode, InterruptEdge, PullMode};
+use libtock_unittest::{
+    fake::{self, GpioMode, InterruptEdge, PullMode},
+    upcall,
+};
 
-use crate::{GpioInterruptListener, GpioState, PullDown, PullNone, PullUp};
+use crate::{GpioInterruptListener, GpioState, PullDown, PullNone, PullUp, DRIVER_NUMBER};
 
 type Gpio = super::Gpio<fake::Syscalls>;
 
@@ -21,7 +24,7 @@ fn num_gpio() {
     assert_eq!(Gpio::count(), Ok(10));
 }
 
-// Tests the command implementation.
+// Tests the OutputPin implementation.
 #[test]
 fn output() {
     let kernel = fake::Kernel::new();
@@ -59,7 +62,7 @@ fn output() {
     });
 }
 
-// Tests the command implementation.
+// Tests the InputPin implementation
 #[test]
 fn input() {
     let kernel = fake::Kernel::new();
@@ -111,7 +114,7 @@ fn input() {
     });
 }
 
-// Tests the command implementation.
+// Tests the pin interrupts implementation
 #[test]
 fn interrupts() {
     let kernel = fake::Kernel::new();
@@ -120,6 +123,22 @@ fn interrupts() {
     kernel.add_driver(&driver);
 
     assert_eq!(Gpio::count(), Ok(10));
+
+    let gpio_state = Cell::<Option<GpioState>>::new(None);
+    let listener = GpioInterruptListener(|gpio, state| {
+        assert_eq!(gpio, 0);
+        gpio_state.set(Some(state));
+    });
+
+    share::scope(|subscribe| {
+        assert_eq!(Gpio::register_listener(&listener, subscribe), Ok(()));
+        assert_eq!(upcall::schedule(DRIVER_NUMBER, 0, (0, 0, 0)), Ok(()));
+        assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::Upcall);
+        assert_eq!(gpio_state.get(), Some(GpioState::Low));
+    });
+
+    assert_eq!(upcall::schedule(DRIVER_NUMBER, 0, (0, 0, 0)), Ok(()));
+    assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::NoUpcall);
 
     let pin_11 = Gpio::get_pin(11);
     assert!(pin_11.is_err());
@@ -260,4 +279,31 @@ fn interrupts() {
             });
         });
     });
+}
+
+// Tests the pin event subcribe implementation
+#[test]
+fn subscribe() {
+    let kernel = fake::Kernel::new();
+    let driver = fake::Gpio::<10>::new();
+    driver.set_missing_gpio(1);
+    kernel.add_driver(&driver);
+
+    assert_eq!(Gpio::count(), Ok(10));
+
+    let gpio_state = Cell::<Option<GpioState>>::new(None);
+    let listener = GpioInterruptListener(|gpio, state| {
+        assert_eq!(gpio, 0);
+        gpio_state.set(Some(state));
+    });
+
+    share::scope(|subscribe| {
+        assert_eq!(Gpio::register_listener(&listener, subscribe), Ok(()));
+        assert_eq!(upcall::schedule(DRIVER_NUMBER, 0, (0, 0, 0)), Ok(()));
+        assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::Upcall);
+        assert_eq!(gpio_state.get(), Some(GpioState::Low));
+    });
+
+    assert_eq!(upcall::schedule(DRIVER_NUMBER, 0, (0, 0, 0)), Ok(()));
+    assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::NoUpcall);
 }
