@@ -6,7 +6,7 @@ use libtock_unittest::{
     upcall,
 };
 
-use crate::{GpioInterruptListener, GpioState, PullDown, PullNone, PullUp, DRIVER_NUMBER};
+use crate::{GpioInterruptListener, GpioState, PullDown, PullNone, PullUp, DRIVER_NUM};
 
 type Gpio = super::Gpio<fake::Syscalls>;
 
@@ -132,12 +132,12 @@ fn interrupts() {
 
     share::scope(|subscribe| {
         assert_eq!(Gpio::register_listener(&listener, subscribe), Ok(()));
-        assert_eq!(upcall::schedule(DRIVER_NUMBER, 0, (0, 0, 0)), Ok(()));
+        assert_eq!(upcall::schedule(DRIVER_NUM, 0, (0, 0, 0)), Ok(()));
         assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::Upcall);
         assert_eq!(gpio_state.get(), Some(GpioState::Low));
     });
 
-    assert_eq!(upcall::schedule(DRIVER_NUMBER, 0, (0, 0, 0)), Ok(()));
+    assert_eq!(upcall::schedule(DRIVER_NUM, 0, (0, 0, 0)), Ok(()));
     assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::NoUpcall);
 
     let pin_11 = Gpio::get_pin(11);
@@ -299,11 +299,11 @@ fn subscribe() {
 
     share::scope(|subscribe| {
         assert_eq!(Gpio::register_listener(&listener, subscribe), Ok(()));
-        assert_eq!(upcall::schedule(DRIVER_NUMBER, 0, (0, 0, 0)), Ok(()));
+        assert_eq!(upcall::schedule(DRIVER_NUM, 0, (0, 0, 0)), Ok(()));
         assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::Upcall);
         assert_eq!(gpio_state.get(), Some(GpioState::Low));
     });
 
-    assert_eq!(upcall::schedule(DRIVER_NUMBER, 0, (0, 0, 0)), Ok(()));
+    assert_eq!(upcall::schedule(DRIVER_NUM, 0, (0, 0, 0)), Ok(()));
     assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::NoUpcall);
 }

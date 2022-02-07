@@ -184,87 +184,87 @@ fn kernel_integration() {
     gpio.set_missing_gpio(1);
     kernel.add_driver(&gpio);
     assert_eq!(
-        fake::Syscalls::command(DRIVER_NUMBER, GPIO_COUNT, 1, 2).get_success_u32(),
+        fake::Syscalls::command(DRIVER_NUM, GPIO_COUNT, 1, 2).get_success_u32(),
         Some(10)
     );
 
     // Enable Output
     assert_eq!(
-        fake::Syscalls::command(DRIVER_NUMBER, GPIO_ENABLE_OUTPUT, 11, 0).get_failure(),
+        fake::Syscalls::command(DRIVER_NUM, GPIO_ENABLE_OUTPUT, 11, 0).get_failure(),
         Some(ErrorCode::Invalid)
     );
     assert_eq!(
-        fake::Syscalls::command(DRIVER_NUMBER, GPIO_ENABLE_OUTPUT, 1, 0).get_failure(),
+        fake::Syscalls::command(DRIVER_NUM, GPIO_ENABLE_OUTPUT, 1, 0).get_failure(),
         Some(ErrorCode::NoDevice)
     );
-    assert!(fake::Syscalls::command(DRIVER_NUMBER, GPIO_ENABLE_OUTPUT, 0, 0).is_success());
+    assert!(fake::Syscalls::command(DRIVER_NUM, GPIO_ENABLE_OUTPUT, 0, 0).is_success());
 
     // Gpio Set
     assert_eq!(
-        fake::Syscalls::command(DRIVER_NUMBER, GPIO_SET, 11, 0).get_failure(),
+        fake::Syscalls::command(DRIVER_NUM, GPIO_SET, 11, 0).get_failure(),
         Some(ErrorCode::Invalid)
     );
     assert_eq!(
-        fake::Syscalls::command(DRIVER_NUMBER, GPIO_SET, 1, 0).get_failure(),
+        fake::Syscalls::command(DRIVER_NUM, GPIO_SET, 1, 0).get_failure(),
         Some(ErrorCode::NoDevice)
     );
-    assert!(fake::Syscalls::command(DRIVER_NUMBER, GPIO_SET, 0, 0).is_success(),);
+    assert!(fake::Syscalls::command(DRIVER_NUM, GPIO_SET, 0, 0).is_success(),);
     assert!(gpio.get_gpio_state(0).unwrap().value);
 
     // Gpio Clear
     assert_eq!(
-        fake::Syscalls::command(DRIVER_NUMBER, GPIO_CLEAR, 11, 0).get_failure(),
+        fake::Syscalls::command(DRIVER_NUM, GPIO_CLEAR, 11, 0).get_failure(),
         Some(ErrorCode::Invalid)
     );
     assert_eq!(
-        fake::Syscalls::command(DRIVER_NUMBER, GPIO_CLEAR, 1, 0).get_failure(),
+        fake::Syscalls::command(DRIVER_NUM, GPIO_CLEAR, 1, 0).get_failure(),
         Some(ErrorCode::NoDevice)
     );
-    assert!(fake::Syscalls::command(DRIVER_NUMBER, GPIO_CLEAR, 0, 0).is_success(),);
+    assert!(fake::Syscalls::command(DRIVER_NUM, GPIO_CLEAR, 0, 0).is_success(),);
     assert!(!gpio.get_gpio_state(0).unwrap().value);
 
     // Gpio Toggle
     assert_eq!(
-        fake::Syscalls::command(DRIVER_NUMBER, GPIO_TOGGLE, 11, 0).get_failure(),
+        fake::Syscalls::command(DRIVER_NUM, GPIO_TOGGLE, 11, 0).get_failure(),
         Some(ErrorCode::Invalid)
     );
     assert_eq!(
-        fake::Syscalls::command(DRIVER_NUMBER, GPIO_TOGGLE, 1, 0).get_failure(),
+        fake::Syscalls::command(DRIVER_NUM, GPIO_TOGGLE, 1, 0).get_failure(),
         Some(ErrorCode::NoDevice)
     );
-    assert!(fake::Syscalls::command(DRIVER_NUMBER, GPIO_TOGGLE, 0, 0).is_success(),);
+    assert!(fake::Syscalls::command(DRIVER_NUM, GPIO_TOGGLE, 0, 0).is_success(),);
     assert!(gpio.get_gpio_state(0).unwrap().value);
-    assert!(fake::Syscalls::command(DRIVER_NUMBER, GPIO_TOGGLE, 0, 0).is_success(),);
+    assert!(fake::Syscalls::command(DRIVER_NUM, GPIO_TOGGLE, 0, 0).is_success(),);
     assert!(!gpio.get_gpio_state(0).unwrap().value);
 
     // Enable Input
     assert_eq!(
-        fake::Syscalls::command(DRIVER_NUMBER, GPIO_ENABLE_INPUT, 11, 0).get_failure(),
+        fake::Syscalls::command(DRIVER_NUM, GPIO_ENABLE_INPUT, 11, 0).get_failure(),
         Some(ErrorCode::Invalid)
     );
     assert_eq!(
-        fake::Syscalls::command(DRIVER_NUMBER, GPIO_ENABLE_INPUT, 1, 0).get_failure(),
+        fake::Syscalls::command(DRIVER_NUM, GPIO_ENABLE_INPUT, 1, 0).get_failure(),
         Some(ErrorCode::NoDevice)
     );
 
     assert_eq!(
-        fake::Syscalls::command(DRIVER_NUMBER, GPIO_ENABLE_INPUT, 0, 3).get_failure(),
+        fake::Syscalls::command(DRIVER_NUM, GPIO_ENABLE_INPUT, 0, 3).get_failure(),
         Some(ErrorCode::Invalid)
     );
 
-    assert!(fake::Syscalls::command(DRIVER_NUMBER, GPIO_ENABLE_INPUT, 0, 0).is_success());
+    assert!(fake::Syscalls::command(DRIVER_NUM, GPIO_ENABLE_INPUT, 0, 0).is_success());
     assert_eq!(
         gpio.get_gpio_state(0).unwrap().mode,
         GpioMode::Input(PullMode::PullNone)
     );
 
-    assert!(fake::Syscalls::command(DRIVER_NUMBER, GPIO_ENABLE_INPUT, 0, 1).is_success());
+    assert!(fake::Syscalls::command(DRIVER_NUM, GPIO_ENABLE_INPUT, 0, 1).is_success());
     assert_eq!(
         gpio.get_gpio_state(0).unwrap().mode,
         GpioMode::Input(PullMode::PullUp)
     );
 
-    assert!(fake::Syscalls::command(DRIVER_NUMBER, GPIO_ENABLE_INPUT, 0, 2).is_success());
+    assert!(fake::Syscalls::command(DRIVER_NUM, GPIO_ENABLE_INPUT, 0, 2).is_success());
     assert_eq!(
         gpio.get_gpio_state(0).unwrap().mode,
         GpioMode::Input(PullMode::PullDown)
@@ -272,40 +272,40 @@ fn kernel_integration() {
 
     // Gpio Read
     assert_eq!(
-        fake::Syscalls::command(DRIVER_NUMBER, GPIO_READ_INPUT, 11, 0).get_failure(),
+        fake::Syscalls::command(DRIVER_NUM, GPIO_READ_INPUT, 11, 0).get_failure(),
         Some(ErrorCode::Invalid)
     );
     assert_eq!(
-        fake::Syscalls::command(DRIVER_NUMBER, GPIO_READ_INPUT, 1, 0).get_failure(),
+        fake::Syscalls::command(DRIVER_NUM, GPIO_READ_INPUT, 1, 0).get_failure(),
         Some(ErrorCode::NoDevice)
     );
 
     assert_eq!(gpio.set_value(0, true), Ok(()));
     assert_eq!(
-        fake::Syscalls::command(DRIVER_NUMBER, GPIO_READ_INPUT, 0, 0).get_success_u32(),
+        fake::Syscalls::command(DRIVER_NUM, GPIO_READ_INPUT, 0, 0).get_success_u32(),
         Some(1)
     );
     assert_eq!(gpio.set_value(0, false), Ok(()));
     assert_eq!(
-        fake::Syscalls::command(DRIVER_NUMBER, GPIO_READ_INPUT, 0, 0).get_success_u32(),
+        fake::Syscalls::command(DRIVER_NUM, GPIO_READ_INPUT, 0, 0).get_success_u32(),
         Some(0)
     );
 
     // Enable Interrupts
     assert_eq!(
-        fake::Syscalls::command(DRIVER_NUMBER, GPIO_ENABLE_INTERRUPTS, 11, 0).get_failure(),
+        fake::Syscalls::command(DRIVER_NUM, GPIO_ENABLE_INTERRUPTS, 11, 0).get_failure(),
         Some(ErrorCode::Invalid)
     );
     assert_eq!(
-        fake::Syscalls::command(DRIVER_NUMBER, GPIO_ENABLE_INTERRUPTS, 1, 0).get_failure(),
+        fake::Syscalls::command(DRIVER_NUM, GPIO_ENABLE_INTERRUPTS, 1, 0).get_failure(),
         Some(ErrorCode::NoDevice)
     );
     assert_eq!(
-        fake::Syscalls::command(DRIVER_NUMBER, GPIO_ENABLE_INTERRUPTS, 0, 3).get_failure(),
+        fake::Syscalls::command(DRIVER_NUM, GPIO_ENABLE_INTERRUPTS, 0, 3).get_failure(),
         Some(ErrorCode::Invalid)
     );
 
-    assert!(fake::Syscalls::command(DRIVER_NUMBER, GPIO_ENABLE_INTERRUPTS, 0, 0).is_success());
+    assert!(fake::Syscalls::command(DRIVER_NUM, GPIO_ENABLE_INTERRUPTS, 0, 0).is_success());
     assert_eq!(
         gpio.get_gpio_state(0).unwrap().interrupt_enabled,
         Some(InterruptEdge::Either)
@@ -314,9 +314,7 @@ fn kernel_integration() {
     let listener = Cell::<Option<(u32, u32)>>::new(None);
     share::scope(|subscribe| {
         assert_eq!(
-            fake::Syscalls::subscribe::<_, _, DefaultConfig, DRIVER_NUMBER, 0>(
-                subscribe, &listener
-            ),
+            fake::Syscalls::subscribe::<_, _, DefaultConfig, DRIVER_NUM, 0>(subscribe, &listener),
             Ok(())
         );
 
@@ -332,7 +330,7 @@ fn kernel_integration() {
         assert_eq!(gpio.set_value(0, false), Ok(()));
         assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::NoUpcall);
 
-        assert!(fake::Syscalls::command(DRIVER_NUMBER, GPIO_ENABLE_INTERRUPTS, 0, 1).is_success());
+        assert!(fake::Syscalls::command(DRIVER_NUM, GPIO_ENABLE_INTERRUPTS, 0, 1).is_success());
         assert_eq!(
             gpio.get_gpio_state(0).unwrap().interrupt_enabled,
             Some(InterruptEdge::Rising)
@@ -347,7 +345,7 @@ fn kernel_integration() {
         assert_eq!(gpio.set_value(0, false), Ok(()));
         assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::NoUpcall);
 
-        assert!(fake::Syscalls::command(DRIVER_NUMBER, GPIO_ENABLE_INTERRUPTS, 0, 2).is_success());
+        assert!(fake::Syscalls::command(DRIVER_NUM, GPIO_ENABLE_INTERRUPTS, 0, 2).is_success());
         assert_eq!(
             gpio.get_gpio_state(0).unwrap().interrupt_enabled,
             Some(InterruptEdge::Falling)
@@ -365,23 +363,21 @@ fn kernel_integration() {
 
     // Disable Interrupts
     assert_eq!(
-        fake::Syscalls::command(DRIVER_NUMBER, GPIO_DISABLE_INTERRUPTS, 11, 0).get_failure(),
+        fake::Syscalls::command(DRIVER_NUM, GPIO_DISABLE_INTERRUPTS, 11, 0).get_failure(),
         Some(ErrorCode::Invalid)
     );
     assert_eq!(
-        fake::Syscalls::command(DRIVER_NUMBER, GPIO_DISABLE_INTERRUPTS, 1, 0).get_failure(),
+        fake::Syscalls::command(DRIVER_NUM, GPIO_DISABLE_INTERRUPTS, 1, 0).get_failure(),
         Some(ErrorCode::NoDevice)
     );
 
-    assert!(fake::Syscalls::command(DRIVER_NUMBER, GPIO_DISABLE_INTERRUPTS, 0, 0).is_success());
+    assert!(fake::Syscalls::command(DRIVER_NUM, GPIO_DISABLE_INTERRUPTS, 0, 0).is_success());
     assert_eq!(gpio.get_gpio_state(0).unwrap().interrupt_enabled, None);
 
     let listener = Cell::<Option<(u32, u32)>>::new(None);
     share::scope(|subscribe| {
         assert_eq!(
-            fake::Syscalls::subscribe::<_, _, DefaultConfig, DRIVER_NUMBER, 0>(
-                subscribe, &listener
-            ),
+            fake::Syscalls::subscribe::<_, _, DefaultConfig, DRIVER_NUM, 0>(subscribe, &listener),
             Ok(())
         );
 
@@ -394,14 +390,14 @@ fn kernel_integration() {
 
     // Disable Pin
     assert_eq!(
-        fake::Syscalls::command(DRIVER_NUMBER, GPIO_DISABLE, 11, 0).get_failure(),
+        fake::Syscalls::command(DRIVER_NUM, GPIO_DISABLE, 11, 0).get_failure(),
         Some(ErrorCode::Invalid)
     );
     assert_eq!(
-        fake::Syscalls::command(DRIVER_NUMBER, GPIO_DISABLE, 1, 0).get_failure(),
+        fake::Syscalls::command(DRIVER_NUM, GPIO_DISABLE, 1, 0).get_failure(),
         Some(ErrorCode::NoDevice)
     );
 
-    assert!(fake::Syscalls::command(DRIVER_NUMBER, GPIO_DISABLE, 0, 0).is_success());
+    assert!(fake::Syscalls::command(DRIVER_NUM, GPIO_DISABLE, 0, 0).is_success());
     assert_eq!(gpio.get_gpio_state(0).unwrap().mode, GpioMode::Disable);
 }

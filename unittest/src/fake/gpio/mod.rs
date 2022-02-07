@@ -17,7 +17,7 @@ use crate::upcall;
 // Driver number and command IDs
 // -----------------------------------------------------------------------------
 
-const DRIVER_NUMBER: u32 = 4;
+const DRIVER_NUM: u32 = 4;
 
 // Command IDs
 const GPIO_COUNT: u32 = 0;
@@ -117,7 +117,7 @@ impl<const NUM_GPIOS: usize> Gpio<NUM_GPIOS> {
 
 impl<const NUM_GPIOS: usize> crate::fake::SyscallDriver for Gpio<NUM_GPIOS> {
     fn id(&self) -> u32 {
-        DRIVER_NUMBER
+        DRIVER_NUM
     }
     fn num_upcalls(&self) -> u32 {
         1
@@ -244,13 +244,13 @@ impl<const NUM_GPIOS: usize> Gpio<NUM_GPIOS> {
                             if gpio_state.interrupt_enabled == Some(InterruptEdge::Either)
                                 || gpio_state.interrupt_enabled == Some(InterruptEdge::Rising)
                             {
-                                upcall::schedule(DRIVER_NUMBER, 0, (pin, value as u32, 0))
+                                upcall::schedule(DRIVER_NUM, 0, (pin, value as u32, 0))
                                     .expect("Unable to schedule upcall");
                             }
                         } else if gpio_state.interrupt_enabled == Some(InterruptEdge::Falling)
                             || gpio_state.interrupt_enabled == Some(InterruptEdge::Either)
                         {
-                            upcall::schedule(DRIVER_NUMBER, 0, (pin, value as u32, 0))
+                            upcall::schedule(DRIVER_NUM, 0, (pin, value as u32, 0))
                                 .expect("Unable to schedule upcall");
                         }
                     }

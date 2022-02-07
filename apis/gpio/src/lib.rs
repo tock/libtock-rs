@@ -17,7 +17,7 @@ use libtock_platform::{
 ///
 /// ```
 
-const DRIVER_NUMBER: u32 = 4;
+const DRIVER_NUM: u32 = 4;
 
 // Command IDs
 const GPIO_COUNT: u32 = 0;
@@ -81,15 +81,15 @@ impl<S: Syscalls> Gpio<S> {
     /// that the driver is working, as it may still fail to allocate grant
     /// memory.
     pub fn count() -> Result<u32, ErrorCode> {
-        S::command(DRIVER_NUMBER, GPIO_COUNT, 0, 0).to_result()
+        S::command(DRIVER_NUM, GPIO_COUNT, 0, 0).to_result()
     }
 
     fn enable_gpio_output(pin: u32) -> Result<(), ErrorCode> {
-        S::command(DRIVER_NUMBER, GPIO_ENABLE_OUTPUT, pin, 0).to_result()
+        S::command(DRIVER_NUM, GPIO_ENABLE_OUTPUT, pin, 0).to_result()
     }
 
     fn enable_gpio_input(pin: u32, mode: u32) -> Result<(), ErrorCode> {
-        S::command(DRIVER_NUMBER, GPIO_ENABLE_INPUT, pin, mode).to_result()
+        S::command(DRIVER_NUM, GPIO_ENABLE_INPUT, pin, mode).to_result()
     }
 
     fn write(pin: u32, state: GpioState) -> Result<(), ErrorCode> {
@@ -97,28 +97,28 @@ impl<S: Syscalls> Gpio<S> {
             GpioState::Low => GPIO_CLEAR,
             _ => GPIO_SET,
         };
-        S::command(DRIVER_NUMBER, action, pin, 0).to_result()
+        S::command(DRIVER_NUM, action, pin, 0).to_result()
     }
 
     fn read(pin: u32) -> Result<GpioState, ErrorCode> {
-        let pin_state: u32 = S::command(DRIVER_NUMBER, GPIO_READ_INPUT, pin, 0).to_result()?;
+        let pin_state: u32 = S::command(DRIVER_NUM, GPIO_READ_INPUT, pin, 0).to_result()?;
         Ok(pin_state.into())
     }
 
     fn toggle(pin: u32) -> Result<(), ErrorCode> {
-        S::command(DRIVER_NUMBER, GPIO_TOGGLE, pin, 0).to_result()
+        S::command(DRIVER_NUM, GPIO_TOGGLE, pin, 0).to_result()
     }
 
     fn disable(pin: u32) -> Result<(), ErrorCode> {
-        S::command(DRIVER_NUMBER, GPIO_DISABLE, pin, 0).to_result()
+        S::command(DRIVER_NUM, GPIO_DISABLE, pin, 0).to_result()
     }
 
     fn enable_interrupts(pin: u32, edge: PinInterruptEdge) -> Result<(), ErrorCode> {
-        S::command(DRIVER_NUMBER, GPIO_ENABLE_INTERRUPTS, pin, edge as u32).to_result()
+        S::command(DRIVER_NUM, GPIO_ENABLE_INTERRUPTS, pin, edge as u32).to_result()
     }
 
     fn disable_interrupts(pin: u32) -> Result<(), ErrorCode> {
-        S::command(DRIVER_NUMBER, GPIO_DISABLE_INTERRUPTS, pin, 0).to_result()
+        S::command(DRIVER_NUM, GPIO_DISABLE_INTERRUPTS, pin, 0).to_result()
     }
 
     pub fn get_pin(pin: u32) -> Result<Pin<S>, ErrorCode> {
@@ -136,9 +136,9 @@ impl<S: Syscalls> Gpio<S> {
     /// previously registered listener.
     pub fn register_listener<'share, F: Fn(u32, GpioState)>(
         listener: &'share GpioInterruptListener<F>,
-        subscribe: Handle<Subscribe<'share, S, DRIVER_NUMBER, 0>>,
+        subscribe: Handle<Subscribe<'share, S, DRIVER_NUM, 0>>,
     ) -> Result<(), ErrorCode> {
-        S::subscribe::<_, _, DefaultConfig, DRIVER_NUMBER, 0>(subscribe, listener)
+        S::subscribe::<_, _, DefaultConfig, DRIVER_NUM, 0>(subscribe, listener)
     }
 
     /// Unregister the interrupt listener
@@ -146,7 +146,7 @@ impl<S: Syscalls> Gpio<S> {
     /// This function may be used even if there was no
     /// previously registered listener.
     pub fn unregister_listener() {
-        S::unsubscribe(DRIVER_NUMBER, 0)
+        S::unsubscribe(DRIVER_NUM, 0)
     }
 }
 
@@ -160,7 +160,7 @@ impl<S: Syscalls> Gpio<S> {
 /// ```
 pub struct GpioInterruptListener<F: Fn(u32, GpioState)>(pub F);
 
-impl<F: Fn(u32, GpioState)> Upcall<OneId<DRIVER_NUMBER, 0>> for GpioInterruptListener<F> {
+impl<F: Fn(u32, GpioState)> Upcall<OneId<DRIVER_NUM, 0>> for GpioInterruptListener<F> {
     fn upcall(&self, gpio_index: u32, value: u32, _arg2: u32) {
         self.0(gpio_index, value.into())
     }
