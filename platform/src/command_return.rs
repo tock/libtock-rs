@@ -325,14 +325,14 @@ impl SuccessData for (u32, u32, u32) {
 /// This trait is [sealed], meaning foreign implementations cannot be defined,
 /// even though it can be referenced by foreign crates.
 ///
+/// # Safety
+/// [`RETURN_VARIANT`] must represent a failure variant, such that `r1` will
+/// always be a valid [`ErrorCode`].
+///
 /// [sealed]: https://rust-lang.github.io/api-guidelines/future-proofing.html#sealed-traits-protect-against-downstream-implementations-c-sealed
 pub unsafe trait FailureData: sealed::Sealed {
     /// The return variant for this failure type, stored in `r0` after
     /// performing a `command` syscall.
-    ///
-    /// # Safety
-    /// This must represent a failure variant, such that `r1` will always be
-    /// a valid [`ErrorCode`].
     const RETURN_VARIANT: ReturnVariant;
 
     /// Constructs the error data given the raw register values.

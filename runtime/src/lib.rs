@@ -18,7 +18,7 @@
 //! `no_auto_layout` feature on `libtock_runtime` to disable this functionality
 //! and provide its own layout file.
 
-#![feature(asm)]
+#![feature(asm_const)]
 #![no_std]
 #![warn(unsafe_op_in_unsafe_fn)]
 
