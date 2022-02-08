@@ -37,32 +37,30 @@ release=--release
 endif
 
 .PHONY: setup
-setup: setup-qemu-2
+setup: setup-qemu
 	cargo install elf2tab
 	cargo install stack-sizes
 	cargo miri setup
 
-# Sets up QEMU in the tock2/ directory. We use Tock's QEMU which may contain
+# Sets up QEMU in the tock/ directory. We use Tock's QEMU which may contain
 # patches to better support boards that Tock supports.
-.PHONY: setup-qemu-2
-setup-qemu-2:
-	CI=true $(MAKE) -C tock2 ci-setup-qemu
+.PHONY: setup-qemu
+setup-qemu:
+	CI=true $(MAKE) -C tock ci-setup-qemu
 
 # Builds a Tock 2.0 kernel for the HiFive board for use by QEMU tests.
-# TODO: After Tock 2.0 is released, we should merge the tock/ and tock2/
-# submodules and only build Tock 2.0 kernels.
-.PHONY: kernel-hifive-2
-kernel-hifive-2:
-	$(MAKE) -C tock2/boards/hifive1 \
-		$(CURDIR)/tock2/target/riscv32imac-unknown-none-elf/release/hifive1.elf
+.PHONY: kernel-hifive
+kernel-hifive:
+	$(MAKE) -C tock/boards/hifive1 \
+		$(CURDIR)/tock/target/riscv32imac-unknown-none-elf/release/hifive1.elf
 
 # Builds a Tock kernel for the OpenTitan board on the cw310 FPGA for use by QEMU
 # tests.
 .PHONY: kernel-opentitan
 kernel-opentitan:
 	CARGO_TARGET_RISCV32IMC_UNKNOWN_NONE_ELF_RUNNER="[]" \
-		$(MAKE) -C tock2/boards/opentitan/earlgrey-cw310 \
-		$(CURDIR)/tock2/target/riscv32imc-unknown-none-elf/release/earlgrey-cw310.elf
+		$(MAKE) -C tock/boards/opentitan/earlgrey-cw310 \
+		$(CURDIR)/tock/target/riscv32imc-unknown-none-elf/release/earlgrey-cw310.elf
 
 # Prints out the sizes of the example binaries.
 .PHONY: print-sizes
@@ -71,7 +69,7 @@ print-sizes: examples
 
 # Runs a libtock2 example in QEMU on a simulated HiFive board.
 .PHONY: qemu-example
-qemu-example: kernel-hifive-2
+qemu-example: kernel-hifive
 	LIBTOCK_PLATFORM="hifive1" cargo run --example "$(EXAMPLE)" -p libtock2 \
 		--release --target=riscv32imac-unknown-none-elf -- --deploy qemu
 
@@ -258,4 +256,4 @@ msp432:
 .PHONY: clean
 clean:
 	cargo clean
-	$(MAKE) -C tock2 clean
+	$(MAKE) -C tock clean

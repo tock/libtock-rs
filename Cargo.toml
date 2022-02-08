@@ -9,7 +9,7 @@ lto = true
 debug = true
 
 [workspace]
-exclude = ["tock", "tock2"]
+exclude = ["tock"]
 members = [
     "apis/leds",
     "apis/low_level_debug",

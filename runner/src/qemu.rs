@@ -14,7 +14,7 @@ pub fn deploy(cli: &Cli, platform: String, tbf_path: PathBuf) -> Child {
             .expect("Non-UTF-8 path"),
         platform_args.process_binary_load_address,
     );
-    let mut qemu = Command::new("tock2/tools/qemu/build/qemu-system-riscv32");
+    let mut qemu = Command::new("tock/tools/qemu/build/qemu-system-riscv32");
     qemu.args(["-device", &device, "-nographic", "-serial", "mon:stdio"]);
     qemu.args(platform_args.fixed_args);
     // If we let QEMU inherit its stdin from us, it will set it to raw mode,
@@ -42,7 +42,7 @@ fn get_platform_args(platform: String) -> PlatformConfig {
         "hifive1" => PlatformConfig {
             #[rustfmt::skip]
             fixed_args: &[
-                "-kernel", "tock2/target/riscv32imac-unknown-none-elf/release/hifive1",
+                "-kernel", "tock/target/riscv32imac-unknown-none-elf/release/hifive1",
                 "-M", "sifive_e,revb=true",
             ],
             process_binary_load_address: "0x20040000",
@@ -50,8 +50,8 @@ fn get_platform_args(platform: String) -> PlatformConfig {
         "opentitan" => PlatformConfig {
             #[rustfmt::skip]
             fixed_args: &[
-                "-bios", "tock2/tools/qemu-runner/opentitan-boot-rom.elf",
-                "-kernel", "tock2/target/riscv32imc-unknown-none-elf/release/earlgrey-cw310",
+                "-bios", "tock/tools/qemu-runner/opentitan-boot-rom.elf",
+                "-kernel", "tock/target/riscv32imc-unknown-none-elf/release/earlgrey-cw310",
                 "-M", "opentitan",
             ],
             process_binary_load_address: "0x20030000",
