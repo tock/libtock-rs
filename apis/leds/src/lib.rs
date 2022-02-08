@@ -12,7 +12,7 @@ use libtock_platform::{ErrorCode, Syscalls};
 /// let _ = Leds::on(0);
 /// ```
 
-const DRIVER_NUMBER: u32 = 2;
+const DRIVER_NUM: u32 = 2;
 
 // Command IDs
 const LEDS_COUNT: u32 = 0;
@@ -29,19 +29,19 @@ impl<S: Syscalls> Leds<S> {
     /// that the driver is working, as it may still fail to allocate grant
     /// memory.
     pub fn count() -> Result<u32, ErrorCode> {
-        S::command(DRIVER_NUMBER, LEDS_COUNT, 0, 0).to_result()
+        S::command(DRIVER_NUM, LEDS_COUNT, 0, 0).to_result()
     }
 
     pub fn on(led: u32) -> Result<(), ErrorCode> {
-        S::command(DRIVER_NUMBER, LED_ON, led, 0).to_result()
+        S::command(DRIVER_NUM, LED_ON, led, 0).to_result()
     }
 
     pub fn off(led: u32) -> Result<(), ErrorCode> {
-        S::command(DRIVER_NUMBER, LED_OFF, led, 0).to_result()
+        S::command(DRIVER_NUM, LED_OFF, led, 0).to_result()
     }
 
     pub fn toggle(led: u32) -> Result<(), ErrorCode> {
-        S::command(DRIVER_NUMBER, LED_TOGGLE, led, 0).to_result()
+        S::command(DRIVER_NUM, LED_TOGGLE, led, 0).to_result()
     }
 }
 

@@ -11,7 +11,7 @@ use libtock_platform::{CommandReturn, ErrorCode};
 // Driver number and command IDs
 // -----------------------------------------------------------------------------
 
-const DRIVER_NUMBER: u32 = 2;
+const DRIVER_NUM: u32 = 2;
 
 // Command numbers
 const DRIVER_CHECK: u32 = 0;
@@ -39,7 +39,7 @@ impl<const LEDS_COUNT: usize> Leds<LEDS_COUNT> {
 
 impl<const LEDS_COUNT: usize> crate::fake::SyscallDriver for Leds<LEDS_COUNT> {
     fn id(&self) -> u32 {
-        DRIVER_NUMBER
+        DRIVER_NUM
     }
     fn num_upcalls(&self) -> u32 {
         0

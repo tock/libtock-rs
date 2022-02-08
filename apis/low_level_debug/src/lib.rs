@@ -16,7 +16,7 @@ use libtock_platform::Syscalls;
 /// LowLevelDebug::print_1(0x45);
 /// ```
 
-const DRIVER_NUMBER: u32 = 8;
+const DRIVER_NUM: u32 = 8;
 
 // Command IDs
 const DRIVER_CHECK: u32 = 0;
@@ -34,13 +34,13 @@ impl<S: Syscalls> LowLevelDebug<S> {
     /// memory.
     #[inline(always)]
     pub fn driver_check() -> bool {
-        S::command(DRIVER_NUMBER, DRIVER_CHECK, 0, 0).is_success()
+        S::command(DRIVER_NUM, DRIVER_CHECK, 0, 0).is_success()
     }
 
     /// Print one of the predefined alerts in [`AlertCode`].
     #[inline(always)]
     pub fn print_alert_code(code: AlertCode) {
-        let _ = S::command(DRIVER_NUMBER, PRINT_ALERT_CODE, code as u32, 0);
+        let _ = S::command(DRIVER_NUM, PRINT_ALERT_CODE, code as u32, 0);
     }
 
     /// Print a single number. The number will be printed in hexadecimal.
@@ -49,7 +49,7 @@ impl<S: Syscalls> LowLevelDebug<S> {
     /// should not be called by released library code.
     #[inline(always)]
     pub fn print_1(x: u32) {
-        let _ = S::command(DRIVER_NUMBER, PRINT_1, x, 0);
+        let _ = S::command(DRIVER_NUM, PRINT_1, x, 0);
     }
 
     /// Print two numbers. The numbers will be printed in hexadecimal.
@@ -60,7 +60,7 @@ impl<S: Syscalls> LowLevelDebug<S> {
     /// value is being printed.
     #[inline(always)]
     pub fn print_2(x: u32, y: u32) {
-        let _ = S::command(DRIVER_NUMBER, PRINT_2, x, y);
+        let _ = S::command(DRIVER_NUM, PRINT_2, x, y);
     }
 }
 
