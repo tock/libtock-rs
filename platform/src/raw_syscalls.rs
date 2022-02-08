@@ -129,9 +129,9 @@ pub unsafe trait RawSyscalls: Sized {
     //            noreturn
     /// `syscall1` should only be called by `libtock_platform`.
     /// # Safety
-    /// This directly makes a system call. It can only be used for core kernel
-    /// system calls that accept 1 argument and only overwrite r0 and r1 on
-    /// return. It is unsafe any time the underlying system call is unsafe.
+    /// This directly makes a system call. It can only be used for Memop calls
+    /// that accept 1 argument and only overwrite r0 and r1 on return. It is
+    /// unsafe any time the underlying system call is unsafe.
     unsafe fn syscall1<const CLASS: usize>(_: [Register; 1]) -> [Register; 2];
 
     // syscall2 is used to invoke Exit as well as Memop operations that take an
