@@ -1,5 +1,4 @@
-# Tells ripgrep to ignore the Tock submodules. Usually when someone wants to
+# Tells ripgrep to ignore the Tock submodule. Usually when someone wants to
 # search this repository they want to search libtock-rs' codebase, not the Tock
 # kernel.
 /tock/
-/tock2/
