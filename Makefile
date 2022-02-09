@@ -194,6 +194,15 @@ flash-nrf52840:
 	LIBTOCK_PLATFORM=nrf52840 cargo run --example $(EXAMPLE) $(features) \
 		--target=thumbv7em-none-eabi $(release) -- --deploy=tockloader
 
+.PHONY: raspberrypi_pico
+raspberrypi_pico:
+	LIBTOCK_PLATFORM=raspberrypi_pico cargo run --example $(EXAMPLE) $(features) \
+		--target=thumbv6m-none-eabi $(release)
+	mkdir -p target/tbf/raspberrypi_pico
+	cp target/thumbv6m-none-eabi/release/examples/$(EXAMPLE).tab \
+		target/thumbv6m-none-eabi/release/examples/$(EXAMPLE).tbf \
+		target/tbf/raspberrypi_pico
+
 .PHONY: stm32f3discovery
 stm32f3discovery:
 	LIBTOCK_PLATFORM=stm32f3discovery cargo run --example $(EXAMPLE) \
