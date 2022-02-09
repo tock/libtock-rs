@@ -60,25 +60,25 @@ fn subscribe() {
     let driver = fake::Buttons::<10>::new();
     kernel.add_driver(&driver);
 
-    let pressed_interrupt_fired: Cell<bool> = Cell::new(false);
+    let pressed_interrupt_count: Cell<bool> = Cell::new(false);
     let listener = ButtonListener(|button, state| {
         assert_eq!(button, 0);
         assert_eq!(state, ButtonState::Pressed);
-        pressed_interrupt_fired.set(true);
+        pressed_interrupt_count.set(true);
     });
     share::scope(|subscribe| {
         assert_eq!(Buttons::register_listener(&listener, subscribe), Ok(()));
         upcall::schedule(DRIVER_NUM, 0, (0, 1, 0)).expect("Unable to schedule upcall");
         assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::Upcall);
     });
-    assert!(pressed_interrupt_fired.get());
+    assert!(pressed_interrupt_count.get());
 
-    let pressed_interrupt_fired: Cell<u32> = Cell::new(0);
+    let pressed_interrupt_count: Cell<u32> = Cell::new(0);
     let expected_button_state: Cell<ButtonState> = Cell::new(ButtonState::Released);
     let listener = ButtonListener(|button, state| {
         assert_eq!(button, 0);
         assert_eq!(state, expected_button_state.get());
-        pressed_interrupt_fired.set(pressed_interrupt_fired.get() + 1);
+        pressed_interrupt_count.set(pressed_interrupt_count.get() + 1);
     });
     share::scope(|subscribe| {
         assert_eq!(Buttons::enable_interrupts(0), Ok(()));
@@ -100,11 +100,11 @@ fn subscribe() {
         assert_eq!(driver.set_pressed(0, false), Ok(()));
         assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::NoUpcall);
     });
-    assert_eq!(pressed_interrupt_fired.get(), 2);
+    assert_eq!(pressed_interrupt_count.get(), 2);
 
-    let pressed_interrupt_fired: Cell<bool> = Cell::new(false);
+    let pressed_interrupt_count: Cell<bool> = Cell::new(false);
     let listener = ButtonListener(|_, _| {
-        pressed_interrupt_fired.set(true);
+        pressed_interrupt_count.set(true);
     });
     share::scope(|subscribe| {
         assert_eq!(Buttons::enable_interrupts(0), Ok(()));
@@ -112,5 +112,5 @@ fn subscribe() {
         Buttons::unregister_listener();
         assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::NoUpcall);
     });
-    assert!(!pressed_interrupt_fired.get());
+    assert!(!pressed_interrupt_count.get());
 }

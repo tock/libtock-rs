@@ -32,11 +32,11 @@ fn command() {
 
     for button_index in 0..10 {
         assert_eq!(
-            buttons.get_button_state(button_index).unwrap(),
-            ButtonState {
+            buttons.get_button_state(button_index),
+            Some(ButtonState {
                 pressed: false,
                 interrupt_enabled: false
-            }
+            })
         );
 
         assert!(buttons
@@ -72,11 +72,11 @@ fn command() {
 
         assert_eq!(buttons.set_pressed(button_index, false), Ok(()));
         assert_eq!(
-            buttons.get_button_state(button_index).unwrap(),
-            ButtonState {
+            buttons.get_button_state(button_index),
+            Some(ButtonState {
                 pressed: false,
                 interrupt_enabled: false
-            }
+            })
         );
     }
 }

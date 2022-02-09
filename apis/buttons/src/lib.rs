@@ -26,16 +26,6 @@ use libtock_platform::{
 /// });
 /// ```
 
-const DRIVER_NUM: u32 = 3;
-
-// Command IDs
-const BUTTONS_COUNT: u32 = 0;
-
-const BUTTONS_ENABLE_INTERRUPTS: u32 = 1;
-const BUTTONS_DISABLE_INTERRUPTS: u32 = 2;
-
-const BUTTONS_READ: u32 = 3;
-
 pub struct Buttons<S: Syscalls>(S);
 
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -140,3 +130,17 @@ impl<F: Fn(u32, ButtonState)> Upcall<OneId<DRIVER_NUM, 0>> for ButtonListener<F>
 }
 #[cfg(test)]
 mod tests;
+
+// -----------------------------------------------------------------------------
+// Driver number and command IDs
+// -----------------------------------------------------------------------------
+
+const DRIVER_NUM: u32 = 3;
+
+// Command IDs
+const BUTTONS_COUNT: u32 = 0;
+
+const BUTTONS_ENABLE_INTERRUPTS: u32 = 1;
+const BUTTONS_DISABLE_INTERRUPTS: u32 = 2;
+
+const BUTTONS_READ: u32 = 3;

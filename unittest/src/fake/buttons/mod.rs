@@ -12,23 +12,6 @@ use libtock_platform::{CommandReturn, ErrorCode};
 
 use crate::upcall;
 
-// -----------------------------------------------------------------------------
-// Driver number and command IDs
-// -----------------------------------------------------------------------------
-
-const DRIVER_NUM: u32 = 3;
-
-// Command IDs
-const BUTTONS_COUNT: u32 = 0;
-
-const BUTTONS_ENABLE_INTERRUPTS: u32 = 1;
-const BUTTONS_DISABLE_INTERRUPTS: u32 = 2;
-
-const BUTTONS_READ: u32 = 3;
-
-// -----------------------------------------------------------------------------
-// Definitions
-// -----------------------------------------------------------------------------
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub struct ButtonState {
     pub pressed: bool,
@@ -38,10 +21,6 @@ pub struct ButtonState {
 pub struct Buttons<const NUM_BUTTONS: usize> {
     buttons: [Cell<ButtonState>; NUM_BUTTONS],
 }
-
-// -----------------------------------------------------------------------------
-// Implementation details below
-// -----------------------------------------------------------------------------
 
 impl<const NUM_BUTTONS: usize> Buttons<NUM_BUTTONS> {
     pub fn new() -> std::rc::Rc<Buttons<NUM_BUTTONS>> {
@@ -53,6 +32,29 @@ impl<const NUM_BUTTONS: usize> Buttons<NUM_BUTTONS> {
         std::rc::Rc::new(Buttons {
             buttons: [OFF; NUM_BUTTONS],
         })
+    }
+
+    pub fn set_pressed(&self, button: u32, pressed: bool) -> Result<(), ErrorCode> {
+        self.buttons
+            .get(button as usize)
+            .map(|button_state| {
+                let original_button_state = button_state.get();
+                button_state.set(ButtonState {
+                    pressed,
+                    ..original_button_state
+                });
+                if original_button_state.interrupt_enabled
+                    && original_button_state.pressed != pressed
+                {
+                    upcall::schedule(DRIVER_NUM, 0, (button, pressed as u32, 0))
+                        .expect("Unable to schedule upcall {}");
+                }
+            })
+            .ok_or(ErrorCode::Invalid)
+    }
+
+    pub fn get_button_state(&self, button: u32) -> Option<ButtonState> {
+        self.buttons.get(button as usize).map(|button| button.get())
     }
 }
 
@@ -105,30 +107,19 @@ impl<const NUM_BUTTONS: usize> crate::fake::SyscallDriver for Buttons<NUM_BUTTON
     }
 }
 
-impl<const NUM_BUTTONS: usize> Buttons<NUM_BUTTONS> {
-    pub fn set_pressed(&self, button: u32, pressed: bool) -> Result<(), ErrorCode> {
-        self.buttons
-            .get(button as usize)
-            .map(|button_state| {
-                let original_button_state = button_state.get();
-                button_state.set(ButtonState {
-                    pressed,
-                    ..original_button_state
-                });
-                if original_button_state.interrupt_enabled
-                    && original_button_state.pressed != pressed
-                {
-                    upcall::schedule(DRIVER_NUM, 0, (button, pressed as u32, 0))
-                        .expect("Unable to schedule upcall {}");
-                }
-            })
-            .ok_or(ErrorCode::Invalid)
-    }
-
-    pub fn get_button_state(&self, button: u32) -> Option<ButtonState> {
-        self.buttons.get(button as usize).map(|button| button.get())
-    }
-}
-
 #[cfg(test)]
 mod tests;
+
+// -----------------------------------------------------------------------------
+// Driver number and command IDs
+// -----------------------------------------------------------------------------
+
+const DRIVER_NUM: u32 = 3;
+
+// Command IDs
+const BUTTONS_COUNT: u32 = 0;
+
+const BUTTONS_ENABLE_INTERRUPTS: u32 = 1;
+const BUTTONS_DISABLE_INTERRUPTS: u32 = 2;
+
+const BUTTONS_READ: u32 = 3;
