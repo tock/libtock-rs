@@ -12,14 +12,6 @@ use libtock_platform::{ErrorCode, Syscalls};
 /// let _ = Leds::on(0);
 /// ```
 
-const DRIVER_NUM: u32 = 2;
-
-// Command IDs
-const LEDS_COUNT: u32 = 0;
-const LED_ON: u32 = 1;
-const LED_OFF: u32 = 2;
-const LED_TOGGLE: u32 = 3;
-
 pub struct Leds<S: Syscalls>(S);
 
 impl<S: Syscalls> Leds<S> {
@@ -47,3 +39,15 @@ impl<S: Syscalls> Leds<S> {
 
 #[cfg(test)]
 mod tests;
+
+// -----------------------------------------------------------------------------
+// Driver number and command IDs
+// -----------------------------------------------------------------------------
+
+const DRIVER_NUM: u32 = 2;
+
+// Command IDs
+const LEDS_COUNT: u32 = 0;
+const LED_ON: u32 = 1;
+const LED_OFF: u32 = 2;
+const LED_TOGGLE: u32 = 3;
