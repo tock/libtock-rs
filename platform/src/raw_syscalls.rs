@@ -5,6 +5,10 @@ use crate::Register;
 /// `libtock_unittest::fake::Kernel`. **Components should not use `RawSyscalls`
 /// directly; instead, use the `Syscalls` trait, which provides higher-level
 /// interfaces to the system calls.**
+///
+/// # Safety
+/// `RawSyscalls` is unsafe because `unsafe` code depends on its methods to
+/// return the correct register values.
 
 // The RawSyscalls trait is designed to minimize the complexity and size of its
 // implementation, as its implementation is difficult to test (it cannot be used
