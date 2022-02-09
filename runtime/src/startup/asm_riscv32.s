@@ -33,7 +33,7 @@ start:
 	 * check is performed by comparing the program counter at the start to the
 	 * address of `start`, which is stored in rt_header. */
 	auipc s0, 0            /* s0 = pc */
-	mv a5, a0              /* Save rt_header so syscalls don't overwrite it */
+	mv a5, a0;             /* Save rt_header so syscalls don't overwrite it */
 	lw s1, 0(a5)           /* s1 = rt_header.start */
 	beq s0, s1, .Lset_brk  /* Skip error handling code if pc is correct */
 	/* If the beq on the previous line did not jump, then the binary is not at

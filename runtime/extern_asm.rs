@@ -18,29 +18,9 @@ pub(crate) fn build_and_link(out_dir: &str) {
             as_extra_args: &[],
             strip: false,
         }],
-        "riscv32" => &[
-            // First try riscv64-unknown-elf, as it is the toolchain used by
-            // libtock-c and the toolchain used in the CI environment.
-            AsmBuildConfig {
-                prefix: "riscv64-unknown-elf",
-                as_extra_args: &["-march=rv32imc"],
-                strip: true,
-            },
-            // Second try riscv32-unknown-elf. This is the best match for Tock's
-            // risc-v targets, but is not as widely available (and has not been
-            // tested with libtock-rs yet).
-            AsmBuildConfig {
-                prefix: "riscv32-unknown-elf",
-                as_extra_args: &[],
-                strip: false, // Untested, may need to change.
-            },
-            // Last try riscv64-linux-gnu, as it is the only option on Debian 10
-            AsmBuildConfig {
-                prefix: "riscv64-linux-gnu",
-                as_extra_args: &["-march=rv32imc"],
-                strip: true,
-            },
-        ],
+        // RISC-V's entry point is compiled using global_asm! rather than an
+        // external toolchain.
+        "riscv32" => return,
         unknown_arch => {
             panic!("Unsupported architecture {}", unknown_arch);
         }
