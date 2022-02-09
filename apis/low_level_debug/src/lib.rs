@@ -16,14 +16,6 @@ use libtock_platform::Syscalls;
 /// LowLevelDebug::print_1(0x45);
 /// ```
 
-const DRIVER_NUM: u32 = 8;
-
-// Command IDs
-const DRIVER_CHECK: u32 = 0;
-const PRINT_ALERT_CODE: u32 = 1;
-const PRINT_1: u32 = 2;
-const PRINT_2: u32 = 3;
-
 pub struct LowLevelDebug<S: Syscalls>(S);
 
 impl<S: Syscalls> LowLevelDebug<S> {
@@ -76,3 +68,15 @@ pub enum AlertCode {
 
 #[cfg(test)]
 mod tests;
+
+// -----------------------------------------------------------------------------
+// Driver number and command IDs
+// -----------------------------------------------------------------------------
+
+const DRIVER_NUM: u32 = 8;
+
+// Command IDs
+const DRIVER_CHECK: u32 = 0;
+const PRINT_ALERT_CODE: u32 = 1;
+const PRINT_1: u32 = 2;
+const PRINT_2: u32 = 3;
