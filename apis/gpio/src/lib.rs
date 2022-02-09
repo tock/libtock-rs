@@ -17,26 +17,7 @@ use libtock_platform::{
 ///
 /// ```
 
-const DRIVER_NUM: u32 = 4;
-
-// Command IDs
-const GPIO_COUNT: u32 = 0;
-
-const GPIO_ENABLE_OUTPUT: u32 = 1;
-const GPIO_SET: u32 = 2;
-const GPIO_CLEAR: u32 = 3;
-const GPIO_TOGGLE: u32 = 4;
-
-const GPIO_ENABLE_INPUT: u32 = 5;
-const GPIO_READ_INPUT: u32 = 6;
-
-const GPIO_ENABLE_INTERRUPTS: u32 = 7;
-const GPIO_DISABLE_INTERRUPTS: u32 = 8;
-
-const GPIO_DISABLE: u32 = 9;
-
-#[derive(Copy, Clone, PartialEq)]
-#[cfg_attr(test, derive(Debug))]
+#[derive(Copy, Clone, PartialEq, Debug)]
 pub enum GpioState {
     Low = 0,
     High = 1,
@@ -82,43 +63,6 @@ impl<S: Syscalls> Gpio<S> {
     /// memory.
     pub fn count() -> Result<u32, ErrorCode> {
         S::command(DRIVER_NUM, GPIO_COUNT, 0, 0).to_result()
-    }
-
-    fn enable_gpio_output(pin: u32) -> Result<(), ErrorCode> {
-        S::command(DRIVER_NUM, GPIO_ENABLE_OUTPUT, pin, 0).to_result()
-    }
-
-    fn enable_gpio_input(pin: u32, mode: u32) -> Result<(), ErrorCode> {
-        S::command(DRIVER_NUM, GPIO_ENABLE_INPUT, pin, mode).to_result()
-    }
-
-    fn write(pin: u32, state: GpioState) -> Result<(), ErrorCode> {
-        let action = match state {
-            GpioState::Low => GPIO_CLEAR,
-            _ => GPIO_SET,
-        };
-        S::command(DRIVER_NUM, action, pin, 0).to_result()
-    }
-
-    fn read(pin: u32) -> Result<GpioState, ErrorCode> {
-        let pin_state: u32 = S::command(DRIVER_NUM, GPIO_READ_INPUT, pin, 0).to_result()?;
-        Ok(pin_state.into())
-    }
-
-    fn toggle(pin: u32) -> Result<(), ErrorCode> {
-        S::command(DRIVER_NUM, GPIO_TOGGLE, pin, 0).to_result()
-    }
-
-    fn disable(pin: u32) -> Result<(), ErrorCode> {
-        S::command(DRIVER_NUM, GPIO_DISABLE, pin, 0).to_result()
-    }
-
-    fn enable_interrupts(pin: u32, edge: PinInterruptEdge) -> Result<(), ErrorCode> {
-        S::command(DRIVER_NUM, GPIO_ENABLE_INTERRUPTS, pin, edge as u32).to_result()
-    }
-
-    fn disable_interrupts(pin: u32) -> Result<(), ErrorCode> {
-        S::command(DRIVER_NUM, GPIO_DISABLE_INTERRUPTS, pin, 0).to_result()
     }
 
     pub fn get_pin(pin: u32) -> Result<Pin<S>, ErrorCode> {
@@ -242,5 +186,70 @@ impl<S: Syscalls, P: Pull> Drop for InputPin<'_, S, P> {
     }
 }
 
+// -----------------------------------------------------------------------------
+// Implementation details below
+// -----------------------------------------------------------------------------
+
+impl<S: Syscalls> Gpio<S> {
+    fn enable_gpio_output(pin: u32) -> Result<(), ErrorCode> {
+        S::command(DRIVER_NUM, GPIO_ENABLE_OUTPUT, pin, 0).to_result()
+    }
+
+    fn enable_gpio_input(pin: u32, mode: u32) -> Result<(), ErrorCode> {
+        S::command(DRIVER_NUM, GPIO_ENABLE_INPUT, pin, mode).to_result()
+    }
+
+    fn write(pin: u32, state: GpioState) -> Result<(), ErrorCode> {
+        let action = match state {
+            GpioState::Low => GPIO_CLEAR,
+            _ => GPIO_SET,
+        };
+        S::command(DRIVER_NUM, action, pin, 0).to_result()
+    }
+
+    fn read(pin: u32) -> Result<GpioState, ErrorCode> {
+        let pin_state: u32 = S::command(DRIVER_NUM, GPIO_READ_INPUT, pin, 0).to_result()?;
+        Ok(pin_state.into())
+    }
+
+    fn toggle(pin: u32) -> Result<(), ErrorCode> {
+        S::command(DRIVER_NUM, GPIO_TOGGLE, pin, 0).to_result()
+    }
+
+    fn disable(pin: u32) -> Result<(), ErrorCode> {
+        S::command(DRIVER_NUM, GPIO_DISABLE, pin, 0).to_result()
+    }
+
+    fn enable_interrupts(pin: u32, edge: PinInterruptEdge) -> Result<(), ErrorCode> {
+        S::command(DRIVER_NUM, GPIO_ENABLE_INTERRUPTS, pin, edge as u32).to_result()
+    }
+
+    fn disable_interrupts(pin: u32) -> Result<(), ErrorCode> {
+        S::command(DRIVER_NUM, GPIO_DISABLE_INTERRUPTS, pin, 0).to_result()
+    }
+}
+
 #[cfg(test)]
 mod tests;
+
+// -----------------------------------------------------------------------------
+// Driver number and command IDs
+// -----------------------------------------------------------------------------
+
+const DRIVER_NUM: u32 = 4;
+
+// Command IDs
+const GPIO_COUNT: u32 = 0;
+
+const GPIO_ENABLE_OUTPUT: u32 = 1;
+const GPIO_SET: u32 = 2;
+const GPIO_CLEAR: u32 = 3;
+const GPIO_TOGGLE: u32 = 4;
+
+const GPIO_ENABLE_INPUT: u32 = 5;
+const GPIO_READ_INPUT: u32 = 6;
+
+const GPIO_ENABLE_INTERRUPTS: u32 = 7;
+const GPIO_DISABLE_INTERRUPTS: u32 = 8;
+
+const GPIO_DISABLE: u32 = 9;

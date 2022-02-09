@@ -13,32 +13,6 @@ use std::convert::TryFrom;
 
 use crate::upcall;
 
-// -----------------------------------------------------------------------------
-// Driver number and command IDs
-// -----------------------------------------------------------------------------
-
-const DRIVER_NUM: u32 = 4;
-
-// Command IDs
-const GPIO_COUNT: u32 = 0;
-
-const GPIO_ENABLE_OUTPUT: u32 = 1;
-const GPIO_SET: u32 = 2;
-const GPIO_CLEAR: u32 = 3;
-const GPIO_TOGGLE: u32 = 4;
-
-const GPIO_ENABLE_INPUT: u32 = 5;
-const GPIO_READ_INPUT: u32 = 6;
-
-const GPIO_ENABLE_INTERRUPTS: u32 = 7;
-const GPIO_DISABLE_INTERRUPTS: u32 = 8;
-
-const GPIO_DISABLE: u32 = 9;
-
-// -----------------------------------------------------------------------------
-// Definitions
-// -----------------------------------------------------------------------------
-
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum GpioMode {
     Output,
@@ -97,10 +71,6 @@ pub struct Gpio<const NUM_GPIOS: usize> {
     gpios: [Cell<Option<GpioState>>; NUM_GPIOS],
 }
 
-// -----------------------------------------------------------------------------
-// Implementation details below
-// -----------------------------------------------------------------------------
-
 impl<const NUM_GPIOS: usize> Gpio<NUM_GPIOS> {
     pub fn new() -> std::rc::Rc<Gpio<NUM_GPIOS>> {
         #[allow(clippy::declare_interior_mutable_const)]
@@ -112,6 +82,53 @@ impl<const NUM_GPIOS: usize> Gpio<NUM_GPIOS> {
         std::rc::Rc::new(Gpio {
             gpios: [OFF; NUM_GPIOS],
         })
+    }
+
+    pub fn set_missing_gpio(&self, gpio: usize) {
+        if (gpio as usize) < self.gpios.len() {
+            self.gpios[gpio as usize].set(None);
+        }
+    }
+
+    pub fn set_value(&self, pin: u32, value: bool) -> Result<(), ErrorCode> {
+        self.gpios
+            .get(pin as usize)
+            .map(|gpio| {
+                if let Some(gpio_state) = gpio.get() {
+                    let original_value = gpio_state.value;
+                    gpio.set(Some(GpioState {
+                        value,
+                        ..gpio_state
+                    }));
+                    if original_value != value {
+                        if value {
+                            if gpio_state.interrupt_enabled == Some(InterruptEdge::Either)
+                                || gpio_state.interrupt_enabled == Some(InterruptEdge::Rising)
+                            {
+                                upcall::schedule(DRIVER_NUM, 0, (pin, value as u32, 0))
+                                    .expect("Unable to schedule upcall");
+                            }
+                        } else if gpio_state.interrupt_enabled == Some(InterruptEdge::Falling)
+                            || gpio_state.interrupt_enabled == Some(InterruptEdge::Either)
+                        {
+                            upcall::schedule(DRIVER_NUM, 0, (pin, value as u32, 0))
+                                .expect("Unable to schedule upcall");
+                        }
+                    }
+                    Ok(())
+                } else {
+                    Err(ErrorCode::NoDevice)
+                }
+            })
+            .ok_or(ErrorCode::Invalid)
+            .and_then(|value| value)
+    }
+
+    pub fn get_gpio_state(&self, button: u32) -> Option<GpioState> {
+        self.gpios
+            .get(button as usize)
+            .map(|button| button.get())
+            .and_then(|value| value)
     }
 }
 
@@ -222,53 +239,27 @@ impl<const NUM_GPIOS: usize> crate::fake::SyscallDriver for Gpio<NUM_GPIOS> {
     }
 }
 
-impl<const NUM_GPIOS: usize> Gpio<NUM_GPIOS> {
-    pub fn set_missing_gpio(&self, gpio: usize) {
-        if (gpio as usize) < self.gpios.len() {
-            self.gpios[gpio as usize].set(None);
-        }
-    }
-
-    pub fn set_value(&self, pin: u32, value: bool) -> Result<(), ErrorCode> {
-        self.gpios
-            .get(pin as usize)
-            .map(|gpio| {
-                if let Some(gpio_state) = gpio.get() {
-                    let original_value = gpio_state.value;
-                    gpio.set(Some(GpioState {
-                        value,
-                        ..gpio_state
-                    }));
-                    if original_value != value {
-                        if value {
-                            if gpio_state.interrupt_enabled == Some(InterruptEdge::Either)
-                                || gpio_state.interrupt_enabled == Some(InterruptEdge::Rising)
-                            {
-                                upcall::schedule(DRIVER_NUM, 0, (pin, value as u32, 0))
-                                    .expect("Unable to schedule upcall");
-                            }
-                        } else if gpio_state.interrupt_enabled == Some(InterruptEdge::Falling)
-                            || gpio_state.interrupt_enabled == Some(InterruptEdge::Either)
-                        {
-                            upcall::schedule(DRIVER_NUM, 0, (pin, value as u32, 0))
-                                .expect("Unable to schedule upcall");
-                        }
-                    }
-                    Ok(())
-                } else {
-                    Err(ErrorCode::NoDevice)
-                }
-            })
-            .ok_or(ErrorCode::Invalid)
-            .and_then(|value| value)
-    }
-
-    pub fn get_gpio_state(&self, button: u32) -> Option<GpioState> {
-        self.gpios
-            .get(button as usize)
-            .map(|button| button.get())
-            .and_then(|value| value)
-    }
-}
 #[cfg(test)]
 mod tests;
+
+// -----------------------------------------------------------------------------
+// Driver number and command IDs
+// -----------------------------------------------------------------------------
+
+const DRIVER_NUM: u32 = 4;
+
+// Command IDs
+const GPIO_COUNT: u32 = 0;
+
+const GPIO_ENABLE_OUTPUT: u32 = 1;
+const GPIO_SET: u32 = 2;
+const GPIO_CLEAR: u32 = 3;
+const GPIO_TOGGLE: u32 = 4;
+
+const GPIO_ENABLE_INPUT: u32 = 5;
+const GPIO_READ_INPUT: u32 = 6;
+
+const GPIO_ENABLE_INTERRUPTS: u32 = 7;
+const GPIO_DISABLE_INTERRUPTS: u32 = 8;
+
+const GPIO_DISABLE: u32 = 9;
