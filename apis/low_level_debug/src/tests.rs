@@ -67,7 +67,7 @@ fn failed_print() {
     let driver = fake::LowLevelDebug::new();
     kernel.add_driver(&driver);
     kernel.add_expected_syscall(ExpectedSyscall::Command {
-        driver_id: DRIVER_ID,
+        driver_id: DRIVER_NUM,
         command_id: PRINT_1,
         argument0: 72,
         argument1: 0,

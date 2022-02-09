@@ -32,20 +32,20 @@ fn kernel_integration() {
     let kernel = fake::Kernel::new();
     let leds = Leds::<10>::new();
     kernel.add_driver(&leds);
-    let value = fake::Syscalls::command(DRIVER_NUMBER, DRIVER_CHECK, 1, 2);
+    let value = fake::Syscalls::command(DRIVER_NUM, DRIVER_CHECK, 1, 2);
     assert!(value.is_success_u32());
     assert_eq!(value.get_success_u32(), Some(10));
     assert_eq!(
-        fake::Syscalls::command(DRIVER_NUMBER, LED_ON, 11, 0).get_failure(),
+        fake::Syscalls::command(DRIVER_NUM, LED_ON, 11, 0).get_failure(),
         Some(ErrorCode::Invalid)
     );
     assert_eq!(leds.get_led(0), Some(false));
-    assert!(fake::Syscalls::command(DRIVER_NUMBER, LED_ON, 0, 0).is_success());
+    assert!(fake::Syscalls::command(DRIVER_NUM, LED_ON, 0, 0).is_success());
     assert_eq!(leds.get_led(0), Some(true));
-    assert!(fake::Syscalls::command(DRIVER_NUMBER, LED_OFF, 0, 0).is_success());
+    assert!(fake::Syscalls::command(DRIVER_NUM, LED_OFF, 0, 0).is_success());
     assert_eq!(leds.get_led(0), Some(false));
-    assert!(fake::Syscalls::command(DRIVER_NUMBER, LED_TOGGLE, 0, 0).is_success());
+    assert!(fake::Syscalls::command(DRIVER_NUM, LED_TOGGLE, 0, 0).is_success());
     assert_eq!(leds.get_led(0), Some(true));
-    assert!(fake::Syscalls::command(DRIVER_NUMBER, LED_TOGGLE, 0, 0).is_success());
+    assert!(fake::Syscalls::command(DRIVER_NUM, LED_TOGGLE, 0, 0).is_success());
     assert_eq!(leds.get_led(0), Some(false));
 }

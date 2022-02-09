@@ -19,11 +19,15 @@ impl<const LEDS_COUNT: usize> Leds<LEDS_COUNT> {
             leds: [OFF; LEDS_COUNT],
         })
     }
+
+    pub fn get_led(&self, led: u32) -> Option<bool> {
+        self.leds.get(led as usize).map(|led| led.get())
+    }
 }
 
 impl<const LEDS_COUNT: usize> crate::fake::SyscallDriver for Leds<LEDS_COUNT> {
     fn id(&self) -> u32 {
-        DRIVER_NUMBER
+        DRIVER_NUM
     }
     fn num_upcalls(&self) -> u32 {
         0
@@ -61,23 +65,17 @@ impl<const LEDS_COUNT: usize> crate::fake::SyscallDriver for Leds<LEDS_COUNT> {
     }
 }
 
+#[cfg(test)]
+mod tests;
+
 // -----------------------------------------------------------------------------
 // Implementation details below
 // -----------------------------------------------------------------------------
 
-#[cfg(test)]
-mod tests;
-
-const DRIVER_NUMBER: u32 = 2;
+const DRIVER_NUM: u32 = 2;
 
 // Command numbers
 const DRIVER_CHECK: u32 = 0;
 const LED_ON: u32 = 1;
 const LED_OFF: u32 = 2;
 const LED_TOGGLE: u32 = 3;
-
-impl<const NUM_LEDS: usize> Leds<NUM_LEDS> {
-    pub fn get_led(&self, led: u32) -> Option<bool> {
-        self.leds.get(led as usize).map(|led| led.get())
-    }
-}
