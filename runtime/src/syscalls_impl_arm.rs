@@ -6,6 +6,12 @@ unsafe impl RawSyscalls for crate::TockSyscalls {
         // Safety: This matches the invariants required by the documentation on
         // RawSyscalls::yield1
         unsafe {
+            #[cfg(all(
+                target_arch = "arm",
+                target_feature = "v7",
+                target_feature = "thumb-mode",
+                target_os = "none"
+            ))]
             asm!("svc 0",
                  inlateout("r0") r0 => _, // a1
                  lateout("r1") _,         // a2
@@ -20,6 +26,31 @@ unsafe impl RawSyscalls for crate::TockSyscalls {
                  lateout("r14") _, // lr
                  // r15 is the program counter.
             );
+
+            // It seems that target_feature = "v6" is set for arm v7
+            // so we explicitly check that we are not compiling it.
+            #[cfg(all(
+                target_arch = "arm",
+                target_feature = "v6",
+                not(target_feature = "v7"),
+                target_feature = "thumb-mode",
+                target_os = "none"
+            ))]
+            asm!("svc 0",
+                 inlateout("r0") r0 => _, // a1
+                 lateout("r1") _,         // a2
+                 lateout("r2") _,         // a3
+                 lateout("r3") _,         // a4
+                 // r4-r8 are callee-saved.
+                 // r9 is platform-specific. We don't use it in libtock_runtime,
+                 // so it is either unused or used as a callee-saved register.
+                 // r10 and r11 are callee-saved.
+
+                 // r13 is the stack pointer and must be restored by the callee.
+                 // r15 is the program counter.
+
+                //  clobber_abi("C"), // ip (r12), lr (r14)
+            );
         }
     }
 
@@ -32,7 +63,7 @@ unsafe impl RawSyscalls for crate::TockSyscalls {
                 target_feature = "v7",
                 target_feature = "thumb-mode",
                 target_os = "none"
-                ))]
+            ))]
             asm!("svc 0",
                  inlateout("r0") r0 => _, // a1
                  inlateout("r1") r1 => _, // a2
@@ -42,19 +73,22 @@ unsafe impl RawSyscalls for crate::TockSyscalls {
                  // r9 is platform-specific. We don't use it in libtock_runtime,
                  // so it is either unused or used as a callee-saved register.
                  // r10 and r11 are callee-saved.
-                 
+
                  lateout("r12") _, // ip
                  // r13 is the stack pointer and must be restored by the callee.
                  lateout("r14") _, // lr
                  // r15 is the program counter.
             );
 
+            // It seems that target_feature = "v6" is set for arm v7
+            // so we explicitly check that we are not compiling it.
             #[cfg(all(
                 target_arch = "arm",
                 target_feature = "v6",
+                not(target_feature = "v7"),
                 target_feature = "thumb-mode",
                 target_os = "none"
-                ))]
+            ))]
             asm!("svc 0",
                  inlateout("r0") r0 => _, // a1
                  inlateout("r1") r1 => _, // a2
@@ -64,7 +98,7 @@ unsafe impl RawSyscalls for crate::TockSyscalls {
                  // r9 is platform-specific. We don't use it in libtock_runtime,
                  // so it is either unused or used as a callee-saved register.
                  // r10 and r11 are callee-saved.
-                 
+
                  // r13 is the stack pointer and must be restored by the callee.
                  // r15 is the program counter.
 

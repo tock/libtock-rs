@@ -203,6 +203,15 @@ raspberrypi_pico:
 		target/thumbv6m-none-eabi/release/examples/$(EXAMPLE).tbf \
 		target/tbf/raspberrypi_pico
 
+.PHONY: nano_rp2040_connect
+nano_rp2040_connect:
+	LIBTOCK_PLATFORM=nano_rp2040_connect cargo run --example $(EXAMPLE) $(features) \
+		--target=thumbv6m-none-eabi $(release)
+	mkdir -p target/tbf/nano_rp2040_connect
+	cp target/thumbv6m-none-eabi/release/examples/$(EXAMPLE).tab \
+		target/thumbv6m-none-eabi/release/examples/$(EXAMPLE).tbf \
+		target/tbf/nano_rp2040_connect
+
 .PHONY: stm32f3discovery
 stm32f3discovery:
 	LIBTOCK_PLATFORM=stm32f3discovery cargo run --example $(EXAMPLE) \
