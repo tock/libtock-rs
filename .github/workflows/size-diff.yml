@@ -39,8 +39,7 @@ jobs:
       # master.
       - name: Compute sizes
         run: |
-          sudo apt-get install binutils-arm-none-eabi \
-            binutils-riscv64-unknown-elf
+          sudo apt-get install binutils-arm-none-eabi
           UPSTREAM_REMOTE_NAME="${UPSTREAM_REMOTE_NAME:-origin}"
           GITHUB_BASE_REF="${GITHUB_BASE_REF:-master}"
           cd "${GITHUB_WORKSPACE}"

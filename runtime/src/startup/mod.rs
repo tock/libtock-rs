@@ -1,5 +1,11 @@
 //! Runtime components related to process startup.
 
+// Include the correct `start` symbol (the program entry point) for the
+// architecture.
+// TODO: Migrate ARM to global_asm! and delete extern_asm.rs.
+#[cfg(target_arch = "riscv32")]
+core::arch::global_asm!(include_str!("asm_riscv32.s"));
+
 /// `set_main!` is used to tell `libtock_runtime` where the process binary's
 /// `main` function is. The process binary's `main` function must have the
 /// signature `FnOnce() -> T`, where T is some concrete type that implements

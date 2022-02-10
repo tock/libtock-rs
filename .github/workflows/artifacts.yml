@@ -12,8 +12,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          sudo apt-get install binutils-arm-none-eabi \
-            binutils-riscv64-unknown-elf
+          sudo apt-get install binutils-arm-none-eabi
           cargo install elf2tab
 
       - name: Build LEDs

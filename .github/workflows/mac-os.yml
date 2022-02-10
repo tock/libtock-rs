@@ -26,3 +26,5 @@ jobs:
           cd "${GITHUB_WORKSPACE}"
           LIBTOCK_PLATFORM=nrf52 cargo build -p libtock2 \
             --target=thumbv7em-none-eabi
+          LIBTOCK_PLATFORM=hifive1 cargo build -p libtock2 \
+            --target=riscv32imac-unknown-none-elf
