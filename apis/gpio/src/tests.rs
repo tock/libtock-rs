@@ -34,12 +34,8 @@ fn output() {
 
     assert_eq!(Gpio::count(), Ok(10));
 
-    let pin_11 = Gpio::get_pin(11);
-    assert!(pin_11.is_err());
-    let _ = pin_11.map_err(|error| assert_eq!(error, ErrorCode::Invalid));
-    let pin_1 = Gpio::get_pin(1);
-    assert!(pin_1.is_err());
-    let _ = pin_1.map_err(|error| assert_eq!(error, ErrorCode::NoDevice));
+    assert!(core::matches!(Gpio::get_pin(11), Err(ErrorCode::Invalid)));
+    assert!(core::matches!(Gpio::get_pin(1), Err(ErrorCode::NoDevice)));
 
     let pin_0 = Gpio::get_pin(0);
     assert!(pin_0.is_ok());
@@ -72,12 +68,8 @@ fn input() {
 
     assert_eq!(Gpio::count(), Ok(10));
 
-    let pin_11 = Gpio::get_pin(11);
-    assert!(pin_11.is_err());
-    let _ = pin_11.map_err(|error| assert_eq!(error, ErrorCode::Invalid));
-    let pin_1 = Gpio::get_pin(1);
-    assert!(pin_1.is_err());
-    let _ = pin_1.map_err(|error| assert_eq!(error, ErrorCode::NoDevice));
+    assert!(core::matches!(Gpio::get_pin(11), Err(ErrorCode::Invalid)));
+    assert!(core::matches!(Gpio::get_pin(1), Err(ErrorCode::NoDevice)));
 
     let pin_0 = Gpio::get_pin(0);
     assert!(pin_0.is_ok());
@@ -140,12 +132,8 @@ fn interrupts() {
     assert_eq!(upcall::schedule(DRIVER_NUM, 0, (0, 0, 0)), Ok(()));
     assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::NoUpcall);
 
-    let pin_11 = Gpio::get_pin(11);
-    assert!(pin_11.is_err());
-    let _ = pin_11.map_err(|error| assert_eq!(error, ErrorCode::Invalid));
-    let pin_1 = Gpio::get_pin(1);
-    assert!(pin_1.is_err());
-    let _ = pin_1.map_err(|error| assert_eq!(error, ErrorCode::NoDevice));
+    assert!(core::matches!(Gpio::get_pin(11), Err(ErrorCode::Invalid)));
+    assert!(core::matches!(Gpio::get_pin(1), Err(ErrorCode::NoDevice)));
 
     let pin_0 = Gpio::get_pin(0);
     assert!(pin_0.is_ok());
