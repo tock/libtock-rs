@@ -2,9 +2,10 @@ use core::str;
 
 use crate::{uDebug, uDisplay, uWrite, Formatter};
 
-macro_rules! ixx {
-    ($uxx:ty, $n:expr, $buf:expr) => {{
+macro_rules! ixx_pad {
+    ($uxx:ty, $n:expr, $w:expr, $p:expr, $buf:expr) => {{
         let n = $n;
+        let len = $buf.len();
         let negative = n.is_negative();
         let mut n = if negative {
             match n.checked_abs() {
@@ -28,7 +29,40 @@ macro_rules! ixx {
             }
         }
 
-        if negative {
+        // Now fill in padding up to the prescribed width.
+        // We do not support widths shorter than the value being
+        // printed, like core::fmt::format!()
+        // Also, we currently only support ' ' and '0' padding.
+        match ($w, $p) {
+            // For now, we default to left padding for all int-like values
+            (Some(mut w), pad) => {
+                // for space padding, pad before negative sign
+                // for 0 padding, pad after negative sign
+                if negative && pad == ' ' {
+                    i -= 1;
+                    *$buf
+                        .get_mut(i)
+                        .unwrap_or_else(|| unsafe { assume_unreachable!() }) = b'-';
+                } else if negative {
+                    w -= 1;
+                }
+                while i > (len - (w as usize)) {
+                    i -= 1;
+                    let byte = match pad {
+                        '0' => b'0',
+                        _ => b' ',
+                    };
+
+                    *$buf
+                        .get_mut(i)
+                        .unwrap_or_else(|| unsafe { assume_unreachable!() }) = byte;
+                }
+            }
+
+            _ => {}
+        }
+
+        if negative && ($w.is_none() || $p != ' ') {
             i -= 1;
             *$buf
                 .get_mut(i)
@@ -39,8 +73,8 @@ macro_rules! ixx {
     }};
 }
 
-fn isize(n: isize, buf: &mut [u8]) -> &str {
-    ixx!(usize, n, buf)
+fn isize_pad(n: isize, width: Option<u8>, pad: char, buf: &mut [u8]) -> &str {
+    ixx_pad!(usize, n, width, pad, buf)
 }
 
 impl uDebug for i8 {
@@ -48,9 +82,13 @@ impl uDebug for i8 {
     where
         W: uWrite + ?Sized,
     {
-        let mut buf: [u8; 4] = [0; 4];
+        if f.hex.is_some() {
+            <u8 as uDebug>::fmt(&(*self as u8), f)
+        } else {
+            let mut buf: [u8; 18] = [0; 18];
 
-        f.write_str(isize(isize::from(*self), &mut buf))
+            f.write_str(isize_pad(isize::from(*self), f.width, f.pad, &mut buf))
+        }
     }
 }
 
@@ -69,9 +107,13 @@ impl uDebug for i16 {
     where
         W: uWrite + ?Sized,
     {
-        let mut buf: [u8; 6] = [0; 6];
+        if f.hex.is_some() {
+            <u16 as uDebug>::fmt(&(*self as u16), f)
+        } else {
+            let mut buf: [u8; 18] = [0; 18];
 
-        f.write_str(isize(isize::from(*self), &mut buf))
+            f.write_str(isize_pad(isize::from(*self), f.width, f.pad, &mut buf))
+        }
     }
 }
 
@@ -90,9 +132,13 @@ impl uDebug for i32 {
     where
         W: uWrite + ?Sized,
     {
-        let mut buf: [u8; 11] = [0; 11];
+        if f.hex.is_some() {
+            <u32 as uDebug>::fmt(&(*self as u32), f)
+        } else {
+            let mut buf: [u8; 21] = [0; 21];
 
-        f.write_str(isize(*self as isize, &mut buf))
+            f.write_str(isize_pad(*self as isize, f.width, f.pad, &mut buf))
+        }
     }
 }
 
@@ -112,10 +158,14 @@ impl uDebug for i64 {
     where
         W: uWrite + ?Sized,
     {
-        let mut buf: [u8; 20] = [0; 20];
+        if f.hex.is_some() {
+            <u64 as uDebug>::fmt(&(*self as u64), f)
+        } else {
+            let mut buf: [u8; 30] = [0; 30];
 
-        let s = ixx!(u64, *self, buf);
-        f.write_str(s)
+            let s = ixx_pad!(u64, *self, f.width, f.pad, buf);
+            f.write_str(s)
+        }
     }
 
     #[cfg(target_pointer_width = "64")]
@@ -123,9 +173,13 @@ impl uDebug for i64 {
     where
         W: uWrite + ?Sized,
     {
-        let mut buf: [u8; 20] = [0; 20];
+        if f.hex.is_some() {
+            <u64 as uDebug>::fmt(&(*self as u64), f)
+        } else {
+            let mut buf: [u8; 30] = [0; 30];
 
-        f.write_str(isize(*self as isize, &mut buf))
+            f.write_str(isize_pad(*self as isize, f.width, f.pad, &mut buf))
+        }
     }
 }
 
@@ -144,10 +198,14 @@ impl uDebug for i128 {
     where
         W: uWrite + ?Sized,
     {
-        let mut buf: [u8; 40] = [0; 40];
+        if f.hex.is_some() {
+            <u128 as uDebug>::fmt(&(*self as u128), f)
+        } else {
+            let mut buf: [u8; 50] = [0; 50];
 
-        let s = ixx!(u128, *self, buf);
-        f.write_str(s)
+            let s = ixx_pad!(u128, *self, f.width, f.pad, buf);
+            f.write_str(s)
+        }
     }
 }
 

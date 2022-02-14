@@ -99,6 +99,154 @@ fn ixx() {
 }
 
 #[test]
+fn hex() {
+    cmp!("{:x}", 0i8);
+    cmp!("{:x}", 10i8);
+    cmp!("{:x}", 100i8);
+    cmp!("{:x}", i8::min_value());
+    cmp!("{:x}", i8::max_value());
+    cmp!("{:x}", i16::min_value());
+    cmp!("{:x}", i16::max_value());
+    cmp!("{:x}", i32::min_value());
+    cmp!("{:x}", i32::max_value());
+    cmp!("{:x}", i64::min_value());
+    cmp!("{:x}", i64::max_value());
+    cmp!("{:x}", i128::min_value());
+    cmp!("{:x}", i128::max_value());
+    cmp!("{:x}", isize::min_value());
+    cmp!("{:x}", isize::max_value());
+    cmp!("{:x}", 0u8);
+    cmp!("{:x}", 10u8);
+    cmp!("{:x}", 100u8);
+    cmp!("{:x}", u8::max_value());
+    cmp!("{:x}", u16::max_value());
+    cmp!("{:x}", u32::max_value());
+    cmp!("{:x}", u64::max_value());
+    cmp!("{:x}", u128::max_value());
+    cmp!("{:x}", usize::max_value());
+}
+
+#[test]
+fn special_hex() {
+    cmp!("{:X}", 0i8);
+    cmp!("{:X}", 10i8);
+    cmp!("{:X}", 100i8);
+    cmp!("{:X}", u32::max_value());
+    cmp!("{:X}", u64::max_value());
+    cmp!("{:#X}", 0i8);
+    cmp!("{:#X}", 10i8);
+    cmp!("{:#X}", u32::max_value());
+    cmp!("{:#X}", u64::max_value());
+    cmp!("{:#x}", 0i8);
+    cmp!("{:#x}", 10i8);
+    cmp!("{:#x}", u32::max_value());
+    cmp!("{:#x}", u64::max_value());
+    cmp!("{:#x}", 0i8);
+    cmp!("{:#x}", 10i8);
+    cmp!("{:#9x}", u32::max_value());
+    cmp!("{:#09x}", u64::max_value());
+    cmp!("{:#9X}", u32::max_value());
+    cmp!("{:#09X}", u64::max_value());
+}
+
+// Verify padding, with spaces or zeroes, up to width 10, for any
+// numeric value.
+macro_rules! width_test {
+    ($tt:expr) => {{
+        cmp!("{:1}", $tt);
+        cmp!("{:3}", $tt);
+        cmp!("{:5}", $tt);
+        cmp!("{:7}", $tt);
+        cmp!("{:9}", $tt);
+        cmp!("{:10}", $tt);
+        cmp!("{:02}", $tt);
+        cmp!("{:04}", $tt);
+        cmp!("{:06}", $tt);
+        cmp!("{:08}", $tt);
+        cmp!("{:010}", $tt);
+        cmp!("{:018}", $tt);
+
+        cmp!("lead{:018}follow", $tt);
+        cmp!("lead{:10}follow", $tt);
+    }};
+}
+
+// Verify space padding for non-numeric values
+macro_rules! width_test_non_numeric {
+    ($tt:expr) => {{
+        cmp!("{:1}", $tt);
+        cmp!("{:3}", $tt);
+        cmp!("{:5}", $tt);
+        cmp!("{:7}", $tt);
+        cmp!("{:9}", $tt);
+        cmp!("{:10}", $tt);
+        cmp!("{:18}", $tt);
+        cmp!("lead{:18}follow", $tt);
+        cmp!("lead{:5}follow", $tt);
+    }};
+}
+
+#[test]
+fn width_format_numbers() {
+    width_test!(0i8);
+    width_test!(10i8);
+    width_test!(100i8);
+    width_test!(i8::min_value());
+    width_test!(i8::max_value());
+    width_test!(i16::min_value());
+    width_test!(i16::max_value());
+    width_test!(i32::min_value());
+    width_test!(i32::max_value());
+    width_test!(i64::min_value());
+    width_test!(i64::max_value());
+    width_test!(i128::min_value());
+    width_test!(i128::max_value());
+    width_test!(isize::min_value());
+    width_test!(isize::max_value());
+    width_test!(0u8);
+    width_test!(10u8);
+    width_test!(100u8);
+    width_test!(u8::max_value());
+    width_test!(u16::max_value());
+    width_test!(u32::max_value());
+    width_test!(u64::max_value());
+    width_test!(u128::max_value());
+    width_test!(usize::max_value());
+
+    width_test!(0i8);
+    width_test!(10i8);
+    width_test!(100i8);
+    width_test!(i8::min_value());
+    width_test!(i8::max_value());
+    width_test!(i16::min_value());
+    width_test!(i16::max_value());
+    width_test!(i32::min_value());
+    width_test!(i32::max_value());
+    width_test!(i64::min_value());
+    width_test!(i64::max_value());
+    width_test!(i128::min_value());
+    width_test!(i128::max_value());
+    width_test!(isize::min_value());
+    width_test!(isize::max_value());
+    width_test!(0u8);
+    width_test!(10u8);
+    width_test!(100u8);
+    width_test!(u8::max_value());
+    width_test!(u16::max_value());
+    width_test!(u32::max_value());
+    width_test!(u64::max_value());
+    width_test!(u128::max_value());
+    width_test!(usize::max_value());
+}
+
+#[test]
+fn width_non_numbers() {
+    width_test_non_numeric!(false);
+    width_test_non_numeric!("hi");
+    width_test_non_numeric!('P');
+}
+
+#[test]
 fn fmt() {
     cmp!("Hello, world!");
     cmp!("The answer is {}", 42);
