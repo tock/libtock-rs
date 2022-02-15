@@ -36,21 +36,21 @@ start:
 	mov r4, pc        /* r4 = address of .start + 4 (Thumb bit unset) */
 	mov r5, r0        /* Save rt_header; we use r0 for syscalls */
 	ldr r0, [r5, #0]  /* r0 = rt_header.start */
-	add r0, #3        /* r0 = rt_header.start + 4 - 1 (for Thumb bit) */
+	adds r0, #3       /* r0 = rt_header.start + 4 - 1 (for Thumb bit) */
 	cmp r0, r4
 	beq .Lset_brk     /* Skip error handling if pc correct */
 	/* If the beq on the previous line did not jump, then the binary is not at
 	 * the correct location. Report the error via LowLevelDebug then exit. */
-	mov r0, #8  /* LowLevelDebug driver number */
-	mov r1, #1  /* Command: print alert code */
-	mov r2, #2  /* Alert code 2 (incorrect location */
-	svc 2       /* Execute `command` */
-	mov r0, #0  /* Operation: exit-terminate */
-	svc 6       /* Execute `exit` */
+	movs r0, #8  /* LowLevelDebug driver number */
+	movs r1, #1  /* Command: print alert code */
+	movs r2, #2  /* Alert code 2 (incorrect location */
+	svc 2        /* Execute `command` */
+	movs r0, #0  /* Operation: exit-terminate */
+	svc 6        /* Execute `exit` */
 
 .Lset_brk:
 	/* memop(): set brk to rt_header's initial break value */
-	mov r0, #0        /* operation: set break */
+	movs r0, #0       /* operation: set break */
 	ldr r1, [r5, #4]  /* rt_header`s initial process break */
 	svc 5             /* call `memop` */
 
@@ -66,9 +66,9 @@ start:
 .Ldata_loop_body:
 	ldr r3, [r1]               /* r3 = *src */
 	str r3, [r2]               /* *(dest) = r3 */
-	sub r0, #4                 /* remaining -= 4 */
-	add r1, #4                 /* src += 4 */
-	add r2, #4                 /* dest += 4 */
+	subs r0, #4                /* remaining -= 4 */
+	adds r1, #4                /* src += 4 */
+	adds r2, #4                /* dest += 4 */
 	cmp r0, #0
 	bne .Ldata_loop_body       /* Iterate again if remaining != 0 */
 
@@ -76,11 +76,11 @@ start:
 	ldr r0, [r5, #24]          /* remaining = rt_header.bss_size */
 	cbz r0, .Lcall_rust_start  /* Jump to call_rust_start if remaining == 0 */
 	ldr r1, [r5, #28]          /* dest = rt_header.bss_start */
-	mov r2, #0                 /* r2 = 0 */
+	movs r2, #0                /* r2 = 0 */
 .Lbss_loop_body:
 	strb r2, [r1]              /* *(dest) = r2 = 0 */
-	sub r0, #1                 /* remaining -= 1 */
-	add r1, #1                 /* dest += 1 */
+	subs r0, #1                /* remaining -= 1 */
+	adds r1, #1                /* dest += 1 */
 	cmp r0, #0
 	bne .Lbss_loop_body        /* Iterate again if remaining != 0 */
 
