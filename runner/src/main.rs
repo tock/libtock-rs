@@ -22,6 +22,10 @@ pub struct Cli {
     /// Whether to output verbose debugging information to the console.
     #[clap(long, short)]
     verbose: bool,
+
+    /// The architecture of the elf file
+    #[clap(long, short)]
+    architecture: Option<String>,
 }
 
 #[derive(ArgEnum, Clone, Copy, Debug)]

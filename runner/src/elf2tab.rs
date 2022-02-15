@@ -19,7 +19,11 @@ pub fn convert_elf(cli: &Cli) -> OutFiles {
     let stack_size = read_stack_size(cli);
     let elf = cli.elf.as_os_str();
     let mut tbf_path = cli.elf.clone();
-    tbf_path.set_extension("tbf");
+    if let Some(ref architecture) = cli.architecture {
+        tbf_path.set_extension(format!("{architecture}.tbf"));
+    } else {
+        tbf_path.set_extension("tbf");
+    }
     if cli.verbose {
         println!("ELF file: {:?}", elf);
         println!("TBF path: {}", tbf_path.display());
@@ -37,6 +41,7 @@ pub fn convert_elf(cli: &Cli) -> OutFiles {
     }
 
     let mut command = Command::new("elf2tab");
+
     #[rustfmt::skip]
     command.args([
         // TODO: libtock-rs' crates are designed for Tock 2.1's Allow interface,
@@ -48,7 +53,11 @@ pub fn convert_elf(cli: &Cli) -> OutFiles {
         "-o".as_ref(), tab_path.as_os_str(),
         "--protected-region-size".as_ref(), protected_size.as_ref(),
         "--stack".as_ref(), stack_size.as_ref(),
-        elf,
+        format!("{}{}", elf.to_str().unwrap(), if let Some(ref architecture) = cli.architecture { 
+                format!(",{architecture}") 
+            } else { 
+                String::from("") 
+            }).as_ref(),
     ]);
     if cli.verbose {
         command.arg("-v");
