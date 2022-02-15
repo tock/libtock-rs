@@ -29,6 +29,7 @@ unsafe impl RawSyscalls for crate::TockSyscalls {
         unsafe {
             asm!("svc 0",
                  inlateout("r0") r0 => _, // a1
+                 inlateout("r1") r1 => _, // a2
                  // r4-r8 are callee-saved.
                  // r9 is platform-specific. We don't use it in libtock_runtime,
                  // so it is either unused or used as a callee-saved register.
@@ -37,7 +38,7 @@ unsafe impl RawSyscalls for crate::TockSyscalls {
                  // r13 is the stack pointer and must be restored by the callee.
                  // r15 is the program counter.
 
-                 clobber_abi("C"), // a2, a3, a4, ip (r12), lr (r14)
+                 clobber_abi("C"), // a3, a4, ip (r12), lr (r14)
             );
         }
     }
