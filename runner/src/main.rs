@@ -22,10 +22,6 @@ pub struct Cli {
     /// Whether to output verbose debugging information to the console.
     #[clap(long, short)]
     verbose: bool,
-
-    /// The architecture of the elf file
-    #[clap(long, short)]
-    architecture: Option<String>,
 }
 
 #[derive(ArgEnum, Clone, Copy, Debug)]
@@ -36,11 +32,6 @@ pub enum Deploy {
 
 fn main() {
     let cli = Cli::parse();
-    let paths = elf2tab::convert_elf(&cli);
-    let deploy = match cli.deploy {
-        None => return,
-        Some(deploy) => deploy,
-    };
     let platform = match var("LIBTOCK_PLATFORM") {
         Err(VarError::NotPresent) => {
             panic!("LIBTOCK_PLATFORM must be specified to deploy")
@@ -53,6 +44,11 @@ fn main() {
     if cli.verbose {
         println!("Detected platform {}", platform);
     }
+    let paths = elf2tab::convert_elf(&cli, &platform);
+    let deploy = match cli.deploy {
+        None => return,
+        Some(deploy) => deploy,
+    };
     let child = match deploy {
         Deploy::Qemu => qemu::deploy(&cli, platform, paths.tbf_path),
         Deploy::Tockloader => tockloader::deploy(&cli, platform, paths.tab_path),

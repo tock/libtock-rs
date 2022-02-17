@@ -128,7 +128,7 @@ analyse-stack-sizes:
 .PHONY: apollo3
 apollo3:
 	LIBTOCK_PLATFORM=apollo3 cargo run --example $(EXAMPLE) $(features) \
-		--target=thumbv7em-none-eabi $(release) -- --architecture cortex-m4
+		--target=thumbv7em-none-eabi $(release) 
 	mkdir -p target/tbf/apollo3
 	cp target/thumbv7em-none-eabi/release/examples/$(EXAMPLE).tab \
 		target/thumbv7em-none-eabi/release/examples/$(EXAMPLE).tbf \
@@ -137,7 +137,7 @@ apollo3:
 .PHONY: hail
 hail:
 	LIBTOCK_PLATFORM=hail cargo run --example $(EXAMPLE) $(features) \
-		--target=thumbv7em-none-eabi $(release) -- --architecture cortex-m4
+		--target=thumbv7em-none-eabi $(release) 
 	mkdir -p target/tbf/hail
 	cp target/thumbv7em-none-eabi/release/examples/$(EXAMPLE).tab \
 		target/thumbv7em-none-eabi/release/examples/$(EXAMPLE).tbf \
@@ -146,67 +146,67 @@ hail:
 .PHONY: flash-hail
 flash-hail:
 	LIBTOCK_PLATFORM=hail cargo run --example $(EXAMPLE) $(features) \
-		--target=thumbv7em-none-eabi $(release) -- --architecture cortex-m4 --deploy=tockloader
+		--target=thumbv7em-none-eabi $(release) --  --deploy=tockloader
 
 .PHONY: microbit_v2
 microbit_v2:
 	LIBTOCK_PLATFORM=microbit_v2 cargo run --example $(EXAMPLE) $(features) \
-		--target=thumbv7em-none-eabi $(release) -- --verbose --architecture cortex-m4
+		--target=thumbv7em-none-eabi $(release)
 	mkdir -p target/tbf/microbit_v2
 	cp target/thumbv7em-none-eabi/release/examples/$(EXAMPLE).tab \
-		target/thumbv7em-none-eabi/release/examples/$(EXAMPLE).cortex-m4.tbf \
+		target/thumbv7em-none-eabi/release/examples/$(EXAMPLE).tbf \
 		target/tbf/microbit_v2
 
 .PHONY: flash-microbit_v2
 flash-microbit_v2:
 	LIBTOCK_PLATFORM=microbit_v2 cargo run --example $(EXAMPLE) $(features) \
-		--target=thumbv7em-none-eabi $(release) -- --architecture cortex-m4 --deploy=tockloader
+		--target=thumbv7em-none-eabi $(release) --  --deploy=tockloader
 
 .PHONY: nucleo_f429zi
 nucleo_f429zi:
 	LIBTOCK_PLATFORM=nucleo_f429zi cargo run --example $(EXAMPLE) $(features) \
-		--target=thumbv7em-none-eabi $(release) -- --architecture cortex-m4
+		--target=thumbv7em-none-eabi $(release)
 	mkdir -p target/tbf/nucleo_f429zi
 	cp target/thumbv7em-none-eabi/release/examples/$(EXAMPLE).tab \
-		target/thumbv7em-none-eabi/release/examples/$(EXAMPLE).cortex-m4.tbf \
+		target/thumbv7em-none-eabi/release/examples/$(EXAMPLE).tbf \
 		target/tbf/nucleo_f429zi
 
 .PHONY: nucleo_f446re
 nucleo_f446re:
 	LIBTOCK_PLATFORM=nucleo_f446re cargo run --example $(EXAMPLE) $(features) \
-		--target=thumbv7em-none-eabi $(release) -- --architecture cortex-m4
+		--target=thumbv7em-none-eabi $(release)
 	mkdir -p target/tbf/nucleo_f446re
 	cp target/thumbv7em-none-eabi/release/examples/$(EXAMPLE).tab \
-		target/thumbv7em-none-eabi/release/examples/$(EXAMPLE).cortex-m4.tbf \
+		target/thumbv7em-none-eabi/release/examples/$(EXAMPLE).tbf \
 		target/tbf/nucleo_f446re
 
 .PHONY: nrf52840
 nrf52840:
 	LIBTOCK_PLATFORM=nrf52840 cargo run --example $(EXAMPLE) $(features) \
-		--target=thumbv7em-none-eabi $(release) -- --architecture cortex-m4
+		--target=thumbv7em-none-eabi $(release)
 	mkdir -p target/tbf/nrf52840
 	cp target/thumbv7em-none-eabi/release/examples/$(EXAMPLE).tab \
-		target/thumbv7em-none-eabi/release/examples/$(EXAMPLE).cortex-m4.tbf \
+		target/thumbv7em-none-eabi/release/examples/$(EXAMPLE).tbf \
 		target/tbf/nrf52840
 
 .PHONY: flash-nrf52840
 flash-nrf52840:
 	LIBTOCK_PLATFORM=nrf52840 cargo run --example $(EXAMPLE) $(features) \
-		--target=thumbv7em-none-eabi $(release) -- --architecture cortex-m4 --deploy=tockloader
+		--target=thumbv7em-none-eabi $(release) --  --deploy=tockloader
 
 .PHONY: stm32f3discovery
 stm32f3discovery:
 	LIBTOCK_PLATFORM=stm32f3discovery cargo run --example $(EXAMPLE) \
-		$(features) --target=thumbv7em-none-eabi $(release) -- --architecture cortex-m4
+		$(features) --target=thumbv7em-none-eabi $(release)
 	mkdir -p target/tbf/stm32f3discovery
 	cp target/thumbv7em-none-eabi/release/examples/$(EXAMPLE).tab \
-		target/thumbv7em-none-eabi/release/examples/$(EXAMPLE).cortex-m4.tbf \
+		target/thumbv7em-none-eabi/release/examples/$(EXAMPLE).tbf \
 		target/tbf/stm32f3discovery
 
 .PHONY: opentitan
 opentitan:
 	LIBTOCK_PLATFORM=opentitan cargo run --example $(EXAMPLE) $(features) \
-		--target=riscv32imc-unknown-none-elf $(release) -- --architecture riscv32imc
+		--target=riscv32imc-unknown-none-elf $(release)
 	mkdir -p target/tbf/opentitan
 	cp target/riscv32imc-unknown-none-elf/release/examples/$(EXAMPLE).tab \
 		target/riscv32imc-unknown-none-elf/release/examples/$(EXAMPLE).tbf \
@@ -215,7 +215,7 @@ opentitan:
 .PHONY: hifive1
 hifive1:
 	LIBTOCK_PLATFORM=hifive1 cargo run --example $(EXAMPLE) $(features) \
-		--target=riscv32imac-unknown-none-elf $(release) -- --architecture riscv32imac
+		--target=riscv32imac-unknown-none-elf $(release)
 	mkdir -p target/tbf/hifive1
 	cp target/riscv32imac-unknown-none-elf/release/examples/$(EXAMPLE).tab \
 		target/riscv32imac-unknown-none-elf/release/examples/$(EXAMPLE).tbf \
@@ -224,33 +224,33 @@ hifive1:
 .PHONY: nrf52
 nrf52:
 	LIBTOCK_PLATFORM=nrf52 cargo run --example $(EXAMPLE) $(features) \
-		--target=thumbv7em-none-eabi $(release) -- --architecture cortex-m4
+		--target=thumbv7em-none-eabi $(release)
 	mkdir -p target/tbf/nrf52
 	cp target/thumbv7em-none-eabi/release/examples/$(EXAMPLE).tab \
-		target/thumbv7em-none-eabi/release/examples/$(EXAMPLE).cortex-m4.tbf \
+		target/thumbv7em-none-eabi/release/examples/$(EXAMPLE).tbf \
 		target/tbf/nrf52
 
 .PHONY: flash-nrf52
 flash-nrf52:
 	LIBTOCK_PLATFORM=nrf52 cargo run --example $(EXAMPLE) $(features) \
-		--target=thumbv7em-none-eabi $(release) -- --architecture cortex-m4 --deploy=tockloader
+		--target=thumbv7em-none-eabi $(release) --  --deploy=tockloader
 
 .PHONY: imxrt1050
 imxrt1050:
 	LIBTOCK_PLATFORM=imxrt1050 cargo run --example $(EXAMPLE) $(features) \
-		--target=thumbv7em-none-eabi $(release) -- --architecture cortex-m7
+		--target=thumbv7em-none-eabi $(release)
 	mkdir -p target/tbf/imxrt1050
 	cp target/thumbv7em-none-eabi/release/examples/$(EXAMPLE).tab \
-		target/thumbv7em-none-eabi/release/examples/$(EXAMPLE).cortex-m7.tbf \
+		target/thumbv7em-none-eabi/release/examples/$(EXAMPLE).tbf \
 		target/tbf/imxrt1050
 
 .PHONY: msp432
 msp432:
 	LIBTOCK_PLATFORM=msp432 cargo run --example $(EXAMPLE) $(features) \
-		--target=thumbv7em-none-eabi $(release) -- --architecture cortex-m4
+		--target=thumbv7em-none-eabi $(release)
 	mkdir -p target/tbf/msp432
 	cp target/thumbv7em-none-eabi/release/examples/$(EXAMPLE).tab \
-		target/thumbv7em-none-eabi/release/examples/$(EXAMPLE).cortex-m4.tbf \
+		target/thumbv7em-none-eabi/release/examples/$(EXAMPLE).tbf \
 		target/tbf/msp432
 
 .PHONY: clean

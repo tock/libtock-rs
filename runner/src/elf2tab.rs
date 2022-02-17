@@ -4,9 +4,32 @@ use std::io::ErrorKind;
 use std::path::PathBuf;
 use std::process::Command;
 
+fn get_platform_architecture(platform: &str) -> Option<&'static str> {
+    match platform {
+        "raspberrypi_pico" | "nano_rp2040_connect" => Some("cortex-m0"),
+        "apollo3"
+        | "clue_nrf52840"
+        | "hail"
+        | "imix"
+        | "microbit_v2"
+        | "msp432"
+        | "nano33bl3"
+        | "nrf52"
+        | "nrf52840"
+        | "nucleo_f429zi"
+        | "nucleo_f446re"
+        | "stm32f3discovery"
+        | "stm32f412gdiscovery" => Some("cortex-m4"),
+        "imxrt1050" | "teensy40" => Some("cortex-m7"),
+        "opentitan" | "esp32_c3_devkitm_1" => Some("riscv32imc"),
+        "hifive1" => Some("riscv32imac"),
+        _ => None,
+    }
+}
+
 // Converts the ELF file specified on the command line into TBF and TAB files,
 // and returns the paths to those files.
-pub fn convert_elf(cli: &Cli) -> OutFiles {
+pub fn convert_elf(cli: &Cli, platform: &str) -> OutFiles {
     let package_name = cli.elf.file_stem().expect("ELF must be a file");
     let mut tab_path = cli.elf.clone();
     tab_path.set_extension("tab");
@@ -19,11 +42,8 @@ pub fn convert_elf(cli: &Cli) -> OutFiles {
     let stack_size = read_stack_size(cli);
     let elf = cli.elf.as_os_str();
     let mut tbf_path = cli.elf.clone();
-    if let Some(ref architecture) = cli.architecture {
-        tbf_path.set_extension(format!("{architecture}.tbf"));
-    } else {
-        tbf_path.set_extension("tbf");
-    }
+    tbf_path.set_extension("tbf");
+    let architecture = get_platform_architecture(platform);
     if cli.verbose {
         println!("ELF file: {:?}", elf);
         println!("TBF path: {}", tbf_path.display());
@@ -53,10 +73,10 @@ pub fn convert_elf(cli: &Cli) -> OutFiles {
         "-o".as_ref(), tab_path.as_os_str(),
         "--protected-region-size".as_ref(), protected_size.as_ref(),
         "--stack".as_ref(), stack_size.as_ref(),
-        format!("{}{}", elf.to_str().unwrap(), if let Some(ref architecture) = cli.architecture { 
-                format!(",{architecture}") 
+        format!("{}{}", elf.to_str().unwrap(), if let Some(ref architecture) = architecture { 
+                format!(",{}", architecture) 
             } else { 
-                String::from("") 
+                "".to_string() 
             }).as_ref(),
     ]);
     if cli.verbose {
