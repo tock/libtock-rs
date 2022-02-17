@@ -25,6 +25,10 @@
  *
  * We currently only use the value in r0. It is copied into r5 early on because
  * r0 is needed to invoke system calls.
+ *
+ * To be compatible with ARMv6 Thumb-1, we the cmp and beq instructions
+ * instead of cbz in two places. This increases the code size with 4 bytes,
+ * but allows us to use it on Cortex-M0+ processors.
  */
 .section .start, "ax"
 .global start
@@ -37,8 +41,8 @@ start:
 	mov r5, r0        /* Save rt_header; we use r0 for syscalls */
 	ldr r0, [r5, #0]  /* r0 = rt_header.start */
 	adds r0, #3       /* r0 = rt_header.start + 4 - 1 (for Thumb bit) */
-	cmp r0, r4
-	beq .Lset_brk     /* Skip error handling if pc correct */
+	cmp r0, r4		  /* Skip error handling if pc correct */
+	beq .Lset_brk     
 	/* If the beq on the previous line did not jump, then the binary is not at
 	 * the correct location. Report the error via LowLevelDebug then exit. */
 	movs r0, #8  /* LowLevelDebug driver number */
@@ -60,7 +64,8 @@ start:
 
 	/* Copy .data into place */
 	ldr r0, [r5, #12]          /* remaining = rt_header.data_size */
-	cbz r0, .Lzero_bss         /* Jump to zero_bss if remaining == 0 */
+	cmp r0, #0				   /* Jump to zero_bss if remaining == 0 */	
+	beq .Lzero_bss         
 	ldr r1, [r5, #16]          /* src = rt_header.data_flash_start */
 	ldr r2, [r5, #20]          /* dest = rt_header.data_ram_start */
 .Ldata_loop_body:
@@ -74,7 +79,8 @@ start:
 
 .Lzero_bss:
 	ldr r0, [r5, #24]          /* remaining = rt_header.bss_size */
-	cbz r0, .Lcall_rust_start  /* Jump to call_rust_start if remaining == 0 */
+	cmp r0, #0
+	beq .Lcall_rust_start  /* Jump to call_rust_start if remaining == 0 */
 	ldr r1, [r5, #28]          /* dest = rt_header.bss_start */
 	movs r2, #0                /* r2 = 0 */
 .Lbss_loop_body:

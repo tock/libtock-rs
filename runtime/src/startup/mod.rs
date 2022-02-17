@@ -2,9 +2,7 @@
 
 // Include the correct `start` symbol (the program entry point) for the
 // architecture.
-#[cfg(all(target_arch = "arm", target_feature = "v6", not(target_feature = "v7")))]
-core::arch::global_asm!(include_str!("asm_armv6.s"));
-#[cfg(all(target_arch = "arm", target_feature = "v7"))]
+#[cfg(target_arch = "arm")]
 core::arch::global_asm!(include_str!("asm_arm.s"));
 #[cfg(target_arch = "riscv32")]
 core::arch::global_asm!(include_str!("asm_riscv32.s"));
