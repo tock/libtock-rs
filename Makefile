@@ -128,7 +128,7 @@ analyse-stack-sizes:
 .PHONY: apollo3
 apollo3:
 	LIBTOCK_PLATFORM=apollo3 cargo run --example $(EXAMPLE) $(features) \
-		--target=thumbv7em-none-eabi $(release) 
+		--target=thumbv7em-none-eabi $(release)
 	mkdir -p target/tbf/apollo3
 	cp target/thumbv7em-none-eabi/release/examples/$(EXAMPLE).tab \
 		target/thumbv7em-none-eabi/release/examples/$(EXAMPLE).tbf \
@@ -137,7 +137,7 @@ apollo3:
 .PHONY: hail
 hail:
 	LIBTOCK_PLATFORM=hail cargo run --example $(EXAMPLE) $(features) \
-		--target=thumbv7em-none-eabi $(release) 
+		--target=thumbv7em-none-eabi $(release)
 	mkdir -p target/tbf/hail
 	cp target/thumbv7em-none-eabi/release/examples/$(EXAMPLE).tab \
 		target/thumbv7em-none-eabi/release/examples/$(EXAMPLE).tbf \
@@ -146,7 +146,7 @@ hail:
 .PHONY: flash-hail
 flash-hail:
 	LIBTOCK_PLATFORM=hail cargo run --example $(EXAMPLE) $(features) \
-		--target=thumbv7em-none-eabi $(release) --  --deploy=tockloader
+		--target=thumbv7em-none-eabi $(release) -- --deploy=tockloader
 
 .PHONY: microbit_v2
 microbit_v2:
@@ -160,7 +160,7 @@ microbit_v2:
 .PHONY: flash-microbit_v2
 flash-microbit_v2:
 	LIBTOCK_PLATFORM=microbit_v2 cargo run --example $(EXAMPLE) $(features) \
-		--target=thumbv7em-none-eabi $(release) --  --deploy=tockloader
+		--target=thumbv7em-none-eabi $(release) -- --deploy=tockloader
 
 .PHONY: nucleo_f429zi
 nucleo_f429zi:
@@ -192,7 +192,7 @@ nrf52840:
 .PHONY: flash-nrf52840
 flash-nrf52840:
 	LIBTOCK_PLATFORM=nrf52840 cargo run --example $(EXAMPLE) $(features) \
-		--target=thumbv7em-none-eabi $(release) --  --deploy=tockloader
+		--target=thumbv7em-none-eabi $(release) -- --deploy=tockloader
 
 .PHONY: stm32f3discovery
 stm32f3discovery:
@@ -233,7 +233,7 @@ nrf52:
 .PHONY: flash-nrf52
 flash-nrf52:
 	LIBTOCK_PLATFORM=nrf52 cargo run --example $(EXAMPLE) $(features) \
-		--target=thumbv7em-none-eabi $(release) --  --deploy=tockloader
+		--target=thumbv7em-none-eabi $(release) -- --deploy=tockloader
 
 .PHONY: imxrt1050
 imxrt1050:
