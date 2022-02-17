@@ -79,8 +79,8 @@ start:
 
 .Lzero_bss:
 	ldr r0, [r5, #24]          /* remaining = rt_header.bss_size */
-	cmp r0, #0
-	beq .Lcall_rust_start  /* Jump to call_rust_start if remaining == 0 */
+	cmp r0, #0                 /* Jump to call_rust_start if remaining == 0 */
+	beq .Lcall_rust_start  
 	ldr r1, [r5, #28]          /* dest = rt_header.bss_start */
 	movs r2, #0                /* r2 = 0 */
 .Lbss_loop_body:
