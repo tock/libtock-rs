@@ -20,6 +20,7 @@ usage:
 	@echo " - imxrt1050"
 	@echo " - apollo3"
 	@echo " - stm32f3discovery"
+	@echo " - clue_nrf52840"
 	@echo
 	@echo "Run 'make setup' to setup Rust to build libtock-rs."
 	@echo "Run 'make <board> EXAMPLE=<>' to build EXAMPLE for that board."
@@ -252,6 +253,20 @@ msp432:
 	cp target/thumbv7em-none-eabi/release/examples/$(EXAMPLE).tab \
 		target/thumbv7em-none-eabi/release/examples/$(EXAMPLE).tbf \
 		target/tbf/msp432
+
+.PHONY: clue_nrf52840
+clue_nrf52840:
+	LIBTOCK_PLATFORM=clue_nrf52840 cargo run --example $(EXAMPLE) $(features) \
+		--target=thumbv7em-none-eabi $(release)
+	mkdir -p target/tbf/clue_nrf52840
+	cp target/thumbv7em-none-eabi/release/examples/$(EXAMPLE).tab \
+		target/thumbv7em-none-eabi/release/examples/$(EXAMPLE).tbf \
+		target/tbf/clue_nrf52840
+
+.PHONY: flash-clue_nrf52840
+flash-clue_nrf52840:
+	LIBTOCK_PLATFORM=clue_nrf52840 cargo run --example $(EXAMPLE) $(features) \
+		--target=thumbv7em-none-eabi $(release) -- --deploy=tockloader
 
 .PHONY: clean
 clean:
