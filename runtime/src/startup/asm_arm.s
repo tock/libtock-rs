@@ -41,7 +41,7 @@ start:
 	mov r5, r0        /* Save rt_header; we use r0 for syscalls */
 	ldr r0, [r5, #0]  /* r0 = rt_header.start */
 	adds r0, #3       /* r0 = rt_header.start + 4 - 1 (for Thumb bit) */
-	cmp r0, r4		  /* Skip error handling if pc correct */
+	cmp r0, r4        /* Skip error handling if pc correct */
 	beq .Lset_brk     
 	/* If the beq on the previous line did not jump, then the binary is not at
 	 * the correct location. Report the error via LowLevelDebug then exit. */
