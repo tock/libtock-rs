@@ -64,7 +64,7 @@ start:
 
 	/* Copy .data into place */
 	ldr r0, [r5, #12]          /* remaining = rt_header.data_size */
-	cmp r0, #0				   /* Jump to zero_bss if remaining == 0 */	
+	cmp r0, #0                 /* Jump to zero_bss if remaining == 0 */	
 	beq .Lzero_bss         
 	ldr r1, [r5, #16]          /* src = rt_header.data_flash_start */
 	ldr r2, [r5, #20]          /* dest = rt_header.data_ram_start */
