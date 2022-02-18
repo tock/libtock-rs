@@ -43,7 +43,8 @@ pub fn convert_elf(cli: &Cli, platform: &str) -> OutFiles {
     let elf = cli.elf.as_os_str();
     let mut tbf_path = cli.elf.clone();
     tbf_path.set_extension("tbf");
-    let architecture = get_platform_architecture(platform);
+    let architecture =
+        get_platform_architecture(platform).expect("Failed to determine ELF's architecture");
     if cli.verbose {
         println!("ELF file: {:?}", elf);
         println!("TBF path: {}", tbf_path.display());
@@ -73,11 +74,7 @@ pub fn convert_elf(cli: &Cli, platform: &str) -> OutFiles {
         "-o".as_ref(), tab_path.as_os_str(),
         "--protected-region-size".as_ref(), protected_size.as_ref(),
         "--stack".as_ref(), stack_size.as_ref(),
-        format!("{}{}", elf.to_str().unwrap(), if let Some(ref architecture) = architecture { 
-                format!(",{}", architecture) 
-            } else { 
-                "".to_string() 
-            }).as_ref(),
+        format!("{},{}", elf.to_str().unwrap(), architecture).as_ref(),
     ]);
     if cli.verbose {
         command.arg("-v");
