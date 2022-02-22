@@ -4,23 +4,23 @@
 /// Like the real kernel, this does nothing and returns success if there is no
 /// upcall or the upcall is a null upcall.
 pub fn schedule(
-    driver_number: u32,
-    subscribe_number: u32,
+    driver_num: u32,
+    subscribe_num: u32,
     args: (u32, u32, u32),
 ) -> Result<(), ScheduleError> {
     crate::kernel_data::with_kernel_data(|kernel_data| {
         let kernel_data = kernel_data.ok_or(ScheduleError::NoKernel)?;
         let driver_data = kernel_data
             .drivers
-            .get(&driver_number)
-            .ok_or(ScheduleError::NoDriver(driver_number))?;
-        if subscribe_number >= driver_data.num_upcalls {
+            .get(&driver_num)
+            .ok_or(ScheduleError::NoDriver(driver_num))?;
+        if subscribe_num >= driver_data.num_upcalls {
             return Err(ScheduleError::TooLargeSubscribeNumber {
                 num_upcalls: driver_data.num_upcalls,
-                requested: subscribe_number,
+                requested: subscribe_num,
             });
         }
-        let upcall = match driver_data.upcalls.get(&subscribe_number) {
+        let upcall = match driver_data.upcalls.get(&subscribe_num) {
             Some(&upcall) => upcall,
             None => return Ok(()),
         };
@@ -32,8 +32,8 @@ pub fn schedule(
         kernel_data.upcall_queue.push_back(UpcallQueueEntry {
             args,
             id: UpcallId {
-                driver_number,
-                subscribe_number,
+                driver_num,
+                subscribe_num,
             },
             upcall,
         });
@@ -108,8 +108,8 @@ pub(crate) struct UpcallQueueEntry {
 
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub(crate) struct UpcallId {
-    pub driver_number: u32,
-    pub subscribe_number: u32,
+    pub driver_num: u32,
+    pub subscribe_num: u32,
 }
 
 #[cfg(test)]
@@ -202,8 +202,8 @@ mod tests {
             assert_eq!(
                 upcall_queue_entry.id,
                 UpcallId {
-                    driver_number: 1,
-                    subscribe_number: 2
+                    driver_num: 1,
+                    subscribe_num: 2
                 }
             );
             assert!(upcall_queue_entry.upcall.fn_pointer == Some(upcall));
@@ -232,8 +232,8 @@ mod tests {
             assert_eq!(
                 front_queue_entry.id,
                 UpcallId {
-                    driver_number: 1,
-                    subscribe_number: 2
+                    driver_num: 1,
+                    subscribe_num: 2
                 }
             );
             assert!(front_queue_entry.upcall.fn_pointer == Some(upcall));
@@ -244,8 +244,8 @@ mod tests {
             assert_eq!(
                 back_queue_entry.id,
                 UpcallId {
-                    driver_number: 1,
-                    subscribe_number: 2
+                    driver_num: 1,
+                    subscribe_num: 2
                 }
             );
             assert!(back_queue_entry.upcall.fn_pointer == Some(upcall));

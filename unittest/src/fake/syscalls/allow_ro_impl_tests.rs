@@ -32,8 +32,8 @@ fn expected_wrong() {
     .contains("but Read-Only Allow was called instead"));
 
     kernel.add_expected_syscall(ExpectedSyscall::AllowRo {
-        driver_number: 1,
-        buffer_number: 2,
+        driver_num: 1,
+        buffer_num: 2,
         return_error: None,
     });
     assert!(catch_unwind(|| unsafe {
@@ -42,11 +42,11 @@ fn expected_wrong() {
     .expect_err("failed to catch wrong driver number")
     .downcast_ref::<String>()
     .expect("wrong panic payload type")
-    .contains("expected different driver_number"));
+    .contains("expected different driver_num"));
 
     kernel.add_expected_syscall(ExpectedSyscall::AllowRo {
-        driver_number: 1,
-        buffer_number: 2,
+        driver_num: 1,
+        buffer_num: 2,
         return_error: None,
     });
     assert!(catch_unwind(|| unsafe {
@@ -55,7 +55,7 @@ fn expected_wrong() {
     .expect_err("failed to catch wrong buffer number")
     .downcast_ref::<String>()
     .expect("wrong panic payload type")
-    .contains("expected different buffer_number"));
+    .contains("expected different buffer_num"));
 }
 
 #[test]
@@ -99,8 +99,8 @@ fn syscall_log() {
     assert_eq!(
         kernel.take_syscall_log(),
         [SyscallLogEntry::AllowRo {
-            driver_number: 1,
-            buffer_number: 2,
+            driver_num: 1,
+            buffer_num: 2,
             len: 3,
         }]
     );

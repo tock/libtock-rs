@@ -12,8 +12,8 @@ pub enum SyscallLogEntry {
     // Subscribe
     // -------------------------------------------------------------------------
     Subscribe {
-        driver_number: u32,
-        subscribe_number: u32,
+        driver_num: u32,
+        subscribe_num: u32,
     },
 
     // -------------------------------------------------------------------------
@@ -30,8 +30,8 @@ pub enum SyscallLogEntry {
     // Read-Only Allow
     // -------------------------------------------------------------------------
     AllowRo {
-        driver_number: u32,
-        buffer_number: u32,
+        driver_num: u32,
+        buffer_num: u32,
         len: usize,
     },
 
@@ -39,8 +39,8 @@ pub enum SyscallLogEntry {
     // Read-Write Allow
     // -------------------------------------------------------------------------
     AllowRw {
-        driver_number: u32,
-        buffer_number: u32,
+        driver_num: u32,
+        buffer_num: u32,
         len: usize,
     },
     // TODO: Add Memop.

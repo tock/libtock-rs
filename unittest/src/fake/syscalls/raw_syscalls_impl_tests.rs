@@ -20,8 +20,8 @@ fn allow_ro() {
     assert_eq!(
         kernel.take_syscall_log(),
         [SyscallLogEntry::AllowRo {
-            driver_number: 1,
-            buffer_number: 2,
+            driver_num: 1,
+            buffer_num: 2,
             len: 0,
         }]
     );
@@ -41,8 +41,8 @@ fn allow_rw() {
     assert_eq!(
         kernel.take_syscall_log(),
         [SyscallLogEntry::AllowRw {
-            driver_number: 1,
-            buffer_number: 2,
+            driver_num: 1,
+            buffer_num: 2,
             len: 0,
         }]
     );

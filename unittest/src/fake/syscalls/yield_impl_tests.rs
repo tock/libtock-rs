@@ -79,8 +79,8 @@ fn yield_no_wait_test() {
     // Upcall structures for using copy_args.
     let mut output_array = [0u32; 3];
     let upcall_id = UpcallId {
-        driver_number: 1,
-        subscribe_number: 2,
+        driver_num: 1,
+        subscribe_num: 2,
     };
     let upcall = Upcall {
         fn_pointer: Some(copy_args),
@@ -159,8 +159,8 @@ fn yield_wait_test() {
     // Upcall structures for using copy_args.
     let mut output_array = [0u32; 3];
     let upcall_id = UpcallId {
-        driver_number: 1,
-        subscribe_number: 2,
+        driver_num: 1,
+        subscribe_num: 2,
     };
     let upcall = Upcall {
         fn_pointer: Some(copy_args),
