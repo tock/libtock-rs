@@ -6,21 +6,21 @@ use std::convert::TryInto;
 // Safety: The arguments must represent a valid Subscribe call as specified by
 // TRD 104.
 pub(super) unsafe fn subscribe(
-    driver_number: Register,
-    subscribe_number: Register,
+    driver_num: Register,
+    subscribe_num: Register,
     upcall_fn: Register,
     data: Register,
 ) -> [Register; 4] {
-    let driver_number = driver_number.try_into().expect("Too large driver number");
-    let subscribe_number = subscribe_number
+    let driver_num = driver_num.try_into().expect("Too large driver number");
+    let subscribe_num = subscribe_num
         .try_into()
         .expect("Too large subscribe number");
     let (skip_with_error, num_upcalls) = with_kernel_data(|option_kernel_data| {
         let kernel_data = option_kernel_data.expect("Subscribe called but no fake::Kernel exists");
 
         kernel_data.syscall_log.push(SyscallLogEntry::Subscribe {
-            driver_number,
-            subscribe_number,
+            driver_num,
+            subscribe_num,
         });
 
         // Check for an expected syscall. Panics if an expected syscall exists
@@ -30,16 +30,16 @@ pub(super) unsafe fn subscribe(
         let skip_with_error = match kernel_data.expected_syscalls.pop_front() {
             None => None,
             Some(ExpectedSyscall::Subscribe {
-                driver_number: expected_driver_number,
-                subscribe_number: expected_subscribe_number,
+                driver_num: expected_driver_num,
+                subscribe_num: expected_subscribe_num,
                 skip_with_error,
             }) => {
                 assert_eq!(
-                    driver_number, expected_driver_number,
+                    driver_num, expected_driver_num,
                     "expected different driver number"
                 );
                 assert_eq!(
-                    subscribe_number, expected_subscribe_number,
+                    subscribe_num, expected_subscribe_num,
                     "expected different subscribe number"
                 );
                 skip_with_error
@@ -51,7 +51,7 @@ pub(super) unsafe fn subscribe(
         // no driver with this number.
         let num_upcalls = kernel_data
             .drivers
-            .get(&driver_number)
+            .get(&driver_num)
             .map(|driver_data| driver_data.num_upcalls);
 
         (skip_with_error, num_upcalls)
@@ -82,7 +82,7 @@ pub(super) unsafe fn subscribe(
 
     // If a too-large subscribe number is passed, the kernel returns the Invalid
     // error code.
-    if subscribe_number >= num_upcalls {
+    if subscribe_num >= num_upcalls {
         return failure_registers(ErrorCode::Invalid);
     }
 
@@ -103,8 +103,8 @@ pub(super) unsafe fn subscribe(
     };
 
     let upcall_id = crate::upcall::UpcallId {
-        driver_number,
-        subscribe_number,
+        driver_num,
+        subscribe_num,
     };
 
     // Go back into the kernel data to update the stored upcall and purge the
@@ -116,10 +116,10 @@ pub(super) unsafe fn subscribe(
             .retain(|existing_queue_entry| existing_queue_entry.id != upcall_id);
         kernel_data
             .drivers
-            .get_mut(&driver_number)
+            .get_mut(&driver_num)
             .unwrap()
             .upcalls
-            .insert(subscribe_number, upcall)
+            .insert(subscribe_num, upcall)
     });
 
     let out_upcall_fn = out_upcall

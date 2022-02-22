@@ -23,8 +23,8 @@ pub enum ExpectedSyscall {
     // Subscribe
     // -------------------------------------------------------------------------
     Subscribe {
-        driver_number: u32,
-        subscribe_number: u32,
+        driver_num: u32,
+        subscribe_num: u32,
 
         /// If not None, the Subscribe call will be skipped and the provided
         /// error code will be returned (along with the passed upcall).
@@ -51,8 +51,8 @@ pub enum ExpectedSyscall {
     // Read-Only Allow
     // -------------------------------------------------------------------------
     AllowRo {
-        driver_number: u32,
-        buffer_number: u32,
+        driver_num: u32,
+        buffer_num: u32,
 
         // If set to Some(_), the driver's allow_readonly method will not be
         // invoked and the provided error will be returned instead.
@@ -63,8 +63,8 @@ pub enum ExpectedSyscall {
     // Read-Write Allow
     // -------------------------------------------------------------------------
     AllowRw {
-        driver_number: u32,
-        buffer_number: u32,
+        driver_num: u32,
+        buffer_num: u32,
 
         // If set to Some(_), the driver's allow_readwrite method will not be
         // invoked and the provided error will be returned instead.

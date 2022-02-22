@@ -24,10 +24,10 @@ impl fake::SyscallDriver for TestDriver {
 
     fn allow_readwrite(
         &self,
-        buffer_number: u32,
+        buffer_num: u32,
         buffer: RwAllowBuffer,
     ) -> Result<RwAllowBuffer, (RwAllowBuffer, ErrorCode)> {
-        if buffer_number != 0 {
+        if buffer_num != 0 {
             return Err((buffer, ErrorCode::NoSupport));
         }
         Ok(self.buffer_0.replace(buffer))
@@ -63,8 +63,8 @@ fn allow_rw() {
         assert_eq!(
             kernel.take_syscall_log(),
             [SyscallLogEntry::AllowRw {
-                driver_number: 42,
-                buffer_number: 1,
+                driver_num: 42,
+                buffer_num: 1,
                 len: 4,
             }]
         );
@@ -74,8 +74,8 @@ fn allow_rw() {
     assert_eq!(
         kernel.take_syscall_log(),
         [SyscallLogEntry::AllowRw {
-            driver_number: 42,
-            buffer_number: 1,
+            driver_num: 42,
+            buffer_num: 1,
             len: 0,
         }]
     );
@@ -88,8 +88,8 @@ fn allow_rw() {
         assert_eq!(
             kernel.take_syscall_log(),
             [SyscallLogEntry::AllowRw {
-                driver_number: 42,
-                buffer_number: 0,
+                driver_num: 42,
+                buffer_num: 0,
                 len: 4,
             }]
         );
@@ -101,8 +101,8 @@ fn allow_rw() {
         assert_eq!(
             kernel.take_syscall_log(),
             [SyscallLogEntry::AllowRw {
-                driver_number: 42,
-                buffer_number: 0,
+                driver_num: 42,
+                buffer_num: 0,
                 len: 2,
             }]
         );
@@ -118,8 +118,8 @@ fn allow_rw() {
     assert_eq!(
         kernel.take_syscall_log(),
         [SyscallLogEntry::AllowRw {
-            driver_number: 42,
-            buffer_number: 0,
+            driver_num: 42,
+            buffer_num: 0,
             len: 0,
         }]
     );
