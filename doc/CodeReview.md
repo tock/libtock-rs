@@ -46,5 +46,3 @@ The owners of `libtock-rs` are:
 * The [Tock Core Working
   Group](https://github.com/tock/tock/tree/master/doc/wg/core#members).
 * Alistair Francis, [alistair23](https://github.com/alistair23), Western Digital
-* [torfmaster](https://github.com/torfmaster)
-* [Woyten](https://github.com/Woyten)
