@@ -99,14 +99,16 @@ EXCLUDE_MIRI := $(EXCLUDE_RUNTIME) --exclude ufmt-macros
 EXCLUDE_STD := --exclude libtock_unittest --exclude print_sizes \
                --exclude runner --exclude syscalls_tests
 
-# Some of our crates should build with a stable toolchain. This verifies those
-# crates don't depend on unstable features by using cargo check. We specify a
-# different target directory so this doesn't flush the cargo cache of the
-# primary toolchain.
+# Currently, all of our crates should build with a stable toolchain. This
+# verifies our crates don't depend on unstable features by using cargo check. We
+# specify a different target directory so this doesn't flush the cargo cache of
+# the primary toolchain.
 .PHONY: test-stable
 test-stable:
 	CARGO_TARGET_DIR="target/stable-toolchain" cargo +stable check --workspace \
 		$(EXCLUDE_RUNTIME)
+	CARGO_TARGET_DIR="target/stable-toolchain" LIBTOCK_PLATFORM=nrf52 cargo \
+		+stable check $(EXCLUDE_STD) --target=thumbv7em-none-eabi --workspace
 
 .PHONY: test
 test: examples test-stable
