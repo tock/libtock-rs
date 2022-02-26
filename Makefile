@@ -42,6 +42,7 @@ setup: setup-qemu
 	cargo install elf2tab
 	cargo install stack-sizes
 	cargo miri setup
+	rustup target add --toolchain stable thumbv7em-none-eabi
 
 # Sets up QEMU in the tock/ directory. We use Tock's QEMU which may contain
 # patches to better support boards that Tock supports.
