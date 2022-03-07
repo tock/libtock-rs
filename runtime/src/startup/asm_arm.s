@@ -40,7 +40,7 @@ start:
 	mov r4, pc        /* r4 = address of .start + 4 (Thumb bit unset) */
 	mov r5, r0        /* Save rt_header; we use r0 for syscalls */
 	ldr r0, [r5, #0]  /* r0 = rt_header.start */
-	adds r0, #3       /* r0 = rt_header.start + 4 - 1 (for Thumb bit) */
+	adds r0, #3       /* r0 = rt_header.start + 4 (Thumb bit already accounted for in rt_header.start value) */
 	cmp r0, r4        /* Skip error handling if pc correct */
 	beq .Lset_brk     
 	/* If the beq on the previous line did not jump, then the binary is not at
