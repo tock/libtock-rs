@@ -10,6 +10,10 @@ pub mod buttons {
     use libtock_buttons as buttons;
     pub type Buttons = buttons::Buttons<super::runtime::TockSyscalls>;
 }
+pub mod console {
+    use libtock_console as console;
+    pub type Console = console::Console<super::runtime::TockSyscalls>;
+}
 pub mod leds {
     use libtock_leds as leds;
     pub type Leds = leds::Leds<super::runtime::TockSyscalls>;

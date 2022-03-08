@@ -13,6 +13,7 @@ exclude = ["tock"]
 members = [
     "apis/gpio",
     "apis/buttons",
+    "apis/console",
     "apis/leds",
     "apis/low_level_debug",
     "libtock2",
