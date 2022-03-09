@@ -1,25 +1,16 @@
 Code Review
 ===========
 
-**Temporary change in code review timeline while the Tock 2.0-compatible
-`libtock-rs` crates are under development.** Until the Tock 2.0-compatible
-crates are ready, we are shortening the timeline for merging significant pull
-requests. If a single `libtock-rs` owner has approved a PR, it may be merged in
-3 days rather than 7. If two `libtock-rs` owners have approved a PR, it may be
-merged immediately. This temporary change was decided by the Tock core WG, and
-will be reversed when the Tock 2.0 `libtock-rs` crates are ready.
-
 ## Code Review Practices
 
 PR to `libtock-rs` can be divided into two categories:
 
-1. **Upkeep pull requests** are minor changes to existing functionality.
-   Examples include bug fixes (that do not significantly affect APIs) and
-   documentation that describes an existing implementation.
+1. **Upkeep pull requests** are self-contained changes that do not introduce
+   significant code churn, and are unlikely to cause major merge conflicts.
 1. **Significant pull requests** are pull requests that are too substantial to
-   be considered upkeep pull requests. Significant pull requests may include new
-   functionality, API changes, significant refactoring, new tooling, and other
-   changes.
+   be considered upkeep pull requests. Significant pull requests may represent a
+   significant change in `libtock-rs`'s design or include large refactorings
+   that are likely to cause merge conflicts for other pull requests.
 
 The owners of `libtock-rs` (listed [below](#owners)) determine whether a PR is
 an upkeep PR or a significant PR. PRs should be merged by the `libtock-rs`
