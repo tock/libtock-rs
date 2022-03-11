@@ -17,7 +17,6 @@ mod low_level_debug;
 mod syscall_driver;
 mod syscalls;
 
-
 pub use buttons::Buttons;
 pub use gpio::{Gpio, GpioMode, InterruptEdge, PullMode};
 pub use kernel::Kernel;
