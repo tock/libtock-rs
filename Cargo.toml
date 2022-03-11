@@ -11,6 +11,7 @@ debug = true
 [workspace]
 exclude = ["tock"]
 members = [
+    "apis/gpio",
     "apis/buttons",
     "apis/leds",
     "apis/low_level_debug",

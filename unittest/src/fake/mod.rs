@@ -10,6 +10,7 @@
 //! (e.g. `fake::Console`).
 
 mod buttons;
+mod gpio;
 mod kernel;
 mod leds;
 mod low_level_debug;
@@ -17,6 +18,7 @@ mod syscall_driver;
 mod syscalls;
 
 pub use buttons::Buttons;
+pub use gpio::{Gpio, GpioMode, InterruptEdge, PullMode};
 pub use kernel::Kernel;
 pub use leds::Leds;
 pub use low_level_debug::{LowLevelDebug, Message};
