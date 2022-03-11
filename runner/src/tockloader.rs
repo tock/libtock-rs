@@ -9,6 +9,7 @@ use std::process::{Child, Command, Stdio};
 // we can fix it or remove this notice!
 pub fn deploy(cli: &Cli, platform: String, tab_path: PathBuf) -> Child {
     let flags: &[_] = match platform.as_str() {
+        "clue_nrf52840" => &[],
         "hail" => &[],
         "microbit_v2" => &["--bundle-apps"],
         "nrf52" | "nrf52840" => &[

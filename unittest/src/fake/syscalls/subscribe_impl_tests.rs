@@ -28,8 +28,8 @@ fn expected_wrong() {
         .contains("but Subscribe was called instead"));
 
     let expected_syscall = ExpectedSyscall::Subscribe {
-        driver_number: 1,
-        subscribe_number: 2,
+        driver_num: 1,
+        subscribe_num: 2,
         skip_with_error: None,
     };
 
@@ -90,8 +90,8 @@ fn no_kernel() {
 fn skip_with_error() {
     let kernel = fake::Kernel::new();
     kernel.add_expected_syscall(ExpectedSyscall::Subscribe {
-        driver_number: 1,
-        subscribe_number: 2,
+        driver_num: 1,
+        subscribe_num: 2,
         skip_with_error: Some(ErrorCode::NoAck),
     });
     unsafe extern "C" fn upcall_fn(_: u32, _: u32, _: u32, _: Register) {}
@@ -132,13 +132,13 @@ fn syscall4_subscribe() {
     assert_eq!(
         kernel.take_syscall_log(),
         [SyscallLogEntry::Subscribe {
-            driver_number: 1,
-            subscribe_number: 2,
+            driver_num: 1,
+            subscribe_num: 2,
         }]
     );
 }
 
-// Tests Subscribe with too large inputs (driver_number and subscribe_number)
+// Tests Subscribe with too large inputs (driver_num and subscribe_num)
 #[cfg(target_pointer_width = "64")]
 #[test]
 fn too_large_inputs() {

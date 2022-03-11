@@ -16,11 +16,6 @@ jobs:
       - name: Clone repository
         uses: actions/checkout@v2
 
-      - name: Install arm-none-eabi-gcc
-        uses: fiam/arm-none-eabi-gcc@v1
-        with:
-          release: '10-2020-q4'
-
       - name: Build and Test
         run: |
           cd "${GITHUB_WORKSPACE}"

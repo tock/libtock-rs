@@ -16,7 +16,7 @@ pub trait SyscallDriver: 'static {
     /// Like the real Tock kernel, `fake::Kernel` implements Subscribe for
     /// drivers. Drivers must implement `num_upcalls` to tell `fake::Kernel` how
     /// many upcalls to store. `fake::Kernel` will reject Subscribe calls for
-    /// any subscribe_number >= num_upcalls.
+    /// any subscribe_num >= num_upcalls.
     fn num_upcalls(&self) -> u32;
 
     // -------------------------------------------------------------------------
@@ -36,10 +36,10 @@ pub trait SyscallDriver: 'static {
     /// implementation is provided that rejects all Read-Only Allow calls.
     fn allow_readonly(
         &self,
-        buffer_number: u32,
+        buffer_num: u32,
         buffer: RoAllowBuffer,
     ) -> Result<RoAllowBuffer, (RoAllowBuffer, ErrorCode)> {
-        let _ = buffer_number; // Silences the unused variable warning.
+        let _ = buffer_num; // Silences the unused variable warning.
         Err((buffer, ErrorCode::NoSupport))
     }
 
@@ -48,10 +48,10 @@ pub trait SyscallDriver: 'static {
     /// implementation is provided that rejects all Read-Write Allow calls.
     fn allow_readwrite(
         &self,
-        buffer_number: u32,
+        buffer_num: u32,
         buffer: RwAllowBuffer,
     ) -> Result<RwAllowBuffer, (RwAllowBuffer, ErrorCode)> {
-        let _ = buffer_number; // Silences the unused variable warning.
+        let _ = buffer_num; // Silences the unused variable warning.
         Err((buffer, ErrorCode::NoSupport))
     }
 }

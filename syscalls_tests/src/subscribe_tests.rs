@@ -81,8 +81,8 @@ fn success() {
         assert_eq!(
             kernel.take_syscall_log(),
             [SyscallLogEntry::Subscribe {
-                driver_number: 1,
-                subscribe_number: 0
+                driver_num: 1,
+                subscribe_num: 0
             }]
         );
         upcall::schedule(1, 0, (2, 3, 4)).unwrap();
@@ -95,8 +95,8 @@ fn success() {
     assert_eq!(
         kernel.take_syscall_log(),
         [SyscallLogEntry::Subscribe {
-            driver_number: 1,
-            subscribe_number: 0
+            driver_num: 1,
+            subscribe_num: 0
         }]
     );
     upcall::schedule(1, 0, (2, 3, 4)).unwrap();

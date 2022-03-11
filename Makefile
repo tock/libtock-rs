@@ -21,6 +21,7 @@ usage:
 	@echo " - apollo3"
 	@echo " - stm32f3discovery"
 	@echo " - stm32f412gdiscovery"
+	@echo " - clue_nrf52840"
 	@echo
 	@echo "Run 'make setup' to setup Rust to build libtock-rs."
 	@echo "Run 'make <board> EXAMPLE=<>' to build EXAMPLE for that board."
@@ -42,6 +43,7 @@ setup: setup-qemu
 	cargo install elf2tab
 	cargo install stack-sizes
 	cargo miri setup
+	rustup target add --toolchain stable thumbv7em-none-eabi
 
 # Sets up QEMU in the tock/ directory. We use Tock's QEMU which may contain
 # patches to better support boards that Tock supports.
@@ -99,14 +101,16 @@ EXCLUDE_MIRI := $(EXCLUDE_RUNTIME) --exclude ufmt-macros
 EXCLUDE_STD := --exclude libtock_unittest --exclude print_sizes \
                --exclude runner --exclude syscalls_tests
 
-# Some of our crates should build with a stable toolchain. This verifies those
-# crates don't depend on unstable features by using cargo check. We specify a
-# different target directory so this doesn't flush the cargo cache of the
-# primary toolchain.
+# Currently, all of our crates should build with a stable toolchain. This
+# verifies our crates don't depend on unstable features by using cargo check. We
+# specify a different target directory so this doesn't flush the cargo cache of
+# the primary toolchain.
 .PHONY: test-stable
 test-stable:
 	CARGO_TARGET_DIR="target/stable-toolchain" cargo +stable check --workspace \
 		$(EXCLUDE_RUNTIME)
+	CARGO_TARGET_DIR="target/stable-toolchain" LIBTOCK_PLATFORM=nrf52 cargo \
+		+stable check $(EXCLUDE_STD) --target=thumbv7em-none-eabi --workspace
 
 .PHONY: test
 test: examples test-stable
@@ -195,6 +199,24 @@ flash-nrf52840:
 	LIBTOCK_PLATFORM=nrf52840 cargo run --example $(EXAMPLE) $(features) \
 		--target=thumbv7em-none-eabi $(release) -- --deploy=tockloader
 
+.PHONY: raspberrypi_pico
+raspberrypi_pico:
+	LIBTOCK_PLATFORM=raspberrypi_pico cargo run --example $(EXAMPLE) $(features) \
+		--target=thumbv6m-none-eabi $(release)
+	mkdir -p target/tbf/raspberrypi_pico
+	cp target/thumbv6m-none-eabi/release/examples/$(EXAMPLE).tab \
+		target/thumbv6m-none-eabi/release/examples/$(EXAMPLE).tbf \
+		target/tbf/raspberrypi_pico
+
+.PHONY: nano_rp2040_connect
+nano_rp2040_connect:
+	LIBTOCK_PLATFORM=nano_rp2040_connect cargo run --example $(EXAMPLE) $(features) \
+		--target=thumbv6m-none-eabi $(release)
+	mkdir -p target/tbf/nano_rp2040_connect
+	cp target/thumbv6m-none-eabi/release/examples/$(EXAMPLE).tab \
+		target/thumbv6m-none-eabi/release/examples/$(EXAMPLE).tbf \
+		target/tbf/nano_rp2040_connect
+
 .PHONY: stm32f3discovery
 stm32f3discovery:
 	LIBTOCK_PLATFORM=stm32f3discovery cargo run --example $(EXAMPLE) \
@@ -262,6 +284,20 @@ msp432:
 	cp target/thumbv7em-none-eabi/release/examples/$(EXAMPLE).tab \
 		target/thumbv7em-none-eabi/release/examples/$(EXAMPLE).tbf \
 		target/tbf/msp432
+
+.PHONY: clue_nrf52840
+clue_nrf52840:
+	LIBTOCK_PLATFORM=clue_nrf52840 cargo run --example $(EXAMPLE) $(features) \
+		--target=thumbv7em-none-eabi $(release)
+	mkdir -p target/tbf/clue_nrf52840
+	cp target/thumbv7em-none-eabi/release/examples/$(EXAMPLE).tab \
+		target/thumbv7em-none-eabi/release/examples/$(EXAMPLE).tbf \
+		target/tbf/clue_nrf52840
+
+.PHONY: flash-clue_nrf52840
+flash-clue_nrf52840:
+	LIBTOCK_PLATFORM=clue_nrf52840 cargo run --example $(EXAMPLE) $(features) \
+		--target=thumbv7em-none-eabi $(release) -- --deploy=tockloader
 
 .PHONY: clean
 clean:

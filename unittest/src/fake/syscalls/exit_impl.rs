@@ -1,9 +1,9 @@
 use core::convert::TryInto;
 
 pub(super) fn exit(r0: libtock_platform::Register, r1: libtock_platform::Register) -> ! {
-    let exit_number: u32 = r0.try_into().expect("Too large exit number");
+    let exit_num: u32 = r0.try_into().expect("Too large exit number");
     let completion_code: u32 = r1.try_into().expect("Too large completion code");
-    match exit_number {
+    match exit_num {
         libtock_platform::exit_id::TERMINATE => {
             println!("exit-terminate called with code {}", completion_code);
 
@@ -20,6 +20,6 @@ pub(super) fn exit(r0: libtock_platform::Register, r1: libtock_platform::Registe
 
             std::process::exit(1);
         }
-        _ => panic!("Unknown exit number {} invoked.", exit_number),
+        _ => panic!("Unknown exit number {} invoked.", exit_num),
     }
 }
