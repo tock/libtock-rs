@@ -20,6 +20,7 @@ usage:
 	@echo " - imxrt1050"
 	@echo " - apollo3"
 	@echo " - stm32f3discovery"
+	@echo " - esp32_c3_devkitm_1"
 	@echo " - clue_nrf52840"
 	@echo
 	@echo "Run 'make setup' to setup Rust to build libtock-rs."
@@ -137,6 +138,15 @@ apollo3:
 	cp target/thumbv7em-none-eabi/release/examples/$(EXAMPLE).tab \
 		target/thumbv7em-none-eabi/release/examples/$(EXAMPLE).tbf \
 		target/tbf/apollo3
+
+.PHONY: esp32_c3_devkitm_1
+esp32_c3_devkitm_1:
+	LIBTOCK_PLATFORM=esp32_c3_devkitm_1 cargo run --example $(EXAMPLE) $(features) \
+		--target=riscv32imc-unknown-none-elf $(release)
+	mkdir -p target/tbf/esp32_c3_devkitm_1
+	cp target/riscv32imc-unknown-none-elf/release/examples/$(EXAMPLE).tab \
+		target/riscv32imc-unknown-none-elf/release/examples/$(EXAMPLE).tbf \
+		target/tbf/esp32_c3_devkitm_1
 
 .PHONY: hail
 hail:
