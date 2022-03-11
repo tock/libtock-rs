@@ -3,7 +3,7 @@ authors = ["Tock Project Developers <tock-dev@googlegroups.com>"]
 categories = ["embedded", "no-std", "os"]
 description = """libtock-rs runtime. Provides raw system call implementations \
                  and language items necessary for Tock apps."""
-edition = "2018"
+edition = "2021"
 license = "Apache-2.0 OR MIT"
 name = "libtock_runtime"
 repository = "https://www.github.com/tock/libtock-rs"

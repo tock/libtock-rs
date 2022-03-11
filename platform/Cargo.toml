@@ -6,7 +6,7 @@ description = """libtock-rs platform layer. Provides the Platform abstraction,
                  basis for libtock-rs' asynchronous APIs. libtock_platform is
                  intended for use in both TBF binaries and unit tests that run
                  on Linux."""
-edition = "2018"
+edition = "2021"
 license = "Apache-2.0 OR MIT"
 name = "libtock_platform"
 repository = "https://www.github.com/tock/libtock/rs"

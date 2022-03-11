@@ -61,7 +61,7 @@ SECTIONS {
          * elf2tab does not parse the ELF file correctly for unknown reasons.
          */
         rt_header = .;
-        LONG(start);
+        LONG(start & 0xFFFFFFFE);        /* .start w/ Thumb bit unset */
         LONG(ADDR(.bss) + SIZEOF(.bss)); /* Initial process break */
         LONG(_stack_top);
         LONG(SIZEOF(.data));

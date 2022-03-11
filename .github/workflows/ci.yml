@@ -40,9 +40,15 @@ jobs:
       # using the RUSTFLAGS environment variable because if we set RUSTFLAGS
       # cargo will ignore the rustflags config in .cargo/config, breaking
       # relocation.
+      #
+      # TODO: Remove the "rustup toolchain update stable" once the 20220227.1
+      # version of the Ubuntu 20.04 virtual environment is fully rolled out.
+      # The rollout status can be found here:
+      # https://github.com/actions/virtual-environments
       - name: Build and Test
         run: |
-          sudo apt-get install binutils-arm-none-eabi ninja-build
+          sudo apt-get install ninja-build
+          rustup toolchain update stable
           cd "${GITHUB_WORKSPACE}"
           echo "[target.'cfg(all())']" >> .cargo/config
           echo 'rustflags = ["-D", "warnings"]' >> .cargo/config

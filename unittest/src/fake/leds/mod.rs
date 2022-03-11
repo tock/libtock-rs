@@ -33,8 +33,8 @@ impl<const LEDS_COUNT: usize> crate::fake::SyscallDriver for Leds<LEDS_COUNT> {
         0
     }
 
-    fn command(&self, command_number: u32, argument0: u32, _argument1: u32) -> CommandReturn {
-        match command_number {
+    fn command(&self, command_num: u32, argument0: u32, _argument1: u32) -> CommandReturn {
+        match command_num {
             DRIVER_CHECK => crate::command_return::success_u32(LEDS_COUNT as u32),
             LED_ON => {
                 if argument0 < LEDS_COUNT as u32 {
