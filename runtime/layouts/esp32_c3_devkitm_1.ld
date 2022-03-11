@@ -1,4 +1,4 @@
-/* Layout for the Imix board, used by the examples in this repository. */
+/* Layout for the esp32c3 DevKit M1 board, used by the examples in this repository. */
 
 MEMORY {
   /* Note that the SRAM address may need to be changed depending on
