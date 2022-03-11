@@ -20,6 +20,7 @@ usage:
 	@echo " - imxrt1050"
 	@echo " - apollo3"
 	@echo " - stm32f3discovery"
+	@echo " - stm32f412gdiscovery"
 	@echo " - esp32_c3_devkitm_1"
 	@echo " - clue_nrf52840"
 	@echo
@@ -234,6 +235,15 @@ stm32f3discovery:
 	cp target/thumbv7em-none-eabi/release/examples/$(EXAMPLE).tab \
 		target/thumbv7em-none-eabi/release/examples/$(EXAMPLE).tbf \
 		target/tbf/stm32f3discovery
+
+.PHONY: stm32f412gdiscovery
+stm32f412gdiscovery:
+	LIBTOCK_PLATFORM=stm32f412gdiscovery cargo run --example $(EXAMPLE) \
+		$(features) --target=thumbv7em-none-eabi $(release)
+	mkdir -p target/tbf/stm32f412gdiscovery
+	cp target/thumbv7em-none-eabi/release/examples/$(EXAMPLE).tab \
+		target/thumbv7em-none-eabi/release/examples/$(EXAMPLE).tbf \
+		target/tbf/stm32f412gdiscovery
 
 .PHONY: opentitan
 opentitan:
