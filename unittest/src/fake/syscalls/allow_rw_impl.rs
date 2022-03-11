@@ -4,20 +4,20 @@ use libtock_platform::{return_variant, ErrorCode, Register};
 use std::convert::TryInto;
 
 pub(super) unsafe fn allow_rw(
-    driver_number: Register,
-    buffer_number: Register,
+    driver_num: Register,
+    buffer_num: Register,
     address: Register,
     len: Register,
 ) -> [Register; 4] {
-    let driver_number = driver_number.try_into().expect("Too large driver number");
-    let buffer_number = buffer_number.try_into().expect("Too large buffer number");
+    let driver_num = driver_num.try_into().expect("Too large driver number");
+    let buffer_num = buffer_num.try_into().expect("Too large buffer number");
     let result = with_kernel_data(|option_kernel_data| {
         let kernel_data =
             option_kernel_data.expect("Read-Write Allow called but no fake::Kernel exists");
 
         kernel_data.syscall_log.push(SyscallLogEntry::AllowRw {
-            driver_number,
-            buffer_number,
+            driver_num,
+            buffer_num,
             len: len.into(),
         });
 
@@ -27,17 +27,17 @@ pub(super) unsafe fn allow_rw(
         match kernel_data.expected_syscalls.pop_front() {
             None => {}
             Some(ExpectedSyscall::AllowRw {
-                driver_number: expected_driver_number,
-                buffer_number: expected_buffer_number,
+                driver_num: expected_driver_num,
+                buffer_num: expected_buffer_num,
                 return_error,
             }) => {
                 assert_eq!(
-                    driver_number, expected_driver_number,
-                    "expected different driver_number"
+                    driver_num, expected_driver_num,
+                    "expected different driver_num"
                 );
                 assert_eq!(
-                    buffer_number, expected_buffer_number,
-                    "expected different buffer_number"
+                    buffer_num, expected_buffer_num,
+                    "expected different buffer_num"
                 );
                 if let Some(error_code) = return_error {
                     return Err(error_code);
@@ -46,7 +46,7 @@ pub(super) unsafe fn allow_rw(
             Some(expected_syscall) => expected_syscall.panic_wrong_call("Read-Write Allow"),
         };
 
-        let driver = match kernel_data.drivers.get(&driver_number) {
+        let driver = match kernel_data.drivers.get(&driver_num) {
             None => return Err(ErrorCode::NoDevice),
             Some(driver_data) => driver_data.driver.clone(),
         };
@@ -71,7 +71,7 @@ pub(super) unsafe fn allow_rw(
         }
     };
 
-    let (error_code, buffer_out) = match driver.allow_readwrite(buffer_number, buffer) {
+    let (error_code, buffer_out) = match driver.allow_readwrite(buffer_num, buffer) {
         Ok(buffer_out) => (None, buffer_out),
         Err((buffer_out, error_code)) => (Some(error_code), buffer_out),
     };

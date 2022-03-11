@@ -1,3 +1,4 @@
+use core::arch::asm;
 use libtock_platform::{RawSyscalls, Register};
 
 unsafe impl RawSyscalls for crate::TockSyscalls {

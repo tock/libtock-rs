@@ -11,6 +11,7 @@ use core::mem;
 use proc_macro::TokenStream;
 use std::borrow::Cow;
 
+use lazy_static::lazy_static;
 use proc_macro2::{Literal, Span};
 use proc_macro_hack::proc_macro_hack;
 use quote::quote;
@@ -229,8 +230,35 @@ fn write(input: TokenStream, newline: bool) -> TokenStream {
             pats.push(quote!(#pat));
 
             match piece {
-                Piece::Display => {
-                    exprs.push(quote!(ufmt::uDisplay::fmt(#pat, f)?;));
+                Piece::Display {
+                    pretty,
+                    hex,
+                    width,
+                    pad,
+                } => {
+                    exprs.push(if let Some(w) = width {
+                        if let Some(case) = hex {
+                            if case == Hex::Lower {
+                                quote!(f.fixed_width(#pretty, Some(true), Some(#w), #pad, |f| ufmt::uDisplay::fmt(#pat, f))?;)
+                            } else {
+                                quote!(f.fixed_width(#pretty, Some(false), Some(#w), #pad, |f| ufmt::uDisplay::fmt(#pat, f))?;)
+                            }
+                        } else {
+                            quote!(f.fixed_width(#pretty, None, Some(#w), #pad, |f| ufmt::uDisplay::fmt(#pat, f))?;)
+                        }
+                    } else if hex == Some(Hex::Lower) && pretty {
+                        quote!(f.hex(true, true, |f| ufmt::uDisplay::fmt(#pat, f))?;)
+                    } else if hex == Some(Hex::Upper) && pretty {
+                        quote!(f.hex(false, true, |f| ufmt::uDisplay::fmt(#pat, f))?;)
+                    } else if hex == Some(Hex::Lower) {
+                        quote!(f.hex(true, false, |f| ufmt::uDisplay::fmt(#pat, f))?;)
+                    } else if hex == Some(Hex::Upper) {
+                        quote!(f.hex(false, false, |f| ufmt::uDisplay::fmt(#pat, f))?;)
+                    } else if pretty {
+                        quote!(f.pretty(|f| ufmt::uDisplay::fmt(#pat, f))?;)
+                    } else {
+                        quote!(ufmt::uDisplay::fmt(#pat, f)?;)
+                    });
                 }
 
                 Piece::Debug { pretty } => {
@@ -294,9 +322,22 @@ impl Parse for Input {
 }
 
 #[derive(Debug, PartialEq)]
+pub(crate) enum Hex {
+    Upper,
+    Lower,
+}
+
+#[derive(Debug, PartialEq)]
 enum Piece<'a> {
-    Debug { pretty: bool },
-    Display,
+    Debug {
+        pretty: bool,
+    },
+    Display {
+        pretty: bool,
+        hex: Option<Hex>,
+        width: Option<u8>,
+        pad: char,
+    },
     Str(Cow<'a, str>),
 }
 
@@ -379,10 +420,17 @@ fn parse<'l>(mut literal: &'l str, span: Span) -> parse::Result<Vec<Piece<'l>>> 
                 const DISPLAY: &str = "}";
                 const ESCAPED_BRACE: &str = "{";
 
+                use regex::Regex;
+                lazy_static! {
+                    static ref WIDTH_REGEX: Regex =
+                        Regex::new(r"^:(#?)(0?)([0-9]*)([x|X]?)}").unwrap();
+                }
                 let head = head.unwrap_or("");
                 if tail.starts_with(DEBUG)
                     || tail.starts_with(DEBUG_PRETTY)
                     || tail.starts_with(DISPLAY)
+                    || WIDTH_REGEX.is_match(tail)
+                // for width specifiers
                 {
                     if buf.is_empty() {
                         if !head.is_empty() {
@@ -405,8 +453,53 @@ fn parse<'l>(mut literal: &'l str, span: Span) -> parse::Result<Vec<Piece<'l>>> 
                         pieces.push(Piece::Debug { pretty: true });
 
                         literal = &tail[DEBUG_PRETTY.len()..];
+                    } else if let Some(cap) = WIDTH_REGEX.captures(tail) {
+                        let leading_pound = cap[1].eq("#");
+                        let leading_zero = cap[2].eq("0");
+                        let width = if cap[3].len() > 0 {
+                            Some(cap[3].parse::<u8>().map_err(|_| {
+                                parse::Error::new(
+                                    span,
+                                    "invalid width specifier: expected valid u8",
+                                )
+                            })?)
+                        } else {
+                            None
+                        };
+                        // 18 is the smallest buffer used by any numeric uDebug impl
+                        // By increasing that buffer size, we could increase this maximum value,
+                        // at the cost of cycles and a small amount of size
+                        if let Some(w) = width {
+                            if w > 18 {
+                                return Err(parse::Error::new(
+                                    span,
+                                    "invalid width specifier: maximum allowed specifier is 18",
+                                ));
+                            }
+                        }
+                        let hex = if cap[4].eq("x") {
+                            Some(Hex::Lower)
+                        } else if cap[4].eq("X") {
+                            Some(Hex::Upper)
+                        } else {
+                            None
+                        };
+                        pieces.push(Piece::Display {
+                            pretty: leading_pound,
+                            hex,
+                            width,
+                            pad: if leading_zero { '0' } else { ' ' },
+                        });
+
+                        // first capture is entire match
+                        literal = &tail[cap[0].len()..];
                     } else {
-                        pieces.push(Piece::Display);
+                        pieces.push(Piece::Display {
+                            pretty: false,
+                            hex: None,
+                            width: None,
+                            pad: ' ',
+                        });
 
                         literal = &tail[DISPLAY.len()..];
                     }
@@ -418,7 +511,7 @@ fn parse<'l>(mut literal: &'l str, span: Span) -> parse::Result<Vec<Piece<'l>>> 
                 } else {
                     return Err(parse::Error::new(
                         span,
-                        "invalid format string: expected `{{`, `{}`, `{:?}` or `{:#?}`",
+                        "invalid format string: expected `{{`, `{}`, `{:?}`, `{:#?}`, `{:x}`, `{:#x}`, or a width specifier}",
                     ));
                 }
             }
@@ -434,6 +527,7 @@ mod tests {
 
     use proc_macro2::Span;
 
+    use crate::Hex;
     use crate::Piece;
 
     #[test]
@@ -445,7 +539,12 @@ mod tests {
             super::parse("The answer is {}", span).ok(),
             Some(vec![
                 Piece::Str(Cow::Borrowed("The answer is ")),
-                Piece::Display
+                Piece::Display {
+                    pretty: false,
+                    hex: None,
+                    width: None,
+                    pad: ' '
+                }
             ]),
         );
 
@@ -459,6 +558,56 @@ mod tests {
             Some(vec![Piece::Debug { pretty: true }]),
         );
 
+        assert_eq!(
+            super::parse("{:x}", span).ok(),
+            Some(vec![Piece::Display {
+                pretty: false,
+                hex: Some(Hex::Lower),
+                width: None,
+                pad: ' ',
+            }]),
+        );
+
+        assert_eq!(
+            super::parse("{:X}", span).ok(),
+            Some(vec![Piece::Display {
+                pretty: false,
+                hex: Some(Hex::Upper),
+                width: None,
+                pad: ' ',
+            }]),
+        );
+
+        assert_eq!(
+            super::parse("{:10x}", span).ok(),
+            Some(vec![Piece::Display {
+                pretty: false,
+                hex: Some(Hex::Lower),
+                width: Some(10),
+                pad: ' ',
+            }]),
+        );
+
+        assert_eq!(
+            super::parse("{:08x}", span).ok(),
+            Some(vec![Piece::Display {
+                pretty: false,
+                hex: Some(Hex::Lower),
+                width: Some(8),
+                pad: '0',
+            }]),
+        );
+
+        assert_eq!(
+            super::parse("{:#08x}", span).ok(),
+            Some(vec![Piece::Display {
+                pretty: true,
+                hex: Some(Hex::Lower),
+                width: Some(8),
+                pad: '0',
+            }]),
+        );
+
         // escaped braces
         assert_eq!(
             super::parse("{{}} is not an argument", span).ok(),
@@ -470,7 +619,6 @@ mod tests {
         assert!(super::parse(" {", span).is_err());
         assert!(super::parse("{ ", span).is_err());
         assert!(super::parse("{ {", span).is_err());
-        assert!(super::parse("{:x}", span).is_err());
     }
 
     #[test]

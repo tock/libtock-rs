@@ -1,0 +1,4 @@
+# Tell search tools to ignore the Tock submodule. Usually when someone wants to
+# search this repository they want to search libtock-rs' codebase, not the Tock
+# kernel.
+/tock/

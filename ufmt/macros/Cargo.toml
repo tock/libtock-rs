@@ -2,7 +2,7 @@
 authors = ["Jorge Aparicio <jorge@japaric.io>"]
 categories = ["embedded", "no-std"]
 description = "`μfmt` macros"
-edition = "2018"
+edition = "2021"
 keywords = ["Debug", "Display", "Write", "format"]
 license = "MIT OR Apache-2.0"
 name = "ufmt-macros"
@@ -16,6 +16,8 @@ proc-macro = true
 proc-macro-hack = "0.5.11"
 proc-macro2 = "1"
 quote = "1"
+regex = "1.5.4"
+lazy_static = "1.4.0"
 
 [dependencies.syn]
 features = ["full"]

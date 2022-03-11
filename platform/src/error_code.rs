@@ -1,4 +1,4 @@
-use core::{convert::TryFrom, mem::transmute};
+use core::{convert::TryFrom, fmt, mem::transmute};
 
 // TODO: Add a ufmt debug implementation for process binaries to use.
 /// An error code that libtock-rs APIs may return, as specified in
@@ -6,7 +6,7 @@ use core::{convert::TryFrom, mem::transmute};
 /// the kernel, it can be produced by userspace APIs.
 /// 
 /// [error-codes]: https://github.com/tock/tock/blob/master/doc/reference/trd104-syscalls.md#33-error-codes
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 #[repr(u16)]  // To facilitate use with transmute() in CommandReturn
 #[rustfmt::skip]
 pub enum ErrorCode {
@@ -237,6 +237,38 @@ pub enum ErrorCode {
 /// The provided value is not a recognized TRD 104 error code.
 #[derive(PartialEq, Eq, Debug)]
 pub struct NotAnErrorCode;
+
+impl ErrorCode {
+    /// Represent this error code as a string, if defined.
+    fn as_str(self) -> Option<&'static str> {
+        match self {
+            Self::Fail => Some("FAIL"),
+            Self::Busy => Some("BUSY"),
+            Self::Already => Some("ALREADY"),
+            Self::Off => Some("OFF"),
+            Self::Reserve => Some("RESERVE"),
+            Self::Invalid => Some("INVALID"),
+            Self::Size => Some("SIZE"),
+            Self::Cancel => Some("CANCEL"),
+            Self::NoMem => Some("NOMEM"),
+            Self::NoSupport => Some("NOSUPPORT"),
+            Self::NoDevice => Some("NODEVICE"),
+            Self::Uninstalled => Some("UNINSTALLED"),
+            Self::NoAck => Some("NOACK"),
+            Self::BadRVal => Some("BADRVAL"),
+            _ => None,
+        }
+    }
+}
+
+impl fmt::Debug for ErrorCode {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self.as_str() {
+            Some(s) => write!(f, "{}", s),
+            None => write!(f, "code {}", *self as u16),
+        }
+    }
+}
 
 impl TryFrom<u32> for ErrorCode {
     type Error = NotAnErrorCode;

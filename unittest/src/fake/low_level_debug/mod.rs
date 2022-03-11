@@ -27,14 +27,14 @@ impl LowLevelDebug {
 
 impl crate::fake::SyscallDriver for LowLevelDebug {
     fn id(&self) -> u32 {
-        DRIVER_NUMBER
+        DRIVER_NUM
     }
     fn num_upcalls(&self) -> u32 {
         0
     }
 
-    fn command(&self, command_number: u32, argument0: u32, argument1: u32) -> CommandReturn {
-        match command_number {
+    fn command(&self, command_num: u32, argument0: u32, argument1: u32) -> CommandReturn {
+        match command_num {
             DRIVER_CHECK => {}
             PRINT_ALERT_CODE => self.handle_message(Message::AlertCode(argument0)),
             PRINT_1 => self.handle_message(Message::Print1(argument0)),
@@ -71,7 +71,7 @@ impl core::fmt::Display for Message {
 #[cfg(test)]
 mod tests;
 
-const DRIVER_NUMBER: u32 = 8;
+const DRIVER_NUM: u32 = 8;
 
 // Command numbers
 const DRIVER_CHECK: u32 = 0;

@@ -1,0 +1,15 @@
+[package]
+authors = ["Tock Project Developers <tock-dev@googlegroups.com>"]
+description = """Tool used to run libtock-rs process binaries."""
+edition = "2021"
+license = "Apache-2.0 OR MIT"
+name = "runner"
+publish = false
+repository = "https://www.github.com/tock/libtock-rs"
+version = "0.1.0"
+
+[dependencies]
+clap = { features = ["derive"], version = "3.0.10" }
+elf = "0.0.10"
+libc = "0.2.113"
+termion = "1.5.6"

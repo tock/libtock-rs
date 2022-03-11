@@ -92,7 +92,6 @@ impl core::convert::TryFrom<Register> for u32 {
     type Error = core::num::TryFromIntError;
 
     fn try_from(register: Register) -> Result<u32, core::num::TryFromIntError> {
-        use core::convert::TryInto;
         (register.0 as usize).try_into()
     }
 }

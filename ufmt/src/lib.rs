@@ -19,6 +19,11 @@
 //! - [`core::fmt::Formatter::debug_struct`][debug_struct]-like API
 //! - [`#[derive(uDebug)]`][derive]
 //! - Pretty formatting (`{:#?}`) for `uDebug`
+//! - Hex formatting (`{:x}`) for numbers
+//! - Pretty hex formatting (`{:#x}`) for numbers
+//! - Fixed width 0-and-space-left-padded formatting (`{:08}`, `{:8}`) for numbers
+//! - Fixed width space-right-padded formatting (`{:8}`) for `uDisplay` types
+//! - Support for padding characters other than 0 and space is not currently implemented
 //!
 //! [`Debug`]: trait.uDebug.html
 //! [`Display`]: trait.uDisplay.html
@@ -33,7 +38,7 @@
 //!
 //! These are out of scope
 //!
-//! - Padding, alignment and other formatting options
+//! - Alignment and other advanced formatting options
 //! - Formatting floating point numbers
 //!
 //! # Examples
@@ -223,6 +228,10 @@ pub use ufmt_write::uWrite;
 /// - `{}` - `uDisplay`
 /// - `{:?}` - `uDebug`
 /// - `{:#?}` - "pretty" `uDebug`
+/// - `{:x}` - lowercase hexadecimal for numbers
+/// - `{:X}` - uppercase hexadecimal for numbers
+/// - `{:8}` - space padded width specifier. left pad spaces for numbers, right pad otherwise
+/// - `{:08}` - zero padded width specifier. left pads zeroes for numbers
 ///
 /// Named parameters and "specified" positional parameters (`{0}`) are not supported.
 ///
@@ -274,6 +283,10 @@ where
 {
     indentation: u8,
     pretty: bool,
+    hex: Option<bool>, // Some(true) = lowercase
+    width: Option<u8>,
+    pad: char,
+    bytes_written: usize, // used internally for width padding
     writer: &'w mut W,
 }
 
@@ -286,6 +299,10 @@ where
         Self {
             indentation: 0,
             pretty: false,
+            hex: None,
+            width: None,
+            pad: ' ',
+            bytes_written: 0,
             writer,
         }
     }
@@ -302,14 +319,80 @@ where
         Ok(())
     }
 
+    /// Execute the closure with hex-printing enabled
+    pub fn hex(
+        &mut self,
+        lower: bool,
+        pretty: bool,
+        f: impl FnOnce(&mut Self) -> Result<(), W::Error>,
+    ) -> Result<(), W::Error> {
+        let old_hex = self.hex;
+        let old_pretty = self.pretty;
+        self.pretty = pretty;
+        self.hex = Some(lower);
+        f(self)?;
+        self.hex = old_hex;
+        self.pretty = old_pretty;
+        Ok(())
+    }
+
+    /// Execute the closure with specified width / pad values
+    pub fn fixed_width(
+        &mut self,
+        pretty: bool,
+        hex: Option<bool>,
+        width: Option<u8>,
+        pad: char,
+        f: impl FnOnce(&mut Self) -> Result<(), W::Error>,
+    ) -> Result<(), W::Error> {
+        self.bytes_written = 0;
+        let old_hex = self.hex;
+        let old_pretty = self.pretty;
+        let old_width = self.width;
+        let old_pad = self.pad;
+        self.pretty = pretty;
+        self.hex = hex;
+        self.width = width;
+        self.pad = pad;
+        f(self)?;
+        // The trick here is that if the internal implementation
+        // already padded to the appropriate length, we don't have
+        // to do anything -- this is the case for all numeric types.
+        // Otherwise, we only support space padding to the right of
+        // the object, so just fill that in here.
+        if let Some(w) = self.width {
+            if (w as usize) > self.bytes_written {
+                // we don't support non-space padding here
+                if self.pad == ' ' {
+                    for _i in 0..(w as usize - self.bytes_written) {
+                        self.write_str(" ")?;
+                    }
+                }
+            }
+        }
+        self.hex = old_hex;
+        self.pretty = old_pretty;
+        self.width = old_width;
+        self.pad = old_pad;
+        Ok(())
+    }
+
     /// Writes a character to the underlying buffer contained within this formatter.
     pub fn write_char(&mut self, c: char) -> Result<(), W::Error> {
-        self.writer.write_char(c)
+        let err = self.writer.write_char(c);
+        if err.is_ok() {
+            self.bytes_written += c.len_utf8();
+        }
+        err
     }
 
     /// Writes a string slice to the underlying buffer contained within this formatter.
     pub fn write_str(&mut self, s: &str) -> Result<(), W::Error> {
-        self.writer.write_str(s)
+        let err = self.writer.write_str(s);
+        if err.is_ok() {
+            self.bytes_written += s.len();
+        }
+        err
     }
 
     /// Write whitespace according to the current `self.indentation`
