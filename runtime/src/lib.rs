@@ -21,7 +21,7 @@
 #![no_std]
 #![warn(unsafe_op_in_unsafe_fn)]
 
-mod startup;
+pub mod startup;
 
 /// TockSyscalls implements `libtock_platform::Syscalls`.
 pub struct TockSyscalls;
