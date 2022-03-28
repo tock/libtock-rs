@@ -1,5 +1,8 @@
 //! Runtime components related to process startup.
 
+use crate::TockSyscalls;
+use libtock_platform::Termination;
+
 // Include the correct `start` symbol (the program entry point) for the
 // architecture.
 #[cfg(target_arch = "arm")]
@@ -29,10 +32,8 @@ macro_rules! set_main {
     {$name:ident} => {
         #[no_mangle]
         fn libtock_unsafe_main() -> ! {
-            use libtock_runtime::TockSyscalls;
-            let res = $name();
             #[allow(unreachable_code)] // so that fn main() -> ! does not produce a warning.
-            libtock_platform::Termination::complete::<TockSyscalls>(res)
+            $crate::startup::handle_main_return($name())
         }
     }
 }
@@ -53,6 +54,12 @@ macro_rules! stack_size {
         #[link_section = ".stack_buffer"]
         pub static mut STACK_MEMORY: [u8; $size] = [0; $size];
     }
+}
+
+/// This is public for the sake of making `set_main!` usable in other crates.
+/// It doesn't have another function.
+pub fn handle_main_return<T: Termination>(result: T) -> ! {
+    Termination::complete::<TockSyscalls>(result)
 }
 
 // rust_start is the first Rust code to execute in the process. It is called
