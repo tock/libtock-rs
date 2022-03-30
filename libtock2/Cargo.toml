@@ -13,6 +13,7 @@ version = "0.1.0"
 libtock_platform = { path = "../platform" }
 libtock_runtime = { path = "../runtime" }
 libtock_buttons = { path = "../apis/buttons" }
+libtock_console = { path = "../apis/console" }
 libtock_leds = { path = "../apis/leds" }
 libtock_low_level_debug = { path = "../apis/low_level_debug" }
 
