@@ -1,7 +1,7 @@
 #![forbid(unsafe_code)]
 #![no_std]
 
-extern crate libtock_small_panic;
+extern crate libtock_debug_panic;
 
 pub use libtock_platform as platform;
 pub use libtock_runtime as runtime;

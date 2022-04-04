@@ -1,0 +1,14 @@
+[package]
+name = "libtock_debug_panic"
+authors = ["Tock Project Developers <tock-dev@googlegroups.com>"]
+version = "0.1.0"
+description = """Debug panic handler for libtock. Prints panic info to console and terminates."""
+edition = "2021"
+license = "Apache-2.0 OR MIT"
+repository = "https://www.github.com/tock/libtock-rs"
+
+[dependencies]
+libtock_console = { path = "../../apis/console" }
+libtock_low_level_debug = { path = "../../apis/low_level_debug" }
+libtock_platform = { path = "../../platform" }
+libtock_runtime = { path = "../../runtime" }
