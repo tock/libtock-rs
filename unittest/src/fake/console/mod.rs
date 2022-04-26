@@ -5,23 +5,33 @@
 //! The resulting byte stream can be retrieved via `take_bytes`
 //! for use in unit tests.
 
-use core::cell::Cell;
+use core::cell::{Cell, RefCell};
 use core::cmp;
 use libtock_platform::{CommandReturn, ErrorCode};
 
 use crate::upcall;
-use crate::RoAllowBuffer;
+use crate::{RoAllowBuffer, RwAllowBuffer};
 
 pub struct Console {
     messages: Cell<Vec<u8>>,
     buffer: Cell<RoAllowBuffer>,
+
+    read_buffer: RefCell<RwAllowBuffer>,
+    /// To be returned on read
+    input: Cell<Vec<u8>>,
 }
 
 impl Console {
     pub fn new() -> std::rc::Rc<Console> {
+        Self::new_with_input(b"")
+    }
+
+    pub fn new_with_input(inputs: &[u8]) -> std::rc::Rc<Console> {
         std::rc::Rc::new(Console {
             messages: Default::default(),
             buffer: Default::default(),
+            read_buffer: Default::default(),
+            input: Cell::new(Vec::from(inputs)),
         })
     }
 
@@ -36,8 +46,9 @@ impl crate::fake::SyscallDriver for Console {
     fn id(&self) -> u32 {
         DRIVER_NUM
     }
+
     fn num_upcalls(&self) -> u32 {
-        2
+        3
     }
 
     fn allow_readonly(
@@ -47,6 +58,18 @@ impl crate::fake::SyscallDriver for Console {
     ) -> Result<RoAllowBuffer, (RoAllowBuffer, ErrorCode)> {
         if buffer_num == ALLOW_WRITE {
             Ok(self.buffer.replace(buffer))
+        } else {
+            Err((buffer, ErrorCode::Invalid))
+        }
+    }
+
+    fn allow_readwrite(
+        &self,
+        buffer_num: u32,
+        buffer: RwAllowBuffer,
+    ) -> Result<RwAllowBuffer, (RwAllowBuffer, ErrorCode)> {
+        if buffer_num == ALLOW_READ {
+            Ok(self.read_buffer.replace(buffer))
         } else {
             Err((buffer, ErrorCode::Invalid))
         }
@@ -63,6 +86,19 @@ impl crate::fake::SyscallDriver for Console {
                 self.buffer.set(buffer);
                 self.messages.set(bytes);
                 upcall::schedule(DRIVER_NUM, SUBSCRIBE_WRITE, (size as u32, 0, 0))
+                    .expect("Unable to schedule upcall {}");
+            }
+            READ => {
+                let count_wanted = argument0 as usize;
+                let bytes = self.input.take();
+                let count_wanted = cmp::min(count_wanted, bytes.len());
+                let to_send = &bytes[..count_wanted];
+                let to_keep = &bytes[count_wanted..];
+                self.input.set(Vec::from(to_keep));
+
+                let count_available = to_send.len();
+                self.read_buffer.borrow_mut()[..count_wanted].copy_from_slice(to_send);
+                upcall::schedule(DRIVER_NUM, SUBSCRIBE_READ, (0, count_available as u32, 0))
                     .expect("Unable to schedule upcall {}");
             }
             _ => return crate::command_return::failure(ErrorCode::NoSupport),
@@ -83,7 +119,9 @@ const DRIVER_NUM: u32 = 1;
 // Command numbers
 const DRIVER_CHECK: u32 = 0;
 const WRITE: u32 = 1;
-//const READ: u32 = 2;
+const READ: u32 = 2;
 //const ABORT: u32 = 3;
 const SUBSCRIBE_WRITE: u32 = 1;
+const SUBSCRIBE_READ: u32 = 2;
 const ALLOW_WRITE: u32 = 1;
+const ALLOW_READ: u32 = 1;
