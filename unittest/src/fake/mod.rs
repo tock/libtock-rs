@@ -9,6 +9,7 @@
 //! `use libtock_unittest::fake` and refer to the type with the `fake::` prefix
 //! (e.g. `fake::Console`).
 
+mod alarm;
 mod buttons;
 mod console;
 mod gpio;
@@ -18,6 +19,7 @@ mod low_level_debug;
 mod syscall_driver;
 mod syscalls;
 
+pub use alarm::Alarm;
 pub use buttons::Buttons;
 pub use console::Console;
 pub use gpio::{Gpio, GpioMode, InterruptEdge, PullMode};
