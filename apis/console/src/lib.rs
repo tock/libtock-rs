@@ -95,7 +95,7 @@ impl<
             S::subscribe::<_, _, C, DRIVER_NUM, { subscribe::READ }>(subscribe, &called)?;
 
             // When this fails, `called` is guaranteed unmodified,
-            // because upcalls are never processed within a `command` call.
+            // because upcalls are never processed until we call `yield`.
             S::command(DRIVER_NUM, command::READ, len as u32, 0).to_result()?;
 
             loop {
