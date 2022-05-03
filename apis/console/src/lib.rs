@@ -4,6 +4,7 @@ use core::fmt;
 use core::marker::PhantomData;
 use libtock_platform as platform;
 use libtock_platform::allow_ro::AllowRo;
+use libtock_platform::allow_rw::AllowRw;
 use libtock_platform::share;
 use libtock_platform::subscribe::Subscribe;
 use libtock_platform::{DefaultConfig, ErrorCode, Syscalls};
@@ -22,10 +23,17 @@ use libtock_platform::{DefaultConfig, ErrorCode, Syscalls};
 /// ```
 pub struct Console<
     S: Syscalls,
-    C: platform::allow_ro::Config + platform::subscribe::Config = DefaultConfig,
+    C: platform::allow_ro::Config
+        + platform::allow_rw::Config
+        + platform::subscribe::Config
+        = DefaultConfig,
 >(S, C);
 
-impl<S: Syscalls, C: platform::allow_ro::Config + platform::subscribe::Config> Console<S, C> {
+impl<
+        S: Syscalls,
+        C: platform::allow_ro::Config + platform::allow_rw::Config + platform::subscribe::Config,
+    > Console<S, C>
+{
     /// Run a check against the console capsule to ensure it is present.
     ///
     /// Returns `true` if the driver was present. This does not necessarily mean
@@ -66,6 +74,44 @@ impl<S: Syscalls, C: platform::allow_ro::Config + platform::subscribe::Config> C
         })
     }
 
+    /// Reads bytes
+    /// Reads from the device and writes to `buf`, starting from index 0.
+    /// No special guarantees about when the read stops.
+    /// Returns count of bytes written to `buf`.
+    pub fn read(buf: &mut [u8]) -> (usize, Result<(), ErrorCode>) {
+        let called = core::cell::Cell::new(Option::<(u32, u32)>::None);
+        let mut bytes_received = 0;
+        let r = share::scope::<
+            (
+                AllowRw<_, DRIVER_NUM, { allow_rw::READ }>,
+                Subscribe<_, DRIVER_NUM, { subscribe::READ }>,
+            ),
+            _,
+            _,
+        >(|handle| {
+            let (allow_rw, subscribe) = handle.split();
+            let len = buf.len();
+            S::allow_rw::<C, DRIVER_NUM, { allow_rw::READ }>(allow_rw, buf)?;
+            S::subscribe::<_, _, C, DRIVER_NUM, { subscribe::READ }>(subscribe, &called)?;
+
+            // When this fails, `called` is guaranteed unmodified,
+            // because upcalls are never processed until we call `yield`.
+            S::command(DRIVER_NUM, command::READ, len as u32, 0).to_result()?;
+
+            loop {
+                S::yield_wait();
+                if let Some((status, bytes_pushed_count)) = called.get() {
+                    bytes_received = bytes_pushed_count as usize;
+                    return match status {
+                        0 => Ok(()),
+                        e_status => Err(e_status.try_into().unwrap_or(ErrorCode::Fail)),
+                    };
+                }
+            }
+        });
+        (bytes_received, r)
+    }
+
     pub fn writer() -> ConsoleWriter<S> {
         ConsoleWriter {
             syscalls: Default::default(),
@@ -103,11 +149,14 @@ mod command {
 
 #[allow(unused)]
 mod subscribe {
-    use libtock_platform::subscribe;
     pub const WRITE: u32 = 1;
     pub const READ: u32 = 2;
 }
 
 mod allow_ro {
     pub const WRITE: u32 = 1;
+}
+
+mod allow_rw {
+    pub const READ: u32 = 1;
 }
