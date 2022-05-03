@@ -28,9 +28,12 @@ pub fn process(cli: &Cli, mut child: Child) {
             }
             to_print.push(byte);
         }
-        stdout()
-            .write_all(&to_print)
+        let stdout = stdout();
+        let mut lock = stdout.lock();
+        lock.write_all(&to_print)
             .expect("Unable to echo child's stdout.");
+        let _ = lock.flush();
+        drop(lock);
         to_print.clear();
 
         let buffer_len = buffer.len();
