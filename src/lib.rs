@@ -28,3 +28,8 @@ pub mod low_level_debug {
     pub type LowLevelDebug = lldb::LowLevelDebug<super::runtime::TockSyscalls>;
     pub use lldb::AlertCode;
 }
+pub mod screen {
+    use libtock_screen as screen;
+    pub use screen::{lightness, Grid, PixelStreamFormat, Rectangle, Resolution};
+    pub type Screen = screen::Screen<super::runtime::TockSyscalls>;
+}

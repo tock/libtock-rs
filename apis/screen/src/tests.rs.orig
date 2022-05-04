@@ -1,0 +1,99 @@
+use super::*;
+use core::fmt::Write;
+<<<<<<< HEAD
+use libtock_platform::ErrorCode;
+=======
+use libtock_platform::{DefaultConfig, ErrorCode};
+>>>>>>> 2dd8d64 (Add console driver)
+use libtock_unittest::{command_return, fake, ExpectedSyscall};
+
+type Console = super::Console<fake::Syscalls>;
+
+#[test]
+fn no_driver() {
+    let _kernel = fake::Kernel::new();
+    assert!(!Console::driver_check());
+}
+
+#[test]
+fn driver_check() {
+    let kernel = fake::Kernel::new();
+    let driver = fake::Console::new();
+    kernel.add_driver(&driver);
+
+    assert!(Console::driver_check());
+    assert_eq!(driver.take_bytes(), &[]);
+}
+
+#[test]
+<<<<<<< HEAD
+fn write_bytes() {
+=======
+fn write_bytes_all() {
+>>>>>>> 2dd8d64 (Add console driver)
+    let kernel = fake::Kernel::new();
+    let driver = fake::Console::new();
+    kernel.add_driver(&driver);
+
+<<<<<<< HEAD
+    Console::write(b"foo").unwrap();
+    Console::write(b"bar").unwrap();
+=======
+    Console::write_all::<DefaultConfig>(b"foo").unwrap();
+    Console::write_all::<DefaultConfig>(b"bar").unwrap();
+>>>>>>> 2dd8d64 (Add console driver)
+    assert_eq!(driver.take_bytes(), b"foobar",);
+}
+
+#[test]
+fn write_str() {
+    let kernel = fake::Kernel::new();
+    let driver = fake::Console::new();
+    kernel.add_driver(&driver);
+
+    write!(Console::writer(), "foo").unwrap();
+    assert_eq!(driver.take_bytes(), b"foo");
+}
+
+#[test]
+fn failed_print() {
+    let kernel = fake::Kernel::new();
+    let driver = fake::Console::new();
+    kernel.add_driver(&driver);
+    kernel.add_expected_syscall(ExpectedSyscall::AllowRo {
+        driver_num: DRIVER_NUM,
+<<<<<<< HEAD
+        buffer_num: subscribe::WRITE,
+=======
+        buffer_num: 1,
+>>>>>>> 2dd8d64 (Add console driver)
+        return_error: None,
+    });
+    kernel.add_expected_syscall(ExpectedSyscall::Subscribe {
+        driver_num: DRIVER_NUM,
+<<<<<<< HEAD
+        subscribe_num: subscribe::WRITE,
+=======
+        subscribe_num: 1,
+>>>>>>> 2dd8d64 (Add console driver)
+        skip_with_error: None,
+    });
+    kernel.add_expected_syscall(ExpectedSyscall::Command {
+        driver_id: DRIVER_NUM,
+        command_id: command::WRITE,
+        argument0: 5,
+        argument1: 0,
+        override_return: Some(command_return::failure(ErrorCode::Fail)),
+    });
+
+<<<<<<< HEAD
+    assert_eq!(Console::write(b"abcde"), Err(ErrorCode::Fail));
+=======
+    assert_eq!(
+        Console::write::<DefaultConfig>(b"abcde"),
+        Err(ErrorCode::Fail)
+    );
+>>>>>>> 2dd8d64 (Add console driver)
+    // The fake driver still receives the command even if a fake error is injected.
+    assert_eq!(driver.take_bytes(), b"abcde");
+}
