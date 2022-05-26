@@ -58,6 +58,16 @@ start:
 	ldr r1, [r5, #4]  /* rt_header`s initial process break */
 	svc 5             /* call `memop` */
 
+	/* memop(): set heap starting location from rt_header's value */
+	movs r0, #10      /* operation: specify heap start address */
+	/* r1 already set correctly from previous svc call */
+	svc 5             /* call `memop` */
+
+	/* memop(): set top of stack from rt_header's value */
+	movs r0, #11      /* operation: specify stack top address */
+	ldr r1, [r5, #8]  /* rt_header`s top of stack value */
+	svc 5             /* call `memop` */
+
 	/* Set the stack pointer */
 	ldr r0, [r5, #8]  /* r0 = rt_header._stack_top */
 	mov sp, r0

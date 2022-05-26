@@ -53,10 +53,14 @@ extern "C" fn start_prototype(
         }
     }
 
-    // Set the app break.
     // TODO: Replace with Syscalls::memop_brk() when that is implemented.
     unsafe {
+        // Set the app break.
         TockSyscalls::syscall2::<syscall_class::MEMOP>([0 as *mut (), rt_header.initial_break]);
+        // Set heap starting address
+        TockSyscalls::syscall2::<syscall_class::MEMOP>([11 as *mut (), rt_header.initial_break]);
+        // Set top of stack address
+        TockSyscalls::syscall2::<syscall_class::MEMOP>([10 as *mut (), rt_header.stack_top]);
     }
 
     // Set the stack pointer.

@@ -55,6 +55,17 @@ start:
 	li a4, 5      /* `memop` class */
 	ecall
 
+	/* memop(): set heap starting location from rt_header's value */
+	li a0, 11     /* operation: specify heap start address */
+	/* a1 and a4 already set correctly from above ecall */
+	ecall
+
+	/* memop(): set top of stack from rt_header's value */
+	li a0, 10     /* operation: specify stack top address */
+	lw a1, 8(a5)  /* rt_header's top of stack value */
+	/* a4 already set correctly from above ecall */
+	ecall
+
 	/* Set the stack pointer */
 	lw sp, 8(a5)  /* sp = rt_header._stack_top */
 
