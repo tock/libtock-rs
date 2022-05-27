@@ -13,7 +13,15 @@ version = "0.1.0"
 libtock_platform = { path = "../platform" }
 
 [features]
+
 # By default, libtock_runtime looks for the LIBTOCK_PLATFORM variable to decide
 # what layout file to use. If you are providing your own linker script, set
 # no_auto_layout to disable the layout file logic.
 no_auto_layout = []
+
+# By default, libtock_runtime calls Memop to tell the Tock kernel where the
+# stack and heap begin. The kernel uses those addresses to specify the stack and
+# heap address ranges if the process faults. Those calls cost 22 bytes on ARM
+# and 28 bytes on RISC-V. To remove them (for the purpose of minimizing code
+# size), enable the no_debug_memop feature.
+no_debug_memop = []
