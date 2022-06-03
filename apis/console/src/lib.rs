@@ -21,19 +21,9 @@ use libtock_platform::{DefaultConfig, ErrorCode, Syscalls};
 /// let mut writer = Console::writer();
 /// writeln!(writer, foo).unwrap();
 /// ```
-pub struct Console<
-    S: Syscalls,
-    C: platform::allow_ro::Config
-        + platform::allow_rw::Config
-        + platform::subscribe::Config
-        = DefaultConfig,
->(S, C);
+pub struct Console<S: Syscalls, C: Config = DefaultConfig>(S, C);
 
-impl<
-        S: Syscalls,
-        C: platform::allow_ro::Config + platform::allow_rw::Config + platform::subscribe::Config,
-    > Console<S, C>
-{
+impl<S: Syscalls, C: Config> Console<S, C> {
     /// Run a check against the console capsule to ensure it is present.
     ///
     /// Returns `true` if the driver was present. This does not necessarily mean
@@ -127,6 +117,16 @@ impl<S: Syscalls> fmt::Write for ConsoleWriter<S> {
     fn write_str(&mut self, s: &str) -> Result<(), fmt::Error> {
         Console::<S>::write(s.as_bytes()).map_err(|_e| fmt::Error)
     }
+}
+
+/// System call configuration trait for `Console`.
+pub trait Config:
+    platform::allow_ro::Config + platform::allow_rw::Config + platform::subscribe::Config
+{
+}
+impl<T: platform::allow_ro::Config + platform::allow_rw::Config + platform::subscribe::Config>
+    Config for T
+{
 }
 
 #[cfg(test)]
