@@ -12,7 +12,7 @@ use libtock_platform::{CommandReturn, ErrorCode};
 
 use crate::upcall;
 
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(Copy, Clone, Eq, PartialEq, Debug)]
 pub struct ButtonState {
     pub pressed: bool,
     pub interrupt_enabled: bool,

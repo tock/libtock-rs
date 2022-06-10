@@ -134,7 +134,7 @@ impl<S: RawSyscalls> Syscalls for S {
             Ok(())
         }
 
-        let upcall_fcn = (kernel_upcall::<S, IDS, U> as usize).into();
+        let upcall_fcn = (kernel_upcall::<S, IDS, U> as *const ()).into();
         let upcall_data = (upcall as *const U).into();
         // Safety: upcall's type guarantees it is a reference to a U that will
         // remain valid for at least the 'scope lifetime. _subscribe is a

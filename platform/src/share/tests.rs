@@ -39,6 +39,7 @@ fn list_lifetime() {
 // This test will only compile if the correct trait impls exist for tuples.
 #[test]
 fn tuple_impls() {
+    #[allow(clippy::let_unit_value)]
     scope(|list: Handle<()>| {
         let _empty: () = list.split();
     });

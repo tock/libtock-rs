@@ -1,5 +1,5 @@
 /// SyscallLogEntry represents a system call made during test execution.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Eq, PartialEq)]
 pub enum SyscallLogEntry {
     // -------------------------------------------------------------------------
     // Yield

@@ -45,7 +45,7 @@ impl crate::fake::SyscallDriver for LowLevelDebug {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Message {
     AlertCode(u32),
     Print1(u32),
