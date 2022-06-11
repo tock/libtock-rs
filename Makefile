@@ -123,8 +123,7 @@ test: examples test-stable
 		--target=thumbv7em-none-eabi --workspace
 	LIBTOCK_PLATFORM=hifive1 cargo clippy $(EXCLUDE_STD) \
 		--target=riscv32imac-unknown-none-elf --workspace
-	cargo miri test $(EXCLUDE_MIRI) --workspace
-	MIRIFLAGS="-Zmiri-symbolic-alignment-check -Zmiri-tag-raw-pointers" \
+	MIRIFLAGS="-Zmiri-strict-provenance -Zmiri-symbolic-alignment-check" \
 		cargo miri test $(EXCLUDE_MIRI) --workspace
 	echo '[ SUCCESS ] libtock-rs tests pass'
 
