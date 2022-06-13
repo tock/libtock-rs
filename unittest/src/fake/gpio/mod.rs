@@ -13,14 +13,14 @@ use std::convert::TryFrom;
 
 use crate::upcall;
 
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(Copy, Clone, Eq, PartialEq, Debug)]
 pub enum GpioMode {
     Output,
     Input(PullMode),
     Disable,
 }
 
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(Copy, Clone, Eq, PartialEq, Debug)]
 pub enum PullMode {
     PullNone = 0,
     PullUp = 1,
@@ -40,7 +40,7 @@ impl TryFrom<u32> for PullMode {
     }
 }
 
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(Copy, Clone, Eq, PartialEq, Debug)]
 pub enum InterruptEdge {
     Either,
     Rising,
@@ -60,7 +60,7 @@ impl TryFrom<u32> for InterruptEdge {
     }
 }
 
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(Copy, Clone, Eq, PartialEq, Debug)]
 pub struct GpioState {
     pub value: bool,
     pub mode: GpioMode,

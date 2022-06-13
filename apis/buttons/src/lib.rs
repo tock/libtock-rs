@@ -28,7 +28,7 @@ use libtock_platform::{
 
 pub struct Buttons<S: Syscalls>(S);
 
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum ButtonState {
     Pressed,
     Released,

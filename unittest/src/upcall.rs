@@ -41,7 +41,7 @@ pub fn schedule(
     })
 }
 
-#[derive(Debug, PartialEq, thiserror::Error)]
+#[derive(Debug, Eq, PartialEq, thiserror::Error)]
 pub enum ScheduleError {
     #[error("Driver number {0} does not exist.")]
     NoDriver(u32),

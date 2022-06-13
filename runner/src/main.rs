@@ -3,7 +3,7 @@ mod output_processor;
 mod qemu;
 mod tockloader;
 
-use clap::{ArgEnum, Parser};
+use clap::{Parser, ValueEnum};
 use std::env::{var, VarError};
 use std::path::PathBuf;
 
@@ -13,18 +13,19 @@ use std::path::PathBuf;
 pub struct Cli {
     /// Where to deploy the process binary. If not specified, runner will only
     /// make a TBF file and not attempt to run it.
-    #[clap(arg_enum, long, short)]
+    #[clap(action, long, short, value_enum)]
     deploy: Option<Deploy>,
 
     /// The executable to convert into Tock Binary Format and run.
+    #[clap(action)]
     elf: PathBuf,
 
     /// Whether to output verbose debugging information to the console.
-    #[clap(long, short)]
+    #[clap(long, short, action)]
     verbose: bool,
 }
 
-#[derive(ArgEnum, Clone, Copy, Debug)]
+#[derive(ValueEnum, Clone, Copy, Debug)]
 pub enum Deploy {
     Qemu,
     Tockloader,

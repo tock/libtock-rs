@@ -97,7 +97,7 @@ pub(super) unsafe fn subscribe(
             // guarantees that an unsafe extern fn(u32, u32, u32, Register) can
             // be transmuted into an Option<unsafe extern fn(u32, u32, u32,
             // Register)>.
-            upcall_fn => unsafe { core::mem::transmute(upcall_fn) },
+            _ => unsafe { core::mem::transmute(upcall_fn) },
         },
         data,
     };

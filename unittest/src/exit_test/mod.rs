@@ -69,7 +69,7 @@ pub fn exit_test<F: FnOnce() + UnwindSafe>(test_name: &str, fcn: F) -> ExitCall 
 
 /// Indicates what type of Exit call was performed, and what completion code was
 /// provided.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum ExitCall {
     Terminate(u32),
     Restart(u32),
@@ -112,7 +112,7 @@ impl std::str::FromStr for ExitCall {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 #[doc(hidden)]
 pub struct ParseExitError;
 
@@ -126,7 +126,7 @@ const SIGNAL_VAR: &str = "LIBTOCK_UNITTEST_EXIT_TEST";
 // followed by the Display string for a ExitMessage.
 const EXIT_STRING: &str = "LIBTOCK_UNITTEST_EXIT_TEST_RESULT: ";
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Eq, PartialEq)]
 enum ExitMessage {
     ExitCall(ExitCall),
     WrongCase,

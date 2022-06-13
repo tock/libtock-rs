@@ -17,7 +17,7 @@ use libtock_platform::{
 ///
 /// ```
 
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(Copy, Clone, Eq, PartialEq, Debug)]
 pub enum GpioState {
     Low = 0,
     High = 1,

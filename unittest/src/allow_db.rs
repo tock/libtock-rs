@@ -145,7 +145,7 @@ impl AllowDb {
     }
 }
 
-#[derive(Debug, PartialEq, thiserror::Error)]
+#[derive(Debug, Eq, PartialEq, thiserror::Error)]
 #[error("allow buffers overlap")]
 pub struct OverlapError;
 
