@@ -10,9 +10,6 @@ intended to be useful to `libtock-rs` newcomers.
 
 ## `libtock`
 
-Note: `libtock` is currently called `libtock2`, as `libtock` is already a Tock
-1.0 crate.
-
 `libtock` provides the default `libtock-rs` experience. It re-exports all of the
 drivers `libtock-rs` provides, and provides usable defaults for panic handling
 and memory allocation. It should be easy to build a Tock application that only

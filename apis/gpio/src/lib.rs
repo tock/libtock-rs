@@ -10,7 +10,7 @@ use libtock_platform::{
 ///
 /// # Example
 /// ```ignore
-/// use libtock2::Gpios;
+/// use libtock::Gpios;
 ///
 /// // Turn on led 0
 /// let pin = Gpios::get_pin(0)?;

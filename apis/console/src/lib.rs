@@ -15,7 +15,7 @@ use libtock_platform::{DefaultConfig, ErrorCode, Syscalls};
 ///
 /// # Example
 /// ```ignore
-/// use libtock2::Console;
+/// use libtock::Console;
 ///
 /// // Writes "foo", followed by a newline, to the console
 /// let mut writer = Console::writer();

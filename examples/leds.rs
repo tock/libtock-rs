@@ -3,8 +3,8 @@
 #![no_main]
 #![no_std]
 
-use libtock2::leds::Leds;
-use libtock2::runtime::{set_main, stack_size};
+use libtock::leds::Leds;
+use libtock::runtime::{set_main, stack_size};
 
 set_main! {main}
 stack_size! {0x100}

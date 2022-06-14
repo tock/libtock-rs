@@ -71,10 +71,10 @@ kernel-opentitan:
 print-sizes: examples
 	cargo run --release -p print_sizes
 
-# Runs a libtock2 example in QEMU on a simulated HiFive board.
+# Runs a libtock example in QEMU on a simulated HiFive board.
 .PHONY: qemu-example
 qemu-example: kernel-hifive
-	LIBTOCK_PLATFORM="hifive1" cargo run --example "$(EXAMPLE)" -p libtock2 \
+	LIBTOCK_PLATFORM="hifive1" cargo run --example "$(EXAMPLE)" -p libtock \
 		--release --target=riscv32imac-unknown-none-elf -- --deploy qemu
 
 # Build the examples on both a RISC-V target and an ARM target. We pick
@@ -90,7 +90,7 @@ examples:
 # This is largely libtock_runtime and crates that depend on libtock_runtime.
 # Used when we need to build a crate for the host OS, as libtock_runtime only
 # supports running on Tock.
-EXCLUDE_RUNTIME := --exclude libtock2 --exclude libtock_runtime \
+EXCLUDE_RUNTIME := --exclude libtock --exclude libtock_runtime \
 	--exclude libtock_debug_panic --exclude libtock_small_panic
 
 # Arguments to pass to cargo to exclude crates that cannot be tested by Miri. In
