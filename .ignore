@@ -1,3 +1,9 @@
+# Cargo and GitHub Actions keep their configs in hidden directories. Some search
+# tools skip hidden directories by default. This overrides that, and makes them
+# search .cargo and .github.
+!.cargo/
+!.github/
+
 # Tell search tools to ignore the Tock submodule. Usually when someone wants to
 # search this repository they want to search libtock-rs' codebase, not the Tock
 # kernel.
