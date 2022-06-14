@@ -19,7 +19,7 @@ jobs:
       - name: Build and Test
         run: |
           cd "${GITHUB_WORKSPACE}"
-          LIBTOCK_PLATFORM=nrf52 cargo build -p libtock2 \
+          LIBTOCK_PLATFORM=nrf52 cargo build -p libtock \
             --target=thumbv7em-none-eabi
-          LIBTOCK_PLATFORM=hifive1 cargo build -p libtock2 \
+          LIBTOCK_PLATFORM=hifive1 cargo build -p libtock \
             --target=riscv32imac-unknown-none-elf
