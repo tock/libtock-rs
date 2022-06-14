@@ -99,7 +99,6 @@ impl Upcall {
 pub(crate) type UpcallQueue = std::collections::VecDeque<crate::upcall::UpcallQueueEntry>;
 
 // An entry in the fake kernel's upcall queue.
-#[allow(dead_code)] // TODO: Remove when upcall invocation is implemented in Yield.
 pub(crate) struct UpcallQueueEntry {
     pub args: (u32, u32, u32),
     pub id: UpcallId,
