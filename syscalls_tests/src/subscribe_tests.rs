@@ -1,22 +1,22 @@
 use libtock_platform::{
     share, subscribe, CommandReturn, DefaultConfig, ErrorCode, Syscalls, YieldNoWaitReturn,
 };
-use libtock_unittest::{command_return, fake, upcall, SyscallLogEntry};
+use libtock_unittest::{command_return, fake, DriverInfo, DriverShareRef, SyscallLogEntry};
+use std::rc::Rc;
 
-// Fake driver that accepts an upcall. The unit test cases use this to make the
-// kernel willing to accept an upcall. The test cases invoke the upcall
-// themselves.
-//
-// TODO: Replace with a real driver once a driver that accepts an upcall exists.
-struct MockDriver;
+// Fake driver that accepts an upcall.
+#[derive(Default)]
+struct MockDriver {
+    share_ref: DriverShareRef,
+}
 
 impl fake::SyscallDriver for MockDriver {
-    fn id(&self) -> u32 {
-        1
+    fn info(&self) -> DriverInfo {
+        DriverInfo::new(1).upcall_count(1)
     }
 
-    fn num_upcalls(&self) -> u32 {
-        1
+    fn register(&self, share_ref: DriverShareRef) {
+        self.share_ref.replace(share_ref);
     }
 
     fn command(&self, _: u32, _: u32, _: u32) -> CommandReturn {
@@ -37,7 +37,7 @@ fn config() {
     }
 
     let kernel = fake::Kernel::new();
-    kernel.add_driver(&std::rc::Rc::new(MockDriver));
+    kernel.add_driver(&std::rc::Rc::new(MockDriver::default()));
     let called = core::cell::Cell::new(false);
     share::scope(|subscribe| {
         assert_eq!(
@@ -70,8 +70,9 @@ fn failed() {
 
 #[test]
 fn success() {
+    let driver = Rc::new(MockDriver::default());
     let kernel = fake::Kernel::new();
-    kernel.add_driver(&std::rc::Rc::new(MockDriver));
+    kernel.add_driver(&driver);
     let called = core::cell::Cell::new(None);
     share::scope(|subscribe| {
         assert_eq!(
@@ -85,7 +86,7 @@ fn success() {
                 subscribe_num: 0
             }]
         );
-        upcall::schedule(1, 0, (2, 3, 4)).unwrap();
+        driver.share_ref.schedule_upcall(0, (2, 3, 4)).unwrap();
         assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::Upcall);
         assert_eq!(called.get(), Some((2, 3, 4)));
         // Clear the syscall log.
@@ -99,7 +100,7 @@ fn success() {
             subscribe_num: 0
         }]
     );
-    upcall::schedule(1, 0, (2, 3, 4)).unwrap();
+    driver.share_ref.schedule_upcall(0, (2, 3, 4)).unwrap();
     assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::NoUpcall);
 }
 
@@ -115,15 +116,16 @@ fn unwinding_upcall() {
     }
 
     let exit = libtock_unittest::exit_test("subscribe_tests::unwinding_upcall", || {
+        let driver = Rc::new(MockDriver::default());
         let kernel = fake::Kernel::new();
-        kernel.add_driver(&std::rc::Rc::new(MockDriver));
+        kernel.add_driver(&driver);
         let upcall = BadUpcall;
         share::scope(|subscribe| {
             assert_eq!(
                 fake::Syscalls::subscribe::<_, _, DefaultConfig, 1, 0>(subscribe, &upcall),
                 Ok(())
             );
-            upcall::schedule(1, 0, (2, 3, 4)).unwrap();
+            driver.share_ref.schedule_upcall(0, (2, 3, 4)).unwrap();
             assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::Upcall);
         });
     });

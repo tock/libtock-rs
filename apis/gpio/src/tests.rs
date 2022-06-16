@@ -1,12 +1,9 @@
 use core::cell::Cell;
 
 use libtock_platform::{share, ErrorCode, Syscalls, YieldNoWaitReturn};
-use libtock_unittest::{
-    fake::{self, GpioMode, InterruptEdge, PullMode},
-    upcall,
-};
+use libtock_unittest::fake::{self, GpioMode, InterruptEdge, PullMode};
 
-use crate::{GpioInterruptListener, GpioState, PullDown, PullNone, PullUp, DRIVER_NUM};
+use crate::{GpioInterruptListener, GpioState, PinInterruptEdge, PullDown, PullNone, PullUp};
 
 type Gpio = super::Gpio<fake::Syscalls>;
 
@@ -122,14 +119,15 @@ fn interrupts() {
         gpio_state.set(Some(state));
     });
 
+    assert_eq!(Gpio::enable_interrupts(0, PinInterruptEdge::Either), Ok(()));
     share::scope(|subscribe| {
         assert_eq!(Gpio::register_listener(&listener, subscribe), Ok(()));
-        assert_eq!(upcall::schedule(DRIVER_NUM, 0, (0, 0, 0)), Ok(()));
+        assert_eq!(driver.set_value(0, true), Ok(()));
         assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::Upcall);
-        assert_eq!(gpio_state.get(), Some(GpioState::Low));
+        assert_eq!(gpio_state.get(), Some(GpioState::High));
     });
 
-    assert_eq!(upcall::schedule(DRIVER_NUM, 0, (0, 0, 0)), Ok(()));
+    assert_eq!(driver.set_value(0, false), Ok(()));
     assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::NoUpcall);
 
     assert!(core::matches!(Gpio::get_pin(11), Err(ErrorCode::Invalid)));
@@ -285,13 +283,14 @@ fn subscribe() {
         gpio_state.set(Some(state));
     });
 
+    assert_eq!(Gpio::enable_interrupts(0, PinInterruptEdge::Either), Ok(()));
     share::scope(|subscribe| {
         assert_eq!(Gpio::register_listener(&listener, subscribe), Ok(()));
-        assert_eq!(upcall::schedule(DRIVER_NUM, 0, (0, 0, 0)), Ok(()));
+        assert_eq!(driver.set_value(0, true), Ok(()));
         assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::Upcall);
-        assert_eq!(gpio_state.get(), Some(GpioState::Low));
+        assert_eq!(gpio_state.get(), Some(GpioState::High));
     });
 
-    assert_eq!(upcall::schedule(DRIVER_NUM, 0, (0, 0, 0)), Ok(()));
+    assert_eq!(driver.set_value(0, false), Ok(()));
     assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::NoUpcall);
 }

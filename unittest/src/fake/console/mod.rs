@@ -9,8 +9,7 @@ use core::cell::{Cell, RefCell};
 use core::cmp;
 use libtock_platform::{CommandReturn, ErrorCode};
 
-use crate::upcall;
-use crate::{RoAllowBuffer, RwAllowBuffer};
+use crate::{DriverInfo, DriverShareRef, RoAllowBuffer, RwAllowBuffer};
 
 pub struct Console {
     messages: Cell<Vec<u8>>,
@@ -19,6 +18,8 @@ pub struct Console {
     read_buffer: RefCell<RwAllowBuffer>,
     /// To be returned on read
     input: Cell<Vec<u8>>,
+
+    share_ref: DriverShareRef,
 }
 
 impl Console {
@@ -32,6 +33,7 @@ impl Console {
             buffer: Default::default(),
             read_buffer: Default::default(),
             input: Cell::new(Vec::from(inputs)),
+            share_ref: Default::default(),
         })
     }
 
@@ -43,12 +45,12 @@ impl Console {
 }
 
 impl crate::fake::SyscallDriver for Console {
-    fn id(&self) -> u32 {
-        DRIVER_NUM
+    fn info(&self) -> DriverInfo {
+        DriverInfo::new(DRIVER_NUM).upcall_count(3)
     }
 
-    fn num_upcalls(&self) -> u32 {
-        3
+    fn register(&self, share_ref: DriverShareRef) {
+        self.share_ref.replace(share_ref);
     }
 
     fn allow_readonly(
@@ -85,7 +87,8 @@ impl crate::fake::SyscallDriver for Console {
                 bytes.extend_from_slice(&(*buffer)[..size]);
                 self.buffer.set(buffer);
                 self.messages.set(bytes);
-                upcall::schedule(DRIVER_NUM, SUBSCRIBE_WRITE, (size as u32, 0, 0))
+                self.share_ref
+                    .schedule_upcall(SUBSCRIBE_WRITE, (size as u32, 0, 0))
                     .expect("Unable to schedule upcall {}");
             }
             READ => {
@@ -98,7 +101,8 @@ impl crate::fake::SyscallDriver for Console {
 
                 let count_available = to_send.len();
                 self.read_buffer.borrow_mut()[..count_wanted].copy_from_slice(to_send);
-                upcall::schedule(DRIVER_NUM, SUBSCRIBE_READ, (0, count_available as u32, 0))
+                self.share_ref
+                    .schedule_upcall(SUBSCRIBE_READ, (0, count_available as u32, 0))
                     .expect("Unable to schedule upcall {}");
             }
             _ => return crate::command_return::failure(ErrorCode::NoSupport),

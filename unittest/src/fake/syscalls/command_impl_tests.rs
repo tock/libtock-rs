@@ -1,5 +1,5 @@
 use super::command_impl::*;
-use crate::{command_return, fake, ExpectedSyscall, SyscallLogEntry};
+use crate::{command_return, fake, DriverInfo, ExpectedSyscall, SyscallLogEntry};
 use libtock_platform::{
     return_variant, syscall_class, CommandReturn, ErrorCode, RawSyscalls, ReturnVariant,
 };
@@ -28,11 +28,8 @@ fn driver_support() {
     // so we have 1 fewer Driver implementations to maintain.
     struct MockDriver;
     impl fake::SyscallDriver for MockDriver {
-        fn id(&self) -> u32 {
-            42
-        }
-        fn num_upcalls(&self) -> u32 {
-            0
+        fn info(&self) -> DriverInfo {
+            DriverInfo::new(42)
         }
         fn command(&self, _command_id: u32, _argument0: u32, _argument1: u32) -> CommandReturn {
             command_return::success_3_u32(1, 2, 3)

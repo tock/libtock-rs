@@ -4,6 +4,7 @@
 //! Like the real API, `Leds` controls a set of fake LEDs. It provides
 //! a function `get_led` used to retrieve the state of an LED.
 
+use crate::DriverInfo;
 use core::cell::Cell;
 use libtock_platform::{CommandReturn, ErrorCode};
 
@@ -26,11 +27,8 @@ impl<const LEDS_COUNT: usize> Leds<LEDS_COUNT> {
 }
 
 impl<const LEDS_COUNT: usize> crate::fake::SyscallDriver for Leds<LEDS_COUNT> {
-    fn id(&self) -> u32 {
-        DRIVER_NUM
-    }
-    fn num_upcalls(&self) -> u32 {
-        0
+    fn info(&self) -> DriverInfo {
+        DriverInfo::new(DRIVER_NUM)
     }
 
     fn command(&self, command_num: u32, argument0: u32, _argument1: u32) -> CommandReturn {
