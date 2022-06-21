@@ -10,7 +10,7 @@ use libtock_platform::Syscalls;
 ///
 /// # Example
 /// ```ignore
-/// use libtock2::LowLevelDebug;
+/// use libtock::LowLevelDebug;
 ///
 /// // Prints 0x45 and the app which called it.
 /// LowLevelDebug::print_1(0x45);

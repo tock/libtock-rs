@@ -8,7 +8,7 @@ use libtock_platform::{
 ///
 /// # Example
 /// ```ignore
-/// use libtock2::Buttons;
+/// use libtock::Buttons;
 ///
 /// // Read button state
 /// Buttons::is_pressed(0);

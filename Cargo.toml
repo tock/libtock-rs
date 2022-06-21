@@ -1,3 +1,23 @@
+[package]
+authors = ["Tock Project Developers <tock-dev@googlegroups.com>"]
+categories = ["embedded", "no-std", "os"]
+description = """Tock Rust userspace library collection. Provides all the \
+                 tools needed to create a Tock Rust process binary."""
+edition = "2021"
+license = "Apache-2.0 OR MIT"
+name = "libtock"
+repository = "https://www.github.com/tock/libtock-rs"
+version = "0.1.0"
+
+[dependencies]
+libtock_buttons = { path = "apis/buttons" }
+libtock_console = { path = "apis/console" }
+libtock_debug_panic = { path = "panic_handlers/debug_panic" }
+libtock_leds = { path = "apis/leds" }
+libtock_low_level_debug = { path = "apis/low_level_debug" }
+libtock_platform = { path = "platform" }
+libtock_runtime = { path = "runtime" }
+
 [profile.dev]
 panic = "abort"
 lto = true
@@ -16,7 +36,6 @@ members = [
     "apis/console",
     "apis/leds",
     "apis/low_level_debug",
-    "libtock2",
     "panic_handlers/debug_panic",
     "panic_handlers/small_panic",
     "platform",

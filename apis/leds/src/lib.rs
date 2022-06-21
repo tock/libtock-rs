@@ -6,7 +6,7 @@ use libtock_platform::{ErrorCode, Syscalls};
 ///
 /// # Example
 /// ```ignore
-/// use libtock2::Leds;
+/// use libtock::Leds;
 ///
 /// // Turn on led 0
 /// let _ = Leds::on(0);
