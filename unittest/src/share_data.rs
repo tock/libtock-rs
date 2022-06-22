@@ -143,7 +143,7 @@ mod tests {
         crate::kernel_data::with_kernel_data(|kernel_data| {
             let kernel_data = kernel_data.unwrap();
 
-            // Very the upcall was not queued.
+            // Verify the upcall was not queued.
             assert!(kernel_data.upcall_queue.is_empty());
 
             // Register a non-null upcall.
