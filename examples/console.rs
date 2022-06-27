@@ -4,8 +4,8 @@
 #![no_main]
 #![no_std]
 use core::fmt::Write;
-use libtock2::console::Console;
-use libtock2::runtime::{set_main, stack_size};
+use libtock::console::Console;
+use libtock::runtime::{set_main, stack_size};
 
 set_main! {main}
 stack_size! {0x100}
