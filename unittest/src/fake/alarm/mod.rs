@@ -7,11 +7,12 @@ use core::cell::Cell;
 use core::num::Wrapping;
 use libtock_platform::{CommandReturn, ErrorCode};
 
-use crate::upcall;
+use crate::{DriverInfo, DriverShareRef};
 
 pub struct Alarm {
     frequency_hz: u32,
     now: Cell<Wrapping<u32>>,
+    share_ref: DriverShareRef,
 }
 
 impl Alarm {
@@ -19,16 +20,18 @@ impl Alarm {
         std::rc::Rc::new(Alarm {
             frequency_hz,
             now: Cell::new(Wrapping(0)),
+            share_ref: Default::default(),
         })
     }
 }
 
 impl crate::fake::SyscallDriver for Alarm {
-    fn id(&self) -> u32 {
-        DRIVER_NUM
+    fn info(&self) -> DriverInfo {
+        DriverInfo::new(DRIVER_NUM).upcall_count(1)
     }
-    fn num_upcalls(&self) -> u32 {
-        1
+
+    fn register(&self, share_ref: DriverShareRef) {
+        self.share_ref.replace(share_ref);
     }
 
     fn command(&self, command_number: u32, argument0: u32, _argument1: u32) -> CommandReturn {
@@ -41,8 +44,9 @@ impl crate::fake::SyscallDriver for Alarm {
                 // and waking immediately.
                 let relative = argument0;
                 let wake = self.now.get() + Wrapping(relative);
-                upcall::schedule(DRIVER_NUM, subscribe::CALLBACK, (wake.0, 0, 0))
-                    .expect("Unable to schedule upcall {}");
+                self.share_ref
+                    .schedule_upcall(subscribe::CALLBACK, (wake.0, 0, 0))
+                    .expect("schedule_upcall failed");
                 self.now.set(wake);
                 crate::command_return::success_u32(wake.0)
             }
