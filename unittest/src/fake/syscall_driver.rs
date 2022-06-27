@@ -1,23 +1,23 @@
-use crate::{RoAllowBuffer, RwAllowBuffer};
+use crate::{DriverInfo, DriverShareRef, RoAllowBuffer, RwAllowBuffer};
 use libtock_platform::{CommandReturn, ErrorCode};
 
 /// The `fake::SyscallDriver` trait is implemented by fake versions of Tock's
 /// kernel APIs. It is used by `fake::Kernel` to route system calls to the fake
 /// kernel APIs.
 pub trait SyscallDriver: 'static {
-    /// Returns this driver's ID. Used by `fake::Kernel` to route syscalls to
-    /// the correct `fake::SyscallDriver` instance.
-    fn id(&self) -> u32;
-
     // -------------------------------------------------------------------------
-    // Subscribe
+    // Functions called by `fake::Kernel` during driver registration.
     // -------------------------------------------------------------------------
 
-    /// Like the real Tock kernel, `fake::Kernel` implements Subscribe for
-    /// drivers. Drivers must implement `num_upcalls` to tell `fake::Kernel` how
-    /// many upcalls to store. `fake::Kernel` will reject Subscribe calls for
-    /// any subscribe_num >= num_upcalls.
-    fn num_upcalls(&self) -> u32;
+    /// Returns information about this driver, including its driver number.
+    fn info(&self) -> DriverInfo;
+
+    /// Called by `fake::Kernel` to link this driver to the `fake::Kernel`.
+    /// Passes a reference to data shared with the kernel (e.g. registered
+    /// upcalls).
+    fn register(&self, share_ref: DriverShareRef) {
+        let _ = share_ref; // Silence the unused variable warning.
+    }
 
     // -------------------------------------------------------------------------
     // Command

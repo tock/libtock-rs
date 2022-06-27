@@ -5,6 +5,7 @@
 //! print. It also keeps a log of the messages as `Message` instances, which can
 //! be retrieved via `take_messages` for use in unit tests.
 
+use crate::DriverInfo;
 use libtock_platform::{CommandReturn, ErrorCode};
 
 pub struct LowLevelDebug {
@@ -26,11 +27,8 @@ impl LowLevelDebug {
 }
 
 impl crate::fake::SyscallDriver for LowLevelDebug {
-    fn id(&self) -> u32 {
-        DRIVER_NUM
-    }
-    fn num_upcalls(&self) -> u32 {
-        0
+    fn info(&self) -> DriverInfo {
+        DriverInfo::new(DRIVER_NUM)
     }
 
     fn command(&self, command_num: u32, argument0: u32, argument1: u32) -> CommandReturn {

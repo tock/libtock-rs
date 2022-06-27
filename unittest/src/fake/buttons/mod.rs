@@ -10,7 +10,7 @@
 use core::cell::Cell;
 use libtock_platform::{CommandReturn, ErrorCode};
 
-use crate::upcall;
+use crate::{DriverInfo, DriverShareRef};
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
 pub struct ButtonState {
@@ -20,6 +20,7 @@ pub struct ButtonState {
 
 pub struct Buttons<const NUM_BUTTONS: usize> {
     buttons: [Cell<ButtonState>; NUM_BUTTONS],
+    share_ref: DriverShareRef,
 }
 
 impl<const NUM_BUTTONS: usize> Buttons<NUM_BUTTONS> {
@@ -31,6 +32,7 @@ impl<const NUM_BUTTONS: usize> Buttons<NUM_BUTTONS> {
         });
         std::rc::Rc::new(Buttons {
             buttons: [OFF; NUM_BUTTONS],
+            share_ref: Default::default(),
         })
     }
 
@@ -46,7 +48,8 @@ impl<const NUM_BUTTONS: usize> Buttons<NUM_BUTTONS> {
                 if original_button_state.interrupt_enabled
                     && original_button_state.pressed != pressed
                 {
-                    upcall::schedule(DRIVER_NUM, 0, (button, pressed as u32, 0))
+                    self.share_ref
+                        .schedule_upcall(0, (button, pressed as u32, 0))
                         .expect("Unable to schedule upcall {}");
                 }
             })
@@ -59,11 +62,12 @@ impl<const NUM_BUTTONS: usize> Buttons<NUM_BUTTONS> {
 }
 
 impl<const NUM_BUTTONS: usize> crate::fake::SyscallDriver for Buttons<NUM_BUTTONS> {
-    fn id(&self) -> u32 {
-        DRIVER_NUM
+    fn info(&self) -> DriverInfo {
+        DriverInfo::new(DRIVER_NUM).upcall_count(1)
     }
-    fn num_upcalls(&self) -> u32 {
-        1
+
+    fn register(&self, share_ref: DriverShareRef) {
+        self.share_ref.replace(share_ref);
     }
 
     fn command(&self, command_number: u32, argument0: u32, _argument1: u32) -> CommandReturn {

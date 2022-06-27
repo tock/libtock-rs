@@ -1,5 +1,6 @@
 use crate::kernel_data::{with_kernel_data, DriverData, KernelData, KERNEL_DATA};
-use crate::{ExpectedSyscall, SyscallLogEntry};
+use crate::{DriverShareRef, ExpectedSyscall, SyscallLogEntry};
+use std::cell::Cell;
 
 /// A fake implementation of the Tock kernel. Used with `fake::Syscalls`, which
 /// provides system calls that are routed to this kernel. `fake::SyscallDriver`s
@@ -56,16 +57,26 @@ impl Kernel {
     // generics?
     // TODO: Add a test for add_driver.
     pub fn add_driver<D: crate::fake::SyscallDriver>(&self, driver: &std::rc::Rc<D>) {
-        let id = driver.id();
-        let num_upcalls = driver.num_upcalls();
+        let info = driver.info();
         let driver_data = DriverData {
             driver: driver.clone(),
-            num_upcalls,
-            upcalls: std::collections::HashMap::with_capacity(num_upcalls as usize),
+            num_upcalls: info.upcall_count,
+            upcalls: std::collections::HashMap::with_capacity(info.upcall_count as usize),
         };
-        let insert_return =
-            with_kernel_data(|kernel_data| kernel_data.unwrap().drivers.insert(id, driver_data));
-        assert!(insert_return.is_none(), "Duplicate driver with ID {}", id);
+        let insert_return = with_kernel_data(|kernel_data| {
+            kernel_data
+                .unwrap()
+                .drivers
+                .insert(info.driver_num, driver_data)
+        });
+        assert!(
+            insert_return.is_none(),
+            "Duplicate driver with number {}",
+            info.driver_num
+        );
+        driver.register(DriverShareRef {
+            driver_num: Cell::new(info.driver_num),
+        });
     }
 
     /// Adds an ExpectedSyscall to the expected syscall queue.

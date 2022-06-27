@@ -11,7 +11,7 @@ use core::cell::Cell;
 use libtock_platform::{CommandReturn, ErrorCode};
 use std::convert::TryFrom;
 
-use crate::upcall;
+use crate::{DriverInfo, DriverShareRef};
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
 pub enum GpioMode {
@@ -69,6 +69,7 @@ pub struct GpioState {
 
 pub struct Gpio<const NUM_GPIOS: usize> {
     gpios: [Cell<Option<GpioState>>; NUM_GPIOS],
+    share_ref: DriverShareRef,
 }
 
 impl<const NUM_GPIOS: usize> Gpio<NUM_GPIOS> {
@@ -81,6 +82,7 @@ impl<const NUM_GPIOS: usize> Gpio<NUM_GPIOS> {
         }));
         std::rc::Rc::new(Gpio {
             gpios: [OFF; NUM_GPIOS],
+            share_ref: Default::default(),
         })
     }
 
@@ -105,13 +107,15 @@ impl<const NUM_GPIOS: usize> Gpio<NUM_GPIOS> {
                             if gpio_state.interrupt_enabled == Some(InterruptEdge::Either)
                                 || gpio_state.interrupt_enabled == Some(InterruptEdge::Rising)
                             {
-                                upcall::schedule(DRIVER_NUM, 0, (pin, value as u32, 0))
+                                self.share_ref
+                                    .schedule_upcall(0, (pin, value as u32, 0))
                                     .expect("Unable to schedule upcall");
                             }
                         } else if gpio_state.interrupt_enabled == Some(InterruptEdge::Falling)
                             || gpio_state.interrupt_enabled == Some(InterruptEdge::Either)
                         {
-                            upcall::schedule(DRIVER_NUM, 0, (pin, value as u32, 0))
+                            self.share_ref
+                                .schedule_upcall(0, (pin, value as u32, 0))
                                 .expect("Unable to schedule upcall");
                         }
                     }
@@ -133,11 +137,12 @@ impl<const NUM_GPIOS: usize> Gpio<NUM_GPIOS> {
 }
 
 impl<const NUM_GPIOS: usize> crate::fake::SyscallDriver for Gpio<NUM_GPIOS> {
-    fn id(&self) -> u32 {
-        DRIVER_NUM
+    fn info(&self) -> DriverInfo {
+        DriverInfo::new(DRIVER_NUM).upcall_count(1)
     }
-    fn num_upcalls(&self) -> u32 {
-        1
+
+    fn register(&self, share_ref: DriverShareRef) {
+        self.share_ref.replace(share_ref);
     }
 
     fn command(&self, command_number: u32, argument0: u32, argument1: u32) -> CommandReturn {

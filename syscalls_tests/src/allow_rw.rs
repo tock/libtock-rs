@@ -1,5 +1,5 @@
 use libtock_platform::{allow_rw, share, CommandReturn, ErrorCode, Syscalls};
-use libtock_unittest::{command_return, fake, RwAllowBuffer, SyscallLogEntry};
+use libtock_unittest::{command_return, fake, DriverInfo, RwAllowBuffer, SyscallLogEntry};
 use std::cell::Cell;
 use std::rc::Rc;
 use std::thread_local;
@@ -10,12 +10,8 @@ struct TestDriver {
 }
 
 impl fake::SyscallDriver for TestDriver {
-    fn id(&self) -> u32 {
-        42
-    }
-
-    fn num_upcalls(&self) -> u32 {
-        0
+    fn info(&self) -> DriverInfo {
+        DriverInfo::new(42)
     }
 
     fn command(&self, _command_num: u32, _argument0: u32, _argument1: u32) -> CommandReturn {
