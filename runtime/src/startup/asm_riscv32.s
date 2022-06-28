@@ -44,7 +44,7 @@ start:
 	li a4, 2  /* `command` class */
 	ecall
 	li a0, 0  /* exit-terminate */
-	/* TODO: Set a completion code, once completion codes are decided */
+	li a1, 1  /* Completion code: FAIL */
 	li a4, 6  /* `exit` class */
 	ecall
 

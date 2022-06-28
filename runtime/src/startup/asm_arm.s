@@ -50,6 +50,7 @@ start:
 	movs r2, #2  /* Alert code 2 (incorrect location */
 	svc 2        /* Execute `command` */
 	movs r0, #0  /* Operation: exit-terminate */
+	movs r1, #1  /* Completion code: FAIL */
 	svc 6        /* Execute `exit` */
 
 .Lset_brk:
