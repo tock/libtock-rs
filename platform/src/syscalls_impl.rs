@@ -118,7 +118,7 @@ impl<S: RawSyscalls> Syscalls for S {
                 // then r1 will contain a valid error code. ErrorCode is
                 // designed to be safely transmuted directly from a kernel error
                 // code.
-                return Err(unsafe { core::mem::transmute(r1.as_u32() as u16) });
+                return Err(unsafe { core::mem::transmute(r1.as_u32()) });
             }
 
             // r0 indicates Success with 2 u32s. Confirm the null upcall was
@@ -231,7 +231,7 @@ impl<S: RawSyscalls> Syscalls for S {
                 // then r1 will contain a valid error code. ErrorCode is
                 // designed to be safely transmuted directly from a kernel error
                 // code.
-                return Err(unsafe { core::mem::transmute(r1.as_u32() as u16) });
+                return Err(unsafe { core::mem::transmute(r1.as_u32()) });
             }
 
             // r0 indicates Success with 2 u32s. Confirm a zero buffer was
@@ -318,7 +318,7 @@ impl<S: RawSyscalls> Syscalls for S {
                 // then r1 will contain a valid error code. ErrorCode is
                 // designed to be safely transmuted directly from a kernel error
                 // code.
-                return Err(unsafe { core::mem::transmute(r1.as_u32() as u16) });
+                return Err(unsafe { core::mem::transmute(r1.as_u32()) });
             }
 
             // r0 indicates Success with 2 u32s. Confirm a zero buffer was

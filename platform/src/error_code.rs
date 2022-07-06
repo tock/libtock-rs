@@ -7,7 +7,9 @@ use core::{convert::TryFrom, fmt, mem::transmute};
 /// 
 /// [error-codes]: https://github.com/tock/tock/blob/master/doc/reference/trd104-syscalls.md#33-error-codes
 #[derive(Clone, Copy, PartialEq, Eq)]
-#[repr(u16)]  // To facilitate use with transmute() in CommandReturn
+// Explicit repr to use `transmute`. A word-sized error code results in
+// significant code size savings in typical use when compared to `#[repr(u16)]`.
+#[repr(u32)]
 #[rustfmt::skip]
 pub enum ErrorCode {
     Fail = 1,
@@ -275,7 +277,7 @@ impl TryFrom<u32> for ErrorCode {
 
     fn try_from(value: u32) -> Result<Self, Self::Error> {
         if (1..=1024).contains(&value) {
-            Ok(unsafe { transmute(value as u16) })
+            Ok(unsafe { transmute(value) })
         } else {
             Err(NotAnErrorCode)
         }
