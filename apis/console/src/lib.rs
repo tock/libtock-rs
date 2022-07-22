@@ -1,5 +1,6 @@
 #![no_std]
 
+use core::cell::Cell;
 use core::fmt;
 use core::marker::PhantomData;
 use libtock_platform as platform;
@@ -38,7 +39,7 @@ impl<S: Syscalls, C: Config> Console<S, C> {
     /// This is an alternative to `fmt::Write::write`
     /// because this can actually return an error code.
     pub fn write(s: &[u8]) -> Result<(), ErrorCode> {
-        let called = core::cell::Cell::new(Option::<(u32,)>::None);
+        let called: Cell<Option<(u32,)>> = Cell::new(None);
         share::scope::<
             (
                 AllowRo<_, DRIVER_NUM, { allow_ro::WRITE }>,
@@ -69,7 +70,7 @@ impl<S: Syscalls, C: Config> Console<S, C> {
     /// No special guarantees about when the read stops.
     /// Returns count of bytes written to `buf`.
     pub fn read(buf: &mut [u8]) -> (usize, Result<(), ErrorCode>) {
-        let called = core::cell::Cell::new(Option::<(u32, u32)>::None);
+        let called: Cell<Option<(u32, u32)>> = Cell::new(None);
         let mut bytes_received = 0;
         let r = share::scope::<
             (
