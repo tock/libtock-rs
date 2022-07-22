@@ -42,7 +42,6 @@ endif
 .PHONY: setup
 setup: setup-qemu
 	cargo install elf2tab
-	cargo install stack-sizes
 	cargo miri setup
 	rustup target add --toolchain stable thumbv7em-none-eabi
 
@@ -126,10 +125,6 @@ test: examples test-stable
 	MIRIFLAGS="-Zmiri-strict-provenance -Zmiri-symbolic-alignment-check" \
 		cargo miri test $(EXCLUDE_MIRI) --workspace
 	echo '[ SUCCESS ] libtock-rs tests pass'
-
-.PHONY: analyse-stack-sizes
-analyse-stack-sizes:
-	cargo stack-sizes $(release) --example $(EXAMPLE) $(features) -- -Z emit-stack-sizes
 
 .PHONY: apollo3
 apollo3:
