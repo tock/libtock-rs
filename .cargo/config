@@ -6,19 +6,6 @@ rrv32imc = "rriscv32imc"
 rthumbv7em = "run --release --target=thumbv7em-none-eabi --example"
 rtv7em = "rthumbv7em"
 
-# Note about rustflags: Because we specify rustflags in a [target.<cfg>] entry
-# (which we use to apply relocation flags to embedded builds but not host
-# builds), all rustc flags must be specified in a [target.<cfg>] entry. If we
-# specify rustflags through another mechanism, such as [build.rustflags], then
-# one of the rustflags definitions will overwrite the other, rather than
-# combining the flags.
-
-# Enable some disabled-by-default lints across the entire workspace.
-[target.'cfg(all())']
-rustflags = [
-    "-W", "unused_qualifications",
-]
-
 # Common settings for all embedded targets
 [target.'cfg(any(target_arch = "arm", target_arch = "riscv32"))']
 rustflags = [
