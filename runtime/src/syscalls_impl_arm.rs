@@ -6,6 +6,7 @@ unsafe impl RawSyscalls for crate::TockSyscalls {
         // Safety: This matches the invariants required by the documentation on
         // RawSyscalls::yield1
         // the use of `clobber_abi` allows us this to run on both Thumb-1 and Thumb-2
+        // see https://doc.rust-lang.org/nightly/reference/inline-assembly.html#abi-clobbers
         unsafe {
             asm!("svc 0",
                  inlateout("r0") r0 => _, // a1
@@ -17,7 +18,7 @@ unsafe impl RawSyscalls for crate::TockSyscalls {
                  // r13 is the stack pointer and must be restored by the callee.
                  // r15 is the program counter.
 
-                 clobber_abi("C"), // a2, a3, a4, ip (r12), lr (r14)
+                 clobber_abi("aapcs"), // r[0-3], r12, r14, s[0-15], d[0-7], d[16-31]
             );
         }
     }
@@ -26,6 +27,7 @@ unsafe impl RawSyscalls for crate::TockSyscalls {
         // Safety: This matches the invariants required by the documentation on
         // RawSyscalls::yield2
         // the use of `clobber_abi` allows us this to run on both Thumb-1 and Thumb-2
+        // see https://doc.rust-lang.org/nightly/reference/inline-assembly.html#abi-clobbers
         unsafe {
             asm!("svc 0",
                  inlateout("r0") r0 => _, // a1
@@ -38,7 +40,7 @@ unsafe impl RawSyscalls for crate::TockSyscalls {
                  // r13 is the stack pointer and must be restored by the callee.
                  // r15 is the program counter.
 
-                 clobber_abi("C"), // a3, a4, ip (r12), lr (r14)
+                 clobber_abi("aapcs"), // r[0-3], r12, r14, s[0-15], d[0-7], d[16-31]
             );
         }
     }
