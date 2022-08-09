@@ -88,7 +88,7 @@ impl<T> From<Register> for *const T {
 /// Converts a `Register` to a `u32`. Returns an error if the `Register`'s value
 /// is larger than `u32::MAX`. This is intended for use in host-based tests; in
 /// Tock process binary code, use Register::as_u32 instead.
-impl core::convert::TryFrom<Register> for u32 {
+impl TryFrom<Register> for u32 {
     type Error = core::num::TryFromIntError;
 
     fn try_from(register: Register) -> Result<u32, core::num::TryFromIntError> {

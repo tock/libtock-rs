@@ -41,7 +41,7 @@ impl Upcall {
 // need a long queue in test cases, so that is acceptable. There are alternative
 // data structures that avoid that slowdown, but they are more complex and
 // likely slower in the common case.
-pub(crate) type UpcallQueue = std::collections::VecDeque<crate::upcall::UpcallQueueEntry>;
+pub(crate) type UpcallQueue = std::collections::VecDeque<UpcallQueueEntry>;
 
 // An entry in the fake kernel's upcall queue.
 pub(crate) struct UpcallQueueEntry {

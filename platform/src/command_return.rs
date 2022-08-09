@@ -244,7 +244,7 @@ impl CommandReturn {
         let ec: ErrorCode = if return_variant == E::RETURN_VARIANT {
             // Safety: E::RETURN_VARIANT must be a failure variant, and
             // failure variants must contain a valid ErrorCode in r1.
-            unsafe { core::mem::transmute(r1) }
+            unsafe { transmute(r1) }
         } else {
             r2 = 0;
             r3 = 0;

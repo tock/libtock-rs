@@ -1,5 +1,6 @@
 #![no_std]
 
+use core::cell::Cell;
 use libtock_platform as platform;
 use libtock_platform::share;
 use libtock_platform::{DefaultConfig, ErrorCode, Syscalls};
@@ -76,7 +77,7 @@ impl<S: Syscalls, C: platform::subscribe::Config> Alarm<S, C> {
         let freq = Self::get_frequency()?;
         let ticks = time.to_ticks(freq);
 
-        let called = core::cell::Cell::new(Option::<(u32, u32)>::None);
+        let called: Cell<Option<(u32, u32)>> = Cell::new(None);
         share::scope(|subscribe| {
             S::subscribe::<_, _, C, DRIVER_NUM, { subscribe::CALLBACK }>(subscribe, &called)?;
 

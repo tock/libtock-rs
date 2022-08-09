@@ -120,7 +120,7 @@ mod tests {
 
         // Call schedule with no registered upcall.
         assert_eq!(mock_driver.share_ref.schedule_upcall(2, (3, 4, 5)), Ok(()));
-        crate::kernel_data::with_kernel_data(|kernel_data| {
+        with_kernel_data(|kernel_data| {
             let kernel_data = kernel_data.unwrap();
 
             // There was no upcall to schedule, so the queue should still be
@@ -140,7 +140,7 @@ mod tests {
         // is a null upcall.
         assert_eq!(mock_driver.share_ref.schedule_upcall(2, (3, 4, 5)), Ok(()));
         unsafe extern "C" fn upcall(_: u32, _: u32, _: u32, _: libtock_platform::Register) {}
-        crate::kernel_data::with_kernel_data(|kernel_data| {
+        with_kernel_data(|kernel_data| {
             let kernel_data = kernel_data.unwrap();
 
             // Verify the upcall was not queued.
@@ -157,7 +157,7 @@ mod tests {
         });
         // Call schedule again. This should schedule the upcall.
         assert_eq!(mock_driver.share_ref.schedule_upcall(2, (3, 4, 5)), Ok(()));
-        crate::kernel_data::with_kernel_data(|kernel_data| {
+        with_kernel_data(|kernel_data| {
             let kernel_data = kernel_data.unwrap();
 
             // Verify the upcall was queued.
@@ -190,7 +190,7 @@ mod tests {
             mock_driver.share_ref.schedule_upcall(2, (30, 40, 50)),
             Ok(())
         );
-        crate::kernel_data::with_kernel_data(|kernel_data| {
+        with_kernel_data(|kernel_data| {
             let kernel_data = kernel_data.unwrap();
 
             // Very the upcall was queued.
