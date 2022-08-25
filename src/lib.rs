@@ -11,6 +11,11 @@ pub mod alarm {
     pub type Alarm = alarm::Alarm<super::runtime::TockSyscalls>;
     pub use alarm::{Convert, Hz, Milliseconds, Ticks};
 }
+pub mod block_storage {
+    use libtock_block_storage as block_storage;
+    pub type BlockStorage = block_storage::BlockStorage<super::runtime::TockSyscalls>;
+    pub use block_storage::Geometry;
+}
 pub mod buttons {
     use libtock_buttons as buttons;
     pub type Buttons = buttons::Buttons<super::runtime::TockSyscalls>;
