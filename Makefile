@@ -90,7 +90,8 @@ examples:
 # Used when we need to build a crate for the host OS, as libtock_runtime only
 # supports running on Tock.
 EXCLUDE_RUNTIME := --exclude libtock --exclude libtock_runtime \
-	--exclude libtock_debug_panic --exclude libtock_small_panic
+	--exclude libtock_debug_panic --exclude libtock_small_panic \
+	--exclude libtock_print_macros
 
 # Arguments to pass to cargo to exclude crates that cannot be tested by Miri. In
 # addition to excluding libtock_runtime, Miri also cannot test proc macro crates

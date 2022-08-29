@@ -17,6 +17,7 @@ libtock_debug_panic = { path = "panic_handlers/debug_panic" }
 libtock_leds = { path = "apis/leds" }
 libtock_low_level_debug = { path = "apis/low_level_debug" }
 libtock_platform = { path = "platform" }
+libtock_print_macros = { path = "print_macros" }
 libtock_runtime = { path = "runtime" }
 
 [profile.dev]
@@ -41,6 +42,7 @@ members = [
     "panic_handlers/debug_panic",
     "panic_handlers/small_panic",
     "platform",
+    "print_macros",
     "runner",
     "runtime",
     "syscalls_tests",
