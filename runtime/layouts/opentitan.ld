@@ -8,5 +8,5 @@ MEMORY {
   RAM   (W) : ORIGIN = 0x10004000, LENGTH = 512K
 }
 
-TBF_HEADER_SIZE = 0x48;
+TBF_HEADER_SIZE = 0x60;
 INCLUDE libtock_layout.ld
