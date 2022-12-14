@@ -28,3 +28,8 @@ pub mod low_level_debug {
     pub type LowLevelDebug = lldb::LowLevelDebug<super::runtime::TockSyscalls>;
     pub use lldb::AlertCode;
 }
+
+pub mod temperature {
+    use libtock_temperature as temperature;
+    pub type Temperature = temperature::Temperature<super::runtime::TockSyscalls>;
+}
