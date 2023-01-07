@@ -37,7 +37,10 @@ fn register_unregister_listener() {
     let driver = fake::Temperature::new();
     kernel.add_driver(&driver);
 
-    let listener = Cell::<Option<(u32,)>>::new(None);
+    let temperature_cell: Cell<Option<i32>> = Cell::new(None);
+    let listener = crate::TemperatureListener(|temp_val| {
+        temperature_cell.set(Some(temp_val));
+    });
     share::scope(|subscribe| {
         assert_eq!(Temperature::read_temperature(), Ok(()));
         driver.set_value(100);
@@ -47,7 +50,7 @@ fn register_unregister_listener() {
         assert_eq!(Temperature::read_temperature(), Ok(()));
         driver.set_value(100);
         assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::Upcall);
-        assert_eq!(listener.get(), Some((100,)));
+        assert_eq!(temperature_cell.get(), Some(100));
 
         Temperature::unregister_listener();
         assert_eq!(Temperature::read_temperature(), Ok(()));
