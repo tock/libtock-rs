@@ -50,7 +50,7 @@ impl<S: Syscalls> Temperature<S> {
         });
 
         match temperature_cell.get() {
-            None => Err(ErrorCode::Fail),
+            None => Err(ErrorCode::Busy),
             Some(temp_val) => Ok(temp_val),
         }
     }

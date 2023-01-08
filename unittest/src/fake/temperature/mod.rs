@@ -1,9 +1,17 @@
-use std::cell::Cell;
-use libtock_platform::{CommandReturn, ErrorCode};
-use crate::{DriverInfo, DriverShareRef};
+//! Fake implementation of the Temperature API, documented here:
+//! https://github.com/tock/tock/blob/master/doc/syscalls/60000_ambient_temperature.md
+//!
+//! Like the real API, `Temperature` controls a fake temperature sensor. It provides
+//! a function `set_value` used to immediately call an upcall with a temperature value read by the sensor
+//! and a function 'set_value_sync' used to call the upcall when the read command is received.
 
-pub struct Temperature{
+use crate::{DriverInfo, DriverShareRef};
+use libtock_platform::{CommandReturn, ErrorCode};
+use std::cell::Cell;
+
+pub struct Temperature {
     busy: Cell<bool>,
+    upcall_on_command: Cell<Option<i32>>,
     share_ref: DriverShareRef,
 }
 
@@ -11,13 +19,15 @@ impl Temperature {
     pub fn new() -> std::rc::Rc<Temperature> {
         #[allow(clippy::declare_interior_mutable_const)]
         const NOT_BUSY: Cell<bool> = Cell::new(false);
+        const NOUPCALL: Cell<Option<i32>> = Cell::new(None);
         std::rc::Rc::new(Temperature {
             busy: NOT_BUSY,
+            upcall_on_command: NOUPCALL,
             share_ref: Default::default(),
         })
     }
-    
-    pub fn is_busy(&self) -> bool{
+
+    pub fn is_busy(&self) -> bool {
         self.busy.get()
     }
     pub fn set_value(&self, value: i32) {
@@ -27,6 +37,9 @@ impl Temperature {
                 .expect("Unable to schedule upcall");
             self.busy.set(false);
         }
+    }
+    pub fn set_value_sync(&self, value: i32) {
+        self.upcall_on_command.set(Some(value));
     }
 }
 
@@ -44,15 +57,18 @@ impl crate::fake::SyscallDriver for Temperature {
             EXISTS => crate::command_return::success(),
 
             READ_TEMP => {
-                if !self.busy.get(){
+                if !self.busy.get() {
                     self.busy.set(true);
+                    if let Some(val) = self.upcall_on_command.get() {
+                        self.set_value(val);
+                        self.upcall_on_command.set(None);
+                    }
                     crate::command_return::success()
-                } 
-                else {
-                    crate::command_return::failure(ErrorCode::Busy)    
+                } else {
+                    crate::command_return::failure(ErrorCode::Busy)
                 }
-            },
-            _ => crate::command_return::failure(ErrorCode::NoSupport)
+            }
+            _ => crate::command_return::failure(ErrorCode::NoSupport),
         }
     }
 }

@@ -29,6 +29,7 @@ fn read_temperature() {
     assert!(driver.is_busy());
 
     assert_eq!(Temperature::read_temperature(), Err(ErrorCode::Busy));
+    assert_eq!(Temperature::read_temperature_sync(), Err(ErrorCode::Busy));
 }
 
 #[test]
@@ -57,4 +58,24 @@ fn register_unregister_listener() {
         driver.set_value(100);
         assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::NoUpcall);
     });
+}
+
+#[test]
+fn read_temperature_sync() {
+    let kernel = fake::Kernel::new();
+    let driver = fake::Temperature::new();
+    kernel.add_driver(&driver);
+
+    driver.set_value_sync(1000);
+    assert_eq!(Temperature::read_temperature_sync(), Ok(1000));
+}
+
+#[test]
+fn negative_value() {
+    let kernel = fake::Kernel::new();
+    let driver = fake::Temperature::new();
+    kernel.add_driver(&driver);
+
+    driver.set_value_sync(-1000);
+    assert_eq!(Temperature::read_temperature_sync(), Ok(-1000));
 }

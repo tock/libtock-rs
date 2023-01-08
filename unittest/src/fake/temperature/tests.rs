@@ -18,6 +18,11 @@ fn command() {
 
     temp.set_value(100);
     assert!(temp.command(READ_TEMP, 0, 1).is_success());
+    temp.set_value(100);
+
+    temp.set_value_sync(100);
+    assert!(temp.command(READ_TEMP, 0, 1).is_success());
+    assert!(temp.command(READ_TEMP, 0, 1).is_success());
 }
 
 // Integration test that verifies Temperature works with fake::Kernel and
@@ -46,16 +51,17 @@ fn kernel_integration() {
 
         temp.set_value(100);
         assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::Upcall);
-        assert_eq!(
-            listener.get(),
-            Some((100,))
-        );
+        assert_eq!(listener.get(), Some((100,)));
 
         temp.set_value(200);
         assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::NoUpcall);
 
         assert!(fake::Syscalls::command(DRIVER_NUM, READ_TEMP, 0, 1).is_success());
         temp.set_value(200);
+        assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::Upcall);
+
+        temp.set_value_sync(200);
+        assert!(fake::Syscalls::command(DRIVER_NUM, READ_TEMP, 0, 1).is_success());
         assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::Upcall);
     });
 }
