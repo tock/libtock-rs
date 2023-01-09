@@ -14,7 +14,9 @@ impl<S: Syscalls> Temperature<S> {
         S::command(DRIVER_NUM, EXISTS, 0, 0).to_result()
     }
 
-    /// initiate a temperature measurement used both for syncronous and asyncronous readings
+    /// Initiate a temperature measurement.
+    ///
+    /// This function is used both for synchronous and asynchronous readings
     pub fn read_temperature() -> Result<(), ErrorCode> {
         S::command(DRIVER_NUM, READ_TEMP, 0, 0).to_result()
     }
@@ -32,8 +34,9 @@ impl<S: Syscalls> Temperature<S> {
         S::unsubscribe(DRIVER_NUM, 0)
     }
 
-    /// initiate a syncronous temperature mesurement
+    /// Initiate a synchronous temperature measurement.
     /// Returns Ok(temperature_value) if the operation was successful
+    /// temperature_value is returned in hundreds of centigrades
     pub fn read_temperature_sync() -> Result<i32, ErrorCode> {
         let temperature_cell: Cell<Option<i32>> = Cell::new(None);
         let listener = TemperatureListener(|temp_val| {

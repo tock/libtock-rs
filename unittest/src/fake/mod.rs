@@ -15,10 +15,10 @@ mod console;
 mod gpio;
 mod kernel;
 mod leds;
-mod temperature;
 mod low_level_debug;
 mod syscall_driver;
 mod syscalls;
+mod temperature;
 
 pub use alarm::Alarm;
 pub use buttons::Buttons;
@@ -26,10 +26,10 @@ pub use console::Console;
 pub use gpio::{Gpio, GpioMode, InterruptEdge, PullMode};
 pub use kernel::Kernel;
 pub use leds::Leds;
-pub use temperature::Temperature;
 pub use low_level_debug::{LowLevelDebug, Message};
 pub use syscall_driver::SyscallDriver;
 pub use syscalls::Syscalls;
+pub use temperature::Temperature;
 
 #[cfg(test)]
 mod kernel_tests;

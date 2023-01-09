@@ -25,9 +25,13 @@ fn main() {
 
     loop {
         match Temperature::read_temperature_sync() {
-            Ok(temp_val) => {
-                writeln!(Console::writer(), "Temperature: {}*C\n", temp_val / 100).unwrap()
-            }
+            Ok(temp_val) => writeln!(
+                Console::writer(),
+                "Temperature: {}.{}*C\n",
+                temp_val / 100,
+                temp_val % 100
+            )
+            .unwrap(),
             Err(_) => writeln!(Console::writer(), "error while reading temperature",).unwrap(),
         }
 
