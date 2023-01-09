@@ -9,6 +9,9 @@ use crate::{DriverInfo, DriverShareRef};
 use libtock_platform::{CommandReturn, ErrorCode};
 use std::cell::Cell;
 
+// The `upcall_on_command` field is set to Some(value) if an upcall(with value as its argument) should be called when read command is received,
+// or None otherwise. It was needed for testing `read_sync` library function which simulates a synchronous temperature read,
+// because it was impossible to schedule an upcall during the `synchronous` read in other ways.
 pub struct Temperature {
     busy: Cell<bool>,
     upcall_on_command: Cell<Option<i32>>,
