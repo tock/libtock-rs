@@ -59,11 +59,8 @@ impl Convert for Milliseconds {
 
 impl<S: Syscalls, C: platform::subscribe::Config> Alarm<S, C> {
     /// Run a check against the console capsule to ensure it is present.
-    ///
-    /// Returns number of concurrent notifications supported,
-    /// 0 if unbounded.
     #[inline(always)]
-    pub fn driver_check() -> Result<u32, ErrorCode> {
+    pub fn driver_check() -> Result<(), ErrorCode> {
         S::command(DRIVER_NUM, command::DRIVER_CHECK, 0, 0).to_result()
     }
 
