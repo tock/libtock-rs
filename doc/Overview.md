@@ -1,10 +1,6 @@
 Overview
 ======
 
-Note: This describes the layout of the Tock 2.0 `libtock-rs` crates, not the
-Tock 1.0 crates. Not all of the Tock 2.0 crates have been merged into this
-repository yet.
-
 This document gives an overview of the crates in this repository, and is
 intended to be useful to `libtock-rs` newcomers.
 

@@ -1,10 +1,6 @@
 Testing
 =======
 
-Note: This describes the test infrastructure for the Tock 2.0 `libtock-rs`
-crates, not the Tock 1.0 crates. Not all of the Tock 2.0 crates have been merged
-into this repository yet.
-
 This document gives an introduction to the tests in this repository, and is
 intended to be useful to `libtock-rs` contributors.
 

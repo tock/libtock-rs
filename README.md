@@ -2,31 +2,20 @@
 
 # libtock-rs
 
-Rust userland library for Tock (WIP)
+Rust userland library for Tock
 
-Generally this library was tested with tock [Release 1.5](https://github.com/tock/tock/releases/tag/release-1.5).
-Since then changes have been made that might not work with the Tock
-release 1.5, but instead target Tock master. For example this library
-might support newer boards (Apollo3), changed boards (HiFive1 revB) or
-new drivers (HMAC).
+Generally this library was tested with Tock [Release
+2.1.1](https://github.com/tock/tock/releases/tag/release-2.1.1).
 
-The library works in principle on most boards, but there is currently the [showstopper
-bug #28](https://github.com/tock/libtock-rs/issues/28) that prevents
-the generation of relocatable code. This means that all applications
-must be installed at the flash address they are compiled with, which
-usually means that they must be compiled especially for your board
-and that there can only be one application written in rust at a time
-and it must be installed as the first application on the board, unless
-you want to play games with linker scripts.
-There are some `boards/layout_*.ld` files provided that allow to run the
-examples on common boards.
-Due to MPU region alignment issues they may not work for applications
-that use a lot of RAM, in that case you may have to change the SRAM
-start address to fit your application.
+The library should work on all Tock boards, but currently apps must be compiled
+for the flash and RAM address they are executed at. See [Fix
+relocation](https://github.com/tock/libtock-rs/issues/28) for more details.
+This means that process binaries must be compiled especially for your board and
+that there can only be one application written in rust at a time and it must be
+installed as the first application on the board, unless you want to play games
+with linker scripts.
 
 ## Getting Started
-
-This project is nascent and still under heavy development, but first steps:
 
 1.  Ensure you have [rustup](https://www.rustup.rs/) installed.
 
@@ -46,51 +35,19 @@ This project is nascent and still under heavy development, but first steps:
 1.  Use `make` to build examples
 
     ```shell
-    make nrf52 # Builds all examples for the nrf52 platform
+    make nrf52 EXAMPLE=console # Builds the console example for the nrf52
     ```
-
-    ```bash
-    make opentitan # Builds all examples for the OpenTitan platform
-    ```
-
-    ```bash
-    make opentitan FEATURES=alloc # Builds all examples for the OpenTitan platform, with alloc feature enabled
-    ```
-
-    ```bash
-    make flash-hail EXAMPLE=blink # Flash the example 'blink' program to the hail platform
-    ```
-
-    For an unknown platform, you may have to create your own memory layout definition. Place the layout definition file at `boards/layout_<platform>.ld` and do not forget to enhance the `tockloader_flags` dispatching section in `tools/flash.sh`. You are welcome to create a PR, s.t. the number of supported platforms grows.
 
 ## Using libtock-rs
 
-The easiest way to start using libtock-rs is adding an example to the examples folder.
-The boiler plate code you would write is
+The easiest way to start using libtock-rs is adding an example to the
+`examples/` folder. We recommend starting by copying the `console` example, as
+it is a simple example that shows you how to perform normal debug prints.
 
-```rust
-#![no_std]
-
-use libtock::result::TockResult;
-
-#[libtock::main]
-async fn main() -> TockResult<()> {
-  // Your code
-}
-```
-
-If you want to use heap based allocation you will have to add
-
-```rust
-extern crate alloc;
-```
-
-to the preamble and store your example in the `examples-alloc` folder.
-
-To build the examples for your board you can use
+To build your example for your board you can use
 
 ```shell
-make <platform> [FEATURES=alloc]
+make <platform> EXAMPLE=<example>
 ```
 
 An example can be flashed to your board after the build process by running:
