@@ -69,7 +69,7 @@ fn missing_driver() {
         r3.into(),
     );
     assert_eq!(r0, return_variant::FAILURE_2_U32.into());
-    assert_eq!(r1, ErrorCode::NoMem as u32);
+    assert_eq!(r1, ErrorCode::NoDevice as u32);
     assert_eq!(r2, 0);
     assert_eq!(r3, 0);
 }
