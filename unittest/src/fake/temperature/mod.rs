@@ -20,12 +20,9 @@ pub struct Temperature {
 
 impl Temperature {
     pub fn new() -> std::rc::Rc<Temperature> {
-        #[allow(clippy::declare_interior_mutable_const)]
-        const NOT_BUSY: Cell<bool> = Cell::new(false);
-        const NOUPCALL: Cell<Option<i32>> = Cell::new(None);
         std::rc::Rc::new(Temperature {
-            busy: NOT_BUSY,
-            upcall_on_command: NOUPCALL,
+            busy: Cell::new(false),
+            upcall_on_command: Cell::new(None),
             share_ref: Default::default(),
         })
     }
