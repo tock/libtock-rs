@@ -63,7 +63,7 @@ fn failed() {
     share::scope(|subscribe| {
         assert_eq!(
             fake::Syscalls::subscribe::<_, _, DefaultConfig, 1, 2>(subscribe, &done),
-            Err(ErrorCode::NoMem)
+            Err(ErrorCode::NoDevice)
         );
     });
 }

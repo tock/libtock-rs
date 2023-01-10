@@ -74,10 +74,10 @@ pub(super) unsafe fn subscribe(
     }
 
     // Verify the given driver ID was present. If no driver with this ID is
-    // present, the kernel returns NOMEM.
+    // present, the kernel returns NODEVICE.
     let num_upcalls = match num_upcalls {
         Some(num_upcalls) => num_upcalls,
-        None => return failure_registers(ErrorCode::NoMem),
+        None => return failure_registers(ErrorCode::NoDevice),
     };
 
     // If a too-large subscribe number is passed, the kernel returns the Invalid
