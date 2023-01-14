@@ -57,16 +57,14 @@ impl crate::fake::SyscallDriver for Temperature {
             EXISTS => crate::command_return::success(),
 
             READ_TEMP => {
-                if !self.busy.get() {
-                    self.busy.set(true);
-                    if let Some(val) = self.upcall_on_command.get() {
-                        self.set_value(val);
-                        self.upcall_on_command.set(None);
-                    }
-                    crate::command_return::success()
-                } else {
-                    crate::command_return::failure(ErrorCode::Busy)
+                if self.busy.get() {
+                    return crate::command_return::failure(ErrorCode::Busy);
                 }
+                self.busy.set(true);
+                if let Some(val) = self.upcall_on_command.take() {
+                    self.set_value(val);
+                }
+                crate::command_return::success()
             }
             _ => crate::command_return::failure(ErrorCode::NoSupport),
         }

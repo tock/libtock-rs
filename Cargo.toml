@@ -15,10 +15,10 @@ libtock_buttons = { path = "apis/buttons" }
 libtock_console = { path = "apis/console" }
 libtock_debug_panic = { path = "panic_handlers/debug_panic" }
 libtock_leds = { path = "apis/leds" }
-libtock_temperature = { path = "apis/temperature"}
 libtock_low_level_debug = { path = "apis/low_level_debug" }
 libtock_platform = { path = "platform" }
 libtock_runtime = { path = "runtime" }
+libtock_temperature = { path = "apis/temperature"}
 
 [profile.dev]
 panic = "abort"
@@ -38,8 +38,8 @@ members = [
     "apis/buttons",
     "apis/console",
     "apis/leds",
-    "apis/temperature",
     "apis/low_level_debug",
+    "apis/temperature",
     "panic_handlers/debug_panic",
     "panic_handlers/small_panic",
     "platform",
