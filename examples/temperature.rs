@@ -25,16 +25,14 @@ fn main() {
 
     loop {
         match Temperature::read_temperature_sync() {
-            Ok(temp_val) => {
-                    writeln!(
-                        Console::writer(),
-                        "Temperature: {}{}.{}*C\n",
-                        if temp_val > 0 { "" } else { "-" },
-                        i32::abs(temp_val) / 100,
-                        i32::abs(temp_val) % 100
-                    )
-                    .unwrap()
-            }
+            Ok(temp_val) => writeln!(
+                Console::writer(),
+                "Temperature: {}{}.{}*C\n",
+                if temp_val > 0 { "" } else { "-" },
+                i32::abs(temp_val) / 100,
+                i32::abs(temp_val) % 100
+            )
+            .unwrap(),
             Err(_) => writeln!(Console::writer(), "error while reading temperature",).unwrap(),
         }
 
