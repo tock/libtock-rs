@@ -18,6 +18,7 @@ mod leds;
 mod low_level_debug;
 mod syscall_driver;
 mod syscalls;
+mod temperature;
 
 pub use alarm::Alarm;
 pub use buttons::Buttons;
@@ -28,6 +29,7 @@ pub use leds::Leds;
 pub use low_level_debug::{LowLevelDebug, Message};
 pub use syscall_driver::SyscallDriver;
 pub use syscalls::Syscalls;
+pub use temperature::Temperature;
 
 #[cfg(test)]
 mod kernel_tests;

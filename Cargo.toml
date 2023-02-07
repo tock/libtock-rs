@@ -18,6 +18,7 @@ libtock_leds = { path = "apis/leds" }
 libtock_low_level_debug = { path = "apis/low_level_debug" }
 libtock_platform = { path = "platform" }
 libtock_runtime = { path = "runtime" }
+libtock_temperature = { path = "apis/temperature"}
 
 [profile.dev]
 panic = "abort"
@@ -38,6 +39,7 @@ members = [
     "apis/console",
     "apis/leds",
     "apis/low_level_debug",
+    "apis/temperature",
     "panic_handlers/debug_panic",
     "panic_handlers/small_panic",
     "platform",
