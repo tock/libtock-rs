@@ -14,7 +14,7 @@ pub mod alarm {
 pub mod buttons {
     use libtock_buttons as buttons;
     pub type Buttons = buttons::Buttons<super::runtime::TockSyscalls>;
-    pub use buttons::{ButtonListener, ButtonListener};
+    pub use buttons::{ButtonListener, ButtonState};
 }
 pub mod console {
     use libtock_console as console;
