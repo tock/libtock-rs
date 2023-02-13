@@ -3,9 +3,8 @@
 #![no_main]
 #![no_std]
 
-use libtock::buttons::Buttons;
+use libtock::buttons::{ButtonListener, Buttons};
 use libtock::runtime::{set_main, stack_size};
-use libtock_buttons::ButtonListener;
 use libtock_platform::{share, Syscalls};
 use libtock_runtime::TockSyscalls;
 
