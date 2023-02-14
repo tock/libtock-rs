@@ -204,14 +204,14 @@ flash-nrf52840:
 	LIBTOCK_PLATFORM=nrf52840 cargo run --example $(EXAMPLE) $(features) \
 		--target=thumbv7em-none-eabi $(release) -- --deploy=tockloader
 
-.PHONY: raspberrypi_pico
-raspberrypi_pico:
-	LIBTOCK_PLATFORM=raspberrypi_pico cargo run --example $(EXAMPLE) $(features) \
+.PHONY: raspberry_pi_pico
+raspberry_pi_pico:
+	LIBTOCK_PLATFORM=raspberry_pi_pico cargo run --example $(EXAMPLE) $(features) \
 		--target=thumbv6m-none-eabi $(release)
-	mkdir -p target/tbf/raspberrypi_pico
+	mkdir -p target/tbf/raspberry_pi_pico
 	cp target/thumbv6m-none-eabi/release/examples/$(EXAMPLE).tab \
 		target/thumbv6m-none-eabi/release/examples/$(EXAMPLE).tbf \
-		target/tbf/raspberrypi_pico
+		target/tbf/raspberry_pi_pico
 
 .PHONY: nano_rp2040_connect
 nano_rp2040_connect:
