@@ -14,10 +14,12 @@ pub mod alarm {
 pub mod buttons {
     use libtock_buttons as buttons;
     pub type Buttons = buttons::Buttons<super::runtime::TockSyscalls>;
+    pub use buttons::{ButtonListener, ButtonState};
 }
 pub mod console {
     use libtock_console as console;
     pub type Console = console::Console<super::runtime::TockSyscalls>;
+    pub use console::ConsoleWriter;
 }
 pub mod leds {
     use libtock_leds as leds;
@@ -32,4 +34,5 @@ pub mod low_level_debug {
 pub mod temperature {
     use libtock_temperature as temperature;
     pub type Temperature = temperature::Temperature<super::runtime::TockSyscalls>;
+    pub use temperature::TemperatureListener;
 }
