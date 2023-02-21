@@ -21,6 +21,14 @@ pub mod console {
     pub type Console = console::Console<super::runtime::TockSyscalls>;
     pub use console::ConsoleWriter;
 }
+pub mod gpio {
+    use libtock_gpio as gpio;
+    pub type Gpio = gpio::Gpio<super::runtime::TockSyscalls>;
+    pub use gpio::{
+        Error, GpioInterruptListener, GpioState, InputPin, OutputPin, PinInterruptEdge, Pull,
+        PullDown, PullNone, PullUp,
+    };
+}
 pub mod leds {
     use libtock_leds as leds;
     pub type Leds = leds::Leds<super::runtime::TockSyscalls>;
