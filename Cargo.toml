@@ -14,11 +14,12 @@ libtock_alarm = { path = "apis/alarm" }
 libtock_buttons = { path = "apis/buttons" }
 libtock_console = { path = "apis/console" }
 libtock_debug_panic = { path = "panic_handlers/debug_panic" }
+libtock_gpio = { path = "apis/gpio" }
 libtock_leds = { path = "apis/leds" }
 libtock_low_level_debug = { path = "apis/low_level_debug" }
 libtock_platform = { path = "platform" }
 libtock_runtime = { path = "runtime" }
-libtock_temperature = { path = "apis/temperature"}
+libtock_temperature = { path = "apis/temperature" }
 
 [profile.dev]
 panic = "abort"
