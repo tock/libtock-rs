@@ -44,3 +44,8 @@ pub mod temperature {
     pub type Temperature = temperature::Temperature<super::runtime::TockSyscalls>;
     pub use temperature::TemperatureListener;
 }
+
+pub mod air_quality {
+    use libtock_air_quality as air_quality;
+    pub type AirQuality = air_quality::AirQuality<super::runtime::TockSyscalls>;
+}
