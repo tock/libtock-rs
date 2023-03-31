@@ -21,7 +21,7 @@ fn main() {
         }
     }
 
-    SoundPressure::sound_pressure_enabled();
+    let _ = SoundPressure::sound_pressure_enabled();
     writeln!(Console::writer(), "Sound Pressure Enabled:\n",).unwrap();
 
     loop {

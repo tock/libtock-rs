@@ -53,7 +53,7 @@ impl<S: Syscalls> SoundPressure<S> {
         match pressure_cell.get() {
             None => Err(ErrorCode::Busy),
             Some(pressure_val) => {
-                if pressure_val < 0 || pressure_val > 256 {
+                if !(0..=256).contains(&pressure_val) {
                     Err(ErrorCode::Fail)
                 } else {
                     Ok(pressure_val)
