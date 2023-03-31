@@ -11,6 +11,7 @@
 
 mod alarm;
 mod buttons;
+mod buzzer;
 mod console;
 mod gpio;
 mod kernel;
@@ -22,6 +23,7 @@ mod temperature;
 
 pub use alarm::Alarm;
 pub use buttons::Buttons;
+pub use buzzer::Buzzer;
 pub use console::Console;
 pub use gpio::{Gpio, GpioMode, InterruptEdge, PullMode};
 pub use kernel::Kernel;

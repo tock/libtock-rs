@@ -44,3 +44,9 @@ pub mod temperature {
     pub type Temperature = temperature::Temperature<super::runtime::TockSyscalls>;
     pub use temperature::TemperatureListener;
 }
+
+pub mod buzzer {
+    use libtock_buzzer as buzzer;
+    pub type Buzzer = buzzer::Buzzer<super::runtime::TockSyscalls>;
+    pub use buzzer::note;
+}
