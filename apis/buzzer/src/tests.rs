@@ -30,3 +30,13 @@ fn tone() {
     assert_eq!(Buzzer::tone(1000, 100), Err(ErrorCode::Busy));
     assert_eq!(Buzzer::tone_sync(1000, 100), Err(ErrorCode::Busy));
 }
+
+#[test]
+fn tone_sync() {
+    let kernel = fake::Kernel::new();
+    let driver = fake::Buzzer::new();
+    kernel.add_driver(&driver);
+
+    driver.set_tone_sync(1000, 100);
+    assert_eq!(Buzzer::tone_sync(1000, 100), Ok(()));
+}

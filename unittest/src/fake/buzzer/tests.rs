@@ -1,20 +1,60 @@
-use crate::fake;
+use crate::fake::{self, SyscallDriver};
 use fake::buzzer::*;
-use libtock_platform::ErrorCode;
+use libtock_platform::{share, DefaultConfig, YieldNoWaitReturn};
 
 #[test]
 fn command() {
-    use fake::SyscallDriver;
     let buzzer = Buzzer::new();
-    let value = buzzer.command(DRIVER_CHECK, 1, 2);
-    assert_eq!(value.get_success_u32(), Some(1));
+    assert!(buzzer.command(EXISTS, 1, 2).is_success());
+    assert!(buzzer.command(TONE, 0, 0).is_success());
+
     assert_eq!(
-        buzzer.command(BUZZER_ON, 0, 0).get_failure(),
-        Some(ErrorCode::Invalid)
+        buzzer.command(TONE, 0, 0).get_failure(),
+        Some(ErrorCode::Busy)
     );
-    assert_eq!(buzzer.get_buzzer(), false);
-    assert!(buzzer.command(BUZZER_ON, 1, 1).is_success());
-    assert_eq!(buzzer.get_buzzer(), true);
-    assert!(buzzer.command(BUZZER_OFF, 0, 0).is_success());
-    assert_eq!(buzzer.get_buzzer(), false);
+
+    buzzer.set_tone(100, 100);
+    assert!(buzzer.command(TONE, 0, 1).is_success());
+    buzzer.set_tone(100, 100);
+
+    buzzer.set_tone_sync(100, 100);
+    assert!(buzzer.command(TONE, 0, 1).is_success());
+    assert!(buzzer.command(TONE, 0, 1).is_success());
+}
+
+#[test]
+fn kernel_integration() {
+    use libtock_platform::Syscalls;
+    let kernel = fake::Kernel::new();
+    let buzzer = Buzzer::new();
+    kernel.add_driver(&buzzer);
+
+    assert!(fake::Syscalls::command(DRIVER_NUM, EXISTS, 1, 2).is_success());
+    assert!(fake::Syscalls::command(DRIVER_NUM, TONE, 0, 0).is_success());
+    assert_eq!(
+        fake::Syscalls::command(DRIVER_NUM, TONE, 0, 0).get_failure(),
+        Some(ErrorCode::Busy)
+    );
+    buzzer.set_tone(100, 100);
+    assert!(fake::Syscalls::command(DRIVER_NUM, TONE, 0, 1).is_success());
+
+    let listener = Cell::<Option<(u32,)>>::new(None);
+    share::scope(|subscribe| {
+        assert_eq!(
+            fake::Syscalls::subscribe::<_, _, DefaultConfig, DRIVER_NUM, 0>(subscribe, &listener),
+            Ok(())
+        );
+
+        buzzer.set_tone(100, 100);
+        assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::Upcall);
+        assert_eq!(listener.get(), Some((100,)));
+
+        buzzer.set_tone(200, 100);
+        assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::NoUpcall);
+
+        assert!(fake::Syscalls::command(DRIVER_NUM, TONE, 0, 1).is_success());
+        buzzer.set_tone(200, 100);
+        assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::Upcall);
+        assert_eq!(listener.get(), Some((200,)));
+    });
 }
