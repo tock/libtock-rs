@@ -8,14 +8,19 @@ use libtock_platform::{
 pub struct SoundPressure<S: Syscalls>(S);
 
 impl<S: Syscalls> SoundPressure<S> {
+    /// Returns Ok() if the driver was present.This does not necessarily mean
+    /// that the driver is working.
     pub fn exists() -> Result<(), ErrorCode> {
         S::command(DRIVER_NUM, EXISTS, 0, 0).to_result()
     }
 
+    /// Initiate a pressure measurement.
+    /// This function is used both for synchronous and asynchronous readings
     pub fn read_pressure() -> Result<(), ErrorCode> {
         S::command(DRIVER_NUM, READ_PRESSURE, 0, 0).to_result()
     }
 
+    /// Register an events listener
     pub fn register_listener<'share, F: Fn(i32)>(
         listener: &'share SoundPressureListener<F>,
         subscribe: share::Handle<Subscribe<'share, S, DRIVER_NUM, 0>>,
@@ -23,18 +28,24 @@ impl<S: Syscalls> SoundPressure<S> {
         S::subscribe::<_, _, DefaultConfig, DRIVER_NUM, 0>(subscribe, listener)
     }
 
+    /// Unregister the events listener
     pub fn unregister_listener() {
         S::unsubscribe(DRIVER_NUM, 0)
     }
 
+    /// Enable sound pressure measurement
     pub fn sound_pressure_enabled() -> Result<(), ErrorCode> {
         S::command(DRIVER_NUM, 2, 0, 0).to_result()
     }
 
+    /// Disable sound pressure measurement
     pub fn sound_pressure_disabled() -> Result<(), ErrorCode> {
         S::command(DRIVER_NUM, 3, 0, 0).to_result()
     }
 
+    /// Initiate a synchronous pressure measurement.
+    /// Returns Ok(pressure_value) if the operation was successful
+    /// pressure_value is between 0 and 256
     pub fn read_pressure_sync() -> Result<i32, ErrorCode> {
         let pressure_cell: Cell<Option<i32>> = Cell::new(None);
         let listener = SoundPressureListener(|pressure_val| {
@@ -72,6 +83,7 @@ impl<F: Fn(i32)> Upcall<OneId<DRIVER_NUM, 0>> for SoundPressureListener<F> {
 
 #[cfg(test)]
 mod tests;
+
 // -----------------------------------------------------------------------------
 // Driver number and command IDs
 // -----------------------------------------------------------------------------
@@ -79,5 +91,6 @@ mod tests;
 const DRIVER_NUM: u32 = 0x60006;
 
 // Command IDs
+
 const EXISTS: u32 = 0;
 const READ_PRESSURE: u32 = 1;

@@ -1,3 +1,6 @@
+//! This example shows how to use the sound pressure driver.
+//! It checks for the sound pressure driver and samples the sensor every second.
+
 #![no_main]
 #![no_std]
 
