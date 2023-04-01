@@ -177,8 +177,7 @@ impl<S: Syscalls> NineDof<S> {
                 let x = data.x as f64;
                 let y = data.y as f64;
                 let z = data.z as f64;
-                let mag = sqrt(x * x + y * y + z * z);
-                mag
+                sqrt(x * x + y * y + z * z)
             }
         }
     }
