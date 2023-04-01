@@ -44,3 +44,9 @@ pub mod temperature {
     pub type Temperature = temperature::Temperature<super::runtime::TockSyscalls>;
     pub use temperature::TemperatureListener;
 }
+
+pub mod ninedof {
+    use libtock_ninedof as ninedof;
+    pub type NineDof = ninedof::NineDof<super::runtime::TockSyscalls>;
+    pub use ninedof::NineDofListener;
+}
