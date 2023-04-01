@@ -1,7 +1,16 @@
+//! Fake implementation of the Buzzer API, documented here:
+//!
+//! Like the real API, `Buzzer` controls a fake buzzer. It provides
+//! a function `set_tone` used to immediately call an upcall with a tone set by the buzzer
+//! and a function 'set_tone_sync' used to call the upcall when the tone command is received.
+
 use crate::{DriverInfo, DriverShareRef};
 use libtock_platform::{CommandReturn, ErrorCode};
 use std::cell::Cell;
 
+// The `upcall_on_command` field is set to Some(value) if an upcall(with value as its argument) should be called when tone command is received,
+// or None otherwise. It was needed for testing `tone_sync` library function which simulates a synchronous tone set,
+// because it was impossible to schedule an upcall during the `synchronous` tone set in other ways.
 pub struct Buzzer {
     busy: Cell<bool>,
     upcall_on_command: [Cell<Option<i32>>; 2],

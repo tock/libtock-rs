@@ -1,3 +1,5 @@
+//! Implementation started by : https://github.com/teodorobert
+//! Continued and modified by : https://github.com/SheepSeb
 #![no_std]
 
 use core::cell::Cell;
@@ -8,12 +10,18 @@ use libtock_platform::{
 pub struct Buzzer<S: Syscalls>(S);
 
 impl<S: Syscalls> Buzzer<S> {
+    /// Returns Ok() if the driver was present.This does not necessarily mean
+    /// that the driver is working.
     pub fn exists() -> Result<(), ErrorCode> {
         S::command(DRIVER_NUM, EXISTS, 0, 0).to_result()
     }
+
+    /// Initiate a tone
     pub fn tone(freq: u32, duration: u32) -> Result<(), ErrorCode> {
         S::command(DRIVER_NUM, BUZZER_ON, freq, duration).to_result()
     }
+
+    /// Register an events listener
     pub fn register_listener<'share, F: Fn(i32)>(
         listener: &'share BuzzerListener<F>,
         subscribe: share::Handle<Subscribe<'share, S, DRIVER_NUM, 0>>,
@@ -21,10 +29,13 @@ impl<S: Syscalls> Buzzer<S> {
         S::subscribe::<_, _, DefaultConfig, DRIVER_NUM, 0>(subscribe, listener)
     }
 
+    /// Unregister the events listener
     pub fn unregister_listener() {
         S::unsubscribe(DRIVER_NUM, 0)
     }
 
+    /// Initiate a synchronous tone
+    /// Returns Ok() if the operation was successful
     pub fn tone_sync(freq: u32, duration: u32) -> Result<(), ErrorCode> {
         let buzzer_cell: Cell<Option<i32>> = Cell::new(None);
         let listener = BuzzerListener(|buzzer_val| {
@@ -56,6 +67,7 @@ impl<F: Fn(i32)> Upcall<OneId<DRIVER_NUM, 0>> for BuzzerListener<F> {
 
 #[cfg(test)]
 mod tests;
+
 // -----------------------------------------------------------------------------
 // Driver number and command IDs
 // -----------------------------------------------------------------------------
@@ -66,6 +78,7 @@ const DRIVER_NUM: u32 = 0x90000;
 const EXISTS: u32 = 0;
 const BUZZER_ON: u32 = 1;
 
+/// The notes that can be played by the buzzer
 #[allow(unused)]
 pub mod note {
     pub const B0: u32 = 31;

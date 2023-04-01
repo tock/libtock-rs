@@ -1,3 +1,4 @@
+//! Implementation done by : https://github.com/teodorobert
 //! A simple libtock-rs example. Plays Ode of Joy using the buzzer.
 #![no_main]
 #![no_std]
