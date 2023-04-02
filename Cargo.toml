@@ -42,6 +42,7 @@ members = [
     "apis/leds",
     "apis/low_level_debug",
     "apis/temperature",
+    "apis/ninedof",
     "panic_handlers/debug_panic",
     "panic_handlers/small_panic",
     "platform",
