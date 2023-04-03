@@ -84,3 +84,4 @@ fn kernel_integration() {
         assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::Upcall);
     })
 }
+

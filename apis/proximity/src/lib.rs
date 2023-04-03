@@ -56,8 +56,9 @@ impl<S: Syscalls> Proximity<S> {
     /// proximity_value < lower or proximity_value > upper
     /// lower - lower interrupt threshold for sensor --> range is [0,255]
     /// upper - upper interrupt threshold for sensor --> range is [0,255]
+    /// lower <= upper
     pub fn read_proximity_on_interrupt(lower: u32, upper: u32) -> Result<(), ErrorCode> {
-        if lower > 255 || upper > 255 {
+        if lower > 255 || upper > 255 || lower > upper {
             return Err(ErrorCode::Invalid);
         }
         S::command(DRIVER_NUM, READ_ON_INT, lower, upper).to_result()
@@ -70,8 +71,9 @@ impl<S: Syscalls> Proximity<S> {
     /// Returns only when proximity_value < lower or proximity_value > upper
     /// lower - lower interrupt threshold for sensor --> range is [0,255]
     /// upper - upper interrupt threshold for sensor --> range is [0,255]
+    /// lower <= upper
     pub fn read_proximity_on_interrupt_sync(lower: u32, upper: u32) -> Result<u8, ErrorCode> {
-        if lower > 255 || upper > 255 {
+        if lower > 255 || upper > 255 || lower > upper {
             return Err(ErrorCode::Invalid);
         }
         let listener: Cell<Option<(u32,)>> = Cell::new(None);
@@ -90,6 +92,9 @@ impl<S: Syscalls> Proximity<S> {
     }
 }
 
+#[cfg(test)]
+mod tests;
+
 // -----------------------------------------------------------------------------
 // Driver number and command IDs
 // -----------------------------------------------------------------------------
@@ -101,3 +106,4 @@ const DRIVER_NUM: u32 = 0x60005;
 const EXISTS: u32 = 0;
 const READ: u32 = 1;
 const READ_ON_INT: u32 = 2;
+
