@@ -6,6 +6,9 @@ use libtock_platform::{
 };
 use ReadType::{ReadCO2, ReadTVOC};
 
+#[cfg(test)]
+mod tests;
+
 enum ReadType {
     ReadCO2 = READ_CO2 as isize,
     ReadTVOC = READ_TVOC as isize,
