@@ -10,7 +10,7 @@ use std::cell::Cell;
 use crate::{DriverInfo, DriverShareRef};
 use libtock_platform::{CommandReturn, ErrorCode};
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum ProximityCommand {
     ReadProximity = 1,
     ReadProximityOnInterrupt = 2,
