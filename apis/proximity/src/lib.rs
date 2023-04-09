@@ -27,7 +27,7 @@ impl<S: Syscalls> Proximity<S> {
     }
 
     /// Initiate a proximity measurement
-    pub fn read_proximity() -> Result<(), ErrorCode> {
+    pub fn read() -> Result<(), ErrorCode> {
         S::command(DRIVER_NUM, READ, 0, 0).to_result()
     }
 
@@ -35,11 +35,11 @@ impl<S: Syscalls> Proximity<S> {
     /// Returns Ok(proximity_value) if the operation was successful
     /// proximity_value is in [0, 255] range,
     /// where '255' indicates the closest measurable distance and '0' that no object is detected
-    pub fn read_proximity_sync() -> Result<u8, ErrorCode> {
+    pub fn read_sync() -> Result<u8, ErrorCode> {
         let listener: Cell<Option<(u32,)>> = Cell::new(None);
         share::scope(|subscribe| {
             if let Ok(()) = Self::register_listener(&listener, subscribe) {
-                if let Ok(()) = Self::read_proximity() {
+                if let Ok(()) = Self::read() {
                     S::yield_wait();
                 }
             }
@@ -52,16 +52,13 @@ impl<S: Syscalls> Proximity<S> {
     }
 
     /// Initiate an on_interrupt proximity measurement
-    /// Executes the callback only if
+    /// The sensor reads values continuously and executes the callback only if
     /// proximity_value < lower or proximity_value > upper
     /// lower - lower interrupt threshold for sensor --> range is [0,255]
     /// upper - upper interrupt threshold for sensor --> range is [0,255]
     /// lower <= upper
-    pub fn read_proximity_on_interrupt(lower: u32, upper: u32) -> Result<(), ErrorCode> {
-        if lower > 255 || upper > 255 || lower > upper {
-            return Err(ErrorCode::Invalid);
-        }
-        S::command(DRIVER_NUM, READ_ON_INT, lower, upper).to_result()
+    pub fn read_on_interrupt(lower: u8, upper: u8) -> Result<(), ErrorCode> {
+        S::command(DRIVER_NUM, READ_ON_INT, lower as u32, upper as u32).to_result()
     }
 
     /// Initiate a synchronous on_interrupt proximity measurement.
@@ -72,14 +69,14 @@ impl<S: Syscalls> Proximity<S> {
     /// lower - lower interrupt threshold for sensor --> range is [0,255]
     /// upper - upper interrupt threshold for sensor --> range is [0,255]
     /// lower <= upper
-    pub fn read_proximity_on_interrupt_sync(lower: u32, upper: u32) -> Result<u8, ErrorCode> {
-        if lower > 255 || upper > 255 || lower > upper {
+    pub fn wait_for_value_between(lower: u8, upper: u8) -> Result<u8, ErrorCode> {
+        if lower > upper {
             return Err(ErrorCode::Invalid);
         }
         let listener: Cell<Option<(u32,)>> = Cell::new(None);
         share::scope(|subscribe| {
             if let Ok(()) = Self::register_listener(&listener, subscribe) {
-                if let Ok(()) = Self::read_proximity_on_interrupt(lower, upper) {
+                if let Ok(()) = Self::read_on_interrupt(lower, upper) {
                     S::yield_wait();
                 }
             }
@@ -106,4 +103,3 @@ const DRIVER_NUM: u32 = 0x60005;
 const EXISTS: u32 = 0;
 const READ: u32 = 1;
 const READ_ON_INT: u32 = 2;
-
