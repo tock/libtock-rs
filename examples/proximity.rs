@@ -17,7 +17,7 @@ stack_size! {0x200}
 fn main() {
     match Proximity::exists() {
         Ok(()) => {
-            writeln!(Console::writer(), "proximity driver available");
+            writeln!(Console::writer(), "proximity driver available").unwrap();
             loop {
                 match Proximity::read_sync() {
                     Ok(prox_val) => {
