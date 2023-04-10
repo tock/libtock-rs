@@ -77,7 +77,9 @@ impl<S: Syscalls> Proximity<S> {
         share::scope(|subscribe| {
             if let Ok(()) = Self::register_listener(&listener, subscribe) {
                 if let Ok(()) = Self::read_on_interrupt(lower, upper) {
-                    S::yield_wait();
+                    while listener.get() == None {
+                        S::yield_wait();
+                    }
                 }
             }
         });
