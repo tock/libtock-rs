@@ -20,31 +20,28 @@ fn driver_check() {
 }
 
 #[test]
+fn driver_busy() {
+    let kernel = fake::Kernel::new();
+    let driver = fake::SoundPressure::new();
+    kernel.add_driver(&driver);
+
+    assert_eq!(SoundPressure::read(), Ok(()));
+    assert!(driver.is_busy());
+
+    assert_eq!(SoundPressure::read(), Err(ErrorCode::Busy));
+    assert_eq!(SoundPressure::read_sync(), Err(ErrorCode::Busy));
+}
+
+#[test]
 fn read_pressure() {
     let kernel = fake::Kernel::new();
     let driver = fake::SoundPressure::new();
     kernel.add_driver(&driver);
 
-    assert_eq!(SoundPressure::read_pressure(), Ok(()));
-    assert!(driver.is_busy());
-
-    assert_eq!(SoundPressure::read_pressure(), Err(ErrorCode::Busy));
-    assert_eq!(SoundPressure::read_pressure_sync(), Err(ErrorCode::Busy));
-}
-
-#[test]
-fn register_unregister_listener() {
-    let kernel = fake::Kernel::new();
-    let driver = fake::SoundPressure::new();
-    kernel.add_driver(&driver);
-
-    let pressure_cell: Cell<Option<i32>> = Cell::new(None);
-    let listener = crate::SoundPressureListener(|pressure_val| {
-        pressure_cell.set(Some(pressure_val));
-    });
+    let listener = Cell::new(None);
 
     share::scope(|subscribe| {
-        assert_eq!(SoundPressure::read_pressure(), Ok(()));
+        assert_eq!(SoundPressure::read(), Ok(()));
         driver.set_value(100);
         assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::NoUpcall);
 
@@ -52,13 +49,13 @@ fn register_unregister_listener() {
             SoundPressure::register_listener(&listener, subscribe),
             Ok(())
         );
-        assert_eq!(SoundPressure::read_pressure(), Ok(()));
+        assert_eq!(SoundPressure::read(), Ok(()));
         driver.set_value(100);
         assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::Upcall);
-        assert_eq!(pressure_cell.get(), Some(100));
+        assert_eq!(listener.get(), Some((100,)));
 
         SoundPressure::unregister_listener();
-        assert_eq!(SoundPressure::read_pressure(), Ok(()));
+        assert_eq!(SoundPressure::read(), Ok(()));
         driver.set_value(100);
         assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::NoUpcall);
     });
@@ -71,7 +68,7 @@ fn read_pressure_sync() {
     kernel.add_driver(&driver);
 
     driver.set_value_sync(100);
-    assert_eq!(SoundPressure::read_pressure_sync(), Ok(100));
+    assert_eq!(SoundPressure::read_sync(), Ok(100));
 }
 
 #[test]
@@ -81,7 +78,7 @@ fn negative_value() {
     kernel.add_driver(&driver);
 
     driver.set_value_sync(-100);
-    assert_eq!(SoundPressure::read_pressure_sync(), Err(ErrorCode::Fail));
+    assert_eq!(SoundPressure::read_sync(), Err(ErrorCode::Fail));
 }
 
 #[test]
@@ -91,5 +88,5 @@ fn large_value() {
     kernel.add_driver(&driver);
 
     driver.set_value_sync(100000);
-    assert_eq!(SoundPressure::read_pressure_sync(), Err(ErrorCode::Fail));
+    assert_eq!(SoundPressure::read_sync(), Err(ErrorCode::Fail));
 }
