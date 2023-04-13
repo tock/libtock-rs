@@ -6,7 +6,8 @@ pub struct AirQuality {
     busy: Cell<bool>,
     co2_available: Cell<bool>,
     tvoc_available: Cell<bool>,
-    upcall_on_command: Cell<Option<u32>>,
+    upcall_on_read: Cell<Option<u32>>,
+    upcall_on_tuple_read: Cell<Option<(u32, u32)>>,
     share_ref: DriverShareRef,
 }
 
@@ -16,7 +17,8 @@ impl AirQuality {
             busy: Cell::new(false),
             co2_available: Cell::new(true),
             tvoc_available: Cell::new(true),
-            upcall_on_command: Cell::new(None),
+            upcall_on_read: Cell::new(None),
+            upcall_on_tuple_read: Cell::new(None),
             share_ref: Default::default(),
         })
     }
@@ -42,7 +44,10 @@ impl AirQuality {
         }
     }
     pub fn set_value_sync(&self, value: u32) {
-        self.upcall_on_command.set(Some(value));
+        self.upcall_on_read.set(Some(value));
+    }
+    pub fn set_values_sync(&self, co2_value: u32, tvoc_value: u32) {
+        self.upcall_on_tuple_read.set(Some((co2_value, tvoc_value)));
     }
 }
 
@@ -67,9 +72,13 @@ impl crate::fake::SyscallDriver for AirQuality {
                 }
 
                 self.busy.set(true);
-                if let Some(val) = self.upcall_on_command.take() {
+                if let Some(val) = self.upcall_on_read.take() {
                     self.set_value(val);
                 }
+                if let Some((co2_val, _)) = self.upcall_on_tuple_read.get() {
+                    self.set_value(co2_val);
+                }
+
                 crate::command_return::success()
             }
             READ_TVOC => {
@@ -81,9 +90,13 @@ impl crate::fake::SyscallDriver for AirQuality {
                 }
 
                 self.busy.set(true);
-                if let Some(val) = self.upcall_on_command.take() {
+                if let Some(val) = self.upcall_on_read.take() {
                     self.set_value(val);
                 }
+                if let Some((_, tvoc_val)) = self.upcall_on_tuple_read.take() {
+                    self.set_value(tvoc_val);
+                }
+
                 crate::command_return::success()
             }
             _ => crate::command_return::failure(ErrorCode::NoSupport),

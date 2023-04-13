@@ -104,3 +104,13 @@ fn read_tvoc_sync() {
     driver.set_value_sync(100);
     assert_eq!(AirQuality::read_tvoc_sync(), Ok(100));
 }
+
+#[test]
+fn read_sync() {
+    let kernel = fake::Kernel::new();
+    let driver = fake::AirQuality::new();
+    kernel.add_driver(&driver);
+
+    driver.set_values_sync(100, 200);
+    assert_eq!(AirQuality::read_sync(), Ok((100, 200)))
+}

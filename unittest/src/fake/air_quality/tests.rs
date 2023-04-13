@@ -95,7 +95,22 @@ fn kernel_integration() {
 
         driver.set_value_sync(200);
         assert!(fake::Syscalls::command(DRIVER_NUM, READ_CO2, 0, 0).is_success());
+        assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::Upcall);
+
+        assert!(fake::Syscalls::command(DRIVER_NUM, READ_TVOC, 0, 0).is_success());
+        assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::NoUpcall);
+        driver.set_value_sync(200);
+        assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::NoUpcall);
+        driver.set_value(100);
+        assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::Upcall);
+        assert_eq!(listener.get(), Some((100,)));
+
+        driver.set_values_sync(100, 200);
+        assert!(fake::Syscalls::command(DRIVER_NUM, READ_CO2, 0, 0).is_success());
+        assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::Upcall);
         assert!(fake::Syscalls::command(DRIVER_NUM, READ_TVOC, 0, 0).is_success());
         assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::Upcall);
+        assert!(fake::Syscalls::command(DRIVER_NUM, READ_CO2, 0, 0).is_success());
+        assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::NoUpcall);
     });
 }
