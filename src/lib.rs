@@ -6,6 +6,11 @@ extern crate libtock_debug_panic;
 pub use libtock_platform as platform;
 pub use libtock_runtime as runtime;
 
+pub mod adc {
+    use libtock_adc as adc;
+    pub type Adc = adc::Adc<super::runtime::TockSyscalls>;
+    pub use adc::{ADCListener};
+}
 pub mod alarm {
     use libtock_alarm as alarm;
     pub type Alarm = alarm::Alarm<super::runtime::TockSyscalls>;
