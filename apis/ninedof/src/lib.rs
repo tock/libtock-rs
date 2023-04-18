@@ -141,7 +141,7 @@ impl<S: Syscalls> NineDof<S> {
     /// Calculate the magnitude of the accelerometer reading
     /// Returns value of magnitude if the operation was successful
     /// Returns 0.0 if the operation was unsuccessful
-    pub fn ninedof_read_accel_mag() -> f64 {
+    pub fn read_accelerometer_mag() -> f64 {
         let data = Self::read_accelerometer_sync();
 
         match data {
