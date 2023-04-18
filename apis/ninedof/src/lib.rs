@@ -69,7 +69,7 @@ impl<S: Syscalls> NineDof<S> {
     /// Initiate a synchronous accelerometer measurement.
     /// Returns Ok(accelerometer_value) if the operation was successful
     /// Returns Err(ErrorCode) if the operation was unsuccessful
-    pub fn read_accelerometer_sync(x: &mut i32, y: &mut i32, z: &mut i32) -> Result<(), ErrorCode> {
+    pub fn read_accelerometer_sync() -> Result<NineDofData, ErrorCode> {
         let data_cell: Cell<Option<NineDofData>> = Cell::new(None);
         let listener = NineDofListener(|data| {
             data_cell.set(Some(data));
@@ -86,19 +86,14 @@ impl<S: Syscalls> NineDof<S> {
 
         match data_cell.get() {
             None => Err(ErrorCode::Busy),
-            Some(data) => {
-                *x = data.x;
-                *y = data.y;
-                *z = data.z;
-                Ok(())
-            }
+            Some(data) => Ok(data),
         }
     }
 
     /// Initiate a synchronous magnetometer measurement.
     /// Returns Ok(data) if the operation was successful
     /// Returns Err(ErrorCode) if the operation was unsuccessful
-    pub fn read_magnetometer_sync(x: &mut i32, y: &mut i32, z: &mut i32) -> Result<(), ErrorCode> {
+    pub fn read_magnetometer_sync() -> Result<NineDofData, ErrorCode> {
         let data_cell: Cell<Option<NineDofData>> = Cell::new(None);
         let listener = NineDofListener(|data| {
             data_cell.set(Some(data));
@@ -115,19 +110,14 @@ impl<S: Syscalls> NineDof<S> {
 
         match data_cell.get() {
             None => Err(ErrorCode::Busy),
-            Some(data) => {
-                *x = data.x;
-                *y = data.y;
-                *z = data.z;
-                Ok(())
-            }
+            Some(data) => Ok(data),
         }
     }
 
     /// Initiate a synchronous gyroscope measurement.
     /// Returns Ok(data) as NineDofData if the operation was successful
     /// Returns Err(ErrorCode) if the operation was unsuccessful
-    pub fn read_gyro_sync(x: &mut i32, y: &mut i32, z: &mut i32) -> Result<(), ErrorCode> {
+    pub fn read_gyroscope_sync() -> Result<NineDofData, ErrorCode> {
         let data_cell: Cell<Option<NineDofData>> = Cell::new(None);
         let listener = NineDofListener(|data| {
             data_cell.set(Some(data));
@@ -144,12 +134,7 @@ impl<S: Syscalls> NineDof<S> {
 
         match data_cell.get() {
             None => Err(ErrorCode::Busy),
-            Some(data) => {
-                *x = data.x;
-                *y = data.y;
-                *z = data.z;
-                Ok(())
-            }
+            Some(data) => Ok(data),
         }
     }
 
@@ -157,28 +142,16 @@ impl<S: Syscalls> NineDof<S> {
     /// Returns value of magnitude if the operation was successful
     /// Returns 0.0 if the operation was unsuccessful
     pub fn ninedof_read_accel_mag() -> f64 {
-        let data_cell: Cell<Option<NineDofData>> = Cell::new(None);
-        let listener = NineDofListener(|data| {
-            data_cell.set(Some(data));
-        });
-        share::scope(|subscribe| {
-            if let Ok(()) = Self::register_listener(&listener, subscribe) {
-                if let Ok(()) = Self::read_accelerometer() {
-                    while data_cell.get() == None {
-                        S::yield_wait();
-                    }
-                }
-            }
-        });
+        let data = Self::read_accelerometer_sync();
 
-        match data_cell.get() {
-            None => 0.0,
-            Some(data) => {
+        match data {
+            Ok(data) => {
                 let x = data.x as f64;
                 let y = data.y as f64;
                 let z = data.z as f64;
                 sqrt(x * x + y * y + z * z)
             }
+            Err(_) => 0.0,
         }
     }
 }

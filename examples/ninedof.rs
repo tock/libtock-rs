@@ -14,53 +14,58 @@ set_main! {main}
 stack_size! {0x2000}
 
 fn main() {
-    match NineDof::exists() {
-        Ok(()) => writeln!(Console::writer(), "ninedof driver available").unwrap(),
-        Err(_) => {
-            writeln!(Console::writer(), "ninedof driver unavailable").unwrap();
-            return;
-        }
+    if NineDof::exists().is_err() {
+        writeln!(Console::writer(), "NineDof driver unavailable").unwrap();
+        return;
     }
 
-    let mut x = 0;
-    let mut y = 0;
-    let mut z = 0;
-
+    writeln!(Console::writer(), "NineDof driver available").unwrap();
     loop {
-        match NineDof::read_accelerometer_sync(&mut x, &mut y, &mut z) {
-            Ok(_data) => writeln!(
-                Console::writer(),
-                "Accelerometer: x: {}, y: {}, z: {}",
-                x,
-                y,
-                z
-            )
-            .unwrap(),
+        let accelerometer_data = NineDof::read_accelerometer_sync();
+        let magnetomer_data = NineDof::read_magnetometer_sync();
+        let gyroscope_data = NineDof::read_gyroscope_sync();
+
+        match accelerometer_data {
+            Ok(data) => {
+                writeln!(
+                    Console::writer(),
+                    "Accelerometer: x: {}, y: {}, z: {}",
+                    data.x,
+                    data.y,
+                    data.z
+                )
+                .unwrap();
+            }
             Err(_) => writeln!(Console::writer(), "error while reading accelerometer").unwrap(),
         }
 
-        match NineDof::read_gyro_sync(&mut x, &mut y, &mut z) {
-            Ok(_data) => {
-                writeln!(Console::writer(), "Gyroscope: x: {}, y: {}, z: {}", x, y, z).unwrap()
+        match magnetomer_data {
+            Ok(data) => {
+                writeln!(
+                    Console::writer(),
+                    "Magnetometer: x: {}, y: {}, z: {}",
+                    data.x,
+                    data.y,
+                    data.z
+                )
+                .unwrap();
             }
-            Err(_) => writeln!(Console::writer(), "error while reading gyroscope").unwrap(),
-        }
-
-        match NineDof::read_magnetometer_sync(&mut x, &mut y, &mut z) {
-            Ok(_data) => writeln!(
-                Console::writer(),
-                "Magnetometer: x: {}, y: {}, z: {}",
-                x,
-                y,
-                z
-            )
-            .unwrap(),
             Err(_) => writeln!(Console::writer(), "error while reading magnetometer").unwrap(),
         }
 
-        let acc_mag = NineDof::ninedof_read_accel_mag();
-        writeln!(Console::writer(), "Magnitude of acceleration: {}", acc_mag).unwrap();
-
+        match gyroscope_data {
+            Ok(data) => {
+                writeln!(
+                    Console::writer(),
+                    "Gyroscope: x: {}, y: {}, z: {}",
+                    data.x,
+                    data.y,
+                    data.z
+                )
+                .unwrap();
+            }
+            Err(_) => writeln!(Console::writer(), "error while reading gyroscope").unwrap(),
+        }
         Alarm::sleep_for(Milliseconds(700)).unwrap();
     }
 }
