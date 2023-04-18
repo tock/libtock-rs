@@ -1,9 +1,7 @@
 #![no_std]
 
 use core::cell::Cell;
-use libtock_platform::{
-    share, subscribe::OneId, DefaultConfig, ErrorCode, Subscribe, Syscalls, Upcall,
-};
+use libtock_platform::{share, DefaultConfig, ErrorCode, Subscribe, Syscalls};
 
 pub struct SoundPressure<S: Syscalls>(S);
 
@@ -70,14 +68,6 @@ impl<S: Syscalls> SoundPressure<S> {
         }
     }
 }
-
-pub struct SoundPressureListener<F: Fn(i32)>(pub F);
-impl<F: Fn(i32)> Upcall<OneId<DRIVER_NUM, 0>> for SoundPressureListener<F> {
-    fn upcall(&self, pressure_val: u32, _arg1: u32, _arg2: u32) {
-        (self.0)(pressure_val as i32);
-    }
-}
-
 #[cfg(test)]
 mod tests;
 

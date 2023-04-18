@@ -48,5 +48,4 @@ pub mod temperature {
 pub mod sound_pressure {
     use libtock_sound_pressure as sound_pressure;
     pub type SoundPressure = sound_pressure::SoundPressure<super::runtime::TockSyscalls>;
-    pub use sound_pressure::SoundPressureListener;
 }
