@@ -10,6 +10,7 @@ repository = "https://www.github.com/tock/libtock-rs"
 version = "0.1.0"
 
 [dependencies]
+libtock_air_quality = { path = "apis/air_quality" }
 libtock_alarm = { path = "apis/alarm" }
 libtock_buttons = { path = "apis/buttons" }
 libtock_console = { path = "apis/console" }
@@ -20,7 +21,6 @@ libtock_low_level_debug = { path = "apis/low_level_debug" }
 libtock_platform = { path = "platform" }
 libtock_runtime = { path = "runtime" }
 libtock_temperature = { path = "apis/temperature" }
-libtock_air_quality = { path = "apis/air_quality" }
 
 [profile.dev]
 panic = "abort"
@@ -35,6 +35,7 @@ debug = true
 [workspace]
 exclude = ["tock"]
 members = [
+    "apis/air_quality",
     "apis/alarm",
     "apis/gpio",
     "apis/buttons",
@@ -42,7 +43,6 @@ members = [
     "apis/leds",
     "apis/low_level_debug",
     "apis/temperature",
-    "apis/air_quality",
     "panic_handlers/debug_panic",
     "panic_handlers/small_panic",
     "platform",

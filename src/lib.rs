@@ -6,6 +6,11 @@ extern crate libtock_debug_panic;
 pub use libtock_platform as platform;
 pub use libtock_runtime as runtime;
 
+pub mod air_quality {
+    use libtock_air_quality as air_quality;
+    pub type AirQuality = air_quality::AirQuality<super::runtime::TockSyscalls>;
+}
+
 pub mod alarm {
     use libtock_alarm as alarm;
     pub type Alarm = alarm::Alarm<super::runtime::TockSyscalls>;
@@ -43,9 +48,4 @@ pub mod temperature {
     use libtock_temperature as temperature;
     pub type Temperature = temperature::Temperature<super::runtime::TockSyscalls>;
     pub use temperature::TemperatureListener;
-}
-
-pub mod air_quality {
-    use libtock_air_quality as air_quality;
-    pub type AirQuality = air_quality::AirQuality<super::runtime::TockSyscalls>;
 }
