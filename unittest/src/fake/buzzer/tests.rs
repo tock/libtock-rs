@@ -13,9 +13,9 @@ fn command() {
         Some(ErrorCode::Busy)
     );
 
-    buzzer.set_tone(100, 100);
+    buzzer.set_tone(100, Duration::from_millis(100));
     assert!(buzzer.command(TONE, 0, 1).is_success());
-    buzzer.set_tone(100, 100);
+    buzzer.set_tone(100, Duration::from_millis(100));
 
     buzzer.set_tone_sync(100, 100);
     assert!(buzzer.command(TONE, 0, 1).is_success());
@@ -35,7 +35,7 @@ fn kernel_integration() {
         fake::Syscalls::command(DRIVER_NUM, TONE, 0, 0).get_failure(),
         Some(ErrorCode::Busy)
     );
-    buzzer.set_tone(100, 100);
+    buzzer.set_tone(100, Duration::from_millis(100));
     assert!(fake::Syscalls::command(DRIVER_NUM, TONE, 0, 1).is_success());
 
     let listener = Cell::<Option<(u32,)>>::new(None);
@@ -45,15 +45,15 @@ fn kernel_integration() {
             Ok(())
         );
 
-        buzzer.set_tone(100, 100);
+        buzzer.set_tone(100, Duration::from_millis(100));
         assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::Upcall);
         assert_eq!(listener.get(), Some((100,)));
 
-        buzzer.set_tone(200, 100);
+        buzzer.set_tone(200, Duration::from_millis(100));
         assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::NoUpcall);
 
         assert!(fake::Syscalls::command(DRIVER_NUM, TONE, 0, 1).is_success());
-        buzzer.set_tone(200, 100);
+        buzzer.set_tone(200, Duration::from_millis(100));
         assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::Upcall);
         assert_eq!(listener.get(), Some((200,)));
     });

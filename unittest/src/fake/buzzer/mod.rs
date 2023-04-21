@@ -5,6 +5,7 @@
 //! and a function 'set_tone_sync' used to call the upcall when the tone command is received.
 
 use crate::{DriverInfo, DriverShareRef};
+use core::time::Duration;
 use libtock_platform::{CommandReturn, ErrorCode};
 use std::cell::Cell;
 
@@ -30,10 +31,10 @@ impl Buzzer {
         self.busy.get()
     }
 
-    pub fn set_tone(&self, freq: i32, duration: i32) {
+    pub fn set_tone(&self, freq: i32, duration: Duration) {
         if self.busy.get() {
             self.share_ref
-                .schedule_upcall(0, (freq as u32, duration as u32, 0))
+                .schedule_upcall(0, (freq as u32, duration.as_millis() as u32, 0))
                 .expect("Unable to schedule upcall");
             self.busy.set(false);
         }
@@ -64,7 +65,7 @@ impl crate::fake::SyscallDriver for Buzzer {
                 self.busy.set(true);
                 if let Some(freq) = self.upcall_on_command[0].take() {
                     if let Some(duration) = self.upcall_on_command[1].take() {
-                        self.set_tone(freq, duration);
+                        self.set_tone(freq, Duration::from_millis(duration as u64));
                     }
                 }
                 crate::command_return::success()
