@@ -3,10 +3,9 @@
 #![no_std]
 
 use core::cell::Cell;
+use core::time::Duration;
 
-use libtock_platform::{
-    share, subscribe::OneId, DefaultConfig, ErrorCode, Subscribe, Syscalls, Upcall,
-};
+use libtock_platform::{share, DefaultConfig, ErrorCode, Subscribe, Syscalls};
 pub struct Buzzer<S: Syscalls>(S);
 
 impl<S: Syscalls> Buzzer<S> {
@@ -17,13 +16,13 @@ impl<S: Syscalls> Buzzer<S> {
     }
 
     /// Initiate a tone
-    pub fn tone(freq: u32, duration: u32) -> Result<(), ErrorCode> {
-        S::command(DRIVER_NUM, BUZZER_ON, freq, duration).to_result()
+    pub fn tone(freq: u32, duration: Duration) -> Result<(), ErrorCode> {
+        S::command(DRIVER_NUM, BUZZER_ON, freq, duration.as_millis() as u32).to_result()
     }
 
     /// Register an events listener
-    pub fn register_listener<'share, F: Fn(i32)>(
-        listener: &'share BuzzerListener<F>,
+    pub fn register_listener<'share>(
+        listener: &'share Cell<Option<(u32,)>>,
         subscribe: share::Handle<Subscribe<'share, S, DRIVER_NUM, 0>>,
     ) -> Result<(), ErrorCode> {
         S::subscribe::<_, _, DefaultConfig, DRIVER_NUM, 0>(subscribe, listener)
@@ -36,32 +35,22 @@ impl<S: Syscalls> Buzzer<S> {
 
     /// Initiate a synchronous tone
     /// Returns Ok() if the operation was successful
-    pub fn tone_sync(freq: u32, duration: u32) -> Result<(), ErrorCode> {
-        let buzzer_cell: Cell<Option<i32>> = Cell::new(None);
-        let listener = BuzzerListener(|buzzer_val| {
-            buzzer_cell.set(Some(buzzer_val));
-        });
+    pub fn tone_sync(freq: u32, duration: Duration) -> Result<u32, ErrorCode> {
+        let listener = Cell::new(Some((0,)));
         share::scope(|subscribe| {
             if let Ok(()) = Self::register_listener(&listener, subscribe) {
                 if let Ok(()) = Self::tone(freq, duration) {
-                    while buzzer_cell.get() == None {
+                    while listener.get() == None {
                         S::yield_wait();
                     }
                 }
             }
         });
 
-        match buzzer_cell.get() {
+        match listener.get() {
             None => Err(ErrorCode::Busy),
-            Some(_buzzer_val) => Ok(()),
+            Some(buzzer_val) => Ok(buzzer_val.0),
         }
-    }
-}
-
-pub struct BuzzerListener<F: Fn(i32)>(pub F);
-impl<F: Fn(i32)> Upcall<OneId<DRIVER_NUM, 0>> for BuzzerListener<F> {
-    fn upcall(&self, _arg0: u32, _arg1: u32, _arg2: u32) {
-        (self.0)(_arg0 as i32);
     }
 }
 
