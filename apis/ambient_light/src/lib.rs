@@ -1,13 +1,11 @@
 #![no_std]
 
 use core::cell::Cell;
-use libtock_platform::{
-    share, DefaultConfig, ErrorCode, Subscribe, Syscalls,
-};
+use libtock_platform::{share, DefaultConfig, ErrorCode, Subscribe, Syscalls};
 
 pub struct AmbientLight<S: Syscalls>(S);
 
-impl <S: Syscalls> AmbientLight<S> {
+impl<S: Syscalls> AmbientLight<S> {
     /// Returns Ok() if the driver was present.This does not necessarily mean
     /// that the driver is working.
     pub fn exists() -> Result<(), ErrorCode> {

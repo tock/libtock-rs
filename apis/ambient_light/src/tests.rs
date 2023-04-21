@@ -44,7 +44,10 @@ fn register_unregister_listener() {
         driver.set_value(100);
         assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::NoUpcall);
 
-        assert_eq!(AmbientLight::register_listener(&intensity_listener, subscribe), Ok(()));
+        assert_eq!(
+            AmbientLight::register_listener(&intensity_listener, subscribe),
+            Ok(())
+        );
         assert_eq!(AmbientLight::read_intensity(), Ok(()));
         driver.set_value(100);
         assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::Upcall);
