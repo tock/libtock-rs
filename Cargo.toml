@@ -18,6 +18,7 @@ libtock_gpio = { path = "apis/gpio" }
 libtock_leds = { path = "apis/leds" }
 libtock_low_level_debug = { path = "apis/low_level_debug" }
 libtock_platform = { path = "platform" }
+libtock_proximity = { path = "apis/proximity" }
 libtock_runtime = { path = "runtime" }
 libtock_temperature = { path = "apis/temperature" }
 libtock_ninedof = { path = "apis/ninedof" }
@@ -41,6 +42,7 @@ members = [
     "apis/console",
     "apis/leds",
     "apis/low_level_debug",
+    "apis/proximity",
     "apis/temperature",
     "apis/ninedof",
     "panic_handlers/debug_panic",
