@@ -40,6 +40,6 @@ fn main() {
                 Alarm::sleep_for(Milliseconds(1000)).unwrap();
             }
         }
-        Err(e) => writeln!(Console::writer(), "Sound pressure driver enable failed",).unwrap(),
+        Err(_e) => writeln!(Console::writer(), "Sound pressure driver enable failed",).unwrap(),
     }
 }
