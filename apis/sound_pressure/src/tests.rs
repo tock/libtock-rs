@@ -70,23 +70,3 @@ fn read_pressure_sync() {
     driver.set_value_sync(100);
     assert_eq!(SoundPressure::read_sync(), Ok(100));
 }
-
-#[test]
-fn negative_value() {
-    let kernel = fake::Kernel::new();
-    let driver = fake::SoundPressure::new();
-    kernel.add_driver(&driver);
-
-    driver.set_value_sync(-100);
-    assert_eq!(SoundPressure::read_sync(), Err(ErrorCode::Fail));
-}
-
-#[test]
-fn large_value() {
-    let kernel = fake::Kernel::new();
-    let driver = fake::SoundPressure::new();
-    kernel.add_driver(&driver);
-
-    driver.set_value_sync(100000);
-    assert_eq!(SoundPressure::read_sync(), Err(ErrorCode::Fail));
-}

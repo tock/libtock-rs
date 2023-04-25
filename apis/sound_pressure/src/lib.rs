@@ -1,6 +1,6 @@
 #![no_std]
 
-use core::cell::Cell;
+use core::{cell::Cell, convert::TryInto};
 use libtock_platform::{share, DefaultConfig, ErrorCode, Subscribe, Syscalls};
 
 pub struct SoundPressure<S: Syscalls>(S);
@@ -43,26 +43,29 @@ impl<S: Syscalls> SoundPressure<S> {
 
     /// Initiate a synchronous pressure measurement.
     /// Returns Ok(pressure_value) if the operation was successful
-    /// pressure_value is between 0 and 256
+    /// pressure_value is between 0 and 255
     pub fn read_sync() -> Result<u8, ErrorCode> {
         let listener: Cell<Option<(u32,)>> = Cell::new(None);
-        share::scope(|subscribe| {
-            if let Ok(()) = Self::register_listener(&listener, subscribe) {
-                if let Ok(()) = Self::read() {
+        let err: Result<u8, ErrorCode> = share::scope(|subscribe| {
+            Self::register_listener(&listener, subscribe)?;
+            {
+                Self::read()?;
+                {
                     while listener.get() == None {
                         S::yield_wait();
                     }
+                    Ok(listener.get().unwrap().0.try_into().unwrap())
                 }
             }
         });
 
         match listener.get() {
-            None => Err(ErrorCode::Busy),
+            None => err,
             Some(pressure_val) => {
                 if !(0..=256).contains(&pressure_val.0) {
                     Err(ErrorCode::Fail)
                 } else {
-                    Ok(pressure_val.0 as u8)
+                    pressure_val.0.try_into().map_err(|_e| ErrorCode::Invalid)
                 }
             }
         }
