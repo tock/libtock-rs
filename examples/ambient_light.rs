@@ -15,12 +15,9 @@ set_main! {main}
 stack_size! {0x200}
 
 fn main() {
-    match AmbientLight::exists() {
-        Ok(()) => writeln!(Console::writer(), "ambient light driver available").unwrap(),
-        Err(_) => {
-            writeln!(Console::writer(), "ambient light driver unavailable").unwrap();
-            return;
-        }
+    if AmbientLight::exists().is_err() {
+        writeln!(Console::writer(), "ambient light driver unavailable").unwrap();
+        return;
     }
 
     loop {
