@@ -29,7 +29,7 @@ impl SoundPressure {
         self.busy.get()
     }
 
-    pub fn set_value(&self, value: i32) {
+    pub fn set_value(&self, value: u8) {
         if self.busy.get() {
             self.share_ref
                 .schedule_upcall(0, (value as u32, 0, 0))
@@ -62,7 +62,7 @@ impl crate::fake::SyscallDriver for SoundPressure {
                 }
                 self.busy.set(true);
                 if let Some(val) = self.upcall_on_command.take() {
-                    self.set_value(val);
+                    self.set_value(val as u8);
                 }
                 crate::command_return::success()
             }
