@@ -46,29 +46,33 @@ impl<S: Syscalls> SoundPressure<S> {
     /// pressure_value is between 0 and 255
     pub fn read_sync() -> Result<u8, ErrorCode> {
         let listener: Cell<Option<(u32,)>> = Cell::new(None);
-        let err: Result<u8, ErrorCode> = share::scope(|subscribe| {
-            Self::register_listener(&listener, subscribe)?;
-            {
-                Self::read()?;
-                {
-                    while listener.get() == None {
-                        S::yield_wait();
+        share::scope(|subscribe| {
+            let err = Self::register_listener(&listener, subscribe);
+            match err {
+                Ok(_) => {
+                    let err = Self::read();
+                    match err {
+                        Ok(_) => {
+                            let pressure_value;
+                            while listener.get() == None {
+                                S::yield_wait();
+                            }
+                            match listener.get() {
+                                Some((value,)) => {
+                                    if !(0..=256).contains(&value) {
+                                        return Err(ErrorCode::Fail);
+                                    }
+                                    Ok(value.try_into().unwrap().map_err(|_e| ErrorCode::Invalid))
+                                }
+                                None => Err(ErrorCode::Fail),
+                            }
+                        }
+                        Err(err) => Err(err),
                     }
-                    Ok(listener.get().unwrap().0.try_into().unwrap())
                 }
+                Err(err) => Err(err),
             }
-        });
-
-        match listener.get() {
-            None => err,
-            Some(pressure_val) => {
-                if !(0..=256).contains(&pressure_val.0) {
-                    Err(ErrorCode::Fail)
-                } else {
-                    pressure_val.0.try_into().map_err(|_e| ErrorCode::Invalid)
-                }
-            }
-        }
+        })
     }
 }
 #[cfg(test)]
