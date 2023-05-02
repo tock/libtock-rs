@@ -11,6 +11,7 @@ version = "0.1.0"
 
 [dependencies]
 libtock_alarm = { path = "apis/alarm" }
+libtock_ambient_light = { path = "apis/ambient_light" }
 libtock_buttons = { path = "apis/buttons" }
 libtock_console = { path = "apis/console" }
 libtock_debug_panic = { path = "panic_handlers/debug_panic" }
@@ -21,7 +22,6 @@ libtock_platform = { path = "platform" }
 libtock_proximity = { path = "apis/proximity" }
 libtock_runtime = { path = "runtime" }
 libtock_temperature = { path = "apis/temperature" }
-libtock_ambient_light = { path = "apis/ambient_light" }
 
 [profile.dev]
 panic = "abort"

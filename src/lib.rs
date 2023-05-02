@@ -6,14 +6,14 @@ extern crate libtock_debug_panic;
 pub use libtock_platform as platform;
 pub use libtock_runtime as runtime;
 
-pub mod ambient_light {
-    use libtock_ambient_light as ambient_light;
-    pub type AmbientLight = ambient_light::AmbientLight<super::runtime::TockSyscalls>;
-}
 pub mod alarm {
     use libtock_alarm as alarm;
     pub type Alarm = alarm::Alarm<super::runtime::TockSyscalls>;
     pub use alarm::{Convert, Hz, Milliseconds, Ticks};
+}
+pub mod ambient_light {
+    use libtock_ambient_light as ambient_light;
+    pub type AmbientLight = ambient_light::AmbientLight<super::runtime::TockSyscalls>;
 }
 pub mod buttons {
     use libtock_buttons as buttons;
