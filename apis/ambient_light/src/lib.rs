@@ -37,19 +37,17 @@ impl<S: Syscalls> AmbientLight<S> {
         let intensity_cell: Cell<Option<(u32,)>> = Cell::new(None);
 
         share::scope(|subscribe| {
-            if let Ok(()) = Self::register_listener(&intensity_cell, subscribe) {
-                if let Ok(()) = Self::read_intensity() {
-                    while intensity_cell.get() == None {
-                        S::yield_wait();
-                    }
-                }
+            Self::register_listener(&intensity_cell, subscribe)?;
+            Self::read_intensity()?;
+            while intensity_cell.get() == None {
+                S::yield_wait();
             }
-        });
 
-        match intensity_cell.get() {
-            None => Err(ErrorCode::Busy),
-            Some(intensity_val) => Ok(intensity_val.0),
-        }
+            match intensity_cell.get() {
+                None => Err(ErrorCode::Busy),
+                Some(intensity_val) => Ok(intensity_val.0),
+            }
+        })
     }
 }
 
