@@ -18,6 +18,7 @@ jobs:
         run: |
           make -j2 EXAMPLE=leds apollo3
           make -j2 EXAMPLE=leds hail
+          make -j2 EXAMPLE=leds imix
           make -j2 EXAMPLE=leds nucleo_f429zi
           make -j2 EXAMPLE=leds nucleo_f446re
           make -j2 EXAMPLE=leds nrf52840
@@ -29,6 +30,7 @@ jobs:
         run: |
           make -j2 EXAMPLE=low_level_debug apollo3
           make -j2 EXAMPLE=low_level_debug hail
+          make -j2 EXAMPLE=low_level_debug imix
           make -j2 EXAMPLE=low_level_debug nucleo_f429zi
           make -j2 EXAMPLE=low_level_debug nucleo_f446re
           make -j2 EXAMPLE=low_level_debug nrf52840
