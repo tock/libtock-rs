@@ -74,20 +74,19 @@ impl<S: Syscalls> NineDof<S> {
         let listener = NineDofListener(|data| {
             data_cell.set(Some(data));
         });
-        share::scope(|subscribe| {
-            if let Ok(()) = Self::register_listener(&listener, subscribe) {
-                if let Ok(()) = Self::read_accelerometer() {
-                    while data_cell.get() == None {
-                        S::yield_wait();
-                    }
-                }
+        let result_err = share::scope(|subscribe| {
+            Self::register_listener(&listener, subscribe)?;
+            Self::read_accelerometer()?;
+            while data_cell.get() == None {
+                S::yield_wait();
+            }
+            match data_cell.get() {
+                None => Err(ErrorCode::Fail),
+                Some(data) => Ok(data),
             }
         });
 
-        match data_cell.get() {
-            None => Err(ErrorCode::Busy),
-            Some(data) => Ok(data),
-        }
+        result_err
     }
 
     /// Initiate a synchronous magnetometer measurement.
@@ -98,20 +97,19 @@ impl<S: Syscalls> NineDof<S> {
         let listener = NineDofListener(|data| {
             data_cell.set(Some(data));
         });
-        share::scope(|subscribe| {
-            if let Ok(()) = Self::register_listener(&listener, subscribe) {
-                if let Ok(()) = Self::read_magnetometer() {
-                    while data_cell.get() == None {
-                        S::yield_wait();
-                    }
-                }
+        let result_err: Result<NineDofData, ErrorCode> = share::scope(|subscribe| {
+            Self::register_listener(&listener, subscribe)?;
+            Self::read_magnetometer()?;
+            while data_cell.get() == None {
+                S::yield_wait();
+            }
+            match data_cell.get() {
+                None => Err(ErrorCode::Fail),
+                Some(data) => Ok(data),
             }
         });
 
-        match data_cell.get() {
-            None => Err(ErrorCode::Busy),
-            Some(data) => Ok(data),
-        }
+        result_err
     }
 
     /// Initiate a synchronous gyroscope measurement.
@@ -122,20 +120,18 @@ impl<S: Syscalls> NineDof<S> {
         let listener = NineDofListener(|data| {
             data_cell.set(Some(data));
         });
-        share::scope(|subscribe| {
-            if let Ok(()) = Self::register_listener(&listener, subscribe) {
-                if let Ok(()) = Self::read_gyro() {
-                    while data_cell.get() == None {
-                        S::yield_wait();
-                    }
-                }
+        let result_err: Result<NineDofData, ErrorCode> = share::scope(|subscribe| {
+            Self::register_listener(&listener, subscribe)?;
+            Self::read_gyro()?;
+            while data_cell.get() == None {
+                S::yield_wait();
+            }
+            match data_cell.get() {
+                None => Err(ErrorCode::Fail),
+                Some(data) => Ok(data),
             }
         });
-
-        match data_cell.get() {
-            None => Err(ErrorCode::Busy),
-            Some(data) => Ok(data),
-        }
+        result_err
     }
 
     /// Calculate the magnitude of the accelerometer reading
