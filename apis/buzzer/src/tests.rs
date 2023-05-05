@@ -40,5 +40,5 @@ fn tone_sync() {
     let duration = Duration::from_millis(100);
 
     driver.set_tone_sync(1000, 100);
-    assert_eq!(Buzzer::tone_sync(1000, duration), Ok(0));
+    assert_eq!(Buzzer::tone_sync(1000, duration), Ok(()));
 }

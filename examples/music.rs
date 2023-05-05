@@ -4,7 +4,8 @@
 #![no_std]
 
 use core::fmt::Write;
-use libtock::buzzer::{note, Buzzer};
+use core::time::Duration;
+use libtock::buzzer::{Buzzer, Note};
 use libtock::console::Console;
 use libtock::runtime::{set_main, stack_size};
 
@@ -14,69 +15,69 @@ stack_size! {0x200}
 // Adapted from https://github.com/robsoncouto/arduino-songs
 
 // Notes in the form of (note_frequency, note_delay in musical terms)
-const MELODY: [(u32, i32); 62] = [
-    (note::E4, 4),
-    (note::E4, 4),
-    (note::F4, 4),
-    (note::G4, 4),
-    (note::G4, 4),
-    (note::F4, 4),
-    (note::E4, 4),
-    (note::D4, 4),
-    (note::C4, 4),
-    (note::C4, 4),
-    (note::D4, 4),
-    (note::E4, 4),
-    (note::E4, -4),
-    (note::D4, 8),
-    (note::D4, 2),
-    (note::E4, 4),
-    (note::E4, 4),
-    (note::F4, 4),
-    (note::G4, 4),
-    (note::G4, 4),
-    (note::F4, 4),
-    (note::E4, 4),
-    (note::D4, 4),
-    (note::C4, 4),
-    (note::C4, 4),
-    (note::D4, 4),
-    (note::E4, 4),
-    (note::D4, -4),
-    (note::C4, 8),
-    (note::C4, 2),
-    (note::D4, 4),
-    (note::D4, 4),
-    (note::E4, 4),
-    (note::C4, 4),
-    (note::D4, 4),
-    (note::E4, 8),
-    (note::F4, 8),
-    (note::E4, 4),
-    (note::C4, 4),
-    (note::D4, 4),
-    (note::E4, 8),
-    (note::F4, 8),
-    (note::E4, 4),
-    (note::D4, 4),
-    (note::C4, 4),
-    (note::D4, 4),
-    (note::G3, 2),
-    (note::E4, 4),
-    (note::E4, 4),
-    (note::F4, 4),
-    (note::G4, 4),
-    (note::G4, 4),
-    (note::F4, 4),
-    (note::E4, 4),
-    (note::D4, 4),
-    (note::C4, 4),
-    (note::C4, 4),
-    (note::D4, 4),
-    (note::E4, 4),
-    (note::D4, -4),
-    (note::C4, 8),
-    (note::C4, 2),
+const MELODY: [(Note, i32); 62] = [
+    (Note::E4, 4),
+    (Note::E4, 4),
+    (Note::F4, 4),
+    (Note::G4, 4),
+    (Note::G4, 4),
+    (Note::F4, 4),
+    (Note::E4, 4),
+    (Note::D4, 4),
+    (Note::C4, 4),
+    (Note::C4, 4),
+    (Note::D4, 4),
+    (Note::E4, 4),
+    (Note::E4, -4),
+    (Note::D4, 8),
+    (Note::D4, 2),
+    (Note::E4, 4),
+    (Note::E4, 4),
+    (Note::F4, 4),
+    (Note::G4, 4),
+    (Note::G4, 4),
+    (Note::F4, 4),
+    (Note::E4, 4),
+    (Note::D4, 4),
+    (Note::C4, 4),
+    (Note::C4, 4),
+    (Note::D4, 4),
+    (Note::E4, 4),
+    (Note::D4, -4),
+    (Note::C4, 8),
+    (Note::C4, 2),
+    (Note::D4, 4),
+    (Note::D4, 4),
+    (Note::E4, 4),
+    (Note::C4, 4),
+    (Note::D4, 4),
+    (Note::E4, 8),
+    (Note::F4, 8),
+    (Note::E4, 4),
+    (Note::C4, 4),
+    (Note::D4, 4),
+    (Note::E4, 8),
+    (Note::F4, 8),
+    (Note::E4, 4),
+    (Note::D4, 4),
+    (Note::C4, 4),
+    (Note::D4, 4),
+    (Note::G3, 2),
+    (Note::E4, 4),
+    (Note::E4, 4),
+    (Note::F4, 4),
+    (Note::G4, 4),
+    (Note::G4, 4),
+    (Note::F4, 4),
+    (Note::E4, 4),
+    (Note::D4, 4),
+    (Note::C4, 4),
+    (Note::C4, 4),
+    (Note::D4, 4),
+    (Note::E4, 4),
+    (Note::D4, -4),
+    (Note::C4, 8),
+    (Note::C4, 2),
 ];
 
 const TEMPO: u32 = 114;
@@ -91,7 +92,9 @@ fn main() {
     writeln!(Console::writer(), "Ode to Joy").unwrap();
 
     for (frequency, duration) in MELODY.iter() {
-        let mut note_duration = WHOLE_NOTE / duration.unsigned_abs();
+        let note_duration: Duration =
+            Duration::from_millis((WHOLE_NOTE / duration.unsigned_abs()) as u64);
+        // let mut note_duration = WHOLE_NOTE / duration.unsigned_abs();
         if duration < &0 {
             note_duration = note_duration * 15 / 10;
         }

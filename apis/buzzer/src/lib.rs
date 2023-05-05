@@ -5,7 +5,9 @@
 use core::cell::Cell;
 use core::time::Duration;
 
-use libtock_platform::{share, DefaultConfig, ErrorCode, Subscribe, Syscalls};
+use libtock_platform::{
+    share, subscribe::OneId, DefaultConfig, ErrorCode, Subscribe, Syscalls, Upcall,
+};
 pub struct Buzzer<S: Syscalls>(S);
 
 impl<S: Syscalls> Buzzer<S> {
@@ -35,22 +37,28 @@ impl<S: Syscalls> Buzzer<S> {
 
     /// Initiate a synchronous tone
     /// Returns Ok() if the operation was successful
-    pub fn tone_sync(freq: u32, duration: Duration) -> Result<u32, ErrorCode> {
+    pub fn tone_sync(freq: u32, duration: Duration) -> Result<(), ErrorCode> {
         let listener = Cell::new(Some((0,)));
-        share::scope(|subscribe| {
-            if let Ok(()) = Self::register_listener(&listener, subscribe) {
-                if let Ok(()) = Self::tone(freq, duration) {
-                    while listener.get() == None {
-                        S::yield_wait();
-                    }
-                }
+        let result_err: Result<(), ErrorCode> = share::scope(|subscribe| {
+            Self::register_listener(&listener, subscribe)?;
+            Self::tone(freq, duration)?;
+            while listener.get() == None {
+                S::yield_wait();
+            }
+            match listener.get() {
+                None => Err(ErrorCode::Fail),
+                Some(_) => Ok(()),
             }
         });
 
-        match listener.get() {
-            None => Err(ErrorCode::Busy),
-            Some(buzzer_val) => Ok(buzzer_val.0),
-        }
+        result_err
+    }
+}
+
+pub struct BuzzerListener<F: Fn(u32)>(pub F);
+impl<F: Fn(u32)> Upcall<OneId<DRIVER_NUM, 0>> for BuzzerListener<F> {
+    fn upcall(&self, _arg0: u32, _arg1: u32, _arg2: u32) {
+        (self.0)(_arg0);
     }
 }
 
@@ -69,94 +77,95 @@ const BUZZER_ON: u32 = 1;
 
 /// The notes that can be played by the buzzer
 #[allow(unused)]
-pub mod note {
-    pub const B0: u32 = 31;
-    pub const C1: u32 = 33;
-    pub const CS1: u32 = 35;
-    pub const D1: u32 = 37;
-    pub const DS1: u32 = 39;
-    pub const E1: u32 = 41;
-    pub const F1: u32 = 44;
-    pub const FS1: u32 = 46;
-    pub const G1: u32 = 49;
-    pub const GS1: u32 = 52;
-    pub const A1: u32 = 55;
-    pub const AS1: u32 = 58;
-    pub const B1: u32 = 62;
-    pub const C2: u32 = 65;
-    pub const CS2: u32 = 69;
-    pub const D2: u32 = 73;
-    pub const DS2: u32 = 78;
-    pub const E2: u32 = 82;
-    pub const F2: u32 = 87;
-    pub const FS2: u32 = 93;
-    pub const G2: u32 = 98;
-    pub const GS2: u32 = 104;
-    pub const A2: u32 = 110;
-    pub const AS2: u32 = 117;
-    pub const B2: u32 = 123;
-    pub const C3: u32 = 131;
-    pub const CS3: u32 = 139;
-    pub const D3: u32 = 147;
-    pub const DS3: u32 = 156;
-    pub const E3: u32 = 165;
-    pub const F3: u32 = 175;
-    pub const FS3: u32 = 185;
-    pub const G3: u32 = 196;
-    pub const GS3: u32 = 208;
-    pub const A3: u32 = 220;
-    pub const AS3: u32 = 233;
-    pub const B3: u32 = 247;
-    pub const C4: u32 = 262;
-    pub const CS4: u32 = 277;
-    pub const D4: u32 = 294;
-    pub const DS4: u32 = 311;
-    pub const E4: u32 = 330;
-    pub const F4: u32 = 349;
-    pub const FS4: u32 = 370;
-    pub const G4: u32 = 392;
-    pub const GS4: u32 = 415;
-    pub const A4: u32 = 440;
-    pub const AS4: u32 = 466;
-    pub const B4: u32 = 494;
-    pub const C5: u32 = 523;
-    pub const CS5: u32 = 554;
-    pub const D5: u32 = 587;
-    pub const DS5: u32 = 622;
-    pub const E5: u32 = 659;
-    pub const F5: u32 = 698;
-    pub const FS5: u32 = 740;
-    pub const G5: u32 = 784;
-    pub const GS5: u32 = 831;
-    pub const A5: u32 = 880;
-    pub const AS5: u32 = 932;
-    pub const B5: u32 = 988;
-    pub const C6: u32 = 1047;
-    pub const CS6: u32 = 1109;
-    pub const D6: u32 = 1175;
-    pub const DS6: u32 = 1245;
-    pub const E6: u32 = 1319;
-    pub const F6: u32 = 1397;
-    pub const FS6: u32 = 1480;
-    pub const G6: u32 = 1568;
-    pub const GS6: u32 = 1661;
-    pub const A6: u32 = 1760;
-    pub const AS6: u32 = 1865;
-    pub const B6: u32 = 1976;
-    pub const C7: u32 = 2093;
-    pub const CS7: u32 = 2217;
-    pub const D7: u32 = 2349;
-    pub const DS7: u32 = 2489;
-    pub const E7: u32 = 2637;
-    pub const F7: u32 = 2794;
-    pub const FS7: u32 = 2960;
-    pub const G7: u32 = 3136;
-    pub const GS7: u32 = 3322;
-    pub const A7: u32 = 3520;
-    pub const AS7: u32 = 3729;
-    pub const B7: u32 = 3951;
-    pub const C8: u32 = 4186;
-    pub const CS8: u32 = 4435;
-    pub const D8: u32 = 4699;
-    pub const DS8: u32 = 4978;
+#[repr(u32)]
+pub enum Note {
+    B0 = 31,
+    C1 = 33,
+    CS1 = 35,
+    D1 = 37,
+    DS1 = 39,
+    E1 = 41,
+    F1 = 44,
+    FS1 = 46,
+    G1 = 49,
+    GS1 = 52,
+    A1 = 55,
+    AS1 = 58,
+    B1 = 62,
+    C2 = 65,
+    CS2 = 69,
+    D2 = 73,
+    DS2 = 78,
+    E2 = 82,
+    F2 = 87,
+    FS2 = 93,
+    G2 = 98,
+    GS2 = 104,
+    A2 = 110,
+    AS2 = 117,
+    B2 = 123,
+    C3 = 131,
+    CS3 = 139,
+    D3 = 147,
+    DS3 = 156,
+    E3 = 165,
+    F3 = 175,
+    FS3 = 185,
+    G3 = 196,
+    GS3 = 208,
+    A3 = 220,
+    AS3 = 233,
+    B3 = 247,
+    C4 = 262,
+    CS4 = 277,
+    D4 = 294,
+    DS4 = 311,
+    E4 = 330,
+    F4 = 349,
+    FS4 = 370,
+    G4 = 392,
+    GS4 = 415,
+    A4 = 440,
+    AS4 = 466,
+    B4 = 494,
+    C5 = 523,
+    CS5 = 554,
+    D5 = 587,
+    DS5 = 622,
+    E5 = 659,
+    F5 = 698,
+    FS5 = 740,
+    G5 = 784,
+    GS5 = 831,
+    A5 = 880,
+    AS5 = 932,
+    B5 = 988,
+    C6 = 1047,
+    CS6 = 1109,
+    D6 = 1175,
+    DS6 = 1245,
+    E6 = 1319,
+    F6 = 1397,
+    FS6 = 1480,
+    G6 = 1568,
+    GS6 = 1661,
+    A6 = 1760,
+    AS6 = 1865,
+    B6 = 1976,
+    C7 = 2093,
+    CS7 = 2217,
+    D7 = 2349,
+    DS7 = 2489,
+    E7 = 2637,
+    F7 = 2794,
+    FS7 = 2960,
+    G7 = 3136,
+    GS7 = 3322,
+    A7 = 3520,
+    AS7 = 3729,
+    B7 = 3951,
+    C8 = 4186,
+    CS8 = 4435,
+    D8 = 4699,
+    DS8 = 4978,
 }
