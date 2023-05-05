@@ -51,7 +51,7 @@ impl<S: Syscalls> SoundPressure<S> {
         let listener = SoundPressureListener(|pressure_val| {
             pressure_cell.set(Some(pressure_val));
         });
-        let err: Result<u8, ErrorCode> = share::scope(|subscribe| {
+        share::scope(|subscribe| {
             Self::register_listener(&listener, subscribe)?;
             Self::read()?;
             while pressure_cell.get() == None {
@@ -67,9 +67,7 @@ impl<S: Syscalls> SoundPressure<S> {
                     }
                 }
             }
-        });
-
-        err
+        })
     }
 }
 
