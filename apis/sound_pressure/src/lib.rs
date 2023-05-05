@@ -1,7 +1,9 @@
 #![no_std]
 
 use core::{cell::Cell, convert::TryInto};
-use libtock_platform::{share, DefaultConfig, ErrorCode, Subscribe, Syscalls};
+use libtock_platform::{
+    share, subscribe::OneId, DefaultConfig, ErrorCode, Subscribe, Syscalls, Upcall,
+};
 
 pub struct SoundPressure<S: Syscalls>(S);
 
@@ -19,8 +21,8 @@ impl<S: Syscalls> SoundPressure<S> {
     }
 
     /// Register an events listener
-    pub fn register_listener<'share>(
-        listener: &'share Cell<Option<(u32,)>>,
+    pub fn register_listener<'share, F: Fn(u32)>(
+        listener: &'share SoundPressureListener<F>,
         subscribe: share::Handle<Subscribe<'share, S, DRIVER_NUM, 0>>,
     ) -> Result<(), ErrorCode> {
         S::subscribe::<_, _, DefaultConfig, DRIVER_NUM, 0>(subscribe, listener)
@@ -45,16 +47,19 @@ impl<S: Syscalls> SoundPressure<S> {
     /// Returns Ok(pressure_value) if the operation was successful
     /// pressure_value is between 0 and 255
     pub fn read_sync() -> Result<u8, ErrorCode> {
-        let listener: Cell<Option<(u32,)>> = Cell::new(None);
+        let pressure_cell: Cell<Option<u32>> = Cell::new(None);
+        let listener = SoundPressureListener(|pressure_val| {
+            pressure_cell.set(Some(pressure_val));
+        });
         let err: Result<u8, ErrorCode> = share::scope(|subscribe| {
             Self::register_listener(&listener, subscribe)?;
             Self::read()?;
-            while listener.get() == None {
+            while pressure_cell.get() == None {
                 S::yield_wait();
             }
-            match listener.get() {
+            match pressure_cell.get() {
                 None => Err(ErrorCode::Fail),
-                Some((pressure_val,)) => {
+                Some(pressure_val) => {
                     if !(0..=256).contains(&pressure_val) {
                         Err(ErrorCode::Fail)
                     } else {
@@ -67,6 +72,14 @@ impl<S: Syscalls> SoundPressure<S> {
         err
     }
 }
+
+pub struct SoundPressureListener<F: Fn(u32)>(pub F);
+impl<F: Fn(u32)> Upcall<OneId<DRIVER_NUM, 0>> for SoundPressureListener<F> {
+    fn upcall(&self, pressure_val: u32, _arg1: u32, _arg2: u32) {
+        (self.0)(pressure_val);
+    }
+}
+
 #[cfg(test)]
 mod tests;
 

@@ -38,7 +38,10 @@ fn read_pressure() {
     let driver = fake::SoundPressure::new();
     kernel.add_driver(&driver);
 
-    let listener = Cell::new(None);
+    let pressure_cell: Cell<Option<u32>> = Cell::new(None);
+    let listener = crate::SoundPressureListener(|pressure_val| {
+        pressure_cell.set(Some(pressure_val));
+    });
 
     share::scope(|subscribe| {
         assert_eq!(SoundPressure::read(), Ok(()));
@@ -52,7 +55,7 @@ fn read_pressure() {
         assert_eq!(SoundPressure::read(), Ok(()));
         driver.set_value(100);
         assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::Upcall);
-        assert_eq!(listener.get(), Some((100,)));
+        assert_eq!(pressure_cell.get(), Some(100));
 
         SoundPressure::unregister_listener();
         assert_eq!(SoundPressure::read(), Ok(()));
