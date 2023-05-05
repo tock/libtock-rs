@@ -23,8 +23,8 @@ impl<S: Syscalls> Buzzer<S> {
     }
 
     /// Register an events listener
-    pub fn register_listener<'share>(
-        listener: &'share Cell<Option<(u32,)>>,
+    pub fn register_listener<'share, F: Fn(u32)>(
+        listener: &'share BuzzerListener<F>,
         subscribe: share::Handle<Subscribe<'share, S, DRIVER_NUM, 0>>,
     ) -> Result<(), ErrorCode> {
         S::subscribe::<_, _, DefaultConfig, DRIVER_NUM, 0>(subscribe, listener)
@@ -38,20 +38,21 @@ impl<S: Syscalls> Buzzer<S> {
     /// Initiate a synchronous tone
     /// Returns Ok() if the operation was successful
     pub fn tone_sync(freq: u32, duration: Duration) -> Result<(), ErrorCode> {
-        let listener = Cell::new(Some((0,)));
-        let result_err: Result<(), ErrorCode> = share::scope(|subscribe| {
+        let buzzer_cell: Cell<Option<u32>> = Cell::new(None);
+        let listener = BuzzerListener(|buzzer_val| {
+            buzzer_cell.set(Some(buzzer_val));
+        });
+        share::scope(|subscribe| {
             Self::register_listener(&listener, subscribe)?;
             Self::tone(freq, duration)?;
-            while listener.get() == None {
+            while buzzer_cell.get() == None {
                 S::yield_wait();
             }
-            match listener.get() {
+            match buzzer_cell.get() {
                 None => Err(ErrorCode::Fail),
                 Some(_) => Ok(()),
             }
-        });
-
-        result_err
+        })
     }
 }
 
@@ -78,6 +79,7 @@ const BUZZER_ON: u32 = 1;
 /// The notes that can be played by the buzzer
 #[allow(unused)]
 #[repr(u32)]
+#[derive(Copy, Clone, Debug)]
 pub enum Note {
     B0 = 31,
     C1 = 33,

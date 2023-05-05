@@ -10,7 +10,7 @@ use libtock::console::Console;
 use libtock::runtime::{set_main, stack_size};
 
 set_main! {main}
-stack_size! {0x200}
+stack_size! {0x800}
 
 // Adapted from https://github.com/robsoncouto/arduino-songs
 
@@ -92,7 +92,7 @@ fn main() {
     writeln!(Console::writer(), "Ode to Joy").unwrap();
 
     for (frequency, duration) in MELODY.iter() {
-        let note_duration: Duration =
+        let mut note_duration: Duration =
             Duration::from_millis((WHOLE_NOTE / duration.unsigned_abs()) as u64);
         // let mut note_duration = WHOLE_NOTE / duration.unsigned_abs();
         if duration < &0 {
@@ -100,6 +100,6 @@ fn main() {
         }
 
         let note_duration = note_duration * 9 / 10;
-        Buzzer::tone_sync(frequency * 3, note_duration).unwrap();
+        Buzzer::tone_sync(*frequency as u32 * 3, note_duration).unwrap();
     }
 }
