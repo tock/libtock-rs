@@ -1,6 +1,6 @@
 #![no_std]
 
-use core::{cell::Cell, convert::TryInto};
+use core::cell::Cell;
 use libtock_platform::{
     share, subscribe::OneId, DefaultConfig, ErrorCode, Subscribe, Syscalls, Upcall,
 };
@@ -63,7 +63,7 @@ impl<S: Syscalls> SoundPressure<S> {
                     if !(0..=256).contains(&pressure_val) {
                         Err(ErrorCode::Invalid)
                     } else {
-                        Ok(pressure_val.try_into().unwrap())
+                        Ok(pressure_val as u8)
                     }
                 }
             }
