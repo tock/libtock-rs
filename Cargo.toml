@@ -38,6 +38,7 @@ members = [
     "apis/alarm",
     "apis/gpio",
     "apis/buttons",
+    "apis/buzzer",
     "apis/console",
     "apis/leds",
     "apis/low_level_debug",
