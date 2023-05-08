@@ -2,6 +2,8 @@ use core::cell::Cell;
 use libtock_platform::{share, ErrorCode, Syscalls, YieldNoWaitReturn};
 use libtock_unittest::fake;
 
+use crate::IntensityListener;
+
 type AmbientLight = super::AmbientLight<fake::Syscalls>;
 
 #[test]
@@ -38,20 +40,23 @@ fn register_unregister_listener() {
     let driver = fake::AmbientLight::new();
     kernel.add_driver(&driver);
 
-    let intensity_listener: Cell<Option<(u32,)>> = Cell::new(None);
+    let intensity_cell: Cell<Option<u32>> = Cell::new(None);
+    let listener = IntensityListener(|val| {
+        intensity_cell.set(Some(val));
+    });
     share::scope(|subscribe| {
         assert_eq!(AmbientLight::read_intensity(), Ok(()));
         driver.set_value(100);
         assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::NoUpcall);
 
         assert_eq!(
-            AmbientLight::register_listener(&intensity_listener, subscribe),
+            AmbientLight::register_listener(&listener, subscribe),
             Ok(())
         );
         assert_eq!(AmbientLight::read_intensity(), Ok(()));
         driver.set_value(100);
         assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::Upcall);
-        assert_eq!(intensity_listener.get(), Some((100,)));
+        assert_eq!(intensity_cell.get(), Some(100));
 
         AmbientLight::unregister_listener();
         assert_eq!(AmbientLight::read_intensity(), Ok(()));

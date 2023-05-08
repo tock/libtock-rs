@@ -1,7 +1,9 @@
 #![no_std]
 
 use core::cell::Cell;
-use libtock_platform::{share, DefaultConfig, ErrorCode, Subscribe, Syscalls};
+use libtock_platform::{
+    share, subscribe::OneId, DefaultConfig, ErrorCode, Subscribe, Syscalls, Upcall,
+};
 
 pub struct AmbientLight<S: Syscalls>(S);
 
@@ -18,8 +20,8 @@ impl<S: Syscalls> AmbientLight<S> {
     }
 
     /// Register an events listener
-    pub fn register_listener<'share>(
-        listener: &'share Cell<Option<(u32,)>>,
+    pub fn register_listener<'share, F: Fn(u32)>(
+        listener: &'share IntensityListener<F>,
         subscribe: share::Handle<Subscribe<'share, S, DRIVER_NUM, 0>>,
     ) -> Result<(), ErrorCode> {
         S::subscribe::<_, _, DefaultConfig, DRIVER_NUM, 0>(subscribe, listener)
@@ -34,10 +36,13 @@ impl<S: Syscalls> AmbientLight<S> {
     /// Returns Ok(intensity_value) if the operation was successful
     /// intensity_value is returned in lux
     pub fn read_intensity_sync() -> Result<u32, ErrorCode> {
-        let intensity_cell: Cell<Option<(u32,)>> = Cell::new(None);
+        let intensity_cell: Cell<Option<u32>> = Cell::new(None);
+        let listener = IntensityListener(|intensity_val| {
+            intensity_cell.set(Some(intensity_val));
+        });
 
         share::scope(|subscribe| {
-            Self::register_listener(&intensity_cell, subscribe)?;
+            Self::register_listener(&listener, subscribe)?;
             Self::read_intensity()?;
             while intensity_cell.get() == None {
                 S::yield_wait();
@@ -45,9 +50,25 @@ impl<S: Syscalls> AmbientLight<S> {
 
             match intensity_cell.get() {
                 None => Err(ErrorCode::Busy),
-                Some(intensity_val) => Ok(intensity_val.0),
+                Some(intensity_val) => Ok(intensity_val),
             }
         })
+    }
+}
+
+/// A wrapper around a closure to be registered and called when
+/// a luminance reading is done.
+///
+/// ```ignore
+/// let listener = IntensityListener(|intensity_val| {
+///     // make use of the intensity value
+/// });
+/// ```
+pub struct IntensityListener<F: Fn(u32)>(pub F);
+
+impl<F: Fn(u32)> Upcall<OneId<DRIVER_NUM, 0>> for IntensityListener<F> {
+    fn upcall(&self, intensity: u32, _arg1: u32, _arg2: u32) {
+        self.0(intensity)
     }
 }
 
