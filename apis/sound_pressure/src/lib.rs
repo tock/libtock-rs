@@ -61,7 +61,7 @@ impl<S: Syscalls> SoundPressure<S> {
                 None => Err(ErrorCode::Fail),
                 Some(pressure_val) => {
                     if !(0..=256).contains(&pressure_val) {
-                        Err(ErrorCode::Fail)
+                        Err(ErrorCode::Invalid)
                     } else {
                         Ok(pressure_val.try_into().unwrap())
                     }
