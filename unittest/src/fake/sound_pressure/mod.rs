@@ -12,7 +12,7 @@ use std::cell::Cell;
 // because it was impossible to schedule an upcall during the `synchronous` read in other ways.
 pub struct SoundPressure {
     busy: Cell<bool>,
-    upcall_on_command: Cell<Option<i32>>,
+    upcall_on_command: Cell<Option<u8>>,
     share_ref: DriverShareRef,
 }
 
@@ -38,7 +38,7 @@ impl SoundPressure {
         }
     }
 
-    pub fn set_value_sync(&self, value: i32) {
+    pub fn set_value_sync(&self, value: u8) {
         self.upcall_on_command.set(Some(value));
     }
 }
