@@ -39,19 +39,17 @@ impl<S: Syscalls> Adc<S> {
             sample.set(Some(adc_val));
         });
         share::scope(|subscribe| {
-            if let Ok(()) = Self::register_listener(&listener, subscribe) {
-                if let Ok(()) = Self::read_single_sample() {
-                    while sample.get().is_none() {
-                        S::yield_wait();
-                    }
-                }
+            Self::register_listener(&listener, subscribe)?;
+            Self::read_single_sample()?;
+            while sample.get() == None {
+                S::yield_wait();
             }
-        });
 
-        match sample.get() {
-            None => Err(ErrorCode::Busy),
-            Some(adc_val) => Ok(adc_val),
-        }
+            match sample.get() {
+                None => Err(ErrorCode::Busy),
+                Some(adc_val) => Ok(adc_val),
+            }
+        })
     }
 
     // pub fn sample_continuous()
