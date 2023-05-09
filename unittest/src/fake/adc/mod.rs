@@ -1,5 +1,4 @@
 //! Fake implementation of the Adc API, documented here:
-//! https://github.com/tock/tock/blob/master/doc/syscalls/60000_ambient_Adc.md
 //!
 //! Like the real API, `Adc` controls a fake Adc sensor. It provides
 //! a function `set_value` used to immediately call an upcall with a Adc value read by the sensor

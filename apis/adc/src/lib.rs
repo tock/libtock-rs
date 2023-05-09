@@ -14,6 +14,7 @@ impl<S: Syscalls> Adc<S> {
         S::command(DRIVER_NUM, EXISTS, 0, 0).to_result()
     }
 
+    // Initiate a sample reading
     pub fn read_single_sample() -> Result<(), ErrorCode> {
         S::command(DRIVER_NUM, SINGLE_SAMPLE, 0, 0).to_result()
     }
