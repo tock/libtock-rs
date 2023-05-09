@@ -15,12 +15,9 @@ set_main! {main}
 stack_size! {0x200}
 
 fn main() {
-    match Adc::exists() {
-        Ok(()) => writeln!(Console::writer(), "adc driver available").unwrap(),
-        Err(_) => {
-            writeln!(Console::writer(), "adc driver unavailable").unwrap();
-            return;
-        }
+    if Adc::exists().is_err() {
+        writeln!(Console::writer(), "adc driver unavailable").unwrap();
+        return;
     }
 
     loop {
