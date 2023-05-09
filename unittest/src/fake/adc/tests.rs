@@ -9,20 +9,20 @@ fn command() {
 
     assert!(adc.command(EXISTS, 1, 2).is_success());
 
-    assert!(adc.command(READ_SINGLE_SAMPLE, 0, 0).is_success());
+    assert!(adc.command(SINGLE_SAMPLE, 0, 0).is_success());
 
     assert_eq!(
-        adc.command(READ_SINGLE_SAMPLE, 0, 0).get_failure(),
+        adc.command(SINGLE_SAMPLE, 0, 0).get_failure(),
         Some(ErrorCode::Busy)
     );
 
     adc.set_value(100);
-    assert!(adc.command(READ_SINGLE_SAMPLE, 0, 1).is_success());
+    assert!(adc.command(SINGLE_SAMPLE, 0, 1).is_success());
     adc.set_value(100);
 
     adc.set_value_sync(100);
-    assert!(adc.command(READ_SINGLE_SAMPLE, 0, 1).is_success());
-    assert!(adc.command(READ_SINGLE_SAMPLE, 0, 1).is_success());
+    assert!(adc.command(SINGLE_SAMPLE, 0, 1).is_success());
+    assert!(adc.command(SINGLE_SAMPLE, 0, 1).is_success());
 }
 
 // Integration test that verifies Adc works with fake::Kernel and
@@ -34,13 +34,13 @@ fn kernel_integration() {
     let adc = Adc::new();
     kernel.add_driver(&adc);
     assert!(fake::Syscalls::command(DRIVER_NUM, EXISTS, 1, 2).is_success());
-    assert!(fake::Syscalls::command(DRIVER_NUM, READ_SINGLE_SAMPLE, 0, 0).is_success());
+    assert!(fake::Syscalls::command(DRIVER_NUM, SINGLE_SAMPLE, 0, 0).is_success());
     assert_eq!(
-        fake::Syscalls::command(DRIVER_NUM, READ_SINGLE_SAMPLE, 0, 0).get_failure(),
+        fake::Syscalls::command(DRIVER_NUM, SINGLE_SAMPLE, 0, 0).get_failure(),
         Some(ErrorCode::Busy)
     );
     adc.set_value(100);
-    assert!(fake::Syscalls::command(DRIVER_NUM, READ_SINGLE_SAMPLE, 0, 1).is_success());
+    assert!(fake::Syscalls::command(DRIVER_NUM, SINGLE_SAMPLE, 0, 1).is_success());
 
     let listener = Cell::<Option<(u32,)>>::new(None);
     share::scope(|subscribe| {
@@ -56,12 +56,12 @@ fn kernel_integration() {
         adc.set_value(200);
         assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::NoUpcall);
 
-        assert!(fake::Syscalls::command(DRIVER_NUM, READ_SINGLE_SAMPLE, 0, 1).is_success());
+        assert!(fake::Syscalls::command(DRIVER_NUM, SINGLE_SAMPLE, 0, 1).is_success());
         adc.set_value(200);
         assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::Upcall);
 
         adc.set_value_sync(200);
-        assert!(fake::Syscalls::command(DRIVER_NUM, READ_SINGLE_SAMPLE, 0, 1).is_success());
+        assert!(fake::Syscalls::command(DRIVER_NUM, SINGLE_SAMPLE, 0, 1).is_success());
         assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::Upcall);
     });
 }

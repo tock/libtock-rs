@@ -56,7 +56,7 @@ impl crate::fake::SyscallDriver for Adc {
         match command_id {
             EXISTS => crate::command_return::success(),
 
-            READ_SINGLE_SAMPLE => {
+            SINGLE_SAMPLE => {
                 if self.busy.get() {
                     return crate::command_return::failure(ErrorCode::Busy);
                 }
@@ -82,4 +82,4 @@ const DRIVER_NUM: u32 = 0x5;
 // Command IDs
 
 const EXISTS: u32 = 0;
-const READ_SINGLE_SAMPLE: u32 = 1;
+const SINGLE_SAMPLE: u32 = 1;

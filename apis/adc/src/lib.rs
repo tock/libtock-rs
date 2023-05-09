@@ -49,7 +49,7 @@ impl<S: Syscalls> Adc<S> {
         });
 
         match sample.get() {
-            None => Err(ErrorCode::Fail),
+            None => Err(ErrorCode::Busy),
             Some(adc_val) => Ok(adc_val),
         }
     }

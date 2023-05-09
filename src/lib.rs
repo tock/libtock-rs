@@ -9,7 +9,7 @@ pub use libtock_runtime as runtime;
 pub mod adc {
     use libtock_adc as adc;
     pub type Adc = adc::Adc<super::runtime::TockSyscalls>;
-    pub use adc::{ADCListener};
+    pub use adc::ADCListener;
 }
 pub mod alarm {
     use libtock_alarm as alarm;
