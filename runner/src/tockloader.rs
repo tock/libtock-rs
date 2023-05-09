@@ -10,7 +10,7 @@ use std::process::{Child, Command, Stdio};
 pub fn deploy(cli: &Cli, platform: String, tab_path: PathBuf) -> Child {
     let flags: &[_] = match platform.as_str() {
         "clue_nrf52840" => &[],
-        "hail" => &[],
+        "hail" | "imix" => &[],
         "microbit_v2" => &["--bundle-apps"],
         "nrf52" | "nrf52840" => &[
             "--jlink",
@@ -31,9 +31,9 @@ pub fn deploy(cli: &Cli, platform: String, tab_path: PathBuf) -> Child {
     // varies from platform to platform. We look up the platform, and if it is
     // not satisfactorily reliable we output a warning for the user.
     let reliable_listen = match platform.as_str() {
-        // tockloader listen will reset the Hail, allowing it to capture all
+        // tockloader listen will reset the Hail/Imix, allowing it to capture all
         // printed messages.
-        "hail" => true,
+        "hail" | "imix" => true,
 
         // Microbit uses CDC over USB, which buffers messages so that tockloader
         // listen can receive messages sent before it was started. As long as
