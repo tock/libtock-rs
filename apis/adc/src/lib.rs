@@ -91,9 +91,9 @@ const DRIVER_NUM: u32 = 0x5;
 
 const EXISTS: u32 = 0;
 const SINGLE_SAMPLE: u32 = 1;
-const REPEAT_SINGLE_SAMPLE: u32 = 2;
-const MULTIPLE_SAMPLE: u32 = 3;
-const CONTINUOUS_BUFF_SAMPLE: u32 = 4;
-const STOP_SAMPLE: u32 = 5;
+// const REPEAT_SINGLE_SAMPLE: u32 = 2;
+// const MULTIPLE_SAMPLE: u32 = 3;
+// const CONTINUOUS_BUFF_SAMPLE: u32 = 4;
+// const STOP_SAMPLE: u32 = 5;
 const GET_RES_BITS: u32 = 101;
 const GET_VOLTAGE_REF: u32 = 102;
