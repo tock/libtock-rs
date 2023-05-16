@@ -1,8 +1,7 @@
 use core::cell::Cell;
 use libtock_platform::{share::scope, ErrorCode, Syscalls, YieldNoWaitReturn};
 use libtock_unittest::fake;
-
-type AirQuality = super::AirQuality<fake::Syscalls>;
+use crate::{AirQuality, AirQualityListener};
 
 #[test]
 fn no_driver() {
@@ -51,7 +50,10 @@ fn register_unregister_listener() {
     let driver = fake::AirQuality::new();
     kernel.add_driver(&driver);
 
-    let listener: Cell<Option<(u32,)>> = Cell::new(None);
+    let data_cell: Cell<Option<u32>> = Cell::new(None);
+    let listener = AirQualityListener(|data_val| {
+        data_cell.set(Some(data_val));
+    });
 
     scope(|subscribe| {
         assert_eq!(AirQuality::read_co2(), Ok(()));
@@ -67,12 +69,12 @@ fn register_unregister_listener() {
         assert_eq!(AirQuality::read_co2(), Ok(()));
         driver.set_value(100);
         assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::Upcall);
-        assert_eq!(listener.get(), Some((100,)));
+        assert_eq!(data_cell.get(), Some(100));
 
         assert_eq!(AirQuality::read_tvoc(), Ok(()));
         driver.set_value(100);
         assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::Upcall);
-        assert_eq!(listener.get(), Some((100,)));
+        assert_eq!(data_cell.get(), Some(100));
 
         AirQuality::unregister_listener();
         assert_eq!(AirQuality::read_co2(), Ok(()));

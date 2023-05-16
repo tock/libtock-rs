@@ -1,13 +1,9 @@
 #![no_std]
 
 use core::cell::Cell;
-use libtock_platform::{
-    share::scope, share::Handle, DefaultConfig, ErrorCode, Subscribe, Syscalls,
-};
+use libtock_platform::{share::scope, share::Handle, DefaultConfig, ErrorCode, Subscribe, Syscalls, Upcall};
+use libtock_platform::subscribe::OneId;
 use Value::{Tvoc, CO2};
-
-#[cfg(test)]
-mod tests;
 
 enum Value {
     CO2 = READ_CO2 as isize,
@@ -21,8 +17,8 @@ impl<S: Syscalls> AirQuality<S> {
         S::command(DRIVER_NUM, EXISTS, 0, 0).to_result()
     }
 
-    pub fn register_listener<'share>(
-        listener: &'share Cell<Option<(u32,)>>,
+    pub fn register_listener<'share, F: Fn(u32)>(
+        listener: &'share AirQualityListener<F>,
         subscribe: Handle<Subscribe<'share, S, DRIVER_NUM, 0>>,
     ) -> Result<(), ErrorCode> {
         S::subscribe::<_, _, DefaultConfig, DRIVER_NUM, 0>(subscribe, listener)
@@ -57,35 +53,50 @@ impl<S: Syscalls> AirQuality<S> {
     }
 
     fn read_data_sync(read_type: Value) -> Result<u32, ErrorCode> {
-        let listener: Cell<Option<(u32,)>> = Cell::new(None);
+        let data_cell: Cell<Option<u32>> = Cell::new(None);
+        let listener = AirQualityListener(|data_val| {
+            data_cell.set(Some(data_val));
+        });
 
         scope(|subscribe| {
-            if let Ok(()) = Self::register_listener(&listener, subscribe) {
-                match read_type {
-                    CO2 => {
-                        if let Ok(()) = Self::read_co2() {
-                            while listener.get() == None {
-                                S::yield_wait();
-                            }
-                        }
+            Self::register_listener(&listener, subscribe)?;
+            return match read_type {
+                CO2 => {
+                    Self::read_co2()?;
+                    while data_cell.get() == None {
+                        S::yield_wait();
                     }
-                    Tvoc => {
-                        if let Ok(()) = Self::read_tvoc() {
-                            while listener.get() == None {
-                                S::yield_wait();
-                            }
-                        }
+
+                    match data_cell.get() {
+                        None => Err(ErrorCode::Fail),
+                        Some(co2_value) => Ok(co2_value)
+                    }
+                }
+                Tvoc => {
+                    Self::read_tvoc()?;
+                    while data_cell.get() == None {
+                        S::yield_wait();
+                    }
+
+                    match data_cell.get() {
+                        None => Err(ErrorCode::Fail),
+                        Some(tvoc_value) => Ok(tvoc_value)
                     }
                 }
             }
-        });
-
-        match listener.get() {
-            None => Err(ErrorCode::Busy),
-            Some((data_val,)) => Ok(data_val),
-        }
+        })
     }
 }
+
+pub struct AirQualityListener<F: Fn(u32)>(pub F);
+impl<F: Fn(u32)> Upcall<OneId<DRIVER_NUM, 0>> for AirQualityListener<F> {
+    fn upcall(&self, data_val: u32, _arg1: u32, _arg2: u32) {
+        self.0(data_val)
+    }
+}
+
+#[cfg(test)]
+mod tests;
 
 // -----------------------------------------------------------------------------
 // Driver number and command IDs
