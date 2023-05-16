@@ -10,6 +10,7 @@
 //! (e.g. `fake::Console`).
 
 mod alarm;
+mod ambient_light;
 mod buttons;
 mod console;
 mod gpio;
@@ -22,6 +23,7 @@ mod syscalls;
 mod temperature;
 
 pub use alarm::Alarm;
+pub use ambient_light::AmbientLight;
 pub use buttons::Buttons;
 pub use console::Console;
 pub use gpio::{Gpio, GpioMode, InterruptEdge, PullMode};

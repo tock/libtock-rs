@@ -11,6 +11,11 @@ pub mod alarm {
     pub type Alarm = alarm::Alarm<super::runtime::TockSyscalls>;
     pub use alarm::{Convert, Hz, Milliseconds, Ticks};
 }
+pub mod ambient_light {
+    use libtock_ambient_light as ambient_light;
+    pub type AmbientLight = ambient_light::AmbientLight<super::runtime::TockSyscalls>;
+    pub use ambient_light::IntensityListener;
+}
 pub mod buttons {
     use libtock_buttons as buttons;
     pub type Buttons = buttons::Buttons<super::runtime::TockSyscalls>;

@@ -11,6 +11,7 @@ version = "0.1.0"
 
 [dependencies]
 libtock_alarm = { path = "apis/alarm" }
+libtock_ambient_light = { path = "apis/ambient_light" }
 libtock_buttons = { path = "apis/buttons" }
 libtock_console = { path = "apis/console" }
 libtock_debug_panic = { path = "panic_handlers/debug_panic" }
@@ -43,6 +44,7 @@ members = [
     "apis/low_level_debug",
     "apis/proximity",
     "apis/temperature",
+    "apis/ambient_light",
     "panic_handlers/debug_panic",
     "panic_handlers/small_panic",
     "platform",
