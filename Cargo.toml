@@ -10,6 +10,7 @@ repository = "https://www.github.com/tock/libtock-rs"
 version = "0.1.0"
 
 [dependencies]
+libtock_adc = { path = "apis/adc"}
 libtock_alarm = { path = "apis/alarm" }
 libtock_ambient_light = { path = "apis/ambient_light" }
 libtock_buttons = { path = "apis/buttons" }
@@ -39,6 +40,7 @@ debug = true
 [workspace]
 exclude = ["tock"]
 members = [
+    "apis/adc",
     "apis/alarm",
     "apis/gpio",
     "apis/buttons",

@@ -9,6 +9,7 @@
 //! `use libtock_unittest::fake` and refer to the type with the `fake::` prefix
 //! (e.g. `fake::Console`).
 
+mod adc;
 mod alarm;
 mod ambient_light;
 mod buttons;
@@ -25,6 +26,7 @@ mod syscall_driver;
 mod syscalls;
 mod temperature;
 
+pub use adc::Adc;
 pub use alarm::Alarm;
 pub use ambient_light::AmbientLight;
 pub use buttons::Buttons;
