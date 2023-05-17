@@ -14,20 +14,6 @@ pub struct NineDofData {
     pub z: i32,
 }
 
-fn sqrt(n: f64) -> f64 {
-    /// Newton-Raphson method for sqrt
-    const EPSILON: f64 = 0.00001;
-    let mut x: f64 = n;
-    let mut y: f64 = 1.0;
-
-    while x - y > EPSILON {
-        x = (x + y) / 2.0;
-        y = n / x;
-    }
-
-    x
-}
-
 impl<S: Syscalls> NineDof<S> {
     /// Returns Ok() if the driver was present.This does not necessarily mean
     /// that the driver is working.
@@ -140,7 +126,7 @@ impl<S: Syscalls> NineDof<S> {
                 let x = data.x as f64;
                 let y = data.y as f64;
                 let z = data.z as f64;
-                sqrt(x * x + y * y + z * z)
+                libm::sqrt(x * x + y * y + z * z)
             }
             Err(_) => 0.0,
         }
