@@ -38,6 +38,11 @@ pub mod low_level_debug {
     pub type LowLevelDebug = lldb::LowLevelDebug<super::runtime::TockSyscalls>;
     pub use lldb::AlertCode;
 }
+pub mod ninedof {
+    use libtock_ninedof as ninedof;
+    pub type NineDof = ninedof::NineDof<super::runtime::TockSyscalls>;
+    pub use ninedof::NineDofListener;
+}
 pub mod proximity {
     use libtock_proximity as proximity;
     pub type Proximity = proximity::Proximity<super::runtime::TockSyscalls>;
@@ -46,10 +51,4 @@ pub mod temperature {
     use libtock_temperature as temperature;
     pub type Temperature = temperature::Temperature<super::runtime::TockSyscalls>;
     pub use temperature::TemperatureListener;
-}
-
-pub mod ninedof {
-    use libtock_ninedof as ninedof;
-    pub type NineDof = ninedof::NineDof<super::runtime::TockSyscalls>;
-    pub use ninedof::NineDofListener;
 }
