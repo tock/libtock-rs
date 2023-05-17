@@ -13,6 +13,7 @@ version = "0.1.0"
 libtock_alarm = { path = "apis/alarm" }
 libtock_ambient_light = { path = "apis/ambient_light" }
 libtock_buttons = { path = "apis/buttons" }
+libtock_buzzer = {path = "apis/buzzer"}
 libtock_console = { path = "apis/console" }
 libtock_debug_panic = { path = "panic_handlers/debug_panic" }
 libtock_gpio = { path = "apis/gpio" }
@@ -39,6 +40,7 @@ members = [
     "apis/alarm",
     "apis/gpio",
     "apis/buttons",
+    "apis/buzzer",
     "apis/console",
     "apis/leds",
     "apis/low_level_debug",
