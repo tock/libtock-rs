@@ -20,8 +20,8 @@ libtock_low_level_debug = { path = "apis/low_level_debug" }
 libtock_platform = { path = "platform" }
 libtock_proximity = { path = "apis/proximity" }
 libtock_runtime = { path = "runtime" }
-libtock_temperature = { path = "apis/temperature" }
 libtock_sound_pressure = {path = "apis/sound_pressure"}
+libtock_temperature = { path = "apis/temperature" }
 
 [profile.dev]
 panic = "abort"
