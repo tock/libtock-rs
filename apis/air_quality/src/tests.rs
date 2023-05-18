@@ -1,7 +1,9 @@
+use crate::AirQualityListener;
 use core::cell::Cell;
 use libtock_platform::{share::scope, ErrorCode, Syscalls, YieldNoWaitReturn};
 use libtock_unittest::fake;
-use crate::{AirQuality, AirQualityListener};
+
+type AirQuality = super::AirQuality<fake::Syscalls>;
 
 #[test]
 fn no_driver() {

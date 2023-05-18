@@ -9,6 +9,7 @@ pub use libtock_runtime as runtime;
 pub mod air_quality {
     use libtock_air_quality as air_quality;
     pub type AirQuality = air_quality::AirQuality<super::runtime::TockSyscalls>;
+    pub use air_quality::AirQualityListener;
 }
 
 pub mod alarm {
