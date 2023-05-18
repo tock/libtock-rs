@@ -9,28 +9,38 @@
 //! `use libtock_unittest::fake` and refer to the type with the `fake::` prefix
 //! (e.g. `fake::Console`).
 
+mod adc;
 mod air_quality;
 mod alarm;
+mod ambient_light;
 mod buttons;
+mod buzzer;
 mod console;
 mod gpio;
 mod kernel;
 mod leds;
 mod low_level_debug;
+mod ninedof;
 mod proximity;
+mod sound_pressure;
 mod syscall_driver;
 mod syscalls;
 mod temperature;
 
+pub use adc::Adc;
 pub use air_quality::AirQuality;
 pub use alarm::Alarm;
+pub use ambient_light::AmbientLight;
 pub use buttons::Buttons;
+pub use buzzer::Buzzer;
 pub use console::Console;
 pub use gpio::{Gpio, GpioMode, InterruptEdge, PullMode};
 pub use kernel::Kernel;
 pub use leds::Leds;
 pub use low_level_debug::{LowLevelDebug, Message};
+pub use ninedof::{NineDof, NineDofData};
 pub use proximity::Proximity;
+pub use sound_pressure::SoundPressure;
 pub use syscall_driver::SyscallDriver;
 pub use syscalls::Syscalls;
 pub use temperature::Temperature;

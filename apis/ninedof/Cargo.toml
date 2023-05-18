@@ -1,0 +1,15 @@
+[package]
+name = "libtock_ninedof"
+version = "0.1.0"
+authors = [ "Tock Project Developers <tock-dev@googlegroups.com>" ]
+license = "MIT/Apache-2.0"
+edition = "2018"
+repository = "https://www.github.com/tock/libtock-rs"
+description = "libtock nine degrees of freedom driver"
+
+[dependencies]
+libtock_platform = { path = "../../platform" }
+libm = "0.2.7"
+
+[dev-dependencies]
+libtock_unittest = { path = "../../unittest" }
