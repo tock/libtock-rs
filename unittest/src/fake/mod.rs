@@ -10,6 +10,7 @@
 //! (e.g. `fake::Console`).
 
 mod adc;
+mod air_quality;
 mod alarm;
 mod ambient_light;
 mod buttons;
@@ -27,6 +28,7 @@ mod syscalls;
 mod temperature;
 
 pub use adc::Adc;
+pub use air_quality::AirQuality;
 pub use alarm::Alarm;
 pub use ambient_light::AmbientLight;
 pub use buttons::Buttons;

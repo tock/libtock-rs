@@ -11,6 +11,13 @@ pub mod adc {
     pub type Adc = adc::Adc<super::runtime::TockSyscalls>;
     pub use adc::ADCListener;
 }
+
+pub mod air_quality {
+    use libtock_air_quality as air_quality;
+    pub type AirQuality = air_quality::AirQuality<super::runtime::TockSyscalls>;
+    pub use air_quality::AirQualityListener;
+}
+
 pub mod alarm {
     use libtock_alarm as alarm;
     pub type Alarm = alarm::Alarm<super::runtime::TockSyscalls>;
