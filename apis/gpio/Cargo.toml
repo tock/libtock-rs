@@ -2,7 +2,7 @@
 name = "libtock_gpio"
 version = "0.1.0"
 authors = ["Tock Project Developers <tock-dev@googlegroups.com>"]
-license = "MIT/Apache-2.0"
+license = "Apache-2.0 OR MIT"
 edition = "2018"
 repository = "https://www.github.com/tock/libtock-rs"
 description = "libtock gpio driver"
