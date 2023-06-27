@@ -33,11 +33,9 @@ pub fn convert_elf(cli: &Cli, platform: &str) -> OutFiles {
     let package_name = cli.elf.file_stem().expect("ELF must be a file");
     let mut tab_path = cli.elf.clone();
     tab_path.set_extension("tab");
-    let protected_size = TBF_HEADER_SIZE.to_string();
     if cli.verbose {
         println!("Package name: {:?}", package_name);
         println!("TAB path: {}", tab_path.display());
-        println!("Protected region size: {}", protected_size);
     }
     let stack_size = read_stack_size(cli);
     let elf = cli.elf.as_os_str();
@@ -71,7 +69,6 @@ pub fn convert_elf(cli: &Cli, platform: &str) -> OutFiles {
         "--kernel-minor".as_ref(), "0".as_ref(),
         "-n".as_ref(), package_name,
         "-o".as_ref(), tab_path.as_os_str(),
-        "--protected-region-size".as_ref(), protected_size.as_ref(),
         "--stack".as_ref(), stack_size.as_ref(),
         format!("{},{}", elf.to_str().unwrap(), architecture).as_ref(),
     ]);
@@ -112,11 +109,6 @@ pub struct OutFiles {
     pub tab_path: PathBuf,
     pub tbf_path: PathBuf,
 }
-
-// The amount of space to reserve for the TBF header. This must match the
-// TBF_HEADER_SIZE value in the layout file for the platform, which is currently
-// 0x60 for all platforms.
-const TBF_HEADER_SIZE: u32 = 0x60;
 
 // Reads the stack size, and returns it as a String for use on elf2tab's command
 // line.
