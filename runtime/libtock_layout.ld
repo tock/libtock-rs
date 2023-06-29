@@ -98,7 +98,7 @@ SECTIONS {
         KEEP(*(.stack_buffer))
         . = ALIGN(16);
         _stack_top = .;  /* Used in rt_header */
-    } > RAM
+    } > RAM AT > FLASH
 
     /* Read-write data section. This is deployed as part of FLASH but is copied
      * into RAM at runtime.
@@ -121,7 +121,7 @@ SECTIONS {
     .bss ALIGN(4) (NOLOAD) : {
         /* .sbss is the RISC-V small data section */
         *(.sbss .bss.*)
-    } > RAM
+    } > RAM AT > FLASH
 
     _heap_start = ADDR(.bss) + SIZEOF(.bss);  /* Used by rt_header */
 
