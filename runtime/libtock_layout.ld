@@ -81,10 +81,6 @@ SECTIONS {
     /* Read-only data section. Contains strings and other global constants. */
     .rodata ALIGN(4) : {
         *(.rodata.*)
-        /* .data is placed after .rodata in flash. data_flash_start is used by
-         * AT() to place .data in flash as well as in rt_header.
-         */
-        _data_flash_start = .;
     } > FLASH
 
     /* Sections located in RAM at runtime.
@@ -107,7 +103,7 @@ SECTIONS {
     /* Read-write data section. This is deployed as part of FLASH but is copied
      * into RAM at runtime.
      */
-    .data ALIGN(4) : AT(_data_flash_start) {
+    .data ALIGN(4) : {
         data_ram_start = .;
         /* .sdata is the RISC-V small data section */
         *(.sdata .data)
@@ -115,7 +111,7 @@ SECTIONS {
          * copies.
          */
         . = ALIGN(4);
-    } > RAM
+    } > RAM AT > FLASH
 
     /* BSS section. These are zero-initialized static variables. This section is
      * not copied from FLASH into RAM but rather directly initialized, and is
