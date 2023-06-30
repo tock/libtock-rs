@@ -2,9 +2,13 @@
 
 TBF_HEADER_SIZE = 0x60;
 
-MEMORY {
-  FLASH (X) : ORIGIN = 0x00030000 + TBF_HEADER_SIZE, LENGTH = 0x00060000 - TBF_HEADER_SIZE
-  RAM   (W) : ORIGIN = 0x20004000                  , LENGTH = 62K
-}
+FLASH_START = 0x00030000;
+FLASH_LENGTH = 0x00060000;
+
+/* Note that the SRAM address may need to be changed depending on
+ * the kernel binary, check for the actual address of APP_MEMORY!
+ */
+RAM_START = 0x20004000;
+RAM_LENGTH = 62K;
 
 INCLUDE libtock_layout.ld
