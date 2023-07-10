@@ -38,6 +38,23 @@
  * stack size? We should see if that is possible.
  */
 
+/* Rust's default linker (llvm-ld) as used with the Rust toolchain versions of
+ * at least 2022-06-10, 2023-01-26, and 2023-06-27 can produce broken ELF
+ * binaries when the RAM region's start address is not well-aligned to a 4kB
+ * boundary. Unfortunately, this behavior is rather tricky to debug: instead of
+ * refusing to produce a binary or producing a corrupt output, it generates an
+ * ELF file which includes a segment that points to the ELF file's header
+ * itself. elf2tab will include this segment in the final binary (as it is set
+ * to be loaded), producing broken TBFs. This (overrideable) check is designed
+ * to warn users that the linker may be misbehaved under these conditions.
+ */
+PROVIDE(LIBTOCKRS_OVERRIDE_RAM_ORIGIN_CHECK = 0);
+ASSERT(LIBTOCKRS_OVERRIDE_RAM_ORIGIN_CHECK == 1 || ORIGIN(RAM) % 0x1000 == 0, "
+Start of RAM region must be well-aligned to a 4kB boundary for LLVM's lld to
+work. Refer to https://github.com/tock/libtock-rs/pull/477 for more
+information. Set LIBTOCKRS_OVERRIDE_RAM_ORIGIN_CHECK = 1 to override this check
+(e.g., when using a different linker).");
+
 /* GNU LD looks for `start` as an entry point by default, while LLVM's LLD looks
  * for `_start`. To be compatible with both, we manually specify an entry point.
  */
