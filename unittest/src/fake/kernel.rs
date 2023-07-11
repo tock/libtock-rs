@@ -108,6 +108,20 @@ impl Kernel {
     pub fn take_syscall_log(&self) -> Vec<SyscallLogEntry> {
         with_kernel_data(|kernel_data| std::mem::take(&mut kernel_data.unwrap().syscall_log))
     }
+
+    /// Returns true if the specified driver installed.
+    pub fn is_driver_present(driver_num: u32) -> bool {
+        with_kernel_data(|kernel_data| {
+            kernel_data.map_or(false, |kernel| kernel.drivers.contains_key(&driver_num))
+        })
+    }
+
+    /// Returns true if there are any pending upcalls.
+    pub fn is_upcall_pending() -> bool {
+        with_kernel_data(|kernel_data| {
+            kernel_data.map_or(false, |kernel| !kernel.upcall_queue.is_empty())
+        })
+    }
 }
 
 impl Drop for Kernel {
