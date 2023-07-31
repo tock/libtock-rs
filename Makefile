@@ -126,6 +126,23 @@ test: examples test-stable
 		cargo miri test $(EXCLUDE_MIRI) --workspace
 	echo '[ SUCCESS ] libtock-rs tests pass'
 
+
+.PHONY: tab
+tab:
+	mkdir -p target/$(EXAMPLE)
+	LINKER_FLASH=0x00040000 LINKER_RAM=0x20008000 cargo build --example $(EXAMPLE) $(features) --target=thumbv7em-none-eabi $(release)
+	cp target/thumbv7em-none-eabi/release/examples/$(EXAMPLE) target/$(EXAMPLE)/cortex-m4.0x00040000.0x20008000.elf
+	LINKER_FLASH=0x00042000 LINKER_RAM=0x2000a000 cargo build --example $(EXAMPLE) $(features) --target=thumbv7em-none-eabi $(release)
+	cp target/thumbv7em-none-eabi/release/examples/$(EXAMPLE) target/$(EXAMPLE)/cortex-m4.0x00042000.0x2000a000.elf
+	LINKER_FLASH=0x00048000 LINKER_RAM=0x20010000 cargo build --example $(EXAMPLE) $(features) --target=thumbv7em-none-eabi $(release)
+	cp target/thumbv7em-none-eabi/release/examples/$(EXAMPLE) target/$(EXAMPLE)/cortex-m4.0x00048000.0x20010000.elf
+
+	elf2tab --kernel-major 2 --kernel-minor 0 -n $(EXAMPLE) -o $(EXAMPLE).tab --protected-region-size 96 --stack 1024 \
+		target/$(EXAMPLE)/cortex-m4.0x00040000.0x20008000.elf \
+		target/$(EXAMPLE)/cortex-m4.0x00042000.0x2000a000.elf \
+		target/$(EXAMPLE)/cortex-m4.0x00048000.0x20010000.elf \
+
+
 .PHONY: apollo3
 apollo3:
 	LIBTOCK_PLATFORM=apollo3 cargo run --example $(EXAMPLE) $(features) \
