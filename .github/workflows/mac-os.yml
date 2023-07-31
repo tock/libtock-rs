@@ -2,8 +2,9 @@
 
 name: ci-mac-os
 
-# We run this workflow during pull request review, but not for Bors merges. We
-# can change this if the workflow is reasonably quick and reliable.
+# We run this workflow during pull request review, but not as a required status
+# for GitHub actions merge-queue merges. We can change this if the workflow is
+# reasonably quick and reliable.
 on: pull_request
 
 jobs:
