@@ -54,7 +54,7 @@ impl<S: Syscalls> SoundPressure<S> {
         share::scope(|subscribe| {
             Self::register_listener(&listener, subscribe)?;
             Self::read()?;
-            while pressure_cell.get() == None {
+            while pressure_cell.get().is_none() {
                 S::yield_wait();
             }
             match pressure_cell.get() {

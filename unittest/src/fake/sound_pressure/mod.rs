@@ -62,7 +62,7 @@ impl crate::fake::SyscallDriver for SoundPressure {
                 }
                 self.busy.set(true);
                 if let Some(val) = self.upcall_on_command.take() {
-                    self.set_value(val as u8);
+                    self.set_value(val);
                 }
                 crate::command_return::success()
             }

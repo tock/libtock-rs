@@ -45,7 +45,7 @@ impl<S: Syscalls> Temperature<S> {
         share::scope(|subscribe| {
             if let Ok(()) = Self::register_listener(&listener, subscribe) {
                 if let Ok(()) = Self::read_temperature() {
-                    while temperature_cell.get() == None {
+                    while temperature_cell.get().is_none() {
                         S::yield_wait();
                     }
                 }
