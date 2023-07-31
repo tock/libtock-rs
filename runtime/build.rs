@@ -5,14 +5,17 @@
 #[cfg(not(feature = "no_auto_layout"))]
 fn auto_layout() {
     use std::fs::copy;
+    use std::fs::File;
+    use std::io::Write;
     use std::path::PathBuf;
 
-    const PLATFORM_CFG_VAR: &str = "LIBTOCK_PLATFORM";
+    const LINKER_FLASH_CFG_VAR: &str = "LINKER_FLASH";
+    const LINKER_RAM_CFG_VAR: &str = "LINKER_RAM";
     const LAYOUT_GENERIC_FILENAME: &str = "libtock_layout.ld";
 
     // Note: we need to print these rerun-if commands before using the variable
     // or file, so that if the build script fails cargo knows when to re-run it.
-    println!("cargo:rerun-if-env-changed={}", PLATFORM_CFG_VAR);
+    // println!("cargo:rerun-if-env-changed={}", PLATFORM_CFG_VAR);
 
     // Read configuration from environment variables.
 
@@ -28,15 +31,37 @@ fn auto_layout() {
 
     // Read the platform environment variable as a String (our platform names
     // should all be valid UTF-8).
-    let platform = std::env::var(PLATFORM_CFG_VAR).expect("Please specify LIBTOCK_PLATFORM");
+    let linker_flash = std::env::var(LINKER_FLASH_CFG_VAR).expect("Please specify LINKER_FLASH");
+    let linker_ram = std::env::var(LINKER_RAM_CFG_VAR).expect("Please specify LINKER_RAM");
 
-    // Copy the platform-specific layout file into OUT_DIR.
-    let platform_filename = format!("{}.ld", platform);
-    let platform_path: PathBuf = ["layouts", &platform_filename].iter().collect();
-    println!("cargo:rerun-if-changed={}", platform_path.display());
-    assert!(platform_path.exists(), "Unknown platform {}", platform);
+    // Create a valid linker file with the specified flash and ram locations.
+    //
+    // ```
+    // MEMORY {
+    //   FLASH (X) : ORIGIN = $LINKER_FLASH, LENGTH = 0x000D0000
+    //   RAM   (W) : ORIGIN = $LINKER_RAM,   LENGTH = 46K
+    // }
+    // TBF_HEADER_SIZE = 0x60;
+    // INCLUDE libtock_layout.ld
+    // ```
     let out_platform_path: PathBuf = [out_dir, "layout.ld"].iter().collect();
-    copy(&platform_path, out_platform_path).expect("Unable to copy platform layout into OUT_DIR");
+    let mut file = File::create(out_platform_path).expect("Could not create linker file");
+    write!(file, "MEMORY {{\n").expect("Could not write linker file");
+    write!(
+        file,
+        "  FLASH (X) : ORIGIN = {}, LENGTH = 0x000D0000\n",
+        linker_flash
+    )
+    .expect("Could not write linker file");
+    write!(
+        file,
+        "  RAM   (X) : ORIGIN = {}, LENGTH = 46k\n",
+        linker_ram
+    )
+    .expect("Could not write linker file");
+    write!(file, "}}\n").expect("Could not write linker file");
+    write!(file, "TBF_HEADER_SIZE = 0x60;\n").expect("Could not write linker file");
+    write!(file, "INCLUDE libtock_layout.ld\n").expect("Could not write linker file");
 
     // Copy the generic layout file into OUT_DIR.
     let out_layout_generic: PathBuf = [out_dir, LAYOUT_GENERIC_FILENAME].iter().collect();
