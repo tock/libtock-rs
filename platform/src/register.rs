@@ -16,19 +16,19 @@ pub struct Register(pub *mut ());
 
 impl From<crate::ErrorCode> for Register {
     fn from(value: crate::ErrorCode) -> Register {
-        Register(value as u16 as *mut ())
+        Register(core::ptr::null::<()>().with_addr(value as u16 as usize) as *mut ())
     }
 }
 
 impl From<u32> for Register {
     fn from(value: u32) -> Register {
-        Register(value as *mut ())
+        Register(core::ptr::null::<()>().with_addr(value as usize) as *mut ())
     }
 }
 
 impl From<usize> for Register {
     fn from(value: usize) -> Register {
-        Register(value as *mut ())
+        Register(core::ptr::null::<()>().with_addr(value) as *mut ())
     }
 }
 

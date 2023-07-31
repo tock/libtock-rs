@@ -1,5 +1,6 @@
 #![cfg_attr(not(test), no_std)]
 #![warn(unsafe_op_in_unsafe_fn)]
+#![feature(strict_provenance)]
 
 pub mod allow_ro;
 pub mod allow_rw;
