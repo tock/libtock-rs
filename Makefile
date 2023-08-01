@@ -41,7 +41,8 @@ endif
 
 .PHONY: setup
 setup: setup-qemu
-	cargo install elf2tab
+	rustup install stable
+	cargo +stable install elf2tab
 	cargo miri setup
 	rustup target add --toolchain stable thumbv7em-none-eabi
 
