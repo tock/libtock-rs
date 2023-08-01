@@ -1,4 +1,6 @@
+use crate::error_code::NotAnErrorCode;
 use crate::share::List;
+use crate::ErrorCode;
 use crate::Syscalls;
 
 // -----------------------------------------------------------------------------
@@ -120,6 +122,48 @@ impl Upcall<AnyId> for core::cell::Cell<Option<(u32, u32)>> {
 impl Upcall<AnyId> for core::cell::Cell<Option<(u32, u32, u32)>> {
     fn upcall(&self, arg0: u32, arg1: u32, arg2: u32) {
         self.set(Some((arg0, arg1, arg2)));
+    }
+}
+
+/// An `Upcall` implementation that interprets its first argument as a return
+/// code.
+impl Upcall<AnyId> for core::cell::Cell<Option<Result<(), ErrorCode>>> {
+    fn upcall(&self, arg0: u32, _: u32, _: u32) {
+        match arg0 {
+            0 => self.set(Some(Ok(()))),
+            a0 => {
+                let e: Result<ErrorCode, NotAnErrorCode> = a0.try_into();
+                self.set(Some(Err(e.unwrap_or(ErrorCode::Fail))));
+            }
+        }
+    }
+}
+
+/// An `Upcall` implementation that interprets its first argument as a return
+/// code and stores its second argument when called.
+impl Upcall<AnyId> for core::cell::Cell<Option<Result<(u32,), ErrorCode>>> {
+    fn upcall(&self, arg0: u32, arg1: u32, _: u32) {
+        match arg0 {
+            0 => self.set(Some(Ok((arg1,)))),
+            a0 => {
+                let e: Result<ErrorCode, NotAnErrorCode> = a0.try_into();
+                self.set(Some(Err(e.unwrap_or(ErrorCode::Fail))));
+            }
+        }
+    }
+}
+
+/// An `Upcall` implementation that interprets its first argument as a return
+/// code and stores its second argument when called.
+impl Upcall<AnyId> for core::cell::Cell<Option<Result<(u32, u32), ErrorCode>>> {
+    fn upcall(&self, arg0: u32, arg1: u32, arg2: u32) {
+        match arg0 {
+            0 => self.set(Some(Ok((arg1, arg2)))),
+            a0 => {
+                let e: Result<ErrorCode, NotAnErrorCode> = a0.try_into();
+                self.set(Some(Err(e.unwrap_or(ErrorCode::Fail))));
+            }
+        }
     }
 }
 
