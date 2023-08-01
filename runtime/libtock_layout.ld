@@ -6,18 +6,22 @@
  * This layout should be included by a script that defines the FLASH and RAM
  * regions for the board as well as TBF_HEADER_SIZE. Here is a an example
  * process binary linker script to get started:
- *     MEMORY {
- *         FLASH (X) : ORIGIN = 0x10000, LENGTH = 0x10000
- *         RAM   (W) : ORIGIN = 0x20000, LENGTH = 0x10000
- *     }
+ *
  *     TBF_HEADER_SIZE = 0x60;
+ *
+ *     FLASH_START = 0x10000;
+ *     FLASH_LENGTH = 0x10000;
+ *
+ *     RAM_START = 0x20000;
+ *     RAM_LENGTH = 0x10000;
+ *
  *     INCLUDE ../libtock-rs/layout.ld
  *
- * FLASH refers to the area the process binary occupies in flash, including TBF
- * headers. RAM refers to the area the process will have access to in memory.
- * STACK_SIZE is the size of the process' stack (this layout file may round the
- * stack size up for alignment purposes). TBF_HEADER_SIZE must correspond to the
- * --protected-region-size flag passed to elf2tab.
+ * FLASH refers to the area the process binary occupies in flash (including the
+ * TBF headers, so FLASH_START refers to the TBF load address). RAM refers to
+ * the area the process will have access to in memory. STACK_SIZE is the size of
+ * the process' stack (this layout file may round the stack size up for
+ * alignment purposes).
  *
  * This places the flash sections in the following order:
  *     1. .rt_header -- Constants used by runtime initialization.
@@ -32,6 +36,11 @@
  *     3. .bss   -- Zero-initialized read-write global data.
  *     4. Heap   -- The heap (optional) comes after .bss and grows upwards to
  *                  the process break.
+ *
+ * TBF_HEADER_SIZE is further used internally in the included `layout.ld` file
+ * to set the `tbf_protected_region_size` symbol. elf2tab will thus prepend TBF
+ * headers and an optional padding such that the final binary matches the
+ * intended app load address (0x10000 in the above example).
  */
 
 /* TODO: Should TBF_HEADER_SIZE be configured via a similar mechanism to the
@@ -49,11 +58,16 @@
  * to warn users that the linker may be misbehaved under these conditions.
  */
 PROVIDE(LIBTOCKRS_OVERRIDE_RAM_ORIGIN_CHECK = 0);
-ASSERT(LIBTOCKRS_OVERRIDE_RAM_ORIGIN_CHECK == 1 || ORIGIN(RAM) % 0x1000 == 0, "
+ASSERT(LIBTOCKRS_OVERRIDE_RAM_ORIGIN_CHECK == 1 || RAM_START % 0x1000 == 0, "
 Start of RAM region must be well-aligned to a 4kB boundary for LLVM's lld to
 work. Refer to https://github.com/tock/libtock-rs/pull/477 for more
 information. Set LIBTOCKRS_OVERRIDE_RAM_ORIGIN_CHECK = 1 to override this check
 (e.g., when using a different linker).");
+
+MEMORY {
+  FLASH (X) : ORIGIN = FLASH_START + TBF_HEADER_SIZE, LENGTH = FLASH_LENGTH - TBF_HEADER_SIZE
+  RAM   (W) : ORIGIN = RAM_START                    , LENGTH = RAM_LENGTH
+}
 
 /* GNU LD looks for `start` as an entry point by default, while LLVM's LLD looks
  * for `_start`. To be compatible with both, we manually specify an entry point.
@@ -61,19 +75,21 @@ information. Set LIBTOCKRS_OVERRIDE_RAM_ORIGIN_CHECK = 1 to override this check
 ENTRY(start)
 
 SECTIONS {
+    /* The FLASH memory section is placed at a TBF_HEADER_SIZE offset, to give
+     * elf2tab room to prepend the TBF headers. Communicate this reservation to
+     * elf2tab, such that it fills up the space after the TBF headers (if any)
+     * as part of the protected region trailer:
+     */
+    tbf_protected_region_size = TBF_HEADER_SIZE;
+
     /* Sections located in FLASH at runtime.
      */
-
-    /* Add a section where elf2tab will place the TBF headers, so that the rest
-     * of the FLASH sections are in the right locations. */
-    .tbf_header (NOLOAD) : {
-        . = . + TBF_HEADER_SIZE;
-    } > FLASH
 
     /* Runtime header. Contains values the linker knows that the runtime needs
      * to look up.
      */
-    .start ALIGN(4) : {
+    . = ALIGN(4);
+    .start : {
         /* We combine rt_header and _start into a single section. If we don't,
          * elf2tab does not parse the ELF file correctly for unknown reasons.
          */
