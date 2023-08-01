@@ -38,30 +38,23 @@ fn auto_layout() {
     // Create a valid linker file with the specified flash and ram locations.
     //
     // ```
-    // MEMORY {
-    //   FLASH (X) : ORIGIN = $LINKER_FLASH, LENGTH = 0x000D0000
-    //   RAM   (W) : ORIGIN = $LINKER_RAM,   LENGTH = 46K
-    // }
     // TBF_HEADER_SIZE = 0x60;
+    //
+    // FLASH_START = 0x00040000;
+    // FLASH_LENGTH = 0x00040000;
+    //
+    // RAM_START = 0x20008000;
+    // RAM_LENGTH = 62K;
+    //
     // INCLUDE libtock_layout.ld
     // ```
     let out_platform_path: PathBuf = [out_dir, "layout.ld"].iter().collect();
     let mut file = File::create(out_platform_path).expect("Could not create linker file");
-    write!(file, "MEMORY {{\n").expect("Could not write linker file");
-    write!(
-        file,
-        "  FLASH (X) : ORIGIN = {}, LENGTH = 0x000D0000\n",
-        linker_flash
-    )
-    .expect("Could not write linker file");
-    write!(
-        file,
-        "  RAM   (X) : ORIGIN = {}, LENGTH = 46k\n",
-        linker_ram
-    )
-    .expect("Could not write linker file");
-    write!(file, "}}\n").expect("Could not write linker file");
     write!(file, "TBF_HEADER_SIZE = 0x60;\n").expect("Could not write linker file");
+    write!(file, "FLASH_START = {};\n", linker_flash).expect("Could not write linker file");
+    write!(file, "FLASH_LENGTH = 0x000D0000;\n",).expect("Could not write linker file");
+    write!(file, "RAM_START = {};\n", linker_ram).expect("Could not write linker file");
+    write!(file, "RAM_LENGTH = 46K;\n",).expect("Could not write linker file");
     write!(file, "INCLUDE libtock_layout.ld\n").expect("Could not write linker file");
 
     // Copy the generic layout file into OUT_DIR.
