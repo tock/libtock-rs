@@ -16,7 +16,7 @@ version = "0.1.0"
 rust-version = "1.70"
 
 [dependencies]
-libtock_adc = { path = "apis/adc" }
+libtock_adc = { path = "apis/adc"}
 libtock_air_quality = { path = "apis/air_quality" }
 libtock_alarm = { path = "apis/alarm" }
 libtock_ambient_light = { path = "apis/ambient_light" }
@@ -26,6 +26,7 @@ libtock_console = { path = "apis/console" }
 libtock_debug_panic = { path = "panic_handlers/debug_panic" }
 libtock_gpio = { path = "apis/gpio" }
 libtock_i2c_master_slave = { path = "apis/i2c_master_slave" }
+libtock_key_value = { path = "apis/key_value"}
 libtock_leds = { path = "apis/leds" }
 libtock_low_level_debug = { path = "apis/low_level_debug" }
 libtock_ninedof = { path = "apis/ninedof" }
@@ -61,6 +62,7 @@ members = [
     "apis/console",
     "apis/gpio",
     "apis/i2c_master_slave",
+    "apis/key_value",
     "apis/leds",
     "apis/low_level_debug",
     "apis/ninedof",

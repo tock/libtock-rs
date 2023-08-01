@@ -87,3 +87,7 @@ pub mod temperature {
     pub type Temperature = temperature::Temperature<super::runtime::TockSyscalls>;
     pub use temperature::TemperatureListener;
 }
+pub mod key_value {
+    use libtock_key_value as key_value;
+    pub type KeyValue = key_value::KeyValue<super::runtime::TockSyscalls>;
+}
