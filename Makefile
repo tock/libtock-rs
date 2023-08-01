@@ -130,6 +130,16 @@ test: examples test-stable
 .PHONY: tab
 tab:
 	mkdir -p target/$(EXAMPLE)
+	LINKER_FLASH=0x00030000 LINKER_RAM=0x20008000 cargo build --example $(EXAMPLE) $(features) --target=thumbv7em-none-eabi $(release)
+	cp target/thumbv7em-none-eabi/release/examples/$(EXAMPLE) target/$(EXAMPLE)/cortex-m4.0x00030000.0x20008000.elf
+	LINKER_FLASH=0x00038000 LINKER_RAM=0x20010000 cargo build --example $(EXAMPLE) $(features) --target=thumbv7em-none-eabi $(release)
+	cp target/thumbv7em-none-eabi/release/examples/$(EXAMPLE) target/$(EXAMPLE)/cortex-m4.0x00038000.0x20010000.elf
+
+	LINKER_FLASH=0x00040000 LINKER_RAM=0x10002000 cargo build --example $(EXAMPLE) $(features) --target=thumbv7em-none-eabi $(release)
+	cp target/thumbv7em-none-eabi/release/examples/$(EXAMPLE) target/$(EXAMPLE)/cortex-m4.0x00040000.0x10002000.elf
+	LINKER_FLASH=0x00048000 LINKER_RAM=0x1000a000 cargo build --example $(EXAMPLE) $(features) --target=thumbv7em-none-eabi $(release)
+	cp target/thumbv7em-none-eabi/release/examples/$(EXAMPLE) target/$(EXAMPLE)/cortex-m4.0x00048000.0x1000a000.elf
+
 	LINKER_FLASH=0x00040000 LINKER_RAM=0x20008000 cargo build --example $(EXAMPLE) $(features) --target=thumbv7em-none-eabi $(release)
 	cp target/thumbv7em-none-eabi/release/examples/$(EXAMPLE) target/$(EXAMPLE)/cortex-m4.0x00040000.0x20008000.elf
 	LINKER_FLASH=0x00042000 LINKER_RAM=0x2000a000 cargo build --example $(EXAMPLE) $(features) --target=thumbv7em-none-eabi $(release)
@@ -137,10 +147,35 @@ tab:
 	LINKER_FLASH=0x00048000 LINKER_RAM=0x20010000 cargo build --example $(EXAMPLE) $(features) --target=thumbv7em-none-eabi $(release)
 	cp target/thumbv7em-none-eabi/release/examples/$(EXAMPLE) target/$(EXAMPLE)/cortex-m4.0x00048000.0x20010000.elf
 
+	LINKER_FLASH=0x00080000 LINKER_RAM=0x20006000 cargo build --example $(EXAMPLE) $(features) --target=thumbv7em-none-eabi $(release)
+	cp target/thumbv7em-none-eabi/release/examples/$(EXAMPLE) target/$(EXAMPLE)/cortex-m4.0x00080000.0x20006000.elf
+	LINKER_FLASH=0x00088000 LINKER_RAM=0x2000e000 cargo build --example $(EXAMPLE) $(features) --target=thumbv7em-none-eabi $(release)
+	cp target/thumbv7em-none-eabi/release/examples/$(EXAMPLE) target/$(EXAMPLE)/cortex-m4.0x00088000.0x2000e000.elf
+
+	LINKER_FLASH=0x403b0000 LINKER_RAM=0x3fca2000 cargo build --example $(EXAMPLE) $(features) --target=riscv32imc-unknown-none-elf $(release)
+	cp target/riscv32imc-unknown-none-elf/release/examples/$(EXAMPLE) target/$(EXAMPLE)/riscv32imc.0x403b0000.0x3fca2000.elf
+	LINKER_FLASH=0x40440000 LINKER_RAM=0x3fcaa000 cargo build --example $(EXAMPLE) $(features) --target=riscv32imc-unknown-none-elf $(release)
+	cp target/riscv32imc-unknown-none-elf/release/examples/$(EXAMPLE) target/$(EXAMPLE)/riscv32imc.0x40440000.0x3fcaa000.elf
+
+	LINKER_FLASH=0x10020000 LINKER_RAM=0x20004000 cargo build --example $(EXAMPLE) $(features) --target=thumbv6m-none-eabi $(release)
+	cp target/thumbv6m-none-eabi/release/examples/$(EXAMPLE) target/$(EXAMPLE)/cortex-m0.0x10020000.0x20006000.elf
+	LINKER_FLASH=0x10028000 LINKER_RAM=0x2000c000 cargo build --example $(EXAMPLE) $(features) --target=thumbv6m-none-eabi $(release)
+	cp target/thumbv6m-none-eabi/release/examples/$(EXAMPLE) target/$(EXAMPLE)/cortex-m0.0x10028000.0x2000c000.elf
+
 	elf2tab --kernel-major 2 --kernel-minor 0 -n $(EXAMPLE) -o $(EXAMPLE).tab --stack 1024 \
+		target/$(EXAMPLE)/cortex-m4.0x00030000.0x20008000.elf \
+		target/$(EXAMPLE)/cortex-m4.0x00038000.0x20010000.elf \
+		target/$(EXAMPLE)/cortex-m4.0x00040000.0x10002000.elf \
+		target/$(EXAMPLE)/cortex-m4.0x00048000.0x1000a000.elf \
 		target/$(EXAMPLE)/cortex-m4.0x00040000.0x20008000.elf \
 		target/$(EXAMPLE)/cortex-m4.0x00042000.0x2000a000.elf \
 		target/$(EXAMPLE)/cortex-m4.0x00048000.0x20010000.elf \
+		target/$(EXAMPLE)/cortex-m4.0x00080000.0x20006000.elf \
+		target/$(EXAMPLE)/cortex-m4.0x00088000.0x2000e000.elf \
+		target/$(EXAMPLE)/riscv32imc.0x403b0000.0x3fca2000.elf \
+		target/$(EXAMPLE)/riscv32imc.0x40440000.0x3fcaa000.elf \
+		target/$(EXAMPLE)/cortex-m0.0x10020000.0x20006000.elf \
+		target/$(EXAMPLE)/cortex-m0.0x10028000.0x2000c000.elf \
 
 
 .PHONY: apollo3
