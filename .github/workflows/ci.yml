@@ -2,14 +2,12 @@
 
 name: ci
 
-# We want to run CI on all pull requests. Additionally, Bors needs workflows to
-# run on the `staging` and `trying` branches.
+# We want to run CI on all pull requests. Additionally, GitHub actions merge
+# queue needs workflows to run on the `merge_queue` trigger to block merges on
+# them.
 on:
   pull_request:
-  push:
-    branches:
-      - staging
-      - trying
+  merge_group:
 
 jobs:
   ci:
