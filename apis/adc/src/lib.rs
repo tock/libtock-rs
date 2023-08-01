@@ -10,7 +10,12 @@ pub struct Adc<S: Syscalls>(S);
 impl<S: Syscalls> Adc<S> {
     /// Returns Ok() if the driver was present.This does not necessarily mean
     /// that the driver is working.
-    pub fn exists() -> Result<(), ErrorCode> {
+    //
+    // Note! The "exists" command should return `Result<(), ErrorCode>`, but the
+    // current ADC driver in the kernel returns the number of ADC channels
+    // instead of just success. This will be fixed in a future release of Tock,
+    // but for now we workaround this issue.
+    pub fn exists() -> Result<u32, ErrorCode> {
         S::command(DRIVER_NUM, EXISTS, 0, 0).to_result()
     }
 
