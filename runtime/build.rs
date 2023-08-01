@@ -61,7 +61,7 @@ fn auto_layout() {
         // Create a valid linker file with the specified flash and ram locations.
         //
         // ```
-        // TBF_HEADER_SIZE = 0x60;
+        // TBF_HEADER_SIZE = 0x80;
         //
         // FLASH_START = 0x00040000;
         // FLASH_LENGTH = 0x00040000;
@@ -73,7 +73,7 @@ fn auto_layout() {
         // ```
         let out_platform_path: PathBuf = [out_dir, "layout.ld"].iter().collect();
         let mut file = File::create(out_platform_path).expect("Could not create linker file");
-        write!(file, "TBF_HEADER_SIZE = 0x60;\n").expect("Could not write linker file");
+        write!(file, "TBF_HEADER_SIZE = 0x80;\n").expect("Could not write linker file");
         write!(file, "FLASH_START = {};\n", linker_flash).expect("Could not write linker file");
         write!(file, "FLASH_LENGTH = 0x000D0000;\n",).expect("Could not write linker file");
         write!(file, "RAM_START = {};\n", linker_ram).expect("Could not write linker file");

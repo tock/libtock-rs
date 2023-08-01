@@ -162,7 +162,7 @@ tab:
 	LINKER_FLASH=0x10028000 LINKER_RAM=0x2000c000 cargo build --example $(EXAMPLE) $(features) --target=thumbv6m-none-eabi $(release)
 	cp target/thumbv6m-none-eabi/release/examples/$(EXAMPLE) target/$(EXAMPLE)/cortex-m0.0x10028000.0x2000c000.elf
 
-	elf2tab --kernel-major 2 --kernel-minor 0 -n $(EXAMPLE) -o $(EXAMPLE).tab --stack 1024 \
+	elf2tab --kernel-major 2 --kernel-minor 0 -n $(EXAMPLE) -o $(EXAMPLE).tab --stack 1024 --minimum-footer-size 256 \
 		target/$(EXAMPLE)/cortex-m4.0x00030000.0x20008000.elf \
 		target/$(EXAMPLE)/cortex-m4.0x00038000.0x20010000.elf \
 		target/$(EXAMPLE)/cortex-m4.0x00040000.0x10002000.elf \
