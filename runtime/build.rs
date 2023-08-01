@@ -15,7 +15,8 @@ fn auto_layout() {
 
     // Note: we need to print these rerun-if commands before using the variable
     // or file, so that if the build script fails cargo knows when to re-run it.
-    // println!("cargo:rerun-if-env-changed={}", PLATFORM_CFG_VAR);
+    println!("cargo:rerun-if-env-changed={}", LINKER_FLASH_CFG_VAR);
+    println!("cargo:rerun-if-env-changed={}", LINKER_RAM_CFG_VAR);
 
     // Read configuration from environment variables.
 
