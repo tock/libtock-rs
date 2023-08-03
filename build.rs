@@ -1,8 +1,3 @@
-// auto_layout() identifies the correct linker scripts to use based on the
-// LIBTOCK_PLATFORM environment variable, and copies the linker scripts into
-// OUT_DIR. The cargo invocation must pass -C link-arg=-Tlayout.ld to rustc
-// (using the rustflags cargo config).
-#[cfg(not(feature = "no_auto_layout"))]
 fn auto_layout() {
     use std::fs::copy;
     use std::fs::File;
@@ -52,11 +47,12 @@ fn auto_layout() {
     if let Ok(platform) = platform {
         // Copy the platform-specific layout file into OUT_DIR.
         let platform_filename = format!("{}.ld", platform);
-        let platform_path: PathBuf = ["layouts", &platform_filename].iter().collect();
+        let platform_path: PathBuf = ["runtime", "layouts", &platform_filename].iter().collect();
         println!("cargo:rerun-if-changed={}", platform_path.display());
         assert!(platform_path.exists(), "Unknown platform {}", platform);
         copy(&platform_path, out_platform_path)
             .expect("Unable to copy platform layout into OUT_DIR");
+        println!("cargo:rustc-link-arg=-Tlayout.ld");
     } else if let (Ok(linker_flash), Ok(linker_ram)) = (linker_flash, linker_ram) {
         // Create a valid linker file with the specified flash and ram locations.
         //
@@ -83,14 +79,16 @@ fn auto_layout() {
 
         // Pass the name of this linker script to rustc.
         println!("cargo:rustc-link-arg=-T{}", linker_script_name);
+        // println!("cargo:rustc-link-arg-bins=-T{}", linker_script_name);
     } else {
         panic!("Need to set LIBTOCK_PLATFORM or (LINKER_FLASH and LINKER_RAM)");
     }
 
     // Copy the generic layout file into OUT_DIR.
+    let in_layout_generic: PathBuf = ["runtime", LAYOUT_GENERIC_FILENAME].iter().collect();
     let out_layout_generic: PathBuf = [out_dir, LAYOUT_GENERIC_FILENAME].iter().collect();
     println!("cargo:rerun-if-changed={}", LAYOUT_GENERIC_FILENAME);
-    copy(LAYOUT_GENERIC_FILENAME, out_layout_generic)
+    copy(in_layout_generic, out_layout_generic)
         .expect("Unable to copy layout_generic.ld into OUT_DIR");
 
     // Tell rustc where to search for the layout file.
@@ -98,6 +96,5 @@ fn auto_layout() {
 }
 
 fn main() {
-    #[cfg(not(feature = "no_auto_layout"))]
     auto_layout();
 }
