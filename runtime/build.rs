@@ -71,7 +71,8 @@ fn auto_layout() {
         //
         // INCLUDE libtock_layout.ld
         // ```
-        let out_platform_path: PathBuf = [out_dir, "layout.ld"].iter().collect();
+        let linker_script_name = format!("{}.{}.ld", linker_flash, linker_ram);
+        let out_platform_path: PathBuf = [out_dir, &linker_script_name].iter().collect();
         let mut file = File::create(out_platform_path).expect("Could not create linker file");
         write!(file, "TBF_HEADER_SIZE = 0x80;\n").expect("Could not write linker file");
         write!(file, "FLASH_START = {};\n", linker_flash).expect("Could not write linker file");
@@ -79,6 +80,9 @@ fn auto_layout() {
         write!(file, "RAM_START = {};\n", linker_ram).expect("Could not write linker file");
         write!(file, "RAM_LENGTH = 46K;\n",).expect("Could not write linker file");
         write!(file, "INCLUDE libtock_layout.ld\n").expect("Could not write linker file");
+
+        // Pass the name of this linker script to rustc.
+        println!("cargo:rustc-link-arg=-T{}", linker_script_name);
     } else {
         panic!("Need to set LIBTOCK_PLATFORM or (LINKER_FLASH and LINKER_RAM)");
     }
