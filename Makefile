@@ -177,6 +177,41 @@ tab:
 		target/$(EXAMPLE)/cortex-m0.0x10020000.0x20006000.elf \
 		target/$(EXAMPLE)/cortex-m0.0x10028000.0x2000c000.elf \
 
+# Helper function to define target variables.
+# https://stackoverflow.com/questions/50322607/multiple-target-specific-variable-values
+assign-vars = $(foreach A,$2,$(eval $1: $A))
+
+# F = Flash Address
+# R = RAM Address
+# T = Target
+# A = Architecture
+$(call assign-vars, elf01, F=0x00030000 R=0x20008000 T=thumbv7em-none-eabi A=cortex-m4)
+$(call assign-vars, elf02, F=0x00038000 R=0x20010000 T=thumbv7em-none-eabi A=cortex-m4)
+
+$(call assign-vars, elf03, F=0x00040000 R=0x10002000 T=thumbv7em-none-eabi A=cortex-m4)
+$(call assign-vars, elf04, F=0x00048000 R=0x1000a000 T=thumbv7em-none-eabi A=cortex-m4)
+
+$(call assign-vars, elf05, F=0x00040000 R=0x20008000 T=thumbv7em-none-eabi A=cortex-m4)
+$(call assign-vars, elf06, F=0x00042000 R=0x2000a000 T=thumbv7em-none-eabi A=cortex-m4)
+$(call assign-vars, elf07, F=0x00048000 R=0x20010000 T=thumbv7em-none-eabi A=cortex-m4)
+
+$(call assign-vars, elf08, F=0x00080000 R=0x20006000 T=thumbv7em-none-eabi A=cortex-m4)
+$(call assign-vars, elf09, F=0x00088000 R=0x2000e000 T=thumbv7em-none-eabi A=cortex-m4)
+
+$(call assign-vars, elf10, F=0x403b0000 R=0x3fca2000 T=riscv32imc-unknown-none-elf A=riscv32imc)
+$(call assign-vars, elf11, F=0x40440000 R=0x3fcaa000 T=riscv32imc-unknown-none-elf A=riscv32imc)
+
+$(call assign-vars, elf12, F=0x10020000 R=0x20004000 T=thumbv6m-none-eabi A=cortex-m0)
+$(call assign-vars, elf13, F=0x10028000 R=0x2000c000 T=thumbv6m-none-eabi A=cortex-m0)
+
+elf01 elf02 elf03 elf04 elf05 elf06 elf07 elf08 elf09 elf10 elf11 elf12 elf13:
+	LINKER_FLASH=$(F) LINKER_RAM=$(R) cargo build --example $(EXAMPLE) $(features) --target=$(T) $(release)
+	cp target/$(T)/release/examples/$(EXAMPLE) target/$(EXAMPLE)/$(A).$(F).$(R).elf
+	$(eval ELF_LIST += target/$(EXAMPLE)/$(A).$(F).$(R).elf)
+
+elfs: elf01 elf02 elf03 elf04 elf05 elf06 elf07 elf08 elf09 elf10 elf11 elf12 elf13
+	elf2tab --kernel-major 2 --kernel-minor 0 -n $(EXAMPLE) -o $(EXAMPLE).tab --stack 1024 --minimum-footer-size 256 $(ELF_LIST)
+
 # Creates the `make <BOARD> EXAMPLE=<EXAMPLE>` targets. Arguments:
 #  1) The name of the platform to build for.
 #
