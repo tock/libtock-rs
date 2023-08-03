@@ -109,10 +109,10 @@ EXCLUDE_STD := --exclude libtock_unittest --exclude print_sizes \
 # the primary toolchain.
 .PHONY: test-stable
 test-stable:
-	CARGO_TARGET_DIR="target/stable-toolchain" cargo +stable check --workspace \
+	cargo +stable check --target-dir=target/stable --workspace \
 		$(EXCLUDE_RUNTIME)
-	CARGO_TARGET_DIR="target/stable-toolchain" LIBTOCK_PLATFORM=nrf52 cargo \
-		+stable check $(EXCLUDE_STD) --target=thumbv7em-none-eabi --workspace
+	LIBTOCK_PLATFORM=nrf52 cargo +stable check $(EXCLUDE_STD) \
+		--target=thumbv7em-none-eabi --target-dir=target/stable --workspace
 
 .PHONY: test
 test: examples test-stable
@@ -127,198 +127,56 @@ test: examples test-stable
 		cargo miri test $(EXCLUDE_MIRI) --workspace
 	echo '[ SUCCESS ] libtock-rs tests pass'
 
-.PHONY: apollo3
-apollo3:
-	LIBTOCK_PLATFORM=apollo3 cargo run --example $(EXAMPLE) $(features) \
-		--target=thumbv7em-none-eabi $(release)
-	mkdir -p target/tbf/apollo3
-	cp target/thumbv7em-none-eabi/release/examples/$(EXAMPLE).tab \
-		target/thumbv7em-none-eabi/release/examples/$(EXAMPLE).tbf \
-		target/tbf/apollo3
+# Creates the `make <BOARD> EXAMPLE=<EXAMPLE>` targets. Arguments:
+#  1) The name of the platform to build for.
+#
+# A different --target-dir is passed for each platform to prevent race
+# conditions between concurrent cargo run invocations. See
+# https://github.com/tock/libtock-rs/issues/366 for more information.
+define platform_build
+.PHONY: $(1)
+$(1):
+	LIBTOCK_PLATFORM=$(1) cargo run --example $(EXAMPLE) $(features) \
+		$(release) --target=thumbv7em-none-eabi --target-dir=target/$(1)
+	mkdir -p target/tbf/$(1)
+	cp target/$(1)/thumbv7em-none-eabi/release/examples/$(EXAMPLE).{tab,tbf} \
+		target/tbf/$(1)
+endef
 
-.PHONY: esp32_c3_devkitm_1
-esp32_c3_devkitm_1:
-	LIBTOCK_PLATFORM=esp32_c3_devkitm_1 cargo run --example $(EXAMPLE) $(features) \
-		--target=riscv32imc-unknown-none-elf $(release)
-	mkdir -p target/tbf/esp32_c3_devkitm_1
-	cp target/riscv32imc-unknown-none-elf/release/examples/$(EXAMPLE).tab \
-		target/riscv32imc-unknown-none-elf/release/examples/$(EXAMPLE).tbf \
-		target/tbf/esp32_c3_devkitm_1
+# Creates the `make flash-<BOARD> EXAMPLE=<EXAMPLE>` targets. Arguments:
+#  1) The name of the platform to flash for.
+define platform_flash
+.PHONY: flash-$(1)
+flash-$(1):
+	LIBTOCK_PLATFORM=$(1) cargo run --example $(EXAMPLE) $(features) \
+		$(release) --target=thumbv7em-none-eabi --target-dir=target/$(1) -- \
+		--deploy=tockloader
+endef
 
-.PHONY: hail
-hail:
-	LIBTOCK_PLATFORM=hail cargo run --example $(EXAMPLE) $(features) \
-		--target=thumbv7em-none-eabi $(release)
-	mkdir -p target/tbf/hail
-	cp target/thumbv7em-none-eabi/release/examples/$(EXAMPLE).tab \
-		target/thumbv7em-none-eabi/release/examples/$(EXAMPLE).tbf \
-		target/tbf/hail
-
-.PHONY: flash-hail
-flash-hail:
-	LIBTOCK_PLATFORM=hail cargo run --example $(EXAMPLE) $(features) \
-		--target=thumbv7em-none-eabi $(release) -- --deploy=tockloader
-
-.PHONY: imix
-imix:
-	LIBTOCK_PLATFORM=imix cargo run --example $(EXAMPLE) $(features) \
-		--target=thumbv7em-none-eabi $(release)
-	mkdir -p target/tbf/imix
-	cp target/thumbv7em-none-eabi/release/examples/$(EXAMPLE).tab \
-		target/thumbv7em-none-eabi/release/examples/$(EXAMPLE).tbf \
-		target/tbf/imix
-
-.PHONY: flash-imix
-flash-imix:
-	LIBTOCK_PLATFORM=imix cargo run --example $(EXAMPLE) $(features) \
-		--target=thumbv7em-none-eabi $(release) -- --deploy=tockloader
-
-
-.PHONY: microbit_v2
-microbit_v2:
-	LIBTOCK_PLATFORM=microbit_v2 cargo run --example $(EXAMPLE) $(features) \
-		--target=thumbv7em-none-eabi $(release)
-	mkdir -p target/tbf/microbit_v2
-	cp target/thumbv7em-none-eabi/release/examples/$(EXAMPLE).tab \
-		target/thumbv7em-none-eabi/release/examples/$(EXAMPLE).tbf \
-		target/tbf/microbit_v2
-
-.PHONY: flash-microbit_v2
-flash-microbit_v2:
-	LIBTOCK_PLATFORM=microbit_v2 cargo run --example $(EXAMPLE) $(features) \
-		--target=thumbv7em-none-eabi $(release) -- --deploy=tockloader
-
-.PHONY: nucleo_f429zi
-nucleo_f429zi:
-	LIBTOCK_PLATFORM=nucleo_f429zi cargo run --example $(EXAMPLE) $(features) \
-		--target=thumbv7em-none-eabi $(release)
-	mkdir -p target/tbf/nucleo_f429zi
-	cp target/thumbv7em-none-eabi/release/examples/$(EXAMPLE).tab \
-		target/thumbv7em-none-eabi/release/examples/$(EXAMPLE).tbf \
-		target/tbf/nucleo_f429zi
-
-.PHONY: nucleo_f446re
-nucleo_f446re:
-	LIBTOCK_PLATFORM=nucleo_f446re cargo run --example $(EXAMPLE) $(features) \
-		--target=thumbv7em-none-eabi $(release)
-	mkdir -p target/tbf/nucleo_f446re
-	cp target/thumbv7em-none-eabi/release/examples/$(EXAMPLE).tab \
-		target/thumbv7em-none-eabi/release/examples/$(EXAMPLE).tbf \
-		target/tbf/nucleo_f446re
-
-.PHONY: nrf52840
-nrf52840:
-	LIBTOCK_PLATFORM=nrf52840 cargo run --example $(EXAMPLE) $(features) \
-		--target=thumbv7em-none-eabi $(release)
-	mkdir -p target/tbf/nrf52840
-	cp target/thumbv7em-none-eabi/release/examples/$(EXAMPLE).tab \
-		target/thumbv7em-none-eabi/release/examples/$(EXAMPLE).tbf \
-		target/tbf/nrf52840
-
-.PHONY: flash-nrf52840
-flash-nrf52840:
-	LIBTOCK_PLATFORM=nrf52840 cargo run --example $(EXAMPLE) $(features) \
-		--target=thumbv7em-none-eabi $(release) -- --deploy=tockloader
-
-.PHONY: raspberry_pi_pico
-raspberry_pi_pico:
-	LIBTOCK_PLATFORM=raspberry_pi_pico cargo run --example $(EXAMPLE) $(features) \
-		--target=thumbv6m-none-eabi $(release)
-	mkdir -p target/tbf/raspberry_pi_pico
-	cp target/thumbv6m-none-eabi/release/examples/$(EXAMPLE).tab \
-		target/thumbv6m-none-eabi/release/examples/$(EXAMPLE).tbf \
-		target/tbf/raspberry_pi_pico
-
-.PHONY: nano_rp2040_connect
-nano_rp2040_connect:
-	LIBTOCK_PLATFORM=nano_rp2040_connect cargo run --example $(EXAMPLE) $(features) \
-		--target=thumbv6m-none-eabi $(release)
-	mkdir -p target/tbf/nano_rp2040_connect
-	cp target/thumbv6m-none-eabi/release/examples/$(EXAMPLE).tab \
-		target/thumbv6m-none-eabi/release/examples/$(EXAMPLE).tbf \
-		target/tbf/nano_rp2040_connect
-
-.PHONY: stm32f3discovery
-stm32f3discovery:
-	LIBTOCK_PLATFORM=stm32f3discovery cargo run --example $(EXAMPLE) \
-		$(features) --target=thumbv7em-none-eabi $(release)
-	mkdir -p target/tbf/stm32f3discovery
-	cp target/thumbv7em-none-eabi/release/examples/$(EXAMPLE).tab \
-		target/thumbv7em-none-eabi/release/examples/$(EXAMPLE).tbf \
-		target/tbf/stm32f3discovery
-
-.PHONY: stm32f412gdiscovery
-stm32f412gdiscovery:
-	LIBTOCK_PLATFORM=stm32f412gdiscovery cargo run --example $(EXAMPLE) \
-		$(features) --target=thumbv7em-none-eabi $(release)
-	mkdir -p target/tbf/stm32f412gdiscovery
-	cp target/thumbv7em-none-eabi/release/examples/$(EXAMPLE).tab \
-		target/thumbv7em-none-eabi/release/examples/$(EXAMPLE).tbf \
-		target/tbf/stm32f412gdiscovery
-
-.PHONY: opentitan
-opentitan:
-	LIBTOCK_PLATFORM=opentitan cargo run --example $(EXAMPLE) $(features) \
-		--target=riscv32imc-unknown-none-elf $(release)
-	mkdir -p target/tbf/opentitan
-	cp target/riscv32imc-unknown-none-elf/release/examples/$(EXAMPLE).tab \
-		target/riscv32imc-unknown-none-elf/release/examples/$(EXAMPLE).tbf \
-		target/tbf/opentitan
-
-.PHONY: hifive1
-hifive1:
-	LIBTOCK_PLATFORM=hifive1 cargo run --example $(EXAMPLE) $(features) \
-		--target=riscv32imac-unknown-none-elf $(release)
-	mkdir -p target/tbf/hifive1
-	cp target/riscv32imac-unknown-none-elf/release/examples/$(EXAMPLE).tab \
-		target/riscv32imac-unknown-none-elf/release/examples/$(EXAMPLE).tbf \
-		target/tbf/hifive1
-
-.PHONY: nrf52
-nrf52:
-	LIBTOCK_PLATFORM=nrf52 cargo run --example $(EXAMPLE) $(features) \
-		--target=thumbv7em-none-eabi $(release)
-	mkdir -p target/tbf/nrf52
-	cp target/thumbv7em-none-eabi/release/examples/$(EXAMPLE).tab \
-		target/thumbv7em-none-eabi/release/examples/$(EXAMPLE).tbf \
-		target/tbf/nrf52
-
-.PHONY: flash-nrf52
-flash-nrf52:
-	LIBTOCK_PLATFORM=nrf52 cargo run --example $(EXAMPLE) $(features) \
-		--target=thumbv7em-none-eabi $(release) -- --deploy=tockloader
-
-.PHONY: imxrt1050
-imxrt1050:
-	LIBTOCK_PLATFORM=imxrt1050 cargo run --example $(EXAMPLE) $(features) \
-		--target=thumbv7em-none-eabi $(release)
-	mkdir -p target/tbf/imxrt1050
-	cp target/thumbv7em-none-eabi/release/examples/$(EXAMPLE).tab \
-		target/thumbv7em-none-eabi/release/examples/$(EXAMPLE).tbf \
-		target/tbf/imxrt1050
-
-.PHONY: msp432
-msp432:
-	LIBTOCK_PLATFORM=msp432 cargo run --example $(EXAMPLE) $(features) \
-		--target=thumbv7em-none-eabi $(release)
-	mkdir -p target/tbf/msp432
-	cp target/thumbv7em-none-eabi/release/examples/$(EXAMPLE).tab \
-		target/thumbv7em-none-eabi/release/examples/$(EXAMPLE).tbf \
-		target/tbf/msp432
-
-.PHONY: clue_nrf52840
-clue_nrf52840:
-	LIBTOCK_PLATFORM=clue_nrf52840 cargo run --example $(EXAMPLE) $(features) \
-		--target=thumbv7em-none-eabi $(release)
-	mkdir -p target/tbf/clue_nrf52840
-	cp target/thumbv7em-none-eabi/release/examples/$(EXAMPLE).tab \
-		target/thumbv7em-none-eabi/release/examples/$(EXAMPLE).tbf \
-		target/tbf/clue_nrf52840
-
-.PHONY: flash-clue_nrf52840
-flash-clue_nrf52840:
-	LIBTOCK_PLATFORM=clue_nrf52840 cargo run --example $(EXAMPLE) $(features) \
-		--target=thumbv7em-none-eabi $(release) -- --deploy=tockloader
+$(eval $(call platform_build,apollo3))
+$(eval $(call platform_build,esp32_c3_devkitm_1))
+$(eval $(call platform_build,hail))
+$(eval $(call platform_flash,hail))
+$(eval $(call platform_build,imix))
+$(eval $(call platform_flash,imix))
+$(eval $(call platform_build,microbit_v2))
+$(eval $(call platform_flash,microbit_v2))
+$(eval $(call platform_build,nucleo_f429zi))
+$(eval $(call platform_build,nucleo_f446re))
+$(eval $(call platform_build,nrf52840))
+$(eval $(call platform_flash,nrf52840))
+$(eval $(call platform_build,raspberry_pi_pico))
+$(eval $(call platform_build,nano_rp2040_connect))
+$(eval $(call platform_build,stm32f3discovery))
+$(eval $(call platform_build,stm32f412gdiscovery))
+$(eval $(call platform_build,opentitan))
+$(eval $(call platform_build,hifive1))
+$(eval $(call platform_build,nrf52))
+$(eval $(call platform_flash,nrf52))
+$(eval $(call platform_build,imxrt1050))
+$(eval $(call platform_build,msp432))
+$(eval $(call platform_build,clue_nrf52840))
+$(eval $(call platform_flash,clue_nrf52840))
 
 .PHONY: clean
 clean:
