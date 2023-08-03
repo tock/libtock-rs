@@ -189,6 +189,33 @@ fn upcall_impls() {
     let cell_three = core::cell::Cell::new(None);
     cell_three.upcall(1, 2, 3);
     assert_eq!(cell_three.get(), Some((1, 2, 3)));
+
+    let cell_returncode_empty_success: core::cell::Cell<Option<Result<(), ErrorCode>>> =
+        core::cell::Cell::new(None);
+    cell_returncode_empty_success.upcall(0, 2, 3);
+    assert_eq!(cell_returncode_empty_success.get(), Some(Ok(())));
+    let cell_returncode_empty_fail: core::cell::Cell<Option<Result<(), ErrorCode>>> =
+        core::cell::Cell::new(None);
+    cell_returncode_empty_fail.upcall(1, 2, 3);
+    assert_eq!(cell_returncode_empty_fail.get(), Some(Err(ErrorCode::Fail)));
+
+    let cell_returncode_one_success: core::cell::Cell<Option<Result<(u32,), ErrorCode>>> =
+        core::cell::Cell::new(None);
+    cell_returncode_one_success.upcall(0, 2, 3);
+    assert_eq!(cell_returncode_one_success.get(), Some(Ok((2,))));
+    let cell_returncode_one_fail: core::cell::Cell<Option<Result<(u32,), ErrorCode>>> =
+        core::cell::Cell::new(None);
+    cell_returncode_one_fail.upcall(1, 2, 3);
+    assert_eq!(cell_returncode_one_fail.get(), Some(Err(ErrorCode::Fail)));
+
+    let cell_returncode_two_success: core::cell::Cell<Option<Result<(u32, u32), ErrorCode>>> =
+        core::cell::Cell::new(None);
+    cell_returncode_two_success.upcall(0, 2, 3);
+    assert_eq!(cell_returncode_two_success.get(), Some(Ok((2, 3))));
+    let cell_returncode_two_fail: core::cell::Cell<Option<Result<(u32, u32), ErrorCode>>> =
+        core::cell::Cell::new(None);
+    cell_returncode_two_fail.upcall(1, 2, 3);
+    assert_eq!(cell_returncode_two_fail.get(), Some(Err(ErrorCode::Fail)));
 }
 
 // -----------------------------------------------------------------------------
