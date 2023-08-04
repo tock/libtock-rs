@@ -206,8 +206,7 @@ $(call assign-vars, elf13, F=0x10028000 R=0x2000c000 T=thumbv6m-none-eabi A=cort
 
 elf01 elf02 elf03 elf04 elf05 elf06 elf07 elf08 elf09 elf10 elf11 elf12 elf13:
 	LINKER_FLASH=$(F) LINKER_RAM=$(R) cargo build --example $(EXAMPLE) $(features) --target=$(T) $(release) --out-dir target/$(A).$(F).$(R) -Z unstable-options
-	cp target/$(A).$(F).$(R)/$(T)/release/examples/$(EXAMPLE) target/$(EXAMPLE)/$(A).$(F).$(R).elf
-	$(eval ELF_LIST += target/$(EXAMPLE)/$(A).$(F).$(R).elf)
+	$(eval ELF_LIST += target/$(A).$(F).$(R)/$(EXAMPLE),$(A).$(F).$(R))
 
 elfs: elf01 elf02 elf03 elf04 elf05 elf06 elf07 elf08 elf09 elf10 elf11 elf12 elf13
 	elf2tab --kernel-major 2 --kernel-minor 0 -n $(EXAMPLE) -o $(EXAMPLE).tab --stack 1024 --minimum-footer-size 256 $(ELF_LIST)
