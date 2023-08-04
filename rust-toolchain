@@ -3,6 +3,7 @@
 # recently nightlies and what components are available for them.
 channel = "nightly-2022-06-10"
 components = ["clippy", "miri", "rustfmt"]
-targets = ["thumbv7em-none-eabi",
+targets = ["thumbv6m-none-eabi",
+           "thumbv7em-none-eabi",
            "riscv32imac-unknown-none-elf",
            "riscv32imc-unknown-none-elf"]
