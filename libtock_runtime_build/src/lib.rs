@@ -27,10 +27,6 @@ pub fn auto_layout() {
         "Build path contains a newline, which is unsupported"
     );
 
-    // Point the linker to the generic libtock-rs linker file.
-    let generic_ld_dir: PathBuf = ["runtime"].iter().collect();
-    println!("cargo:rustc-link-search={}", generic_ld_dir.display());
-
     // Choose the linker file we are going to use for this build. That can be
     // specified by choosing a platform, where the linker file will be selected
     // from `runtime/layouts`, or by explicitly setting the flash and RAM
@@ -47,16 +43,7 @@ pub fn auto_layout() {
     if let Ok(platform) = platform {
         // Point the linker to the correct platform-specific linker file.
         let platform_ld_name = format!("{}.ld", platform);
-        let platform_ld_dir: PathBuf = ["runtime", "layouts"].iter().collect();
-        let platform_ld_path: PathBuf = ["runtime", "layouts", &platform_ld_name].iter().collect();
-
-        assert!(platform_ld_path.exists(), "Unknown platform {}", platform);
-
-        println!("cargo:rerun-if-changed={}", platform_ld_path.display());
         println!("cargo:rustc-link-arg=-T{}", platform_ld_name);
-
-        // Tell rustc where to search for the layout file.
-        println!("cargo:rustc-link-search={}", platform_ld_dir.display());
     } else if let (Ok(linker_flash), Ok(linker_ram)) = (linker_flash, linker_ram) {
         // Create a valid linker file with the specified flash and ram locations.
         //
