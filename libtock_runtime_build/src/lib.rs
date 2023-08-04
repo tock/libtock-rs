@@ -27,6 +27,11 @@ pub fn auto_layout() {
         "Build path contains a newline, which is unsupported"
     );
 
+    // Set the linker search path to the out dir of this crate where we have
+    // stored all of the linker files.
+    let runtime_build_out_dir = env!("LIBTOCK_RUNTIME_BUILD_OUT_DIR");
+    println!("cargo:rustc-link-search={}", runtime_build_out_dir);
+
     // Choose the linker file we are going to use for this build. That can be
     // specified by choosing a platform, where the linker file will be selected
     // from `runtime/layouts`, or by explicitly setting the flash and RAM
