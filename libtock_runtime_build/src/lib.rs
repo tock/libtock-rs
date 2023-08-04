@@ -1,5 +1,33 @@
 //! Utility functions for implementing build.rs files for libtock-rs apps.
 
+/// This path is set by this crate's build.rs file when this crate is compiled.
+/// This allows this file to know the path of its own local outdir where copies
+/// of linker scripts are stored (by this crate's build.rs). That path can then
+/// be used in other libtock-rs compilations to provide useful linker scripts.
+pub const RUNTIME_BUILD_OUT_DIR: &str = env!("LIBTOCK_RUNTIME_BUILD_OUT_DIR");
+
+/// Helper function to configure cargo to use suitable linker scripts for
+/// linking libtock-rs apps.
+///
+/// This function does two things:
+///
+/// 1. Make sure that the linker's search path includes where
+///    `libtock_layout.ld` is stored. This is a general linker script designed
+///    for libtock-rs apps and the Tock kernel.
+///
+/// 2. Reference a board-specific linker script that essentially sets the
+///    `MEMORY` command to specify the flash and RAM addresses where the app
+///    should be compiled. This happens by passing the `-T<linker script.ld>`
+///    flag to the linker.
+///
+///    This function supports two methods for doing this:
+///
+///    1. Passing the `LIBTOCK_PLATFORM` environment variable which specifies
+///       the name of the linker script in `/layouts` to be used.
+///
+///    2. Passing the `LINKER_FLASH` and `LINKER_RAM` environment variables
+///       which specify the starting addresses of flash and RAM memory,
+///       respectively.
 pub fn auto_layout() {
     use std::fs::File;
     use std::io::Write;
@@ -29,8 +57,7 @@ pub fn auto_layout() {
 
     // Set the linker search path to the out dir of this crate where we have
     // stored all of the linker files.
-    let runtime_build_out_dir = env!("LIBTOCK_RUNTIME_BUILD_OUT_DIR");
-    println!("cargo:rustc-link-search={}", runtime_build_out_dir);
+    println!("cargo:rustc-link-search={}", RUNTIME_BUILD_OUT_DIR);
 
     // Choose the linker file we are going to use for this build. That can be
     // specified by choosing a platform, where the linker file will be selected
