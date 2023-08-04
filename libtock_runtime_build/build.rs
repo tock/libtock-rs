@@ -18,6 +18,10 @@ fn main() {
         "Build path contains a newline, which is unsupported"
     );
 
+    // Share the out dir of this crate with the actual source so we know where
+    // we put the linker scripts.
+    println!("cargo:rustc-env=LIBTOCK_RUNTIME_BUILD_OUT_DIR={}", out_dir);
+
     // Copy all platform linker scripts to a directory where the linker can find
     // them.
     let paths = read_dir("layouts").unwrap();
