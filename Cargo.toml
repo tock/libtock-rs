@@ -28,6 +28,9 @@ libtock_runtime = { path = "runtime" }
 libtock_sound_pressure = {path = "apis/sound_pressure"}
 libtock_temperature = { path = "apis/temperature" }
 
+[build-dependencies]
+libtock_runtime_build = { path = "libtock_runtime_build"}
+
 [profile.dev]
 panic = "abort"
 lto = true
