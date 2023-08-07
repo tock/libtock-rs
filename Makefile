@@ -182,7 +182,7 @@ $(call fixed-target, F=0x10020000 R=0x20004000 T=thumbv6m-none-eabi A=cortex-m0)
 $(call fixed-target, F=0x10028000 R=0x2000c000 T=thumbv6m-none-eabi A=cortex-m0)
 
 $(ELF_TARGETS):
-	LINKER_FLASH=$(F) LINKER_RAM=$(R) cargo build --example $(EXAMPLE) $(features) --target=$(T) $(release) --out-dir target/$(A).$(F).$(R) -Z unstable-options
+	LIBTOCK_LINKER_FLASH=$(F) LIBTOCK_LINKER_RAM=$(R) cargo build --example $(EXAMPLE) $(features) --target=$(T) $(release) --out-dir target/$(A).$(F).$(R) -Z unstable-options
 	$(eval ELF_LIST += target/$(A).$(F).$(R)/$(EXAMPLE),$(A).$(F).$(R))
 
 .PHONY: tab

@@ -49,12 +49,12 @@ There are three general steps to use this crate.
       $ LIBTOCK_PLATFORM=microbit_v2 cargo build --target thumbv7em-none-eabi --release
       ```
 
-   2. Set the `LINKER_FLASH` and `LINKER_RAM` environment variables which
-      specify the starting addresses of flash and RAM memory, respectively. This
-      allows you to customize where exactly the compiled app must be placed in
-      flash and RAM. For example, to build for common Cortex-M4 platforms you
-      might run:
+   2. Set the `LIBTOCK_LINKER_FLASH` and `LIBTOCK_LINKER_RAM` environment
+      variables which specify the starting addresses of flash and RAM memory,
+      respectively. This allows you to customize where exactly the compiled app
+      must be placed in flash and RAM. For example, to build for common
+      Cortex-M4 platforms you might run:
 
       ```bash
-      $ LINKER_FLASH=0x00040000 LINKER_RAM=0x20008000 cargo build --target thumbv7em-none-eabi --release
+      $ LIBTOCK_LINKER_FLASH=0x00040000 LIBTOCK_LINKER_RAM=0x20008000 cargo build --target thumbv7em-none-eabi --release
       ```

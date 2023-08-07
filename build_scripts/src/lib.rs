@@ -4,7 +4,7 @@
 /// This allows this file to know the path of its own local outdir where copies
 /// of linker scripts are stored (by this crate's build.rs). That path can then
 /// be used in other libtock-rs compilations to provide useful linker scripts.
-pub const RUNTIME_BUILD_OUT_DIR: &str = env!("LIBTOCK_RUNTIME_BUILD_OUT_DIR");
+pub const BUILD_SCRIPTS_OUT_DIR: &str = env!("LIBTOCK_BUILD_SCRIPTS_OUT_DIR");
 
 /// Helper function to configure cargo to use suitable linker scripts for
 /// linking libtock-rs apps.
@@ -22,20 +22,20 @@ pub const RUNTIME_BUILD_OUT_DIR: &str = env!("LIBTOCK_RUNTIME_BUILD_OUT_DIR");
 ///
 ///    This function supports two methods for doing this:
 ///
-///    1. Passing the `LIBTOCK_PLATFORM` environment variable which specifies
-///       the name of the linker script in `/layouts` to be used.
+///    1. Passing the `LIBTOCK_LIBTOCK_PLATFORM` environment variable which
+///       specifies the name of the linker script in `/layouts` to be used.
 ///
-///    2. Passing the `LINKER_FLASH` and `LINKER_RAM` environment variables
-///       which specify the starting addresses of flash and RAM memory,
-///       respectively.
+///    2. Passing the `LIBTOCK_LINKER_FLASH` and `LINKER_RAM` environment
+///       variables which specify the starting addresses of flash and RAM
+///       memory, respectively.
 pub fn auto_layout() {
     use std::fs::File;
     use std::io::Write;
     use std::path::PathBuf;
 
     const PLATFORM_CFG_VAR: &str = "LIBTOCK_PLATFORM";
-    const LINKER_FLASH_CFG_VAR: &str = "LINKER_FLASH";
-    const LINKER_RAM_CFG_VAR: &str = "LINKER_RAM";
+    const LINKER_FLASH_CFG_VAR: &str = "LIBTOCK_LINKER_FLASH";
+    const LINKER_RAM_CFG_VAR: &str = "LIBTOCK_LINKER_RAM";
 
     // Note: we need to print these rerun-if commands before using the variable
     // or file, so that if the build script fails cargo knows when to re-run it.
@@ -57,7 +57,7 @@ pub fn auto_layout() {
 
     // Set the linker search path to the out dir of this crate where we have
     // stored all of the linker files.
-    println!("cargo:rustc-link-search={}", RUNTIME_BUILD_OUT_DIR);
+    println!("cargo:rustc-link-search={}", BUILD_SCRIPTS_OUT_DIR);
 
     // Choose the linker file we are going to use for this build. That can be
     // specified by choosing a platform, where the linker file will be selected
@@ -106,6 +106,6 @@ pub fn auto_layout() {
         // Tell rustc where to search for the layout file.
         println!("cargo:rustc-link-search={}", out_dir);
     } else {
-        panic!("Need to set LIBTOCK_PLATFORM or (LINKER_FLASH and LINKER_RAM)");
+        panic!("Need to set LIBTOCK_PLATFORM or (LIBTOCK_LINKER_FLASH and LIBTOCK_LINKER_RAM)");
     }
 }
