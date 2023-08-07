@@ -93,12 +93,12 @@ pub fn auto_layout() {
         let linker_script_name = format!("{}.{}.ld", linker_flash, linker_ram);
         let out_platform_path: PathBuf = [out_dir, &linker_script_name].iter().collect();
         let mut file = File::create(out_platform_path).expect("Could not create linker file");
-        write!(file, "TBF_HEADER_SIZE = 0x80;\n").expect("Could not write linker file");
-        write!(file, "FLASH_START = {};\n", linker_flash).expect("Could not write linker file");
-        write!(file, "FLASH_LENGTH = 0x000D0000;\n",).expect("Could not write linker file");
-        write!(file, "RAM_START = {};\n", linker_ram).expect("Could not write linker file");
-        write!(file, "RAM_LENGTH = 46K;\n",).expect("Could not write linker file");
-        write!(file, "INCLUDE libtock_layout.ld\n").expect("Could not write linker file");
+        writeln!(file, "TBF_HEADER_SIZE = 0x80;").expect("Could not write linker file");
+        writeln!(file, "FLASH_START = {};", linker_flash).expect("Could not write linker file");
+        writeln!(file, "FLASH_LENGTH = 0x000D0000;",).expect("Could not write linker file");
+        writeln!(file, "RAM_START = {};", linker_ram).expect("Could not write linker file");
+        writeln!(file, "RAM_LENGTH = 46K;",).expect("Could not write linker file");
+        writeln!(file, "INCLUDE libtock_layout.ld").expect("Could not write linker file");
 
         // Pass the name of this linker script to rustc.
         println!("cargo:rustc-link-arg=-T{}", linker_script_name);
