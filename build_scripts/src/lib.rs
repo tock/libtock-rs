@@ -1,111 +1,189 @@
 //! Utility functions for implementing build.rs files for libtock-rs apps.
 
-/// This path is set by this crate's build.rs file when this crate is compiled.
-/// This allows this file to know the path of its own local outdir where copies
-/// of linker scripts are stored (by this crate's build.rs). That path can then
-/// be used in other libtock-rs compilations to provide useful linker scripts.
-pub const BUILD_SCRIPTS_OUT_DIR: &str = env!("LIBTOCK_BUILD_SCRIPTS_OUT_DIR");
+/// List of known `LIBTOCK_PLATFORM` values.
+#[rustfmt::skip]
+const PLATFORMS: &[(&str, &str, &str, &str, &str)] = &[
+    // Name               | Flash start | Flash len  | RAM start   | RAM length
+    ("apollo3"            , "0x00040000", "0x0060000", "0x10002000", "0x02000"),
+    ("clue_nrf52840"      , "0x00080000", "512K"     , "0x20006000", "216K"   ),
+    ("esp32_c3_devkitm_1" , "0x403B0000", "0x0030000", "0x3FCA2000", "0x2E000"),
+    ("hail"               , "0x00030000", "0x0040000", "0x20008000", "62K"    ),
+    ("hifive1"            , "0x20040000", "32M"      , "0x80003000", "0x01000"),
+    ("imix"               , "0x00040000", "0x0040000", "0x20008000", "62K"    ),
+    ("imxrt1050"          , "0x63002000", "0x1000000", "0x20004000", "112K"   ),
+    ("microbit_v2"        , "0x00040000", "256K"     , "0x20004000", "112K"   ),
+    ("msp432"             , "0x00020000", "0x0020000", "0x20004000", "0x02000"),
+    ("nano_rp2040_connect", "0x10020000", "256K"     , "0x20004000", "248K"   ),
+    ("nrf52"              , "0x00030000", "0x0060000", "0x20004000", "62K"    ),
+    ("nrf52840"           , "0x00030000", "0x00D0000", "0x20008000", "46K"    ),
+    ("nucleo_f429zi"      , "0x08040000", "255K"     , "0x20004000", "112K"   ),
+    ("nucleo_f446re"      , "0x08040000", "255K"     , "0x20004000", "176K"   ),
+    ("opentitan"          , "0x20030000", "32M"      , "0x10005000", "512K"   ),
+    ("raspberry_pi_pico"  , "0x10040000", "256K"     , "0x20012000", "192K"   ),
+    ("stm32f3discovery"   , "0x08020000", "0x0020000", "0x20004000", "48K"    ),
+    ("stm32f412gdiscovery", "0x08030000", "256K"     , "0x20004000", "112K"   ),
+];
 
 /// Helper function to configure cargo to use suitable linker scripts for
 /// linking libtock-rs apps.
 ///
-/// This function does two things:
+/// `auto_layout` function does a few things:
 ///
-/// 1. Make sure that the linker's search path includes where
-///    `libtock_layout.ld` is stored. This is a general linker script designed
-///    for libtock-rs apps and the Tock kernel.
+/// 1. Copies `libtock_layout.ld` into the linker's search path.
+/// 2. Generates a linker script that specifies which flash and RAM addresses
+///    the app should be compiled for. This linker script depends on the
+///    previously-mentioned `libtock_layout.ld`.
+/// 3. Passes the `-T<linker script.ld>` argument to the linker to make it use
+///    the generated linker script.
 ///
-/// 2. Reference a board-specific linker script that essentially sets the
-///    `MEMORY` command to specify the flash and RAM addresses where the app
-///    should be compiled. This happens by passing the `-T<linker script.ld>`
-///    flag to the linker.
+/// `auto_layout` supports two mechanisms for specifying the flash and RAM
+/// address ranges:
 ///
-///    This function supports two methods for doing this:
+/// 1. Passing the `LIBTOCK_PLATFORM` environment variable, specifying one of a
+///    hardcoded list of known platforms. See the `PLATFORMS` variable above for
+///    the list of supported platforms.
+/// 2. Passing the `LIBTOCK_LINKER_FLASH` and `LIBTOCK_LINKER_RAM` environment
+///    variables which specify the starting addresses of flash and RAM memory,
+///    respectively.
 ///
-///    1. Passing the `LIBTOCK_LIBTOCK_PLATFORM` environment variable which
-///       specifies the name of the linker script in `/layouts` to be used.
-///
-///    2. Passing the `LIBTOCK_LINKER_FLASH` and `LINKER_RAM` environment
-///       variables which specify the starting addresses of flash and RAM
-///       memory, respectively.
+/// Programs passing `LIBTOCK_LINKER_FLASH` and `LIBTOCK_LINKER_RAM` may
+/// additionally pass `LIBTOCK_TBF_HEADER_SIZE`, `LIBTOCK_LINKER_FLASH_LENGTH`,
+/// and/or `LIBTOCK_LINKER_RAM_LENGTH`. If not specified, this function will
+/// assume some default values for those variables.
 pub fn auto_layout() {
+    use std::env::var;
     use std::fs::File;
     use std::io::Write;
+    use std::ops::Deref;
     use std::path::PathBuf;
 
-    const PLATFORM_CFG_VAR: &str = "LIBTOCK_PLATFORM";
-    const LINKER_FLASH_CFG_VAR: &str = "LIBTOCK_LINKER_FLASH";
-    const LINKER_RAM_CFG_VAR: &str = "LIBTOCK_LINKER_RAM";
+    const LIBTOCK_LAYOUT_NAME: &str = "libtock_layout.ld";
+    const LINKER_FLASH_VAR: &str = "LIBTOCK_LINKER_FLASH";
+    const LINKER_FLASH_LEN_VAR: &str = "LIBTOCK_LINKER_FLASH_LENGTH";
+    const LINKER_RAM_VAR: &str = "LIBTOCK_LINKER_RAM";
+    const LINKER_RAM_LEN_VAR: &str = "LIBTOCK_LINKER_RAM_LENGTH";
+    const PLATFORM_VAR: &str = "LIBTOCK_PLATFORM";
+    const TBF_HEADER_SIZE_VAR: &str = "LIBTOCK_TBF_HEADER_SIZE";
 
     // Note: we need to print these rerun-if commands before using the variable
     // or file, so that if the build script fails cargo knows when to re-run it.
-    println!("cargo:rerun-if-env-changed={}", PLATFORM_CFG_VAR);
-    println!("cargo:rerun-if-env-changed={}", LINKER_FLASH_CFG_VAR);
-    println!("cargo:rerun-if-env-changed={}", LINKER_RAM_CFG_VAR);
+    println!("cargo:rerun-if-env-changed={}", LINKER_FLASH_VAR);
+    println!("cargo:rerun-if-env-changed={}", LINKER_FLASH_LEN_VAR);
+    println!("cargo:rerun-if-env-changed={}", LINKER_RAM_VAR);
+    println!("cargo:rerun-if-env-changed={}", LINKER_RAM_LEN_VAR);
+    println!("cargo:rerun-if-env-changed={}", PLATFORM_VAR);
+    println!("cargo:rerun-if-env-changed={}", TBF_HEADER_SIZE_VAR);
 
-    // Read configuration from environment variables.
+    let platform = get_env_var(PLATFORM_VAR);
+    let flash_start = get_env_var(LINKER_FLASH_VAR);
+    let ram_start = get_env_var(LINKER_RAM_VAR);
+    let flash_len;
+    let ram_len;
+    // Determine the flash and RAM address ranges. This detects whether
+    // LIBTOCK_PLATFORM was specified or whether the flash and RAM ranges were
+    // specified directly.
+    let (flash_start, flash_len, ram_start, ram_len) = match (platform, &flash_start, &ram_start) {
+        (None, Some(flash_start), Some(ram_start)) => {
+            // The flash and RAM ranges were specified directly.
+            flash_len = get_env_var(LINKER_FLASH_LEN_VAR);
+            ram_len = get_env_var(LINKER_RAM_LEN_VAR);
+            (
+                flash_start.deref(),
+                flash_len.as_deref().unwrap_or("0xD0000"),
+                ram_start.deref(),
+                ram_len.as_deref().unwrap_or("46K"),
+            )
+        }
+        (Some(platform), None, None) => {
+            // LIBTOCK_PLATFORM was specified.
+            match PLATFORMS
+                .iter()
+                .find(|&&(name, _, _, _, _)| name == platform)
+            {
+                None => panic!("Unknown platform: {}", platform),
+                Some(&(_, flash_start, flash_len, ram_start, ram_len)) => {
+                    (flash_start, flash_len, ram_start, ram_len)
+                }
+            }
+        }
+        _ => panic!(
+            "Must specify either {} or both {} and {}; please see \
+                     libtock_build_scripts' documentation for more information.",
+            PLATFORM_VAR, LINKER_FLASH_VAR, LINKER_RAM_VAR
+        ),
+    };
+    let tbf_header_size;
+    let tbf_header_size = match get_env_var(TBF_HEADER_SIZE_VAR) {
+        None => "0x80",
+        Some(value) => {
+            tbf_header_size = value;
+            &tbf_header_size
+        }
+    };
 
     // Note: cargo fails if run in a path that is not valid Unicode, so this
     // script doesn't need to handle non-Unicode paths. Also, OUT_DIR cannot be
     // in a location with a newline in it, or we have no way to pass
     // rustc-link-search to cargo.
-    let out_dir = &std::env::var("OUT_DIR").expect("Unable to read OUT_DIR");
+    let out_dir = &*var("OUT_DIR").expect("Unable to read OUT_DIR");
     assert!(
         !out_dir.contains('\n'),
         "Build path contains a newline, which is unsupported"
     );
 
-    // Set the linker search path to the out dir of this crate where we have
-    // stored all of the linker files.
-    println!("cargo:rustc-link-search={}", BUILD_SCRIPTS_OUT_DIR);
+    // Create a valid linker file with the specified flash and ram locations.
+    //
+    // ```
+    // TBF_HEADER_SIZE = 0x80;
+    // FLASH_START = 0x00040000;
+    // FLASH_LENGTH = 0x00040000;
+    // RAM_START = 0x20008000;
+    // RAM_LENGTH = 62K;
+    // INCLUDE libtock_layout.ld
+    // ```
+    let layout_name = format!("{flash_start}.{flash_len}.{ram_start}.{ram_len}.ld");
+    let layout_path: PathBuf = [out_dir, &layout_name].iter().collect();
+    let mut layout_file =
+        File::create(&layout_path).unwrap_or_else(|e| panic!("Could not open layout file: {}", e));
+    writeln!(
+        layout_file,
+        "\
+        TBF_HEADER_SIZE = {tbf_header_size};\n\
+        FLASH_START = {flash_start};\n\
+        FLASH_LENGTH = {flash_len};\n\
+        RAM_START = {ram_start};\n\
+        RAM_LENGTH = {ram_len};\n\
+        INCLUDE {};",
+        LIBTOCK_LAYOUT_NAME
+    )
+    .expect("Failed to write layout file");
+    drop(layout_file);
 
-    // Choose the linker file we are going to use for this build. That can be
-    // specified by choosing a platform, where the linker file will be selected
-    // from `runtime/layouts`, or by explicitly setting the flash and RAM
-    // addresses.
+    // Compile the contents of `libtock_layout.ld` into this library as a
+    // string, and copy those contents into out_dir at runtime.
+    let libtock_layout_path: PathBuf = [out_dir, &LIBTOCK_LAYOUT_NAME].iter().collect();
+    let mut libtock_layout_file = File::create(libtock_layout_path)
+        .unwrap_or_else(|e| panic!("Could not open {}: {}", LIBTOCK_LAYOUT_NAME, e));
+    write!(
+        libtock_layout_file,
+        "{}",
+        include_str!("../libtock_layout.ld")
+    )
+    .expect("Failed to write libtock_layout.ld");
+    drop(libtock_layout_file);
 
-    // Read the platform environment variable as a String (our platform names
-    // should all be valid UTF-8).
-    let platform = std::env::var(PLATFORM_CFG_VAR);
+    // Tell rustc which linker script to use and where to find it.
+    println!("cargo:rustc-link-arg=-T{}", layout_path.display());
+    println!("cargo:rustc-link-search={}", out_dir);
+}
 
-    // Read the explicit flash and RAM addresses.
-    let linker_flash = std::env::var(LINKER_FLASH_CFG_VAR);
-    let linker_ram = std::env::var(LINKER_RAM_CFG_VAR);
-
-    if let Ok(platform) = platform {
-        // Point the linker to the correct platform-specific linker file.
-        let platform_ld_name = format!("{}.ld", platform);
-        println!("cargo:rustc-link-arg=-T{}", platform_ld_name);
-    } else if let (Ok(linker_flash), Ok(linker_ram)) = (linker_flash, linker_ram) {
-        // Create a valid linker file with the specified flash and ram locations.
-        //
-        // ```
-        // TBF_HEADER_SIZE = 0x80;
-        //
-        // FLASH_START = 0x00040000;
-        // FLASH_LENGTH = 0x00040000;
-        //
-        // RAM_START = 0x20008000;
-        // RAM_LENGTH = 62K;
-        //
-        // INCLUDE libtock_layout.ld
-        // ```
-        let linker_script_name = format!("{}.{}.ld", linker_flash, linker_ram);
-        let out_platform_path: PathBuf = [out_dir, &linker_script_name].iter().collect();
-        let mut file = File::create(out_platform_path).expect("Could not create linker file");
-        writeln!(file, "TBF_HEADER_SIZE = 0x80;").expect("Could not write linker file");
-        writeln!(file, "FLASH_START = {};", linker_flash).expect("Could not write linker file");
-        writeln!(file, "FLASH_LENGTH = 0x000D0000;",).expect("Could not write linker file");
-        writeln!(file, "RAM_START = {};", linker_ram).expect("Could not write linker file");
-        writeln!(file, "RAM_LENGTH = 46K;",).expect("Could not write linker file");
-        writeln!(file, "INCLUDE libtock_layout.ld").expect("Could not write linker file");
-
-        // Pass the name of this linker script to rustc.
-        println!("cargo:rustc-link-arg=-T{}", linker_script_name);
-
-        // Tell rustc where to search for the layout file.
-        println!("cargo:rustc-link-search={}", out_dir);
-    } else {
-        panic!("Need to set LIBTOCK_PLATFORM or (LIBTOCK_LINKER_FLASH and LIBTOCK_LINKER_RAM)");
+// Retrieves an environment variable as a String. Returns None if the variable
+// is not specified and panics if the variable is not valid Unicode.
+fn get_env_var(name: &str) -> Option<String> {
+    use std::env::{var, VarError};
+    match var(name) {
+        Ok(value) => Some(value),
+        Err(VarError::NotPresent) => None,
+        Err(VarError::NotUnicode(value)) => panic!("Non-Unicode value in {}: {:?}", name, value),
     }
 }
