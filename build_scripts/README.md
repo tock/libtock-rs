@@ -1,4 +1,4 @@
-Libtock Runtime Build Support Crate
+Libtock Build Scripts Support Crate
 ===================================
 
 This crate provides helpers for building libtock-rs apps.
@@ -16,7 +16,7 @@ There are three general steps to use this crate.
    ...
 
    [build-dependencies]
-   libtock_runtime_build = { git = "https://github.com/tock/libtock-rs"}
+   libtock_build_scripts = { git = "https://github.com/tock/libtock-rs"}
    ```
 
    This will ensure the crate and the contained linker scripts are available for
@@ -30,7 +30,7 @@ There are three general steps to use this crate.
    // build.rs
 
    fn main() {
-       libtock_runtime_build::auto_layout();
+       libtock_build_scripts::auto_layout();
    }
    ```
 
