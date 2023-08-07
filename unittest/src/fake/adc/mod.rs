@@ -53,7 +53,7 @@ impl crate::fake::SyscallDriver for Adc {
 
     fn command(&self, command_id: u32, _argument0: u32, _argument1: u32) -> CommandReturn {
         match command_id {
-            EXISTS => crate::command_return::success(),
+            EXISTS => crate::command_return::success_u32(1),
 
             SINGLE_SAMPLE => {
                 if self.busy.get() {

@@ -7,7 +7,7 @@ use libtock_platform::{share, DefaultConfig, YieldNoWaitReturn};
 fn command() {
     let adc = Adc::new();
 
-    assert!(adc.command(EXISTS, 1, 2).is_success());
+    assert!(adc.command(EXISTS, 1, 2).is_success_u32());
 
     assert!(adc.command(SINGLE_SAMPLE, 0, 0).is_success());
 
@@ -33,7 +33,7 @@ fn kernel_integration() {
     let kernel = fake::Kernel::new();
     let adc = Adc::new();
     kernel.add_driver(&adc);
-    assert!(fake::Syscalls::command(DRIVER_NUM, EXISTS, 1, 2).is_success());
+    assert!(fake::Syscalls::command(DRIVER_NUM, EXISTS, 1, 2).is_success_u32());
     assert!(fake::Syscalls::command(DRIVER_NUM, SINGLE_SAMPLE, 0, 0).is_success());
     assert_eq!(
         fake::Syscalls::command(DRIVER_NUM, SINGLE_SAMPLE, 0, 0).get_failure(),
