@@ -27,6 +27,7 @@ libtock_proximity = { path = "apis/proximity" }
 libtock_runtime = { path = "runtime" }
 libtock_sound_pressure = {path = "apis/sound_pressure"}
 libtock_temperature = { path = "apis/temperature" }
+ufmt = { path = "ufmt" }
 
 [profile.dev]
 panic = "abort"
@@ -37,6 +38,7 @@ debug = true
 panic = "abort"
 lto = true
 debug = true
+opt-level = 'z'
 
 [workspace]
 exclude = ["tock"]

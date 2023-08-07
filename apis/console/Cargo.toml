@@ -12,6 +12,7 @@ description = "libtock console driver"
 
 [dependencies]
 libtock_platform = { path = "../../platform" }
+ufmt = { path = "../../ufmt" }
 
 [dev-dependencies]
 libtock_unittest = { path = "../../unittest" }

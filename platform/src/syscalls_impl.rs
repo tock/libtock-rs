@@ -162,6 +162,7 @@ impl<S: RawSyscalls> Syscalls for S {
     // Command
     // -------------------------------------------------------------------------
 
+    #[inline(always)]
     fn command(driver_id: u32, command_id: u32, argument0: u32, argument1: u32) -> CommandReturn {
         unsafe {
             // syscall4's documentation indicates it can be used to call
