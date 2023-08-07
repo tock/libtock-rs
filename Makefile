@@ -102,7 +102,7 @@ EXCLUDE_MIRI := $(EXCLUDE_RUNTIME) --exclude ufmt-macros
 # when we build a crate for an embedded target, as those targets lack `std`.
 EXCLUDE_STD := --exclude libtock_unittest --exclude print_sizes \
                --exclude runner --exclude syscalls_tests \
-               --exclude libtock_runtime_build
+               --exclude libtock_build_scripts
 
 # Currently, all of our crates should build with a stable toolchain. This
 # verifies our crates don't depend on unstable features by using cargo check. We

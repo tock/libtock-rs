@@ -1,3 +1,3 @@
 fn main() {
-    libtock_runtime_build::auto_layout();
+    libtock_build_scripts::auto_layout();
 }
