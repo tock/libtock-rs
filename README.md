@@ -74,7 +74,7 @@ make tab EXAMPLE=<example>
 To install the tab use tockloader
 
 ```shell
-tockloader install <example.tab>
+tockloader install target/tab/<example.tab>
 ```
 
 Tockloader will determine which compiled version with the correct flash and RAM
