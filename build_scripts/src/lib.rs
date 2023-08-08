@@ -161,7 +161,7 @@ pub fn auto_layout() {
 
     // Compile the contents of `libtock_layout.ld` into this library as a
     // string, and copy those contents into out_dir at runtime.
-    let libtock_layout_path: PathBuf = [out_dir, &LIBTOCK_LAYOUT_NAME].iter().collect();
+    let libtock_layout_path: PathBuf = [out_dir, LIBTOCK_LAYOUT_NAME].iter().collect();
     let mut libtock_layout_file = File::create(libtock_layout_path)
         .unwrap_or_else(|e| panic!("Could not open {}: {}", LIBTOCK_LAYOUT_NAME, e));
     write!(
