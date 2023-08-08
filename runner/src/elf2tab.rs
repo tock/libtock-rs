@@ -62,11 +62,8 @@ pub fn convert_elf(cli: &Cli, platform: &str) -> OutFiles {
     let mut command = Command::new("elf2tab");
     #[rustfmt::skip]
     command.args([
-        // TODO: libtock-rs' crates are designed for Tock 2.1's Allow interface,
-        // so we should increment this as soon as the Tock kernel will accept a
-        // 2.1 app.
         "--kernel-major".as_ref(), "2".as_ref(),
-        "--kernel-minor".as_ref(), "0".as_ref(),
+        "--kernel-minor".as_ref(), "1".as_ref(),
         "-n".as_ref(), package_name,
         "-o".as_ref(), tab_path.as_os_str(),
         "--stack".as_ref(), stack_size.as_ref(),
