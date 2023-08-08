@@ -6,15 +6,15 @@ use libtock_platform::{
     share::Handle, subscribe::OneId, DefaultConfig, ErrorCode, Subscribe, Syscalls, Upcall,
 };
 
-/// The Gpio driver
+/// The GPIO driver.
 ///
 /// # Example
 /// ```ignore
-/// use libtock::Gpios;
+/// use libtock::gpio;
 ///
-/// // Turn on led 0
-/// let pin = Gpios::get_pin(0)?;
-///
+/// // Set pin to high.
+/// let pin = gpio::Gpio::get_pin(0).unwrap().make_output().unwrap();
+/// let _ = pin.set();
 /// ```
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
