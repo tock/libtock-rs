@@ -187,7 +187,7 @@ $(ELF_TARGETS):
 
 .PHONY: tab
 tab: $(ELF_TARGETS)
-	elf2tab --kernel-major 2 --kernel-minor 0 -n $(EXAMPLE) -o $(EXAMPLE).tab --stack 1024 --minimum-footer-size 256 $(ELF_LIST)
+	elf2tab --kernel-major 2 --kernel-minor 1 -n $(EXAMPLE) -o $(EXAMPLE).tab --stack 1024 --minimum-footer-size 256 $(ELF_LIST)
 
 # Creates the `make <BOARD> EXAMPLE=<EXAMPLE>` targets. Arguments:
 #  1) The name of the platform to build for.
