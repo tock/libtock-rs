@@ -62,6 +62,9 @@ This script does the following steps for you:
 - create a TAB (tock application bundle)
 - if you have a J-Link compatible board connected: flash this TAB to your board (using tockloader)
 
+## Minimum Supported Rust Version (MSRV)
+
+`libtock-rs` requires Rust 1.59 or higher.
 
 ## License
 
