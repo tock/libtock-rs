@@ -25,7 +25,7 @@ jobs:
       # We'll later add another commit (the pre-merge target branch) to the
       # repository.
       - name: Clone repository
-        uses: actions/checkout@v2.3.0
+        uses: actions/checkout@v3
 
       # The main diff script. Stores the sizes of the example binaries for both
       # the merge commit and the target branch. We display the diff in a
