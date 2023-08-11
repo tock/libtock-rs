@@ -22,25 +22,22 @@ fn main() {
         writeln!(Console::writer(), "GPIO[{}]: {:?}", gpio_index, state).unwrap();
     });
 
-    match Gpio::count() {
-        Ok(gpio_count) if gpio_count > 0 => {
-            // Configure pin 0 as an input and enable rising interrupts
-            let pin = Gpio::get_pin(0).unwrap();
-            let input_pin = pin.make_input::<gpio::PullNone>().unwrap();
-            let _ = input_pin.enable_interrupts(gpio::PinInterruptEdge::Rising);
-
-            // Wait for callbacks.
-            share::scope(|subscribe| {
-                Gpio::register_listener(&listener, subscribe).unwrap();
-
-                loop {
-                    TockSyscalls::yield_wait();
-                }
-            });
-        }
-
-        _ => {
-            writeln!(Console::writer(), "No GPIO pins on this board.").unwrap();
-        }
+    if !Gpio::count().is_ok_and(|c| c > 0) {
+        writeln!(Console::writer(), "No GPIO pins on this board.").unwrap();
+        return;
     }
+
+    // Configure pin 0 as an input and enable rising interrupts
+    let pin = Gpio::get_pin(0).unwrap();
+    let input_pin = pin.make_input::<gpio::PullNone>().unwrap();
+    let _ = input_pin.enable_interrupts(gpio::PinInterruptEdge::Rising);
+
+    // Wait for callbacks.
+    share::scope(|subscribe| {
+        Gpio::register_listener(&listener, subscribe).unwrap();
+
+        loop {
+            TockSyscalls::yield_wait();
+        }
+    });
 }
