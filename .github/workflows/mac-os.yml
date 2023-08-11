@@ -15,7 +15,7 @@ jobs:
       # Clones a single commit from the libtock-rs repository. The commit cloned
       # is a merge commit between the PR's target branch and the PR's source.
       - name: Clone repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Build and Test
         run: |
