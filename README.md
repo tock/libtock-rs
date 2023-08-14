@@ -9,11 +9,10 @@ Generally this library was tested with Tock [Release
 
 The library should work on all Tock boards, but currently apps must be compiled
 for the flash and RAM address they are executed at. See [Fix
-relocation](https://github.com/tock/libtock-rs/issues/28) for more details.
-This means that process binaries must be compiled especially for your board and
-that there can only be one application written in rust at a time and it must be
-installed as the first application on the board, unless you want to play games
-with linker scripts.
+relocation](https://github.com/tock/libtock-rs/issues/28) for more details. You
+may either compile a process binary especially for your board and use only a
+single application written in rust at a time, or use the `make tab` target that
+builds examples for a series of likely useful flash and RAM addresses.
 
 ## Getting Started
 
@@ -44,6 +43,8 @@ The easiest way to start using libtock-rs is adding an example to the
 `examples/` folder. We recommend starting by copying the `console` example, as
 it is a simple example that shows you how to perform normal debug prints.
 
+### Building for a specific board
+
 To build your example for your board you can use
 
 ```shell
@@ -61,6 +62,23 @@ This script does the following steps for you:
 - cross-compile your program
 - create a TAB (tock application bundle)
 - if you have a J-Link compatible board connected: flash this TAB to your board (using tockloader)
+
+### Building a generic TAB (Tock Application Bundle) file
+
+To build your example for a variety of boards you can use
+
+```shell
+make tab EXAMPLE=<example>
+```
+
+To install the tab use tockloader
+
+```shell
+tockloader install target/tab/<example.tab>
+```
+
+Tockloader will determine which compiled version with the correct flash and RAM
+addresses to use.
 
 
 ## License

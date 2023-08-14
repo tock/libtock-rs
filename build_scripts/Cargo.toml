@@ -1,0 +1,9 @@
+[package]
+authors = ["Tock Project Developers <tock-dev@googlegroups.com>"]
+categories = ["embedded", "no-std", "os"]
+description = """Helper functions for compiling libtock-rs apps."""
+edition = "2021"
+license = "Apache-2.0 OR MIT"
+name = "libtock_build_scripts"
+repository = "https://www.github.com/tock/libtock-rs"
+version = "0.1.0"
