@@ -1,3 +1,7 @@
+# Make uses /bin/sh by default, which is a different shell on different OSes.
+# Specify Bash instead so we don't have to test against a variety of shells.
+SHELL := /bin/bash
+
 # By default, let's print out some help
 .PHONY: usage
 usage:
