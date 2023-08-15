@@ -139,10 +139,14 @@ test: examples test-stable
 # and RAM addresses, use `fixed-target`:
 #
 # ```
-# $(call fixed-target, F=0x00030000 R=0x20008000 T=thumbv7em-none-eabi A=cortex-m4)
+# $(call fixed-target, nrf52, F=0x00030000 R=0x20008000 T=thumbv7em-none-eabi A=cortex-m4)
 # ```
 #
-# The "arguments" if you will are:
+# The arguments for `fixed-target` are:
+# 1. Group name for similar platforms with similar flash/RAM addresses.
+# 2. The parameters for a specific build.
+#
+# The "arguments" of the platform parameters are:
 # - F = Flash Address: The address in flash the app is compiled for.
 # - R = RAM Address: The address in RAM the app is compiled for.
 # - T = Target: The cargo target to compile for.
@@ -160,35 +164,46 @@ test: examples test-stable
 # then assigns target variables to that new target to represent the compilation
 # tuple values.
 concat = $(subst =,,$(subst $(eval ) ,,$1))
-fixed-target = $(foreach A,$1,$(eval $(call concat,$1): $A)) $(eval ELF_TARGETS += $(call concat,$1))
+fixed-target = $(foreach A,$2,$(eval $(call concat,$2): $A)) $(eval ELF_TARGETS += $(call concat,$2)) $(eval $1_TARGETS += $(call concat,$2)) $(eval GROUP_TARGETS += $1)
 
-$(call fixed-target, F=0x00030000 R=0x20008000 T=thumbv7em-none-eabi A=cortex-m4)
-$(call fixed-target, F=0x00038000 R=0x20010000 T=thumbv7em-none-eabi A=cortex-m4)
+$(call fixed-target, hail, F=0x00030000 R=0x20008000 T=thumbv7em-none-eabi A=cortex-m4)
+$(call fixed-target, hail, F=0x00038000 R=0x20010000 T=thumbv7em-none-eabi A=cortex-m4)
 
-$(call fixed-target, F=0x00040000 R=0x10002000 T=thumbv7em-none-eabi A=cortex-m4)
-$(call fixed-target, F=0x00048000 R=0x1000a000 T=thumbv7em-none-eabi A=cortex-m4)
+$(call fixed-target, apollo3, F=0x00040000 R=0x10002000 T=thumbv7em-none-eabi A=cortex-m4)
+$(call fixed-target, apollo3, F=0x00048000 R=0x1000a000 T=thumbv7em-none-eabi A=cortex-m4)
 
-$(call fixed-target, F=0x00040000 R=0x20008000 T=thumbv7em-none-eabi A=cortex-m4)
-$(call fixed-target, F=0x00042000 R=0x2000a000 T=thumbv7em-none-eabi A=cortex-m4)
-$(call fixed-target, F=0x00048000 R=0x20010000 T=thumbv7em-none-eabi A=cortex-m4)
+$(call fixed-target, nrf52, F=0x00040000 R=0x20008000 T=thumbv7em-none-eabi A=cortex-m4)
+$(call fixed-target, nrf52, F=0x00042000 R=0x2000a000 T=thumbv7em-none-eabi A=cortex-m4)
+$(call fixed-target, nrf52, F=0x00048000 R=0x20010000 T=thumbv7em-none-eabi A=cortex-m4)
 
-$(call fixed-target, F=0x00080000 R=0x20006000 T=thumbv7em-none-eabi A=cortex-m4)
-$(call fixed-target, F=0x00088000 R=0x2000e000 T=thumbv7em-none-eabi A=cortex-m4)
+$(call fixed-target, clue, F=0x00080000 R=0x20006000 T=thumbv7em-none-eabi A=cortex-m4)
+$(call fixed-target, clue, F=0x00088000 R=0x2000e000 T=thumbv7em-none-eabi A=cortex-m4)
 
-$(call fixed-target, F=0x403b0000 R=0x3fca2000 T=riscv32imc-unknown-none-elf A=riscv32imc)
-$(call fixed-target, F=0x40440000 R=0x3fcaa000 T=riscv32imc-unknown-none-elf A=riscv32imc)
+$(call fixed-target, esp32, F=0x403b0000 R=0x3fca2000 T=riscv32imc-unknown-none-elf A=riscv32imc)
+$(call fixed-target, esp32, F=0x40440000 R=0x3fcaa000 T=riscv32imc-unknown-none-elf A=riscv32imc)
 
-$(call fixed-target, F=0x10020000 R=0x20004000 T=thumbv6m-none-eabi A=cortex-m0)
-$(call fixed-target, F=0x10028000 R=0x2000c000 T=thumbv6m-none-eabi A=cortex-m0)
+$(call fixed-target, rpi, F=0x10020000 R=0x20004000 T=thumbv6m-none-eabi A=cortex-m0)
+$(call fixed-target, rpi, F=0x10028000 R=0x2000c000 T=thumbv6m-none-eabi A=cortex-m0)
+
+# Helper function to define `make tab-<group>` rules. This uses elf2tab to
+# build a .tab.
+define tabpergroup
+.PHONY: tab$(2)
+tab$(2): $$($(1)_TARGETS)
+	mkdir -p target/tab
+	elf2tab --kernel-major 2 --kernel-minor 1 -n $$(EXAMPLE) -o target/tab/$$(EXAMPLE).tab --stack 1024 --minimum-footer-size 256 $$(ELF_LIST)
+endef
+
+# Create `tab-<group>` rules for each group to build TBFs relevant to just that
+# group of platforms.
+$(foreach A,$(sort $(GROUP_TARGETS)),$(eval $(call tabpergroup,$A,-$A)))
+# Create the `make tab` rule to build all TBFs for all platforms.
+$(eval $(call tabpergroup,ELF))
 
 $(ELF_TARGETS):
 	LIBTOCK_LINKER_FLASH=$(F) LIBTOCK_LINKER_RAM=$(R) cargo build --example $(EXAMPLE) $(features) --target=$(T) $(release) --out-dir target/$(A).$(F).$(R) -Z unstable-options
 	$(eval ELF_LIST += target/$(A).$(F).$(R)/$(EXAMPLE),$(A).$(F).$(R))
 
-.PHONY: tab
-tab: $(ELF_TARGETS)
-	mkdir -p target/tab
-	elf2tab --kernel-major 2 --kernel-minor 1 -n $(EXAMPLE) -o target/tab/$(EXAMPLE).tab --stack 1024 --minimum-footer-size 256 $(ELF_LIST)
 
 # Creates the `make <BOARD> EXAMPLE=<EXAMPLE>` targets. Arguments:
 #  1) The name of the platform to build for.
