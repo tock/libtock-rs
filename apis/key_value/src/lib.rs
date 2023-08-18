@@ -51,7 +51,7 @@ impl<S: Syscalls, C: Config> KeyValue<S, C> {
     }
 
     /// Set a key-value object for the `key`.
-    pub fn set(key: &[u8], value: &[u8]) -> Result<(), ErrorCode> {
+    fn insert(command_num: u32, key: &[u8], value: &[u8]) -> Result<(), ErrorCode> {
         let called: Cell<Option<Result<(), ErrorCode>>> = Cell::new(None);
         share::scope::<
             (
@@ -69,7 +69,7 @@ impl<S: Syscalls, C: Config> KeyValue<S, C> {
 
             S::subscribe::<_, _, C, DRIVER_NUM, { subscribe::CALLBACK }>(subscribe, &called)?;
 
-            S::command(DRIVER_NUM, command::SET, 0, 0).to_result()?;
+            S::command(DRIVER_NUM, command_num, 0, 0).to_result()?;
 
             loop {
                 S::yield_wait();
@@ -78,6 +78,21 @@ impl<S: Syscalls, C: Config> KeyValue<S, C> {
                 }
             }
         })
+    }
+
+    /// Set a key-value object for the `key`.
+    pub fn set(key: &[u8], value: &[u8]) -> Result<(), ErrorCode> {
+        Self::insert(command::SET, key, value)
+    }
+
+    /// Set a key-value object for the `key`.
+    pub fn add(key: &[u8], value: &[u8]) -> Result<(), ErrorCode> {
+        Self::insert(command::ADD, key, value)
+    }
+
+    /// Set a key-value object for the `key`.
+    pub fn update(key: &[u8], value: &[u8]) -> Result<(), ErrorCode> {
+        Self::insert(command::UPDATE, key, value)
     }
 
     /// Delete a key-value object by `key`.
@@ -132,6 +147,8 @@ mod command {
     pub const GET: u32 = 1;
     pub const SET: u32 = 2;
     pub const DELETE: u32 = 3;
+    pub const ADD: u32 = 4;
+    pub const UPDATE: u32 = 5;
 }
 
 #[allow(unused)]
