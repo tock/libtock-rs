@@ -1,3 +1,5 @@
+use core::mem::transmute;
+
 /// In order to work with Miri's `-Zmiri-track-raw-pointers` flag, we cannot
 /// pass pointers to the kernel through `usize` values (as casting to and from
 /// `usize` drops the pointer`s tag). Instead, `RawSyscalls` uses the `Register`
@@ -16,19 +18,28 @@ pub struct Register(pub *mut ());
 
 impl From<crate::ErrorCode> for Register {
     fn from(value: crate::ErrorCode) -> Register {
-        Register(value as u16 as *mut ())
+        (value as usize).into()
     }
 }
 
 impl From<u32> for Register {
     fn from(value: u32) -> Register {
-        Register(value as *mut ())
+        (value as usize).into()
     }
 }
 
 impl From<usize> for Register {
     fn from(value: usize) -> Register {
-        Register(value as *mut ())
+        // Note: clippy is wrong here; transmute has different semantics than
+        // `as` casts under strict provenance.
+        #[allow(clippy::useless_transmute)]
+        // We want to convert using the same semantics as core::ptr::invalid:
+        // convert the usize into a pointer with that address without attaching
+        // provenance to it. However, core::ptr::invalid is a nightly-only
+        // function. In order to build on stable, we copy its implementation.
+        // Safety: Raw pointers do not have any validity invariants that usize
+        // does not have; a raw pointer can point to any address.
+        Register(unsafe { transmute(value) })
     }
 }
 
