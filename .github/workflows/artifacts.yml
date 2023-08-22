@@ -12,7 +12,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          cargo install elf2tab
+          rustup install stable
+          cargo +stable install elf2tab
 
       - name: Build LEDs
         run: |
