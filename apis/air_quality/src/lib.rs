@@ -80,7 +80,7 @@ impl<S: Syscalls> AirQuality<S> {
             match read_type {
                 CO2 => {
                     Self::read_co2()?;
-                    while data_cell.get() == None {
+                    while data_cell.get().is_none() {
                         S::yield_wait();
                     }
 
@@ -91,7 +91,7 @@ impl<S: Syscalls> AirQuality<S> {
                 }
                 Tvoc => {
                     Self::read_tvoc()?;
-                    while data_cell.get() == None {
+                    while data_cell.get().is_none() {
                         S::yield_wait();
                     }
 

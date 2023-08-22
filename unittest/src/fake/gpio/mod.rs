@@ -87,8 +87,8 @@ impl<const NUM_GPIOS: usize> Gpio<NUM_GPIOS> {
     }
 
     pub fn set_missing_gpio(&self, gpio: usize) {
-        if (gpio as usize) < self.gpios.len() {
-            self.gpios[gpio as usize].set(None);
+        if let Some(state) = self.gpios.get(gpio) {
+            state.set(None);
         }
     }
 
