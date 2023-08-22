@@ -8,6 +8,9 @@ license = "Apache-2.0 OR MIT"
 name = "libtock"
 repository = "https://www.github.com/tock/libtock-rs"
 version = "0.1.0"
+# Minimum required Rust compiler version for libtock-rs.
+# Aug 2023: Set to support `Result::is_ok_and()`.
+rust-version = "1.70"
 
 [dependencies]
 libtock_adc = { path = "apis/adc"}
