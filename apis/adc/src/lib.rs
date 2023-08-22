@@ -51,7 +51,7 @@ impl<S: Syscalls> Adc<S> {
         share::scope(|subscribe| {
             Self::register_listener(&listener, subscribe)?;
             Self::read_single_sample()?;
-            while sample.get() == None {
+            while sample.get().is_none() {
                 S::yield_wait();
             }
 

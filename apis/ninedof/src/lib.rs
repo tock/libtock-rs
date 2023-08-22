@@ -63,7 +63,7 @@ impl<S: Syscalls> NineDof<S> {
         share::scope(|subscribe| {
             Self::register_listener(&listener, subscribe)?;
             Self::read_accelerometer()?;
-            while data_cell.get() == None {
+            while data_cell.get().is_none() {
                 S::yield_wait();
             }
             match data_cell.get() {
@@ -84,7 +84,7 @@ impl<S: Syscalls> NineDof<S> {
         share::scope(|subscribe| {
             Self::register_listener(&listener, subscribe)?;
             Self::read_magnetometer()?;
-            while data_cell.get() == None {
+            while data_cell.get().is_none() {
                 S::yield_wait();
             }
             match data_cell.get() {
@@ -105,7 +105,7 @@ impl<S: Syscalls> NineDof<S> {
         share::scope(|subscribe| {
             Self::register_listener(&listener, subscribe)?;
             Self::read_gyro()?;
-            while data_cell.get() == None {
+            while data_cell.get().is_none() {
                 S::yield_wait();
             }
             match data_cell.get() {

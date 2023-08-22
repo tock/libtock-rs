@@ -45,7 +45,7 @@ impl<S: Syscalls> Buzzer<S> {
         share::scope(|subscribe| {
             Self::register_listener(&listener, subscribe)?;
             Self::tone(freq, duration)?;
-            while buzzer_cell.get() == None {
+            while buzzer_cell.get().is_none() {
                 S::yield_wait();
             }
             match buzzer_cell.get() {

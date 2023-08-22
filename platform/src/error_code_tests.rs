@@ -8,7 +8,7 @@ use crate::{error_code::NotAnErrorCode, ErrorCode};
 #[test]
 fn error_code_range() {
     for value in 1..=1024u32 {
-        unsafe { *(&value as *const u32 as *const ErrorCode) };
+        let _ = unsafe { *(&value as *const u32 as *const ErrorCode) };
     }
 }
 

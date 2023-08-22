@@ -33,7 +33,7 @@ impl AmbientLight {
     pub fn set_value(&self, value: u32) {
         if self.busy.get() {
             self.share_ref
-                .schedule_upcall(0, (value as u32, 0, 0))
+                .schedule_upcall(0, (value, 0, 0))
                 .expect("Unable to schedule upcall");
             self.busy.set(false);
         }

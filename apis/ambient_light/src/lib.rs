@@ -44,7 +44,7 @@ impl<S: Syscalls> AmbientLight<S> {
         share::scope(|subscribe| {
             Self::register_listener(&listener, subscribe)?;
             Self::read_intensity()?;
-            while intensity_cell.get() == None {
+            while intensity_cell.get().is_none() {
                 S::yield_wait();
             }
 
