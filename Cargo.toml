@@ -32,14 +32,14 @@ libtock_temperature = { path = "apis/temperature" }
 libtock_build_scripts = { path = "build_scripts"}
 
 [profile.dev]
-panic = "abort"
-lto = true
 debug = true
+lto = true
+panic = "abort"
 
 [profile.release]
-panic = "abort"
-lto = true
 debug = true
+lto = true
+panic = "abort"
 
 [workspace]
 exclude = ["tock"]
@@ -47,16 +47,16 @@ members = [
     "apis/adc",
     "apis/air_quality",
     "apis/alarm",
-    "apis/gpio",
+    "apis/ambient_light",
     "apis/buttons",
     "apis/buzzer",
     "apis/console",
+    "apis/gpio",
     "apis/leds",
     "apis/low_level_debug",
     "apis/ninedof",
     "apis/proximity",
     "apis/temperature",
-    "apis/ambient_light",
     "panic_handlers/debug_panic",
     "panic_handlers/small_panic",
     "platform",
