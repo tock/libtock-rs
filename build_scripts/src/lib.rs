@@ -175,6 +175,11 @@ pub fn auto_layout() {
     // Tell rustc which linker script to use and where to find it.
     println!("cargo:rustc-link-arg=-T{}", layout_path.display());
     println!("cargo:rustc-link-search={}", out_dir);
+
+    // Configure the alignment size for the linker. This prevents the linker
+    // from assuming very large pages (i.e. 65536 bytes) and unnecessarily
+    // inserting additional padding into the output ELF.
+    println!("cargo:rustc-link-arg=-zmax-page-size=4096");
 }
 
 // Retrieves an environment variable as a String. Returns None if the variable
