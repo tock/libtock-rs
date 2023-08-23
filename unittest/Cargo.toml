@@ -10,4 +10,4 @@ version = "0.1.0"
 
 [dependencies]
 libtock_platform = { path = "../platform" }
-thiserror = "1.0"
+thiserror = "1.0.44"
