@@ -164,3 +164,23 @@ SECTIONS {
       *(.ARM.exidx .eh_frame)
     }
 }
+
+/* Check that the linker thinks our start of flash is page aligned. Now, the
+ * linker doesn't actually know the size of pages, and for our purposes we don't
+ * necessarily care that these are aligned, but the linker will generate
+ * segments which are aligned to what it thinks the page size is. This will
+ * cause the linker to insert segments _before_ `FLASH_START`, which is not what
+ * we intend. To ensure more valid-looking .elf files, we check that
+ * `FLASH_START` is aligned to what the linker thinks is the page size.
+ *
+ * If this check fails, it is likely the linker is using a page size of 0x10000
+ * (based on observations in Aug 2023). The linker argument `-z
+ * max-page-size=4096` changes this setting. We recommend adding
+ * `println!("cargo:rustc-link-arg=-zmax-page-size=4096");` to your build.rs
+ * file to fix this issue.
+ */
+ASSERT(FLASH_START % CONSTANT(MAXPAGESIZE)==0, "
+FLASH_START not page aligned according to the linker.
+This will cause issues with generated .elf segments.
+The linker is probably assuming too large of a page size.
+Add `println!('cargo:rustc-link-arg=-zmax-page-size=4096');` to build.rs to fix.")
