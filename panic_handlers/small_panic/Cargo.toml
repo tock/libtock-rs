@@ -6,6 +6,7 @@ description = """Small and basic panic handler for libtock. Calls low-level debu
 edition = "2021"
 license = "Apache-2.0 OR MIT"
 repository = "https://www.github.com/tock/libtock-rs"
+rust-version.workspace = true
 
 [dependencies]
 libtock_low_level_debug = { path = "../../apis/low_level_debug" }
