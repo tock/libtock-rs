@@ -45,10 +45,7 @@ endif
 
 .PHONY: setup
 setup: setup-qemu
-	rustup install stable
-	cargo +stable install elf2tab
-	cargo miri setup
-	rustup target add --toolchain stable thumbv7em-none-eabi
+	cargo install elf2tab
 
 # Sets up QEMU in the tock/ directory. We use Tock's QEMU which may contain
 # patches to better support boards that Tock supports.
@@ -108,19 +105,8 @@ EXCLUDE_STD := --exclude libtock_unittest --exclude print_sizes \
                --exclude runner --exclude syscalls_tests \
                --exclude libtock_build_scripts
 
-# Currently, all of our crates should build with a stable toolchain. This
-# verifies our crates don't depend on unstable features by using cargo check. We
-# specify a different target directory so this doesn't flush the cargo cache of
-# the primary toolchain.
-.PHONY: test-stable
-test-stable:
-	cargo +stable check --target-dir=target/stable --workspace \
-		$(EXCLUDE_RUNTIME)
-	LIBTOCK_PLATFORM=nrf52 cargo +stable check $(EXCLUDE_STD) \
-		--target=thumbv7em-none-eabi --target-dir=target/stable --workspace
-
 .PHONY: test
-test: examples test-stable
+test: examples
 	cargo test $(EXCLUDE_RUNTIME) --workspace
 	LIBTOCK_PLATFORM=nrf52 cargo fmt --all -- --check
 	cargo clippy --all-targets $(EXCLUDE_RUNTIME) --workspace
@@ -128,8 +114,10 @@ test: examples test-stable
 		--target=thumbv7em-none-eabi --workspace
 	LIBTOCK_PLATFORM=hifive1 cargo clippy $(EXCLUDE_STD) \
 		--target=riscv32imac-unknown-none-elf --workspace
-	MIRIFLAGS="-Zmiri-strict-provenance -Zmiri-symbolic-alignment-check" \
-		cargo miri test $(EXCLUDE_MIRI) --workspace
+	cd nightly && \
+		MIRIFLAGS="-Zmiri-strict-provenance -Zmiri-symbolic-alignment-check" \
+		cargo miri test $(EXCLUDE_MIRI) --manifest-path=../Cargo.toml \
+		--target-dir=target --workspace
 	echo '[ SUCCESS ] libtock-rs tests pass'
 
 # Helper functions to define make targets to build for specific (flash, ram,
