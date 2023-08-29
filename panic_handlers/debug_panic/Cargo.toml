@@ -6,6 +6,7 @@ description = """Debug panic handler for libtock. Prints panic info to console a
 edition = "2021"
 license = "Apache-2.0 OR MIT"
 repository = "https://www.github.com/tock/libtock-rs"
+rust-version.workspace = true
 
 [dependencies]
 libtock_console = { path = "../../apis/console" }
