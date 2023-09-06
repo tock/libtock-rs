@@ -184,6 +184,7 @@ tab: $(ELF_TARGETS)
 
 # Creates the `make <BOARD> EXAMPLE=<EXAMPLE>` targets. Arguments:
 #  1) The name of the platform to build for.
+#  2) The target architecture the platform uses.
 #
 # A different --target-dir is passed for each platform to prevent race
 # conditions between concurrent cargo run invocations. See
@@ -192,9 +193,9 @@ define platform_build
 .PHONY: $(1)
 $(1):
 	LIBTOCK_PLATFORM=$(1) cargo run --example $(EXAMPLE) $(features) \
-		$(release) --target=thumbv7em-none-eabi --target-dir=target/$(1)
+		$(release) --target=$(2) --target-dir=target/$(1)
 	mkdir -p target/tbf/$(1)
-	cp target/$(1)/thumbv7em-none-eabi/release/examples/$(EXAMPLE).{tab,tbf} \
+	cp target/$(1)/$(2)/release/examples/$(EXAMPLE).{tab,tbf} \
 		target/tbf/$(1)
 endef
 
@@ -204,34 +205,34 @@ define platform_flash
 .PHONY: flash-$(1)
 flash-$(1):
 	LIBTOCK_PLATFORM=$(1) cargo run --example $(EXAMPLE) $(features) \
-		$(release) --target=thumbv7em-none-eabi --target-dir=target/$(1) -- \
+		$(release) --target=$(2) --target-dir=target/$(1) -- \
 		--deploy=tockloader
 endef
 
-$(eval $(call platform_build,apollo3))
-$(eval $(call platform_build,esp32_c3_devkitm_1))
-$(eval $(call platform_build,hail))
-$(eval $(call platform_flash,hail))
-$(eval $(call platform_build,imix))
-$(eval $(call platform_flash,imix))
-$(eval $(call platform_build,microbit_v2))
-$(eval $(call platform_flash,microbit_v2))
-$(eval $(call platform_build,nucleo_f429zi))
-$(eval $(call platform_build,nucleo_f446re))
-$(eval $(call platform_build,nrf52840))
-$(eval $(call platform_flash,nrf52840))
-$(eval $(call platform_build,raspberry_pi_pico))
-$(eval $(call platform_build,nano_rp2040_connect))
-$(eval $(call platform_build,stm32f3discovery))
-$(eval $(call platform_build,stm32f412gdiscovery))
-$(eval $(call platform_build,opentitan))
-$(eval $(call platform_build,hifive1))
-$(eval $(call platform_build,nrf52))
-$(eval $(call platform_flash,nrf52))
-$(eval $(call platform_build,imxrt1050))
-$(eval $(call platform_build,msp432))
-$(eval $(call platform_build,clue_nrf52840))
-$(eval $(call platform_flash,clue_nrf52840))
+$(eval $(call platform_build,apollo3,thumbv7em-none-eabi))
+$(eval $(call platform_build,esp32_c3_devkitm_1,riscv32imc-unknown-none-elf))
+$(eval $(call platform_build,hail,thumbv7em-none-eabi))
+$(eval $(call platform_flash,hail,thumbv7em-none-eabi))
+$(eval $(call platform_build,imix,thumbv7em-none-eabi))
+$(eval $(call platform_flash,imix,thumbv7em-none-eabi))
+$(eval $(call platform_build,microbit_v2,thumbv7em-none-eabi))
+$(eval $(call platform_flash,microbit_v2,thumbv7em-none-eabi))
+$(eval $(call platform_build,nucleo_f429zi,thumbv7em-none-eabi))
+$(eval $(call platform_build,nucleo_f446re,thumbv7em-none-eabi))
+$(eval $(call platform_build,nrf52840,thumbv7em-none-eabi))
+$(eval $(call platform_flash,nrf52840,thumbv7em-none-eabi))
+$(eval $(call platform_build,raspberry_pi_pico,thumbv6m-none-eabi))
+$(eval $(call platform_build,nano_rp2040_connect,thumbv6m-none-eabi))
+$(eval $(call platform_build,stm32f3discovery,thumbv7em-none-eabi))
+$(eval $(call platform_build,stm32f412gdiscovery,thumbv7em-none-eabi))
+$(eval $(call platform_build,opentitan,riscv32imc-unknown-none-elf))
+$(eval $(call platform_build,hifive1,riscv32imac-unknown-none-elf))
+$(eval $(call platform_build,nrf52,thumbv7em-none-eabi))
+$(eval $(call platform_flash,nrf52,thumbv7em-none-eabi))
+$(eval $(call platform_build,imxrt1050,thumbv7em-none-eabi))
+$(eval $(call platform_build,msp432,thumbv7em-none-eabi))
+$(eval $(call platform_build,clue_nrf52840,thumbv7em-none-eabi))
+$(eval $(call platform_flash,clue_nrf52840,thumbv7em-none-eabi))
 
 .PHONY: clean
 clean:
