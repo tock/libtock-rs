@@ -146,7 +146,9 @@ impl<const NUM_GPIOS: usize> crate::fake::SyscallDriver for Gpio<NUM_GPIOS> {
     }
 
     fn command(&self, command_number: u32, argument0: u32, argument1: u32) -> CommandReturn {
-        if command_number == GPIO_COUNT {
+        if command_number == EXISTS {
+            crate::command_return::success()
+        } else if command_number == GPIO_COUNT {
             crate::command_return::success_u32(NUM_GPIOS as u32)
         } else if argument0 < NUM_GPIOS as u32 {
             if self.gpios[argument0 as usize].get().is_some() {
@@ -254,7 +256,7 @@ mod tests;
 const DRIVER_NUM: u32 = 4;
 
 // Command IDs
-const GPIO_COUNT: u32 = 0;
+const EXISTS: u32 = 0;
 
 const GPIO_ENABLE_OUTPUT: u32 = 1;
 const GPIO_SET: u32 = 2;
@@ -268,3 +270,5 @@ const GPIO_ENABLE_INTERRUPTS: u32 = 7;
 const GPIO_DISABLE_INTERRUPTS: u32 = 8;
 
 const GPIO_DISABLE: u32 = 9;
+
+const GPIO_COUNT: u32 = 10;

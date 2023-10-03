@@ -7,16 +7,16 @@ type LowLevelDebug = super::LowLevelDebug<fake::Syscalls>;
 #[test]
 fn no_driver() {
     let _kernel = fake::Kernel::new();
-    assert!(!LowLevelDebug::driver_check());
+    assert!(!LowLevelDebug::exists());
 }
 
 #[test]
-fn driver_check() {
+fn exists() {
     let kernel = fake::Kernel::new();
     let driver = fake::LowLevelDebug::new();
     kernel.add_driver(&driver);
 
-    assert!(LowLevelDebug::driver_check());
+    assert!(LowLevelDebug::exists());
     assert_eq!(driver.take_messages(), []);
 }
 

@@ -33,7 +33,7 @@ impl crate::fake::SyscallDriver for LowLevelDebug {
 
     fn command(&self, command_num: u32, argument0: u32, argument1: u32) -> CommandReturn {
         match command_num {
-            DRIVER_CHECK => {}
+            EXISTS => {}
             PRINT_ALERT_CODE => self.handle_message(Message::AlertCode(argument0)),
             PRINT_1 => self.handle_message(Message::Print1(argument0)),
             PRINT_2 => self.handle_message(Message::Print2(argument0, argument1)),
@@ -72,7 +72,7 @@ mod tests;
 const DRIVER_NUM: u32 = 8;
 
 // Command numbers
-const DRIVER_CHECK: u32 = 0;
+const EXISTS: u32 = 0;
 const PRINT_ALERT_CODE: u32 = 1;
 const PRINT_1: u32 = 2;
 const PRINT_2: u32 = 3;

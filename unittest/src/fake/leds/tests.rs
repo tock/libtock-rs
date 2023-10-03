@@ -7,7 +7,7 @@ use libtock_platform::ErrorCode;
 fn command() {
     use fake::SyscallDriver;
     let leds = Leds::<10>::new();
-    let value = leds.command(DRIVER_CHECK, 1, 2);
+    let value = leds.command(EXISTS, 1, 2);
     assert_eq!(value.get_success_u32(), Some(10));
     assert_eq!(
         leds.command(LED_ON, 11, 0).get_failure(),
@@ -32,7 +32,7 @@ fn kernel_integration() {
     let kernel = fake::Kernel::new();
     let leds = Leds::<10>::new();
     kernel.add_driver(&leds);
-    let value = fake::Syscalls::command(DRIVER_NUM, DRIVER_CHECK, 1, 2);
+    let value = fake::Syscalls::command(DRIVER_NUM, EXISTS, 1, 2);
     assert!(value.is_success_u32());
     assert_eq!(value.get_success_u32(), Some(10));
     assert_eq!(

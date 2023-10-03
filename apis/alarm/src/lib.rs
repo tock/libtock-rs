@@ -60,8 +60,8 @@ impl Convert for Milliseconds {
 impl<S: Syscalls, C: platform::subscribe::Config> Alarm<S, C> {
     /// Run a check against the console capsule to ensure it is present.
     #[inline(always)]
-    pub fn driver_check() -> Result<(), ErrorCode> {
-        S::command(DRIVER_NUM, command::DRIVER_CHECK, 0, 0).to_result()
+    pub fn exists() -> Result<(), ErrorCode> {
+        S::command(DRIVER_NUM, command::EXISTS, 0, 0).to_result()
     }
 
     pub fn get_frequency() -> Result<Hz, ErrorCode> {
@@ -104,7 +104,7 @@ const DRIVER_NUM: u32 = 0;
 // Command IDs
 #[allow(unused)]
 mod command {
-    pub const DRIVER_CHECK: u32 = 0;
+    pub const EXISTS: u32 = 0;
     pub const FREQUENCY: u32 = 1;
     pub const TIME: u32 = 2;
     pub const STOP: u32 = 3;

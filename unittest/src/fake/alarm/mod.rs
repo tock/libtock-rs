@@ -67,7 +67,7 @@ const DRIVER_NUM: u32 = 0;
 // Command IDs
 #[allow(unused)]
 pub mod command {
-    pub const DRIVER_CHECK: u32 = 0;
+    pub const EXISTS: u32 = 0;
     pub const FREQUENCY: u32 = 1;
     pub const TIME: u32 = 2;
     pub const STOP: u32 = 3;

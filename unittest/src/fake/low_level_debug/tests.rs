@@ -6,7 +6,7 @@ use fake::low_level_debug::*;
 fn command() {
     use fake::SyscallDriver;
     let low_level_debug = LowLevelDebug::new();
-    assert!(low_level_debug.command(DRIVER_CHECK, 1, 2).is_success());
+    assert!(low_level_debug.command(EXISTS, 1, 2).is_success());
     assert!(low_level_debug.command(PRINT_ALERT_CODE, 3, 4).is_success());
     assert_eq!(low_level_debug.take_messages(), [Message::AlertCode(3)]);
     assert!(low_level_debug.command(PRINT_1, 5, 6).is_success());
@@ -25,7 +25,7 @@ fn kernel_integration() {
     let kernel = fake::Kernel::new();
     let low_level_debug = LowLevelDebug::new();
     kernel.add_driver(&low_level_debug);
-    assert!(fake::Syscalls::command(DRIVER_NUM, DRIVER_CHECK, 1, 2).is_success());
+    assert!(fake::Syscalls::command(DRIVER_NUM, EXISTS, 1, 2).is_success());
     assert!(fake::Syscalls::command(DRIVER_NUM, PRINT_ALERT_CODE, 3, 4).is_success());
     assert_eq!(low_level_debug.take_messages(), [Message::AlertCode(3)]);
     assert!(fake::Syscalls::command(DRIVER_NUM, PRINT_1, 5, 6).is_success());
