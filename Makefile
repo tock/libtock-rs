@@ -43,8 +43,21 @@ ifndef DEBUG
 release=--release
 endif
 
+# Rustup currently lacks the locking needed for concurrent use:
+# https://github.com/rust-lang/rustup/issues/988. In particular, running
+# concurrent cargo commands with a missing toolchain results in parallel rustup
+# instances installing the same toolchain, corrupting that toolchain. To
+# mitigate that issue, every target that uses the main (MSRV) toolchain should
+# depend transitively on the `toolchain` target, so that the toolchain is
+# installed before it is invoked concurrently. Note that we don't need to do
+# this for the nightly toolchain because the nightly toolchain is only used by
+# the `test` target, so this Makefile won't invoke it concurrently.
+.PHONY: toolchain
+toolchain:
+	cargo -V
+
 .PHONY: setup
-setup: setup-qemu
+setup: setup-qemu toolchain
 	cargo install elf2tab
 
 # Sets up QEMU in the tock/ directory. We use Tock's QEMU which may contain
@@ -69,19 +82,19 @@ kernel-opentitan:
 
 # Prints out the sizes of the example binaries.
 .PHONY: print-sizes
-print-sizes: examples
+print-sizes: examples toolchain
 	cargo run --release -p print_sizes
 
 # Runs a libtock example in QEMU on a simulated HiFive board.
 .PHONY: qemu-example
-qemu-example: kernel-hifive
+qemu-example: kernel-hifive toolchain
 	LIBTOCK_PLATFORM="hifive1" cargo run --example "$(EXAMPLE)" -p libtock \
 		--release --target=riscv32imac-unknown-none-elf -- --deploy qemu
 
 # Build the examples on both a RISC-V target and an ARM target. We pick
 # opentitan as the RISC-V target because it lacks atomics.
 .PHONY: examples
-examples:
+examples: toolchain
 	LIBTOCK_PLATFORM=nrf52 cargo build --examples --release \
 		--target=thumbv7em-none-eabi
 	LIBTOCK_PLATFORM=opentitan cargo build --examples --release \
@@ -173,7 +186,7 @@ $(call fixed-target, F=0x40440000 R=0x3fcaa000 T=riscv32imc-unknown-none-elf A=r
 $(call fixed-target, F=0x10020000 R=0x20004000 T=thumbv6m-none-eabi A=cortex-m0)
 $(call fixed-target, F=0x10028000 R=0x2000c000 T=thumbv6m-none-eabi A=cortex-m0)
 
-$(ELF_TARGETS):
+$(ELF_TARGETS): toolchain
 	LIBTOCK_LINKER_FLASH=$(F) LIBTOCK_LINKER_RAM=$(R) cargo build --example $(EXAMPLE) $(features) --target=$(T) $(release) --out-dir target/$(A).$(F).$(R) -Z unstable-options
 	$(eval ELF_LIST += target/$(A).$(F).$(R)/$(EXAMPLE),$(A).$(F).$(R))
 
@@ -191,7 +204,7 @@ tab: $(ELF_TARGETS)
 # https://github.com/tock/libtock-rs/issues/366 for more information.
 define platform_build
 .PHONY: $(1)
-$(1):
+$(1): toolchain
 	LIBTOCK_PLATFORM=$(1) cargo run --example $(EXAMPLE) $(features) \
 		$(release) --target=$(2) --target-dir=target/$(1)
 	mkdir -p target/tbf/$(1)
@@ -203,9 +216,9 @@ endef
 #  1) The name of the platform to flash for.
 define platform_flash
 .PHONY: flash-$(1)
-flash-$(1):
+flash-$(1): toolchain
 	LIBTOCK_PLATFORM=$(1) cargo run --example $(EXAMPLE) $(features) \
-		$(release) --target=$(2) --target-dir=target/$(1) -- \
+		$(release) --target=$(2) --target-dir=target/flash-$(1) -- \
 		--deploy=tockloader
 endef
 
@@ -234,7 +247,12 @@ $(eval $(call platform_build,msp432,thumbv7em-none-eabi))
 $(eval $(call platform_build,clue_nrf52840,thumbv7em-none-eabi))
 $(eval $(call platform_flash,clue_nrf52840,thumbv7em-none-eabi))
 
+# clean cannot safely be invoked concurrently with other actions, so we don't
+# need to depend on toolchain. We also manually remove the nightly toolchain's
+# target directory, in case the user doesn't want to install the nightly
+# toolchain.
 .PHONY: clean
 clean:
 	cargo clean
+	rm -fr nightly/target/
 	$(MAKE) -C tock clean
