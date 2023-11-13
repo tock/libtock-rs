@@ -25,8 +25,8 @@ impl<S: Syscalls> LowLevelDebug<S> {
     /// that the driver is working, as it may still fail to allocate grant
     /// memory.
     #[inline(always)]
-    pub fn driver_check() -> bool {
-        S::command(DRIVER_NUM, DRIVER_CHECK, 0, 0).is_success()
+    pub fn exists() -> bool {
+        S::command(DRIVER_NUM, EXISTS, 0, 0).is_success()
     }
 
     /// Print one of the predefined alerts in [`AlertCode`].
@@ -76,7 +76,7 @@ mod tests;
 const DRIVER_NUM: u32 = 8;
 
 // Command IDs
-const DRIVER_CHECK: u32 = 0;
+const EXISTS: u32 = 0;
 const PRINT_ALERT_CODE: u32 = 1;
 const PRINT_1: u32 = 2;
 const PRINT_2: u32 = 3;

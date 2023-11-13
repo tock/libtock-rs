@@ -8,16 +8,16 @@ type Console = super::Console<fake::Syscalls>;
 #[test]
 fn no_driver() {
     let _kernel = fake::Kernel::new();
-    assert!(!Console::driver_check());
+    assert!(!Console::exists());
 }
 
 #[test]
-fn driver_check() {
+fn exists() {
     let kernel = fake::Kernel::new();
     let driver = fake::Console::new();
     kernel.add_driver(&driver);
 
-    assert!(Console::driver_check());
+    assert!(Console::exists());
     assert_eq!(driver.take_bytes(), &[]);
 }
 

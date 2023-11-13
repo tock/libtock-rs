@@ -79,7 +79,7 @@ impl crate::fake::SyscallDriver for Console {
 
     fn command(&self, command_num: u32, argument0: u32, _argument1: u32) -> CommandReturn {
         match command_num {
-            DRIVER_CHECK => {}
+            EXISTS => {}
             WRITE => {
                 let mut bytes = self.messages.take();
                 let buffer = self.buffer.take();
@@ -121,7 +121,7 @@ mod tests;
 const DRIVER_NUM: u32 = 1;
 
 // Command numbers
-const DRIVER_CHECK: u32 = 0;
+const EXISTS: u32 = 0;
 const WRITE: u32 = 1;
 const READ: u32 = 2;
 //const ABORT: u32 = 3;

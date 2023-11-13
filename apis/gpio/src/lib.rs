@@ -56,11 +56,13 @@ impl Pull for PullNone {
 pub struct Gpio<S: Syscalls>(S);
 
 impl<S: Syscalls> Gpio<S> {
-    /// Run a check against the gpio capsule to ensure it is present.
-    ///
-    /// Returns true` if the driver was present. This does not necessarily mean
+    /// Returns Ok() if the driver was present.This does not necessarily mean
     /// that the driver is working, as it may still fail to allocate grant
     /// memory.
+    pub fn exists() -> Result<(), ErrorCode> {
+        S::command(DRIVER_NUM, EXISTS, 0, 0).to_result()
+    }
+
     pub fn count() -> Result<u32, ErrorCode> {
         S::command(DRIVER_NUM, GPIO_COUNT, 0, 0).to_result()
     }
@@ -239,7 +241,7 @@ mod tests;
 const DRIVER_NUM: u32 = 4;
 
 // Command IDs
-const GPIO_COUNT: u32 = 0;
+const EXISTS: u32 = 0;
 
 const GPIO_ENABLE_OUTPUT: u32 = 1;
 const GPIO_SET: u32 = 2;
@@ -253,3 +255,5 @@ const GPIO_ENABLE_INTERRUPTS: u32 = 7;
 const GPIO_DISABLE_INTERRUPTS: u32 = 8;
 
 const GPIO_DISABLE: u32 = 9;
+
+const GPIO_COUNT: u32 = 10;

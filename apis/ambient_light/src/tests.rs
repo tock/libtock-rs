@@ -13,7 +13,7 @@ fn no_driver() {
 }
 
 #[test]
-fn driver_check() {
+fn exists() {
     let kernel = fake::Kernel::new();
     let driver = fake::AmbientLight::new();
     kernel.add_driver(&driver);

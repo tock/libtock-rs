@@ -31,8 +31,8 @@ impl<S: Syscalls, C: Config> Console<S, C> {
     /// that the driver is working, as it may still fail to allocate grant
     /// memory.
     #[inline(always)]
-    pub fn driver_check() -> bool {
-        S::command(DRIVER_NUM, command::DRIVER_CHECK, 0, 0).is_success()
+    pub fn exists() -> bool {
+        S::command(DRIVER_NUM, command::EXISTS, 0, 0).is_success()
     }
 
     /// Writes bytes.
@@ -142,7 +142,7 @@ const DRIVER_NUM: u32 = 1;
 // Command IDs
 #[allow(unused)]
 mod command {
-    pub const DRIVER_CHECK: u32 = 0;
+    pub const EXISTS: u32 = 0;
     pub const WRITE: u32 = 1;
     pub const READ: u32 = 2;
     pub const ABORT: u32 = 3;
