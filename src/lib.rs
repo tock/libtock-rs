@@ -51,6 +51,10 @@ pub mod gpio {
         PullDown, PullNone, PullUp,
     };
 }
+pub mod i2c_master_slave {
+    use libtock_i2c_master_slave as i2c_master_slave;
+    pub type I2CMasterSlave = i2c_master_slave::I2CMasterSlave<super::runtime::TockSyscalls>;
+}
 pub mod leds {
     use libtock_leds as leds;
     pub type Leds = leds::Leds<super::runtime::TockSyscalls>;
