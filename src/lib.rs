@@ -72,6 +72,7 @@ pub mod proximity {
 pub mod rng {
     use libtock_rng as rng;
     pub type Rng = rng::Rng<super::runtime::TockSyscalls>;
+    pub use rng::RngListener;
 }
 pub mod sound_pressure {
     use libtock_sound_pressure as sound_pressure;
