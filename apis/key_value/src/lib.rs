@@ -134,6 +134,9 @@ impl<T: platform::allow_ro::Config + platform::allow_rw::Config + platform::subs
 {
 }
 
+#[cfg(test)]
+mod tests;
+
 // -----------------------------------------------------------------------------
 // Driver number and command IDs
 // -----------------------------------------------------------------------------
