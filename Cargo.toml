@@ -16,12 +16,12 @@ version = "0.1.0"
 rust-version = "1.70"
 
 [dependencies]
-libtock_adc = { path = "apis/adc"}
+libtock_adc = { path = "apis/adc" }
 libtock_air_quality = { path = "apis/air_quality" }
 libtock_alarm = { path = "apis/alarm" }
 libtock_ambient_light = { path = "apis/ambient_light" }
 libtock_buttons = { path = "apis/buttons" }
-libtock_buzzer = {path = "apis/buzzer"}
+libtock_buzzer = { path = "apis/buzzer" }
 libtock_console = { path = "apis/console" }
 libtock_debug_panic = { path = "panic_handlers/debug_panic" }
 libtock_gpio = { path = "apis/gpio" }
@@ -31,12 +31,13 @@ libtock_low_level_debug = { path = "apis/low_level_debug" }
 libtock_ninedof = { path = "apis/ninedof" }
 libtock_platform = { path = "platform" }
 libtock_proximity = { path = "apis/proximity" }
+libtock_rng = { path = "apis/rng" }
 libtock_runtime = { path = "runtime" }
-libtock_sound_pressure = {path = "apis/sound_pressure"}
+libtock_sound_pressure = { path = "apis/sound_pressure" }
 libtock_temperature = { path = "apis/temperature" }
 
 [build-dependencies]
-libtock_build_scripts = { path = "build_scripts"}
+libtock_build_scripts = { path = "build_scripts" }
 
 [profile.dev]
 debug = true
@@ -64,6 +65,7 @@ members = [
     "apis/low_level_debug",
     "apis/ninedof",
     "apis/proximity",
+    "apis/rng",
     "apis/temperature",
     "panic_handlers/debug_panic",
     "panic_handlers/small_panic",
