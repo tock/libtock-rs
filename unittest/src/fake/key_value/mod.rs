@@ -120,14 +120,11 @@ impl crate::fake::SyscallDriver for KeyValue {
                 let mut db = self.database.take();
 
                 let mut found = false;
-                match db.get(k_str) {
-                    Some(_val) => {
-                        self.share_ref
-                            .schedule_upcall(SUB_CALLBACK, (ErrorCode::NoSupport as u32, 0, 0))
-                            .expect("Unable to schedule upcall {}");
-                        found = true;
-                    }
-                    _ => {}
+                if let Some(_val) = db.get(k_str) {
+                    self.share_ref
+                        .schedule_upcall(SUB_CALLBACK, (ErrorCode::NoSupport as u32, 0, 0))
+                        .expect("Unable to schedule upcall {}");
+                    found = true;
                 }
 
                 if !found {
