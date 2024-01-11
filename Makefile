@@ -33,6 +33,8 @@ usage:
 	@echo "Run 'make flash-<board> EXAMPLE=<>' to flash EXAMPLE to a tockloader-supported board."
 	@echo "Run 'make qemu-example EXAMPLE=<>' to run EXAMPLE in QEMU"
 	@echo "Run 'make test' to test any local changes you have made"
+	@echo "Run 'make format' to format any local changes you have made"
+	@echo "Run 'make clippy' to lint check any local changes you have made"
 	@echo "Run 'make print-sizes' to print size data for the example binaries"
 
 ifdef FEATURES
@@ -118,15 +120,21 @@ EXCLUDE_STD := --exclude libtock_unittest --exclude print_sizes \
                --exclude runner --exclude syscalls_tests \
                --exclude libtock_build_scripts
 
-.PHONY: test
-test: examples
-	cargo test $(EXCLUDE_RUNTIME) --workspace
-	LIBTOCK_PLATFORM=nrf52 cargo fmt --all -- --check
+.PHONY: clippy
+clippy:
 	cargo clippy --all-targets $(EXCLUDE_RUNTIME) --workspace
 	LIBTOCK_PLATFORM=nrf52 cargo clippy $(EXCLUDE_STD) \
 		--target=thumbv7em-none-eabi --workspace
 	LIBTOCK_PLATFORM=hifive1 cargo clippy $(EXCLUDE_STD) \
 		--target=riscv32imac-unknown-none-elf --workspace
+
+.PHONY: format
+format:
+	LIBTOCK_PLATFORM=nrf52 cargo fmt --all -- --check
+
+.PHONY: test
+test: examples clippy format
+	cargo test $(EXCLUDE_RUNTIME) --workspace
 	cd nightly && \
 		MIRIFLAGS="-Zmiri-strict-provenance -Zmiri-symbolic-alignment-check" \
 		cargo miri test $(EXCLUDE_MIRI) --manifest-path=../Cargo.toml \
