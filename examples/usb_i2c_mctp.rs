@@ -86,7 +86,7 @@ set_main! {main}
 stack_size! {0x900}
 
 /// The address to which we listen for in slave/target mode.
-pub const MY_ID: u8 = 0x22;
+pub const MY_ID: u8 = 0x34;
 /// Contains packet metadata
 pub const HEADER_LEN: usize = 4;
 /// Max data message length
