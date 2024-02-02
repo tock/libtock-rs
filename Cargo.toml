@@ -26,7 +26,7 @@ libtock_console = { path = "apis/console" }
 libtock_debug_panic = { path = "panic_handlers/debug_panic" }
 libtock_gpio = { path = "apis/gpio" }
 libtock_i2c_master_slave = { path = "apis/i2c_master_slave" }
-libtock_key_value = { path = "apis/key_value"}
+libtock_key_value = { path = "apis/key_value" }
 libtock_leds = { path = "apis/leds" }
 libtock_low_level_debug = { path = "apis/low_level_debug" }
 libtock_ninedof = { path = "apis/ninedof" }
