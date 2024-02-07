@@ -13,7 +13,7 @@ fn get_platform_architecture(platform: &str) -> Option<&'static str> {
         | "imix"
         | "microbit_v2"
         | "msp432"
-        | "nano33bl3"
+        | "nano33ble"
         | "nrf52"
         | "nrf52840"
         | "nucleo_f429zi"
