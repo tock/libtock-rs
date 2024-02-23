@@ -12,7 +12,7 @@ fn exists() {
 }
 
 #[test]
-fn analog_comparator_comparison() {``
+fn analog_comparator_comparison() {
     let kernel = fake::Kernel::new();
     let ac = fake::AnalogComparator::new();
     kernel.add_driver(&ac);
