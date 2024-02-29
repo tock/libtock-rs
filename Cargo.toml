@@ -13,7 +13,7 @@ version = "0.1.0"
 [workspace.package]
 # This must be kept in sync with rust-toolchain.toml; please see that file for
 # more information.
-rust-version = "1.70"
+rust-version = "1.74"
 
 [dependencies]
 libtock_adc = { path = "apis/adc" }
@@ -25,6 +25,7 @@ libtock_buzzer = { path = "apis/buzzer" }
 libtock_console = { path = "apis/console" }
 libtock_debug_panic = { path = "panic_handlers/debug_panic" }
 libtock_gpio = { path = "apis/gpio" }
+libtock_i2c_master = { path = "apis/i2c_master" }
 libtock_i2c_master_slave = { path = "apis/i2c_master_slave" }
 libtock_key_value = { path = "apis/key_value" }
 libtock_leds = { path = "apis/leds" }
@@ -61,6 +62,7 @@ members = [
     "apis/buzzer",
     "apis/console",
     "apis/gpio",
+    "apis/i2c_master",
     "apis/i2c_master_slave",
     "apis/key_value",
     "apis/leds",

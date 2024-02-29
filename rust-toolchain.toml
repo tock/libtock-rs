@@ -5,7 +5,7 @@
 # you'd like to use. When you do so, update this to the first Rust version that
 # includes that feature. Whenever this value is updated, the rust-version field
 # in Cargo.toml must be updated as well.
-channel = "1.70"
+channel = "1.74"
 components = ["clippy", "rustfmt"]
 targets = ["thumbv6m-none-eabi",
            "thumbv7em-none-eabi",

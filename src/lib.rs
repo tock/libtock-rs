@@ -51,6 +51,10 @@ pub mod gpio {
         PullDown, PullNone, PullUp,
     };
 }
+pub mod i2c_master {
+    use libtock_i2c_master as i2c_master;
+    pub type I2CMaster = i2c_master::I2CMaster<super::runtime::TockSyscalls>;
+}
 pub mod i2c_master_slave {
     use libtock_i2c_master_slave as i2c_master_slave;
     pub type I2CMasterSlave = i2c_master_slave::I2CMasterSlave<super::runtime::TockSyscalls>;

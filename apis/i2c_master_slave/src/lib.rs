@@ -11,6 +11,10 @@ use libtock_platform::{DefaultConfig, ErrorCode, Syscalls};
 pub struct I2CMasterSlave<S: Syscalls, C: Config = DefaultConfig>(S, C);
 
 impl<S: Syscalls, C: Config> I2CMasterSlave<S, C> {
+    pub fn exists() -> Result<(), ErrorCode> {
+        S::command(DRIVER_NUM, i2c_master_slave_cmd::EXISTS, 0, 0).to_result()
+    }
+
     /// # Summary
     ///
     /// Perform an I2C write to the slave device on @addr.
@@ -427,6 +431,7 @@ mod i2c_buffers {
 
 #[allow(unused)]
 mod i2c_master_slave_cmd {
+    pub const EXISTS: u32 = 0;
     pub const MASTER_WRITE: u32 = 1;
     pub const MASTER_READ: u32 = 2;
     pub const SLAVE_START_LISTEN: u32 = 3;
