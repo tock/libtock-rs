@@ -22,7 +22,7 @@ const PLATFORMS: &[(&str, &str, &str, &str, &str)] = &[
     ("raspberry_pi_pico"  , "0x10040000", "256K"     , "0x20012000", "192K"   ),
     ("stm32f3discovery"   , "0x08020000", "0x0020000", "0x20004000", "48K"    ),
     ("stm32f412gdiscovery", "0x08030000", "256K"     , "0x20004000", "112K"   ),
-    ("nano33ble"          , "0x00050000", "704K"     , "0x20000000", "256K"   ),
+    ("nano33ble"          , "0x00050000", "704K"     , "0x20005000", "240K"   ),
 ];
 
 /// Helper function to configure cargo to use suitable linker scripts for
