@@ -20,6 +20,7 @@ libtock_adc = { path = "apis/adc" }
 libtock_air_quality = { path = "apis/air_quality" }
 libtock_alarm = { path = "apis/alarm" }
 libtock_ambient_light = { path = "apis/ambient_light" }
+libtock_analog_comparator = { path = "apis/analog_comparator" }
 libtock_buttons = { path = "apis/buttons" }
 libtock_buzzer = { path = "apis/buzzer" }
 libtock_console = { path = "apis/console" }

@@ -28,6 +28,10 @@ pub mod ambient_light {
     pub type AmbientLight = ambient_light::AmbientLight<super::runtime::TockSyscalls>;
     pub use ambient_light::IntensityListener;
 }
+pub mod analog_comparator {
+    use libtock_analog_comparator as analog_comparator;
+    pub type AnalogComparator = analog_comparator::AnalogComparator<super::runtime::TockSyscalls>;
+}
 pub mod buttons {
     use libtock_buttons as buttons;
     pub type Buttons = buttons::Buttons<super::runtime::TockSyscalls>;
