@@ -12,3 +12,9 @@ name = "libtock_platform"
 repository = "https://www.github.com/tock/libtock/rs"
 rust-version.workspace = true
 version = "0.1.0"
+
+[features]
+rust_embedded = ["embedded-hal"]
+
+[dependencies]
+embedded-hal = { version = "1.0", optional = true }

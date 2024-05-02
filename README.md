@@ -63,6 +63,19 @@ This script does the following steps for you:
 - create a TAB (tock application bundle)
 - if you have a J-Link compatible board connected: flash this TAB to your board (using tockloader)
 
+### Enabling rust-embedded support
+
+libtock-rs can be built to be compatible with the rust-embedded
+[embedded_hal](https://docs.rs/embedded-hal/1.0.0/embedded_hal/index.html) by
+including the following when running `make`
+
+```shell
+FEATURES=rust_embedded
+```
+
+If using libtock-rs or a sub-crate as a cargo dependency the `rust_embedded`
+can also be enabled via Cargo.
+
 ### Building a generic TAB (Tock Application Bundle) file
 
 To build your example for a variety of boards you can use
