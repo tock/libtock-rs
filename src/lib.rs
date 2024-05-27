@@ -86,6 +86,13 @@ pub mod sound_pressure {
     use libtock_sound_pressure as sound_pressure;
     pub type SoundPressure = sound_pressure::SoundPressure<super::runtime::TockSyscalls>;
 }
+#[cfg(feature = "rust_embedded")]
+pub mod spi_controller;
+#[cfg(not(feature = "rust_embedded"))]
+pub mod spi_controller {
+    use libtock_spi_controller as spi_controller;
+    pub type SpiController = spi_controller::SpiController<super::runtime::TockSyscalls>;
+}
 pub mod temperature {
     use libtock_temperature as temperature;
     pub type Temperature = temperature::Temperature<super::runtime::TockSyscalls>;

@@ -19,7 +19,7 @@ rust-version = "1.75"
 rust_embedded = [
     "embedded-hal",
     "libtock_platform/rust_embedded",
-    "libtock_gpio/rust_embedded"
+    "libtock_gpio/rust_embedded",
 ]
 
 [dependencies]
@@ -43,6 +43,7 @@ libtock_proximity = { path = "apis/proximity" }
 libtock_rng = { path = "apis/rng" }
 libtock_runtime = { path = "runtime" }
 libtock_sound_pressure = { path = "apis/sound_pressure" }
+libtock_spi_controller = { path = "apis/spi_controller" }
 libtock_temperature = { path = "apis/temperature" }
 
 embedded-hal = { version = "1.0", optional = true }
