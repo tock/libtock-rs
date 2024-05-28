@@ -283,3 +283,11 @@ impl TryFrom<u32> for ErrorCode {
         }
     }
 }
+
+#[cfg(feature = "rust_embedded")]
+impl embedded_hal::digital::Error for ErrorCode {
+    fn kind(&self) -> embedded_hal::digital::ErrorKind {
+        use embedded_hal::digital::ErrorKind;
+        ErrorKind::Other
+    }
+}

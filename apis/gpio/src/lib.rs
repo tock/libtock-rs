@@ -231,6 +231,22 @@ impl<S: Syscalls> Gpio<S> {
     }
 }
 
+#[cfg(feature = "rust_embedded")]
+impl<'a, S: Syscalls> embedded_hal::digital::ErrorType for OutputPin<'a, S> {
+    type Error = ErrorCode;
+}
+
+#[cfg(feature = "rust_embedded")]
+impl<'a, S: Syscalls> embedded_hal::digital::OutputPin for OutputPin<'a, S> {
+    fn set_low(&mut self) -> Result<(), Self::Error> {
+        self.clear()
+    }
+
+    fn set_high(&mut self) -> Result<(), Self::Error> {
+        self.set()
+    }
+}
+
 #[cfg(test)]
 mod tests;
 
