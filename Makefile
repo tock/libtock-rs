@@ -111,7 +111,7 @@ EXCLUDE_RUNTIME := --exclude libtock --exclude libtock_runtime \
 	--exclude libtock_debug_panic --exclude libtock_small_panic
 
 # Arguments to pass to cargo to exclude demo crates.
-EXCLUDE_RUNTIME := $(EXCLUDE_RUNTIME) --exclude st7789
+EXCLUDE_RUNTIME := $(EXCLUDE_RUNTIME) --exclude st7789 --exclude st7789-slint
 
 # Arguments to pass to cargo to exclude crates that cannot be tested by Miri. In
 # addition to excluding libtock_runtime, Miri also cannot test proc macro crates
@@ -134,6 +134,7 @@ test: examples
 	LIBTOCK_PLATFORM=hifive1 cargo clippy $(EXCLUDE_STD) \
 		--target=riscv32imac-unknown-none-elf --workspace
 	$(MAKE) apollo3-st7789
+	$(MAKE) apollo3-st7789-slint
 	cd nightly && \
 		MIRIFLAGS="-Zmiri-strict-provenance -Zmiri-symbolic-alignment-check" \
 		cargo miri test $(EXCLUDE_MIRI) --manifest-path=../Cargo.toml \
@@ -227,6 +228,14 @@ $(1)-st7789: toolchain
 	mkdir -p target/tbf/$(1)
 	cp demos/st7789/target/$(1)/$(2)/release/st7789.{tab,tbf} \
 		target/tbf/$(1)
+
+.PHONY: $(1)-st7789-slint
+$(1)-st7789-slint: toolchain
+	cd demos/st7789-slint && LIBTOCK_PLATFORM=$(1) cargo run $(features) \
+		$(release) --target=$(2) --target-dir=target/$(1)
+	mkdir -p target/tbf/$(1)
+	cp demos/st7789-slint/target/$(1)/$(2)/release/st7789-slint.{tab,tbf} \
+		target/tbf/$(1)
 endef
 
 # Creates the `make flash-<BOARD> EXAMPLE=<EXAMPLE>` targets. Arguments:
@@ -241,6 +250,12 @@ flash-$(1): toolchain
 .PHONY: flash-$(1)-st7789
 flash-$(1)-st7789: toolchain
 	cd demos/st7789 && LIBTOCK_PLATFORM=$(1) cargo run $(features) \
+		$(release) --target=$(2) --target-dir=target/flash-$(1) -- \
+		--deploy=tockloader
+
+.PHONY: flash-$(1)-st7789-slint
+flash-$(1)-st7789-slint: toolchain
+	cd demos/st7789-slint && LIBTOCK_PLATFORM=$(1) cargo run $(features) \
 		$(release) --target=$(2) --target-dir=target/flash-$(1) -- \
 		--deploy=tockloader
 endef
