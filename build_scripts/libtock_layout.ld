@@ -144,7 +144,7 @@ SECTIONS {
     .data ALIGN(4) : {
         data_ram_start = .;
         /* .sdata is the RISC-V small data section */
-        *(.sdata .data)
+        *(.sdata .data*)
         /* Pad to word alignment so the relocation loop can use word-sized
          * copies.
          */
