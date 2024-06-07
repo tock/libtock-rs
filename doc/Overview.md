@@ -59,12 +59,4 @@ panic handler for binaries that depend on it). The following crates provide a
 
 ## Driver crates
 
-Driver crates provide interfaces to specific Tock APIs:
-
-| Crate                   | Tock API        |
-|-------------------------|-----------------|
-|`libtock_console`        |[Console]        |
-|`libtock_low_level_debug`|[Low-Level Debug]|
-
-[Console]: https://github.com/tock/tock/blob/master/doc/syscalls/00001_console.md
-[Low-Level Debug]: https://github.com/tock/tock/blob/master/doc/syscalls/00008_low_level_debug.md
+Driver crates provide interfaces to specific Tock APIs in the `/apis` directory.
