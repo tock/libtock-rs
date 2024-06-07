@@ -37,6 +37,18 @@ pub trait Syscalls: RawSyscalls + Sized {
         upcall: &'share U,
     ) -> Result<(), ErrorCode>;
 
+    fn ipc_subscribe<
+        'share,
+        IDS: subscribe::SupportsId<DRIVER_NUM, 0>,
+        U: Upcall<IDS>,
+        CONFIG: subscribe::Config,
+        const DRIVER_NUM: u32,
+    >(
+        subscribe: share::Handle<Subscribe<'share, Self, DRIVER_NUM, 0>>,
+        svc_id: u32,
+        upcall: &'share U,
+    ) -> Result<(), ErrorCode>;
+
     /// Unregisters the upcall with the given ID. If no upcall is registered
     /// with the given ID, `unsubscribe` does nothing.
     fn unsubscribe(driver_num: u32, subscribe_num: u32);

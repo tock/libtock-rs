@@ -32,6 +32,7 @@ libtock_buzzer = { path = "apis/buzzer" }
 libtock_console = { path = "apis/console" }
 libtock_debug_panic = { path = "panic_handlers/debug_panic" }
 libtock_gpio = { path = "apis/gpio" }
+libtock_ipc = { path = "apis/ipc" }
 libtock_i2c_master = { path = "apis/i2c_master" }
 libtock_i2c_master_slave = { path = "apis/i2c_master_slave" }
 libtock_key_value = { path = "apis/key_value" }
@@ -72,6 +73,7 @@ members = [
     "apis/buzzer",
     "apis/console",
     "apis/gpio",
+    "apis/ipc",
     "apis/i2c_master",
     "apis/i2c_master_slave",
     "apis/key_value",
