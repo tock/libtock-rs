@@ -1,0 +1,18 @@
+[package]
+name = "libtock_rng"
+version = "0.1.0"
+authors = [
+    "Tock Project Developers <tock-dev@googlegroups.com>",
+    "Cosmin Gabriel Georgescu <cosmingg2013@gmail.com>",
+]
+license = "Apache-2.0 OR MIT"
+edition = "2021"
+repository = "https://www.github.com/tock/libtock-rs"
+rust-version.workspace = true
+description = "libtock rng driver"
+
+[dependencies]
+libtock_platform = { path = "../../../platform" }
+
+[dev-dependencies]
+libtock_unittest = { path = "../../../unittest" }

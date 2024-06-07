@@ -23,28 +23,28 @@ rust_embedded = [
 ]
 
 [dependencies]
-libtock_adc = { path = "apis/adc" }
-libtock_air_quality = { path = "apis/air_quality" }
-libtock_alarm = { path = "apis/alarm" }
-libtock_ambient_light = { path = "apis/ambient_light" }
-libtock_buttons = { path = "apis/buttons" }
-libtock_buzzer = { path = "apis/buzzer" }
-libtock_console = { path = "apis/console" }
+libtock_adc = { path = "apis/peripherals/adc" }
+libtock_air_quality = { path = "apis/sensors/air_quality" }
+libtock_alarm = { path = "apis/peripherals/alarm" }
+libtock_ambient_light = { path = "apis/sensors/ambient_light" }
+libtock_buttons = { path = "apis/interface/buttons" }
+libtock_buzzer = { path = "apis/interface/buzzer" }
+libtock_console = { path = "apis/interface/console" }
 libtock_debug_panic = { path = "panic_handlers/debug_panic" }
-libtock_gpio = { path = "apis/gpio" }
-libtock_i2c_master = { path = "apis/i2c_master" }
-libtock_i2c_master_slave = { path = "apis/i2c_master_slave" }
-libtock_key_value = { path = "apis/key_value" }
-libtock_leds = { path = "apis/leds" }
-libtock_low_level_debug = { path = "apis/low_level_debug" }
-libtock_ninedof = { path = "apis/ninedof" }
+libtock_gpio = { path = "apis/peripherals/gpio" }
+libtock_i2c_master = { path = "apis/peripherals/i2c_master" }
+libtock_i2c_master_slave = { path = "apis/peripherals/i2c_master_slave" }
+libtock_key_value = { path = "apis/storage/key_value" }
+libtock_leds = { path = "apis/interface/leds" }
+libtock_low_level_debug = { path = "apis/kernel/low_level_debug" }
+libtock_ninedof = { path = "apis/sensors/ninedof" }
 libtock_platform = { path = "platform" }
-libtock_proximity = { path = "apis/proximity" }
-libtock_rng = { path = "apis/rng" }
+libtock_proximity = { path = "apis/sensors/proximity" }
+libtock_rng = { path = "apis/peripherals/rng" }
 libtock_runtime = { path = "runtime" }
-libtock_sound_pressure = { path = "apis/sound_pressure" }
-libtock_spi_controller = { path = "apis/spi_controller" }
-libtock_temperature = { path = "apis/temperature" }
+libtock_sound_pressure = { path = "apis/sensors/sound_pressure" }
+libtock_spi_controller = { path = "apis/peripherals/spi_controller" }
+libtock_temperature = { path = "apis/sensors/temperature" }
 
 embedded-hal = { version = "1.0", optional = true }
 
@@ -64,23 +64,23 @@ panic = "abort"
 [workspace]
 exclude = ["tock"]
 members = [
-    "apis/adc",
-    "apis/air_quality",
-    "apis/alarm",
-    "apis/ambient_light",
-    "apis/buttons",
-    "apis/buzzer",
-    "apis/console",
-    "apis/gpio",
-    "apis/i2c_master",
-    "apis/i2c_master_slave",
-    "apis/key_value",
-    "apis/leds",
-    "apis/low_level_debug",
-    "apis/ninedof",
-    "apis/proximity",
-    "apis/rng",
-    "apis/temperature",
+    "apis/interface/buttons",
+    "apis/interface/buzzer",
+    "apis/interface/console",
+    "apis/interface/leds",
+    "apis/kernel/low_level_debug",
+    "apis/peripherals/adc",
+    "apis/peripherals/alarm",
+    "apis/peripherals/gpio",
+    "apis/peripherals/i2c_master",
+    "apis/peripherals/i2c_master_slave",
+    "apis/peripherals/rng",
+    "apis/sensors/air_quality",
+    "apis/sensors/ambient_light",
+    "apis/sensors/ninedof",
+    "apis/sensors/proximity",
+    "apis/sensors/temperature",
+    "apis/storage/key_value",
     "panic_handlers/debug_panic",
     "panic_handlers/small_panic",
     "platform",

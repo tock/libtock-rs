@@ -1,0 +1,15 @@
+[package]
+name = "libtock_ambient_light"
+version = "0.1.0"
+authors = ["Tock Project Developers <tock-dev@googlegroups.com>"]
+license = "Apache-2.0 OR MIT"
+edition = "2021"
+repository = "https://www.github.com/tock/libtock-rs"
+rust-version.workspace = true
+description = "libtock ambient light driver"
+
+[dependencies]
+libtock_platform = { path = "../../../platform" }
+
+[dev-dependencies]
+libtock_unittest = { path = "../../../unittest" }

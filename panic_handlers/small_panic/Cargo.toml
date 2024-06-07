@@ -9,6 +9,6 @@ repository = "https://www.github.com/tock/libtock-rs"
 rust-version.workspace = true
 
 [dependencies]
-libtock_low_level_debug = { path = "../../apis/low_level_debug" }
+libtock_low_level_debug = { path = "../../apis/kernel/low_level_debug" }
 libtock_platform = { path = "../../platform" }
 libtock_runtime = { path = "../../runtime" }
