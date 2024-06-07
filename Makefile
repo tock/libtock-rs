@@ -194,7 +194,7 @@ $(ELF_TARGETS): toolchain
 	@mkdir -p target/$(A).$(F).$(R)/
 	@cp target/$(T)/$(artifact_dir)/examples/$(EXAMPLE) target/$(A).$(F).$(R)/
 	$(eval ELF_LIST += target/$(A).$(F).$(R)/$(EXAMPLE),$(A).$(F).$(R))
-
+# This target (`make tab`) is not parallel-safe
 .PHONY: tab
 tab: $(ELF_TARGETS)
 	mkdir -p target/tab
