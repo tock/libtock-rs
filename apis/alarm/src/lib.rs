@@ -70,6 +70,17 @@ impl<S: Syscalls, C: platform::subscribe::Config> Alarm<S, C> {
             .map(Hz)
     }
 
+    pub fn get_ticks() -> Result<u32, ErrorCode> {
+        S::command(DRIVER_NUM, command::TIME, 0, 0).to_result()
+    }
+
+    pub fn get_milliseconds() -> Result<u64, ErrorCode> {
+        let ticks = Self::get_ticks()? as u64;
+        let freq = (Self::get_frequency()?).0 as u64;
+
+        Ok(ticks.saturating_div(freq / 1000))
+    }
+
     pub fn sleep_for<T: Convert>(time: T) -> Result<(), ErrorCode> {
         let freq = Self::get_frequency()?;
         let ticks = time.to_ticks(freq);
