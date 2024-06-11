@@ -4,7 +4,7 @@
 #[rustfmt::skip]
 const PLATFORMS: &[(&str, &str, &str, &str, &str)] = &[
     // Name               | Flash start | Flash len  | RAM start   | RAM length
-    ("apollo3"            , "0x00040000", "0x0060000", "0x10003000", "0x03000"),
+    ("apollo3"            , "0x00040000", "0x0060000", "0x10004000", "0x03000"),
     ("clue_nrf52840"      , "0x00080000", "512K"     , "0x20006000", "216K"   ),
     ("esp32_c3_devkitm_1" , "0x403B0000", "0x0030000", "0x3FCA2000", "0x2E000"),
     ("hail"               , "0x00030000", "0x0040000", "0x20008000", "62K"    ),
