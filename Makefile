@@ -215,6 +215,14 @@ $(1): toolchain
 	mkdir -p target/tbf/$(1)
 	cp target/$(1)/$(2)/release/examples/$(EXAMPLE).{tab,tbf} \
 		target/tbf/$(1)
+
+.PHONY: $(1)-st7789
+$(1)-st7789: toolchain
+	cd demos/st7789 && LIBTOCK_PLATFORM=$(1) cargo run $(features) \
+		$(release) --target=$(2) --target-dir=target/$(1) --verbose
+	mkdir -p target/tbf/$(1)
+	cp demos/st7789/target/$(1)/$(2)/release/examples/st7789.{tab,tbf} \
+		target/tbf/$(1)
 endef
 
 # Creates the `make flash-<BOARD> EXAMPLE=<EXAMPLE>` targets. Arguments:
