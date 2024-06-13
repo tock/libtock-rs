@@ -110,6 +110,9 @@ examples: toolchain
 EXCLUDE_RUNTIME := --exclude libtock --exclude libtock_runtime \
 	--exclude libtock_debug_panic --exclude libtock_small_panic
 
+# Arguments to pass to cargo to exclude demo crates.
+EXCLUDE_RUNTIME := $(EXCLUDE_RUNTIME) --exclude st7789
+
 # Arguments to pass to cargo to exclude crates that cannot be tested by Miri. In
 # addition to excluding libtock_runtime, Miri also cannot test proc macro crates
 # (and in fact will generate broken data that causes cargo test to fail).
@@ -130,6 +133,7 @@ test: examples
 		--target=thumbv7em-none-eabi --workspace
 	LIBTOCK_PLATFORM=hifive1 cargo clippy $(EXCLUDE_STD) \
 		--target=riscv32imac-unknown-none-elf --workspace
+	$(MAKE) apollo3-st7789
 	cd nightly && \
 		MIRIFLAGS="-Zmiri-strict-provenance -Zmiri-symbolic-alignment-check" \
 		cargo miri test $(EXCLUDE_MIRI) --manifest-path=../Cargo.toml \
@@ -215,6 +219,14 @@ $(1): toolchain
 	mkdir -p target/tbf/$(1)
 	cp target/$(1)/$(2)/release/examples/$(EXAMPLE).{tab,tbf} \
 		target/tbf/$(1)
+
+.PHONY: $(1)-st7789
+$(1)-st7789: toolchain
+	cd demos/st7789 && LIBTOCK_PLATFORM=$(1) cargo run $(features) \
+		$(release) --target=$(2) --target-dir=target/$(1)
+	mkdir -p target/tbf/$(1)
+	cp demos/st7789/target/$(1)/$(2)/release/st7789.{tab,tbf} \
+		target/tbf/$(1)
 endef
 
 # Creates the `make flash-<BOARD> EXAMPLE=<EXAMPLE>` targets. Arguments:
@@ -223,6 +235,12 @@ define platform_flash
 .PHONY: flash-$(1)
 flash-$(1): toolchain
 	LIBTOCK_PLATFORM=$(1) cargo run --example $(EXAMPLE) $(features) \
+		$(release) --target=$(2) --target-dir=target/flash-$(1) -- \
+		--deploy=tockloader
+
+.PHONY: flash-$(1)-st7789
+flash-$(1)-st7789: toolchain
+	cd demos/st7789 && LIBTOCK_PLATFORM=$(1) cargo run $(features) \
 		$(release) --target=$(2) --target-dir=target/flash-$(1) -- \
 		--deploy=tockloader
 endef
@@ -261,4 +279,5 @@ $(eval $(call platform_flash,clue_nrf52840,thumbv7em-none-eabi))
 clean:
 	cargo clean
 	rm -fr nightly/target/
+	cd demos/st7789 && cargo clean
 	$(MAKE) -C tock clean

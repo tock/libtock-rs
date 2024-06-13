@@ -1,0 +1,20 @@
+[package]
+name = "st7789"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+authors = ["Alistair Francis <alistair.francis@wdc.com>"]
+description = """A demo to drive a ST7789 display via SPI using libtock-rs."""
+license = "Apache-2.0 OR MIT"
+
+[dependencies]
+libtock = { path = "../../", features = ["rust_embedded"] }
+
+embedded-hal = "1.0"
+
+mipidsi = "0.8.0"
+display-interface-spi = "0.5"
+embedded-graphics = "0.8"
+
+[build-dependencies]
+libtock_build_scripts = { path = "../../build_scripts" }

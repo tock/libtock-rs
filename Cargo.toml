@@ -81,6 +81,7 @@ members = [
     "apis/sensors/proximity",
     "apis/sensors/temperature",
     "apis/storage/key_value",
+    "demos/st7789",
     "panic_handlers/debug_panic",
     "panic_handlers/small_panic",
     "platform",
