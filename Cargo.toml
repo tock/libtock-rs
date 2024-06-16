@@ -82,6 +82,7 @@ members = [
     "apis/sensors/temperature",
     "apis/storage/key_value",
     "demos/st7789",
+    "demos/st7789-slint",
     "panic_handlers/debug_panic",
     "panic_handlers/small_panic",
     "platform",
