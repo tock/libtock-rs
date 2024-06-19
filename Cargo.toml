@@ -42,6 +42,7 @@ libtock_platform = { path = "platform" }
 libtock_proximity = { path = "apis/sensors/proximity" }
 libtock_rng = { path = "apis/peripherals/rng" }
 libtock_runtime = { path = "runtime" }
+libtock_small_panic = { path = "panic_handlers/small_panic" }
 libtock_sound_pressure = { path = "apis/sensors/sound_pressure" }
 libtock_spi_controller = { path = "apis/peripherals/spi_controller" }
 libtock_temperature = { path = "apis/sensors/temperature" }
