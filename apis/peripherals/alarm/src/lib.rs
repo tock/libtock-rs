@@ -1,8 +1,6 @@
 #![no_std]
 
-use core::cell::Cell;
 use libtock_platform as platform;
-use libtock_platform::share;
 use libtock_platform::{DefaultConfig, ErrorCode, Syscalls};
 
 /// The alarm driver
@@ -85,21 +83,13 @@ impl<S: Syscalls, C: platform::subscribe::Config> Alarm<S, C> {
         let freq = Self::get_frequency()?;
         let ticks = time.to_ticks(freq);
 
-        let called: Cell<Option<(u32, u32)>> = Cell::new(None);
-        share::scope(|subscribe| {
-            S::subscribe::<_, _, C, DRIVER_NUM, { subscribe::CALLBACK }>(subscribe, &called)?;
+        S::command(DRIVER_NUM, command::SET_RELATIVE, ticks.0, 0)
+            .to_result()
+            .map(|_when: u32| ())?;
 
-            S::command(DRIVER_NUM, command::SET_RELATIVE, ticks.0, 0)
-                .to_result()
-                .map(|_when: u32| ())?;
-
-            loop {
-                S::yield_wait();
-                if let Some((_when, _ref)) = called.get() {
-                    return Ok(());
-                }
-            }
-        })
+        loop {
+            S::yield_wait_for(DRIVER_NUM, subscribe::CALLBACK);
+        }
     }
 }
 

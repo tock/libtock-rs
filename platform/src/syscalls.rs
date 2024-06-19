@@ -20,6 +20,8 @@ pub trait Syscalls: RawSyscalls + Sized {
     /// callback, then returns.
     fn yield_wait();
 
+    fn yield_wait_for(driver: u32, subscribe: u32);
+
     // -------------------------------------------------------------------------
     // Subscribe
     // -------------------------------------------------------------------------

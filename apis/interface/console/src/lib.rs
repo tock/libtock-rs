@@ -39,28 +39,21 @@ impl<S: Syscalls, C: Config> Console<S, C> {
     /// This is an alternative to `fmt::Write::write`
     /// because this can actually return an error code.
     pub fn write(s: &[u8]) -> Result<(), ErrorCode> {
-        let called: Cell<Option<(u32,)>> = Cell::new(None);
         share::scope::<
             (
                 AllowRo<_, DRIVER_NUM, { allow_ro::WRITE }>,
-                Subscribe<_, DRIVER_NUM, { subscribe::WRITE }>,
             ),
             _,
             _,
         >(|handle| {
-            let (allow_ro, subscribe) = handle.split();
+            let (allow_ro,) = handle.split();
 
             S::allow_ro::<C, DRIVER_NUM, { allow_ro::WRITE }>(allow_ro, s)?;
-
-            S::subscribe::<_, _, C, DRIVER_NUM, { subscribe::WRITE }>(subscribe, &called)?;
 
             S::command(DRIVER_NUM, command::WRITE, s.len() as u32, 0).to_result()?;
 
             loop {
-                S::yield_wait();
-                if let Some((_,)) = called.get() {
-                    return Ok(());
-                }
+                S::yield_wait_for(DRIVER_NUM, subscribe::WRITE);
             }
         })
     }
