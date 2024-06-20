@@ -60,6 +60,8 @@ panic = "abort"
 debug = true
 lto = true
 panic = "abort"
+opt-level = "z"
+codegen-units = 1
 
 [workspace]
 exclude = ["tock"]
