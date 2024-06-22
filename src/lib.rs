@@ -62,6 +62,13 @@ pub mod i2c_master_slave {
     use libtock_i2c_master_slave as i2c_master_slave;
     pub type I2CMasterSlave = i2c_master_slave::I2CMasterSlave<super::runtime::TockSyscalls>;
 }
+pub mod ieee802154 {
+    use libtock_ieee802154 as ieee802154;
+    pub type Ieee802154 = ieee802154::Ieee802154<super::runtime::TockSyscalls>;
+    pub use ieee802154::{Frame, RxOperator, RxRingBuffer};
+    pub type RxSingleBufferOperator<'buf, const N: usize> =
+        ieee802154::RxSingleBufferOperator<'buf, N, super::runtime::TockSyscalls>;
+}
 pub mod leds {
     use libtock_leds as leds;
     pub type Leds = leds::Leds<super::runtime::TockSyscalls>;
