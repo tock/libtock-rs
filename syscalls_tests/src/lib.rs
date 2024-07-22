@@ -24,7 +24,8 @@ mod exit_on_drop;
 
 // TODO: Add Exit.
 
-// TODO: Add Memop.
+#[cfg(test)]
+mod memop_tests;
 
 #[cfg(test)]
 mod subscribe_tests;

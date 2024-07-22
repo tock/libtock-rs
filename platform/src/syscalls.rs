@@ -77,7 +77,42 @@ pub trait Syscalls: RawSyscalls + Sized {
     /// `unallow_ro` does nothing.
     fn unallow_ro(driver_num: u32, buffer_num: u32);
 
-    // TODO: Add memop() methods.
+    // -------------------------------------------------------------------------
+    // Memop
+    // -------------------------------------------------------------------------
+
+    /// Changes the location of the program break to the specified address and
+    /// returns an error if it fails to do so.
+    ///
+    /// # Safety
+    /// Callers of this function must ensure that they do not pass an
+    /// address below any address that includes a currently reachable object.
+    unsafe fn memop_brk(addr: *const u8) -> Result<(), ErrorCode>;
+
+    /// Changes the location of the program break by the passed increment,
+    /// and returns the previous break address.
+    ///
+    /// # Safety
+    /// Callers of this function must ensure that they do not pass an
+    /// increment that would deallocate memory containing any currently
+    /// reachable object.
+    unsafe fn memop_sbrk(incr: i32) -> Result<*const u8, ErrorCode>;
+
+    /// Increments the program break by the passed increment,
+    /// and returns the previous break address.
+    fn memop_increment_brk(incr: u32) -> Result<*const u8, ErrorCode>;
+
+    /// Gets the address of the start of this application's RAM allocation.
+    fn memop_app_ram_start() -> Result<*const u8, ErrorCode>;
+
+    /// Tells the kernel where the start of the app stack is, to support
+    /// debugging.
+    fn memop_debug_stack_start(stack_top: *const u8) -> Result<(), ErrorCode>;
+
+    /// Tells the kernel the initial program break, to support debugging.
+    fn memop_debug_heap_start(initial_break: *const u8) -> Result<(), ErrorCode>;
+
+    // TODO: Add remaining memop() methods (3-9).
 
     // -------------------------------------------------------------------------
     // Exit

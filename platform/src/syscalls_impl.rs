@@ -353,6 +353,153 @@ impl<S: RawSyscalls> Syscalls for S {
     }
 
     // -------------------------------------------------------------------------
+    // Memop
+    // -------------------------------------------------------------------------
+
+    // Safety: Callers of this function must ensure that they do not pass an
+    // address below any address that includes a currently reachable object.
+    unsafe fn memop_brk(addr: *const u8) -> Result<(), ErrorCode> {
+        // Safety: syscall2's documentation indicates it can be used to call Memop.
+        let [r0, r1] =
+            unsafe { Self::syscall2::<{ syscall_class::MEMOP }>([0u32.into(), addr.into()]) };
+        let return_variant: ReturnVariant = r0.as_u32().into();
+        // TRD 104 guarantees that memop 0, 10, and 11 return either Success
+        // or Failure. We check the return variant by comparing against Failure
+        // for 2 reasons:
+        //
+        //   1. On RISC-V with compressed instructions, it generates smaller
+        //      code. FAILURE has value 0, which can be loaded into a
+        //      register with a single compressed instruction, whereas
+        //      loading SUCCESS uses an uncompressed instruction.
+        //   2. In the event the kernel malfunctions and returns a different
+        //      return variant, the success path is actually safer than the
+        //      failure path. The failure path assumes that r1 contains an
+        //      ErrorCode, and produces UB if it has an out of range value.
+        if return_variant == return_variant::FAILURE {
+            // Safety: TRD 104 guarantees that if r0 is Failure,
+            // then r1 will contain a valid error code. ErrorCode is
+            // designed to be safely transmuted directly from a kernel error
+            // code.
+            Err(unsafe { core::mem::transmute(r1.as_u32()) })
+        } else {
+            Ok(())
+        }
+    }
+
+    // Safety: Callers of this function must ensure that they do not pass an
+    // increment that would deallocate memory containing any currently
+    // reachable object.
+    unsafe fn memop_sbrk(incr: i32) -> Result<*const u8, ErrorCode> {
+        // Safety: syscall2's documentation indicates it can be used to call Memop.
+        let [r0, r1] =
+            unsafe { Self::syscall2::<{ syscall_class::MEMOP }>([1u32.into(), incr.into()]) };
+        let return_variant: ReturnVariant = r0.as_u32().into();
+        // TRD 104 guarantees that memop 1, returns either Success with U32
+        // or Failure. We check the return variant by comparing against Failure
+        // for 1 reason:
+        //
+        //   1. On RISC-V with compressed instructions, it generates smaller
+        //      code. FAILURE has value 0, which can be loaded into a
+        //      register with a single compressed instruction, whereas
+        //      loading SUCCESS_U32 uses an uncompressed instruction.
+        if return_variant == return_variant::FAILURE {
+            // Safety: TRD 104 guarantees that if r0 is Failure,
+            // then r1 will contain a valid error code. ErrorCode is
+            // designed to be safely transmuted directly from a kernel error
+            // code.
+            Err(unsafe { core::mem::transmute(r1.as_u32()) })
+        } else {
+            Ok(r1.into())
+        }
+    }
+
+    fn memop_increment_brk(incr: u32) -> Result<*const u8, ErrorCode> {
+        // Safety: memop_sbrk is safe if the passed increment is positive
+        unsafe { Self::memop_sbrk(i32::try_from(incr).map_err(|_| ErrorCode::Invalid)?) }
+    }
+
+    fn memop_app_ram_start() -> Result<*const u8, ErrorCode> {
+        // Safety: syscall1's documentation indicates it can be used to call Memop operations
+        // that only accept a memop operation number.
+        let [r0, r1] = unsafe { Self::syscall1::<{ syscall_class::MEMOP }>([2u32.into()]) };
+        let return_variant: ReturnVariant = r0.as_u32().into();
+        // TRD 104 guarantees that memop 2 returns either Success
+        // or Failure. We check the return variant by comparing against Failure
+        // for 1 reason:
+        //
+        //   1. On RISC-V with compressed instructions, it generates smaller
+        //      code. FAILURE has value 0, which can be loaded into a
+        //      register with a single compressed instruction, whereas
+        //      loading SUCCESS_U32 uses an uncompressed instruction.
+        if return_variant == return_variant::FAILURE {
+            // Safety: TRD 104 guarantees that if r0 is Failure,
+            // then r1 will contain a valid error code. ErrorCode is
+            // designed to be safely transmuted directly from a kernel error
+            // code.
+            Err(unsafe { core::mem::transmute(r1.as_u32()) })
+        } else {
+            Ok(r1.into())
+        }
+    }
+
+    fn memop_debug_stack_start(stack_top: *const u8) -> Result<(), ErrorCode> {
+        // Safety: syscall2's documentation indicates it can be used to call Memop.
+        let [r0, r1] =
+            unsafe { Self::syscall2::<{ syscall_class::MEMOP }>([10u32.into(), stack_top.into()]) };
+        let return_variant: ReturnVariant = r0.as_u32().into();
+        // TRD 104 guarantees that memop 0, 10, and 11 return either Success
+        // or Failure. We check the return variant by comparing against Failure
+        // for 2 reasons:
+        //
+        //   1. On RISC-V with compressed instructions, it generates smaller
+        //      code. FAILURE has value 0, which can be loaded into a
+        //      register with a single compressed instruction, whereas
+        //      loading SUCCESS uses an uncompressed instruction.
+        //   2. In the event the kernel malfunctions and returns a different
+        //      return variant, the success path is actually safer than the
+        //      failure path. The failure path assumes that r1 contains an
+        //      ErrorCode, and produces UB if it has an out of range value.
+        if return_variant == return_variant::FAILURE {
+            // Safety: TRD 104 guarantees that if r0 is Failure,
+            // then r1 will contain a valid error code. ErrorCode is
+            // designed to be safely transmuted directly from a kernel error
+            // code.
+            Err(unsafe { core::mem::transmute(r1.as_u32()) })
+        } else {
+            Ok(())
+        }
+    }
+
+    fn memop_debug_heap_start(initial_break: *const u8) -> Result<(), ErrorCode> {
+        // Safety: syscall2's documentation indicates it can be used to call Memop.
+        let [r0, r1] = unsafe {
+            Self::syscall2::<{ syscall_class::MEMOP }>([11u32.into(), initial_break.into()])
+        };
+        let return_variant: ReturnVariant = r0.as_u32().into();
+        // TRD 104 guarantees that memop 0, 10, and 11 return either Success
+        // or Failure. We check the return variant by comparing against Failure
+        // for 2 reasons:
+        //
+        //   1. On RISC-V with compressed instructions, it generates smaller
+        //      code. FAILURE has value 0, which can be loaded into a
+        //      register with a single compressed instruction, whereas
+        //      loading SUCCESS uses an uncompressed instruction.
+        //   2. In the event the kernel malfunctions and returns a different
+        //      return variant, the success path is actually safer than the
+        //      failure path. The failure path assumes that r1 contains an
+        //      ErrorCode, and produces UB if it has an out of range value.
+        if return_variant == return_variant::FAILURE {
+            // Safety: TRD 104 guarantees that if r0 is Failure,
+            // then r1 will contain a valid error code. ErrorCode is
+            // designed to be safely transmuted directly from a kernel error
+            // code.
+            Err(unsafe { core::mem::transmute(r1.as_u32()) })
+        } else {
+            Ok(())
+        }
+    }
+
+    // -------------------------------------------------------------------------
     // Exit
     // -------------------------------------------------------------------------
 

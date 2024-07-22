@@ -1,3 +1,5 @@
+use libtock_platform::Register;
+
 /// Unit tests can use `ExpectedSyscall` to alter `fake::Kernel`'s behavior for
 /// a particular system call. An example use case is error injection: unit tests
 /// can add a `ExpectedSyscall` to the fake kernel's queue to insert errors in
@@ -70,7 +72,18 @@ pub enum ExpectedSyscall {
         // invoked and the provided error will be returned instead.
         return_error: Option<libtock_platform::ErrorCode>,
     },
-    // TODO: Add Memop.
+
+    // -------------------------------------------------------------------------
+    // Memop
+    // -------------------------------------------------------------------------
+    Memop {
+        memop_num: u32,
+        argument0: Register, // Necessary for Miri ptr provenance tests of brk
+
+        // If set to Some(_), the driver's memop method will not be
+        // invoked and the provided error will be returned instead.
+        return_error: Option<libtock_platform::ErrorCode>,
+    },
     // TODO: Add Exit.
 }
 
