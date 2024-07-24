@@ -36,6 +36,7 @@ libtock_i2c_master = { path = "apis/peripherals/i2c_master" }
 libtock_i2c_master_slave = { path = "apis/peripherals/i2c_master_slave" }
 libtock_key_value = { path = "apis/storage/key_value" }
 libtock_leds = { path = "apis/interface/leds" }
+libtock_ipc = { path = "apis/kernel/ipc" }
 libtock_low_level_debug = { path = "apis/kernel/low_level_debug" }
 libtock_ninedof = { path = "apis/sensors/ninedof" }
 libtock_platform = { path = "platform" }
@@ -71,6 +72,7 @@ members = [
     "apis/interface/buzzer",
     "apis/interface/console",
     "apis/interface/leds",
+    "apis/kernel/ipc",
     "apis/kernel/low_level_debug",
     "apis/peripherals/adc",
     "apis/peripherals/alarm",
