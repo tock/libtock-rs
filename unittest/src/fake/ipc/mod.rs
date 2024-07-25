@@ -22,31 +22,38 @@ impl Process {
     }
 }
 
-pub struct Ipc {
-    processes: Vec<Process>,
+pub struct Ipc<const NUM_PROCS: usize> {
+    processes: [Process; NUM_PROCS],
     search_buffer: RefCell<RoAllowBuffer>,
     share_ref: DriverShareRef,
 }
-impl Ipc {
-    pub fn new() -> std::rc::Rc<Ipc> {
-        Self::new_with_processes(&[] as &[&[u8]])
-    }
 
-    pub fn new_with_processes<T: AsRef<[u8]>>(pkg_names: &[T]) -> std::rc::Rc<Ipc> {
+impl Ipc<0> {
+    pub fn new() -> std::rc::Rc<Ipc<0>> {
+        Self::new_with_processes(&[] as &[&[u8]; 0])
+    }
+}
+
+impl<const NUM_PROCS: usize> Ipc<NUM_PROCS> {
+    pub fn new_with_processes<T: AsRef<[u8]>>(
+        pkg_names: &[T; NUM_PROCS],
+    ) -> std::rc::Rc<Ipc<NUM_PROCS>> {
         std::rc::Rc::new(Ipc {
             processes: pkg_names
                 .iter()
                 .map(|name| Process::new(name.as_ref()))
-                .collect(),
+                .collect::<Vec<_>>()
+                .try_into()
+                .unwrap(),
             search_buffer: Default::default(),
             share_ref: Default::default(),
         })
     }
 }
 
-impl crate::fake::SyscallDriver for Ipc {
+impl<const NUM_PROCS: usize> crate::fake::SyscallDriver for Ipc<NUM_PROCS> {
     fn info(&self) -> DriverInfo {
-        DriverInfo::new(DRIVER_NUM)
+        DriverInfo::new(DRIVER_NUM).upcall_count(NUM_PROCS as u32)
     }
 
     fn command(&self, command_num: u32, _argument0: u32, _argument1: u32) -> CommandReturn {

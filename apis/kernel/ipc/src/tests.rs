@@ -21,21 +21,21 @@ fn exists() {
 #[test]
 fn discover_valid_service() {
     let kernel = fake::Kernel::new();
-    let processes = [
+    let processes: [&[u8]; 3] = [
         b"org.tockos.test.app_0",
-        b"org.tockos.test.app_1",
-        b"org.tockos.test.app_2",
+        b"org.tockos.test.app_4",
+        b"org.tockos.test.app_18",
     ];
     let driver = fake::Ipc::new_with_processes(&processes);
     kernel.add_driver(&driver);
 
-    assert_eq!(Ipc::discover(b"org.tockos.test.app_1"), Ok(1))
+    assert_eq!(Ipc::discover(b"org.tockos.test.app_4"), Ok(1))
 }
 
 #[test]
 fn discover_invalid_service() {
     let kernel = fake::Kernel::new();
-    let processes = [
+    let processes: [&[u8]; 3] = [
         b"org.tockos.test.app_0",
         b"org.tockos.test.app_1",
         b"org.tockos.test.app_2",
