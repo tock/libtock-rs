@@ -21,25 +21,13 @@ fn main() {
     }
     loop {
         //testing for channels 0, 1 and 2
-        while Adc::exists().is_ok() {
-            match Adc::read_single_sample_sync(0) {
+        for i in 0..2 {
+            match Adc::read_single_sample_sync(i) {
                 Ok(adc_val) => writeln!(Console::writer(), "Sample: {}\n", adc_val).unwrap(),
                 Err(_) => writeln!(Console::writer(), "error while reading sample",).unwrap(),
             }
 
             Alarm::sleep_for(Milliseconds(2000)).unwrap();
-
-            match Adc::read_single_sample_sync(1) {
-                Ok(adc_val) => writeln!(Console::writer(), "Sample: {}\n", adc_val).unwrap(),
-                Err(_) => writeln!(Console::writer(), "error while reading sample",).unwrap(),
-            }
-
-            Alarm::sleep_for(Milliseconds(2000)).unwrap();
-
-            match Adc::read_single_sample_sync(2) {
-                Ok(adc_val) => writeln!(Console::writer(), "Sample: {}\n", adc_val).unwrap(),
-                Err(_) => writeln!(Console::writer(), "error while reading sample",).unwrap(),
-            }
         }
     }
 }
