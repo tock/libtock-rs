@@ -67,7 +67,7 @@ impl<S: Syscalls> Adc<S> {
     }
 
     /// Returns the number of ADC resolution bits
-    pub fn get_resolution_bits(channel: u32) -> Result<u32, ErrorCode> {
+    pub fn get_resolution_bits(channel: size) -> Result<u32, ErrorCode> {
         S::command(DRIVER_NUM, GET_RES_BITS, channel, 0).to_result()
     }
 
