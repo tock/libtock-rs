@@ -28,7 +28,7 @@ impl<S: Syscalls> Adc<S> {
     }
 
     // Initiate a sample reading
-    pub fn read_single_sample(channel: u32) -> Result<(), ErrorCode> {
+    pub fn read_single_sample(channel: size) -> Result<(), ErrorCode> {
         S::command(DRIVER_NUM, SINGLE_SAMPLE, channel, 0).to_result()
     }
 
