@@ -28,8 +28,14 @@ impl<S: Syscalls> Adc<S> {
     }
 
     // Initiate a sample reading
-    pub fn read_single_sample(channel: size) -> Result<(), ErrorCode> {
-        S::command(DRIVER_NUM, SINGLE_SAMPLE, channel, 0).to_result()
+    pub fn read_single_sample(channel: usize) -> Result<(), ErrorCode> {
+        S::command(
+            DRIVER_NUM,
+            SINGLE_SAMPLE,
+            (channel as usize).try_into().unwrap(),
+            0,
+        )
+        .to_result()
     }
 
     // Register a listener to be called when the ADC conversion is finished
@@ -47,7 +53,7 @@ impl<S: Syscalls> Adc<S> {
 
     /// Initiates a synchronous ADC conversion
     /// Returns the converted ADC value or an error
-    pub fn read_single_sample_sync(channel: u32) -> Result<u16, ErrorCode> {
+    pub fn read_single_sample_sync(channel: usize) -> Result<u16, ErrorCode> {
         let sample: Cell<Option<u16>> = Cell::new(None);
         let listener = ADCListener(|adc_val| {
             sample.set(Some(adc_val));
@@ -67,13 +73,25 @@ impl<S: Syscalls> Adc<S> {
     }
 
     /// Returns the number of ADC resolution bits
-    pub fn get_resolution_bits(channel: size) -> Result<u32, ErrorCode> {
-        S::command(DRIVER_NUM, GET_RES_BITS, channel, 0).to_result()
+    pub fn get_resolution_bits(channel: usize) -> Result<u32, ErrorCode> {
+        S::command(
+            DRIVER_NUM,
+            GET_RES_BITS,
+            (channel as usize).try_into().unwrap(),
+            0,
+        )
+        .to_result()
     }
 
     /// Returns the reference voltage in millivolts (mV)
-    pub fn get_reference_voltage_mv(channel: u32) -> Result<u32, ErrorCode> {
-        S::command(DRIVER_NUM, GET_VOLTAGE_REF, channel, 0).to_result()
+    pub fn get_reference_voltage_mv(channel: usize) -> Result<u32, ErrorCode> {
+        S::command(
+            DRIVER_NUM,
+            GET_VOLTAGE_REF,
+            (channel as usize).try_into().unwrap(),
+            0,
+        )
+        .to_result()
     }
 }
 
