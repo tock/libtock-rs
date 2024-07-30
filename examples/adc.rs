@@ -19,13 +19,27 @@ fn main() {
         writeln!(Console::writer(), "adc driver unavailable").unwrap();
         return;
     }
-
     loop {
-        match Adc::read_single_sample_sync() {
-            Ok(adc_val) => writeln!(Console::writer(), "Sample: {}\n", adc_val).unwrap(),
-            Err(_) => writeln!(Console::writer(), "error while reading sample",).unwrap(),
-        }
+        //testing for channels 0, 1 and 2
+        while Adc::exists().is_ok() {
+            match Adc::read_single_sample_sync(0) {
+                Ok(adc_val) => writeln!(Console::writer(), "Sample: {}\n", adc_val).unwrap(),
+                Err(_) => writeln!(Console::writer(), "error while reading sample",).unwrap(),
+            }
 
-        Alarm::sleep_for(Milliseconds(2000)).unwrap();
+            Alarm::sleep_for(Milliseconds(2000)).unwrap();
+
+            match Adc::read_single_sample_sync(1) {
+                Ok(adc_val) => writeln!(Console::writer(), "Sample: {}\n", adc_val).unwrap(),
+                Err(_) => writeln!(Console::writer(), "error while reading sample",).unwrap(),
+            }
+
+            Alarm::sleep_for(Milliseconds(2000)).unwrap();
+
+            match Adc::read_single_sample_sync(2) {
+                Ok(adc_val) => writeln!(Console::writer(), "Sample: {}\n", adc_val).unwrap(),
+                Err(_) => writeln!(Console::writer(), "error while reading sample",).unwrap(),
+            }
+        }
     }
 }

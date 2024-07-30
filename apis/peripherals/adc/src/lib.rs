@@ -22,10 +22,14 @@ impl<S: Syscalls> Adc<S> {
             .to_result::<u32, ErrorCode>()
             .and(Ok(()))
     }
+    //Returns the number of channels
+    pub fn get_number_of_channels() -> Result<u32, ErrorCode> {
+        S::command(DRIVER_NUM, EXISTS, 0, 0).to_result::<u32, ErrorCode>()
+    }
 
     // Initiate a sample reading
-    pub fn read_single_sample() -> Result<(), ErrorCode> {
-        S::command(DRIVER_NUM, SINGLE_SAMPLE, 0, 0).to_result()
+    pub fn read_single_sample(channel: u32) -> Result<(), ErrorCode> {
+        S::command(DRIVER_NUM, SINGLE_SAMPLE, channel, 0).to_result()
     }
 
     // Register a listener to be called when the ADC conversion is finished
@@ -43,14 +47,14 @@ impl<S: Syscalls> Adc<S> {
 
     /// Initiates a synchronous ADC conversion
     /// Returns the converted ADC value or an error
-    pub fn read_single_sample_sync() -> Result<u16, ErrorCode> {
+    pub fn read_single_sample_sync(channel: u32) -> Result<u16, ErrorCode> {
         let sample: Cell<Option<u16>> = Cell::new(None);
         let listener = ADCListener(|adc_val| {
             sample.set(Some(adc_val));
         });
         share::scope(|subscribe| {
             Self::register_listener(&listener, subscribe)?;
-            Self::read_single_sample()?;
+            Self::read_single_sample(channel)?;
             while sample.get().is_none() {
                 S::yield_wait();
             }
@@ -63,21 +67,21 @@ impl<S: Syscalls> Adc<S> {
     }
 
     /// Returns the number of ADC resolution bits
-    pub fn get_resolution_bits() -> Result<u32, ErrorCode> {
-        S::command(DRIVER_NUM, GET_RES_BITS, 0, 0).to_result()
+    pub fn get_resolution_bits(channel: u32) -> Result<u32, ErrorCode> {
+        S::command(DRIVER_NUM, GET_RES_BITS, channel, 0).to_result()
     }
 
     /// Returns the reference voltage in millivolts (mV)
-    pub fn get_reference_voltage_mv() -> Result<u32, ErrorCode> {
-        S::command(DRIVER_NUM, GET_VOLTAGE_REF, 0, 0).to_result()
+    pub fn get_reference_voltage_mv(channel: u32) -> Result<u32, ErrorCode> {
+        S::command(DRIVER_NUM, GET_VOLTAGE_REF, channel, 0).to_result()
     }
 }
 
 pub struct ADCListener<F: Fn(u16)>(pub F);
 
 impl<F: Fn(u16)> Upcall<OneId<DRIVER_NUM, 0>> for ADCListener<F> {
-    fn upcall(&self, adc_val: u32, _arg1: u32, _arg2: u32) {
-        self.0(adc_val as u16)
+    fn upcall(&self, _adc_mode: u32, _channel: u32, sample: u32) {
+        self.0(sample as u32 as u16)
     }
 }
 
