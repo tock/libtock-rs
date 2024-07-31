@@ -23,8 +23,10 @@ impl<S: Syscalls> Adc<S> {
             .and(Ok(()))
     }
     //Returns the number of channels
-    pub fn get_number_of_channels() -> Result<u32, ErrorCode> {
-        S::command(DRIVER_NUM, EXISTS, 0, 0).to_result::<u32, ErrorCode>()
+    pub fn get_number_of_channels() -> Result<usize, ErrorCode> {
+        S::command(DRIVER_NUM, EXISTS, 0, 0)
+            .to_result::<u32, ErrorCode>()
+            .and_then(|number_channels| number_channels.try_into().map_err(|_| ErrorCode::Fail))
     }
 
     // Initiate a sample reading
