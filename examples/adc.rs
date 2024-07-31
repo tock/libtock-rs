@@ -20,16 +20,13 @@ fn main() {
         return;
     }
     //getting the number of channels
-    let number_channels: usize = match Adc::get_number_of_channels() {
-        Ok(channel) => channel as usize,
-        Err(_) => {
-            writeln!(Console::writer(), "can't get number of channels").unwrap();
-            return;
-        }
+    let Ok(number_channels) = Adc::get_number_of_channels() else {
+        writeln!(Console::writer(), "can't get number of channels").unwrap();
+        return;
     };
     loop {
         for i in 0..number_channels {
-            match Adc::read_single_sample_sync(i) {
+            match Adc::read_single_sample_sync(i as usize) {
                 Ok(adc_val) => writeln!(Console::writer(), "Sample: {}\n", adc_val).unwrap(),
                 Err(_) => writeln!(Console::writer(), "error while reading sample",).unwrap(),
             }
