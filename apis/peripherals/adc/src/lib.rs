@@ -99,7 +99,7 @@ pub struct ADCListener<F: Fn(u16)>(pub F);
 
 impl<F: Fn(u16)> Upcall<OneId<DRIVER_NUM, 0>> for ADCListener<F> {
     fn upcall(&self, _adc_mode: u32, _channel: u32, sample: u32) {
-        self.0(sample as u32 as u16)
+        self.0(sample as u16)
     }
 }
 
