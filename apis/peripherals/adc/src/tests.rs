@@ -48,18 +48,18 @@ fn register_unregister_listener() {
         let ch = Adc::get_number_of_channels().unwrap();
 
         assert_eq!(Adc::read_single_sample(ch), Ok(()));
-        driver.set_value(100);
+        driver.set_value(ch.try_into().unwrap(), 100);
         assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::NoUpcall);
 
         assert_eq!(Adc::register_listener(&listener, subscribe), Ok(()));
         assert_eq!(Adc::read_single_sample(ch), Ok(()));
-        driver.set_value(100);
+        driver.set_value(ch.try_into().unwrap(), 100);
         assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::Upcall);
         assert_eq!(sample.get(), Some(100));
 
         Adc::unregister_listener();
         assert_eq!(Adc::read_single_sample(ch), Ok(()));
-        driver.set_value(100);
+        driver.set_value(ch.try_into().unwrap(), 100);
         assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::NoUpcall);
     });
 }
@@ -72,6 +72,6 @@ fn read_single_sample_sync() {
 
     let ch = Adc::get_number_of_channels().unwrap();
 
-    driver.set_value_sync(1000);
+    driver.set_value_sync(ch.try_into().unwrap(), 1000);
     assert_eq!(Adc::read_single_sample_sync(ch), Ok(1000));
 }
