@@ -1,3 +1,5 @@
+use libtock_platform::Register;
+
 /// SyscallLogEntry represents a system call made during test execution.
 #[derive(Debug, Eq, PartialEq)]
 pub enum SyscallLogEntry {
@@ -43,6 +45,13 @@ pub enum SyscallLogEntry {
         buffer_num: u32,
         len: usize,
     },
-    // TODO: Add Memop.
+
+    // -------------------------------------------------------------------------
+    // Memop
+    // -------------------------------------------------------------------------
+    Memop {
+        memop_num: u32,
+        argument0: Register, // Necessary for Miri ptr provenance of brk()
+    },
     // TODO: Add Exit.
 }

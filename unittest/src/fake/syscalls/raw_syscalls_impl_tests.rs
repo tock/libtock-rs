@@ -52,7 +52,27 @@ fn allow_rw() {
 
 // TODO: Implement Exit.
 
-// TODO: Implement Memop.
+#[test]
+fn memop() {
+    let kernel = fake::Kernel::new();
+    unsafe {
+        fake::Syscalls::syscall2::<{ syscall_class::MEMOP }>([1u32.into(), 2u32.into()]);
+        fake::Syscalls::syscall1::<{ syscall_class::MEMOP }>([2u32.into()]);
+    }
+    assert_eq!(
+        kernel.take_syscall_log(),
+        [
+            SyscallLogEntry::Memop {
+                memop_num: 1,
+                argument0: 2.into(),
+            },
+            SyscallLogEntry::Memop {
+                memop_num: 2,
+                argument0: 0.into(),
+            }
+        ]
+    );
+}
 
 // TODO: Implement Subscribe.
 

@@ -37,6 +37,7 @@ impl Kernel {
                 expected_syscalls: Default::default(),
                 syscall_log: Vec::new(),
                 upcall_queue: Default::default(),
+                memory_break: core::ptr::null(),
             }))
         });
         if let Some(old_kernel_data) = old_option {

@@ -8,7 +8,7 @@ use core::mem::transmute;
 /// wraps, but instead use the conversion functions in this module.
 // Register is repr(transparent) so that an upcall's application data can be
 // soundly passed as a Register.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 #[repr(transparent)]
 pub struct Register(pub *mut ());
 
@@ -24,6 +24,12 @@ impl From<crate::ErrorCode> for Register {
 
 impl From<u32> for Register {
     fn from(value: u32) -> Register {
+        (value as usize).into()
+    }
+}
+
+impl From<i32> for Register {
+    fn from(value: i32) -> Register {
         (value as usize).into()
     }
 }
@@ -71,6 +77,13 @@ impl Register {
     /// the `TryFrom<Register> for u32` implementation instead.
     pub fn as_u32(self) -> u32 {
         self.0 as u32
+    }
+
+    /// Casts this register to a i32, truncating it if it is larger than
+    /// 32 bits. This conversion should be avoided in host-based test code; use
+    /// the `TryFrom<Register> for i32` implementation instead.
+    pub fn as_i32(self) -> i32 {
+        self.0 as i32
     }
 }
 

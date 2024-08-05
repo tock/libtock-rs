@@ -1,7 +1,7 @@
 //! Runtime components related to process startup.
 
 use crate::TockSyscalls;
-use libtock_platform::{syscall_class, RawSyscalls, Termination};
+use libtock_platform::{Syscalls, Termination};
 
 // Include the correct `start` symbol (the program entry point) for the
 // architecture.
@@ -85,21 +85,12 @@ extern "C" fn rust_start() -> ! {
         static rt_header: RtHeader;
     }
 
-    // TODO: Implement a safe memop API in libtock_platform and migrate these
-    // calls to that API.
-    //
-    // Safety: Memop operations 10 and 11 are always memory-safe, as they do not
-    // impact the execution of this process.
     #[cfg(not(feature = "no_debug_memop"))]
+    // Safety: rt_header is defined in the linker script, valid for its type,
+    // and not modified anywhere
     unsafe {
-        TockSyscalls::syscall2::<{ syscall_class::MEMOP }>([
-            10u32.into(),
-            rt_header.stack_top.into(),
-        ]);
-        TockSyscalls::syscall2::<{ syscall_class::MEMOP }>([
-            11u32.into(),
-            rt_header.initial_break.into(),
-        ]);
+        let _ = TockSyscalls::memop_debug_stack_start(rt_header.stack_top as *const u8);
+        let _ = TockSyscalls::memop_debug_heap_start(rt_header.initial_break as *const u8);
     }
 
     // Safety: libtock_unsafe_main is defined by the set_main! macro, and its
@@ -107,4 +98,15 @@ extern "C" fn rust_start() -> ! {
     unsafe {
         libtock_unsafe_main();
     }
+}
+
+/// Function which an allocator can call to learn the initial
+/// start of the heap region
+pub fn get_heap_start() -> *mut () {
+    extern "Rust" {
+        static rt_header: RtHeader;
+    }
+    // Safety: rt_header is defined in the linker script, valid for its type,
+    // and not modified anywhere
+    unsafe { rt_header.initial_break }
 }

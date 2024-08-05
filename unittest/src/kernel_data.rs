@@ -23,6 +23,7 @@ pub(crate) struct KernelData {
     pub expected_syscalls: std::collections::VecDeque<crate::ExpectedSyscall>,
     pub syscall_log: Vec<crate::SyscallLogEntry>,
     pub upcall_queue: crate::upcall::UpcallQueue,
+    pub memory_break: *const u8,
 }
 
 // KERNEL_DATA is set to Some in `fake::Kernel::new` and set to None when the
