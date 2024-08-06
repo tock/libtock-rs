@@ -12,7 +12,7 @@ fn no_driver() {
 #[test]
 fn exists() {
     let kernel = fake::Kernel::new();
-    let driver = fake::Ipc::new();
+    let driver = fake::Ipc::new(&[]);
     kernel.add_driver(&driver);
 
     assert_eq!(Ipc::exists(), Ok(()));
@@ -21,12 +21,11 @@ fn exists() {
 #[test]
 fn discover_valid_service() {
     let kernel = fake::Kernel::new();
-    let processes: [fake::Process; 3] = [
+    let driver = fake::Ipc::new(&[
         fake::Process::new(b"org.tockos.test.app_0", 311149534),
         fake::Process::new(b"org.tockos.test.app_4", 202834883),
         fake::Process::new(b"org.tockos.test.app_18", 256614857),
-    ];
-    let driver = fake::Ipc::new_with_processes(&processes);
+    ]);
     kernel.add_driver(&driver);
 
     assert_eq!(Ipc::discover(b"org.tockos.test.app_4"), Ok(1))
@@ -35,12 +34,11 @@ fn discover_valid_service() {
 #[test]
 fn discover_invalid_service() {
     let kernel = fake::Kernel::new();
-    let processes: [fake::Process; 3] = [
+    let driver = fake::Ipc::new(&[
         fake::Process::new(b"org.tockos.test.app_0", 311149534),
         fake::Process::new(b"org.tockos.test.app_4", 202834883),
         fake::Process::new(b"org.tockos.test.app_18", 256614857),
-    ];
-    let driver = fake::Ipc::new_with_processes(&processes);
+    ]);
     kernel.add_driver(&driver);
 
     assert_eq!(

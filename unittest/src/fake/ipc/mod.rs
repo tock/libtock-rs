@@ -12,7 +12,7 @@ pub struct Process {
 }
 
 impl Process {
-    pub fn new(pkg_name: &[u8], process_id: u32) -> Process {
+    pub fn new(pkg_name: &[u8], process_id: u32) -> Self {
         Process {
             pkg_name: Vec::from(pkg_name),
             process_id,
@@ -27,14 +27,8 @@ pub struct Ipc<const NUM_PROCS: usize> {
     share_ref: DriverShareRef,
 }
 
-impl Ipc<0> {
-    pub fn new() -> std::rc::Rc<Ipc<0>> {
-        Self::new_with_processes(&[] as &[Process; 0])
-    }
-}
-
 impl<const NUM_PROCS: usize> Ipc<NUM_PROCS> {
-    pub fn new_with_processes(processes: &[Process; NUM_PROCS]) -> std::rc::Rc<Ipc<NUM_PROCS>> {
+    pub fn new(processes: &[Process; NUM_PROCS]) -> std::rc::Rc<Ipc<NUM_PROCS>> {
         std::rc::Rc::new(Ipc {
             processes: Vec::from(processes).try_into().unwrap(),
             current_index: Cell::from(None),
@@ -43,7 +37,7 @@ impl<const NUM_PROCS: usize> Ipc<NUM_PROCS> {
         })
     }
 
-    pub fn set_process(&mut self, process_id: u32) -> Result<(), ErrorCode> {
+    pub fn set_process(&self, process_id: u32) -> Result<(), ErrorCode> {
         let index = self
             .processes
             .iter()
@@ -57,6 +51,10 @@ impl<const NUM_PROCS: usize> Ipc<NUM_PROCS> {
 impl<const NUM_PROCS: usize> crate::fake::SyscallDriver for Ipc<NUM_PROCS> {
     fn info(&self) -> DriverInfo {
         DriverInfo::new(DRIVER_NUM).upcall_count(NUM_PROCS as u32)
+    }
+
+    fn register(&self, share_ref: DriverShareRef) {
+        self.share_ref.replace(share_ref);
     }
 
     fn command(&self, command_num: u32, target_index: u32, _argument1: u32) -> CommandReturn {
@@ -78,7 +76,7 @@ impl<const NUM_PROCS: usize> crate::fake::SyscallDriver for Ipc<NUM_PROCS> {
                 .unwrap_or(crate::command_return::failure(ErrorCode::Invalid)),
             command::SERVICE_NOTIFY => {
                 let index = self.current_index.get().expect("No current application");
-                if index < self.processes.len() as u32 {
+                if target_index < NUM_PROCS as u32 {
                     self.share_ref
                         .schedule_upcall(target_index, (index, 0, 0))
                         .expect("Unable to schedule upcall {}");
@@ -89,7 +87,7 @@ impl<const NUM_PROCS: usize> crate::fake::SyscallDriver for Ipc<NUM_PROCS> {
             }
             command::CLIENT_NOTIFY => {
                 let index = self.current_index.get().expect("No current application");
-                if index < self.processes.len() as u32 {
+                if target_index < NUM_PROCS as u32 {
                     self.share_ref
                         .schedule_upcall(index, (index, 0, 0))
                         .expect("Unable to schedule upcall {}");
