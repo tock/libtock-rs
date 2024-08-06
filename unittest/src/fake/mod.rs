@@ -37,7 +37,7 @@ pub use buttons::Buttons;
 pub use buzzer::Buzzer;
 pub use console::Console;
 pub use gpio::{Gpio, GpioMode, InterruptEdge, PullMode};
-pub use ipc::Ipc;
+pub use ipc::{Ipc, Process};
 pub use kernel::Kernel;
 pub use key_value::KeyValue;
 pub use leds::Leds;

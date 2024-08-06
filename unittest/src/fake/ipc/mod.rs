@@ -1,53 +1,56 @@
 //! Fake implementation of the Ipc API, documented here:
 
 use libtock_platform::{CommandReturn, ErrorCode};
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 
 use crate::{DriverInfo, DriverShareRef, RoAllowBuffer};
-
-// TODO: remove identifier, just have processes be package names
-// TODO: remove index, use .enumerate() on processes
-// TODO: figure out how to simulate calls on processes
 
 #[derive(Clone, Debug)]
 pub struct Process {
     pkg_name: Vec<u8>,
+    process_id: u32,
 }
 
 impl Process {
-    pub fn new(pkg_name: &[u8]) -> Process {
+    pub fn new(pkg_name: &[u8], process_id: u32) -> Process {
         Process {
             pkg_name: Vec::from(pkg_name),
+            process_id,
         }
     }
 }
 
 pub struct Ipc<const NUM_PROCS: usize> {
     processes: [Process; NUM_PROCS],
+    current_index: Cell<Option<u32>>,
     search_buffer: RefCell<RoAllowBuffer>,
     share_ref: DriverShareRef,
 }
 
 impl Ipc<0> {
     pub fn new() -> std::rc::Rc<Ipc<0>> {
-        Self::new_with_processes(&[] as &[&[u8]; 0])
+        Self::new_with_processes(&[] as &[Process; 0])
     }
 }
 
 impl<const NUM_PROCS: usize> Ipc<NUM_PROCS> {
-    pub fn new_with_processes<T: AsRef<[u8]>>(
-        pkg_names: &[T; NUM_PROCS],
-    ) -> std::rc::Rc<Ipc<NUM_PROCS>> {
+    pub fn new_with_processes(processes: &[Process; NUM_PROCS]) -> std::rc::Rc<Ipc<NUM_PROCS>> {
         std::rc::Rc::new(Ipc {
-            processes: pkg_names
-                .iter()
-                .map(|name| Process::new(name.as_ref()))
-                .collect::<Vec<_>>()
-                .try_into()
-                .unwrap(),
+            processes: Vec::from(processes).try_into().unwrap(),
+            current_index: Cell::from(None),
             search_buffer: Default::default(),
             share_ref: Default::default(),
         })
+    }
+
+    pub fn set_process(&mut self, process_id: u32) -> Result<(), ErrorCode> {
+        let index = self
+            .processes
+            .iter()
+            .position(|process| process.process_id == process_id)
+            .ok_or(ErrorCode::Invalid)?;
+        self.current_index.replace(Some(index as u32));
+        Ok(())
     }
 }
 
@@ -56,7 +59,7 @@ impl<const NUM_PROCS: usize> crate::fake::SyscallDriver for Ipc<NUM_PROCS> {
         DriverInfo::new(DRIVER_NUM).upcall_count(NUM_PROCS as u32)
     }
 
-    fn command(&self, command_num: u32, _argument0: u32, _argument1: u32) -> CommandReturn {
+    fn command(&self, command_num: u32, target_index: u32, _argument1: u32) -> CommandReturn {
         match command_num {
             command::EXISTS => crate::command_return::success(),
             command::DISCOVER => self
@@ -73,6 +76,28 @@ impl<const NUM_PROCS: usize> crate::fake::SyscallDriver for Ipc<NUM_PROCS> {
                 })
                 .map(|index| crate::command_return::success_u32(index as u32))
                 .unwrap_or(crate::command_return::failure(ErrorCode::Invalid)),
+            command::SERVICE_NOTIFY => {
+                let index = self.current_index.get().expect("No current application");
+                if index < self.processes.len() as u32 {
+                    self.share_ref
+                        .schedule_upcall(target_index, (index, 0, 0))
+                        .expect("Unable to schedule upcall {}");
+                    crate::command_return::success()
+                } else {
+                    crate::command_return::failure(ErrorCode::Invalid)
+                }
+            }
+            command::CLIENT_NOTIFY => {
+                let index = self.current_index.get().expect("No current application");
+                if index < self.processes.len() as u32 {
+                    self.share_ref
+                        .schedule_upcall(index, (index, 0, 0))
+                        .expect("Unable to schedule upcall {}");
+                    crate::command_return::success()
+                } else {
+                    crate::command_return::failure(ErrorCode::Invalid)
+                }
+            }
             _ => crate::command_return::failure(ErrorCode::NoSupport),
         }
     }
@@ -103,6 +128,8 @@ const DRIVER_NUM: u32 = 0x10000;
 mod command {
     pub const EXISTS: u32 = 0;
     pub const DISCOVER: u32 = 1;
+    pub const SERVICE_NOTIFY: u32 = 2;
+    pub const CLIENT_NOTIFY: u32 = 3;
 }
 
 mod allow_ro {
