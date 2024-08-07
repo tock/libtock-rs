@@ -37,13 +37,15 @@ impl<const NUM_PROCS: usize> Ipc<NUM_PROCS> {
         })
     }
 
-    pub fn set_process(&self, process_id: u32) -> Result<(), ErrorCode> {
+    pub fn as_process<F: Fn()>(&self, process_id: u32, process_fn: F) -> Result<(), ErrorCode> {
         let index = self
             .processes
             .iter()
             .position(|process| process.process_id == process_id)
             .ok_or(ErrorCode::Invalid)?;
         self.current_index.replace(Some(index as u32));
+        process_fn();
+        self.current_index.set(None);
         Ok(())
     }
 }
