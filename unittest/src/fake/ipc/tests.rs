@@ -47,19 +47,27 @@ fn command() {
     );
 
     // Service Notify
-    ipc.set_process(APP_1_PROCESS_ID).unwrap();
-    assert!(ipc.command(command::SERVICE_NOTIFY, 2, 0).is_success());
     assert_eq!(
-        ipc.command(command::SERVICE_NOTIFY, 3, 0).get_failure(),
-        Some(ErrorCode::Invalid)
+        ipc.as_process(APP_1_PROCESS_ID, || {
+            assert!(ipc.command(command::SERVICE_NOTIFY, 2, 0).is_success());
+            assert_eq!(
+                ipc.command(command::SERVICE_NOTIFY, 3, 0).get_failure(),
+                Some(ErrorCode::Invalid)
+            );
+        }),
+        Ok(())
     );
 
     // Client Notify
-    ipc.set_process(APP_2_PROCESS_ID).unwrap();
-    assert!(ipc.command(command::CLIENT_NOTIFY, 0, 0).is_success());
     assert_eq!(
-        ipc.command(command::CLIENT_NOTIFY, 4, 0).get_failure(),
-        Some(ErrorCode::Invalid)
+        ipc.as_process(APP_2_PROCESS_ID, || {
+            assert!(ipc.command(command::CLIENT_NOTIFY, 0, 0).is_success());
+            assert_eq!(
+                ipc.command(command::CLIENT_NOTIFY, 4, 0).get_failure(),
+                Some(ErrorCode::Invalid)
+            );
+        }),
+        Ok(())
     );
 }
 
@@ -107,46 +115,58 @@ fn kernel_integration() {
     });
 
     // Notify Service
-    ipc.set_process(APP_1_PROCESS_ID).unwrap();
-    let listener = Cell::<Option<(u32, u32, u32)>>::new(None);
-    share::scope(|subscribe_service| {
-        assert_eq!(
-            fake::Syscalls::subscribe::<_, _, DefaultConfig, DRIVER_NUM, 2>(
-                subscribe_service,
-                &listener,
-            ),
-            Ok(())
-        );
-        assert!(fake::Syscalls::command(DRIVER_NUM, command::SERVICE_NOTIFY, 2, 0).is_success());
-        assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::Upcall);
-    });
-    assert_eq!(listener.get(), Some((1, 0, 0)));
-
     assert_eq!(
-        fake::Syscalls::command(DRIVER_NUM, command::SERVICE_NOTIFY, 3, 0).get_failure(),
-        Some(ErrorCode::Invalid)
+        ipc.as_process(APP_1_PROCESS_ID, || {
+            let listener = Cell::<Option<(u32, u32, u32)>>::new(None);
+            share::scope(|subscribe_service| {
+                assert_eq!(
+                    fake::Syscalls::subscribe::<_, _, DefaultConfig, DRIVER_NUM, 2>(
+                        subscribe_service,
+                        &listener,
+                    ),
+                    Ok(())
+                );
+                assert!(
+                    fake::Syscalls::command(DRIVER_NUM, command::SERVICE_NOTIFY, 2, 0).is_success()
+                );
+                assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::Upcall);
+            });
+            assert_eq!(listener.get(), Some((1, 0, 0)));
+
+            assert_eq!(
+                fake::Syscalls::command(DRIVER_NUM, command::SERVICE_NOTIFY, 3, 0).get_failure(),
+                Some(ErrorCode::Invalid)
+            );
+            assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::NoUpcall);
+        }),
+        Ok(())
     );
-    assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::NoUpcall);
 
     // Notify Client
-    ipc.set_process(APP_2_PROCESS_ID).unwrap();
-    let listener = Cell::<Option<(u32, u32, u32)>>::new(None);
-    share::scope(|subscribe_client| {
-        assert_eq!(
-            fake::Syscalls::subscribe::<_, _, DefaultConfig, DRIVER_NUM, 2>(
-                subscribe_client,
-                &listener,
-            ),
-            Ok(())
-        );
-        assert!(fake::Syscalls::command(DRIVER_NUM, command::CLIENT_NOTIFY, 0, 0).is_success());
-        assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::Upcall);
-    });
-    assert_eq!(listener.get(), Some((2, 0, 0)));
-
     assert_eq!(
-        fake::Syscalls::command(DRIVER_NUM, command::CLIENT_NOTIFY, 5, 0).get_failure(),
-        Some(ErrorCode::Invalid)
+        ipc.as_process(APP_2_PROCESS_ID, || {
+            let listener = Cell::<Option<(u32, u32, u32)>>::new(None);
+            share::scope(|subscribe_client| {
+                assert_eq!(
+                    fake::Syscalls::subscribe::<_, _, DefaultConfig, DRIVER_NUM, 2>(
+                        subscribe_client,
+                        &listener,
+                    ),
+                    Ok(())
+                );
+                assert!(
+                    fake::Syscalls::command(DRIVER_NUM, command::CLIENT_NOTIFY, 0, 0).is_success()
+                );
+                assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::Upcall);
+            });
+            assert_eq!(listener.get(), Some((2, 0, 0)));
+
+            assert_eq!(
+                fake::Syscalls::command(DRIVER_NUM, command::CLIENT_NOTIFY, 5, 0).get_failure(),
+                Some(ErrorCode::Invalid)
+            );
+            assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::NoUpcall);
+        }),
+        Ok(())
     );
-    assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::NoUpcall);
 }

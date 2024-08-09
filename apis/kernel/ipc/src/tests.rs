@@ -29,6 +29,7 @@ fn exists() {
     assert_eq!(Ipc::exists(), Ok(()));
 }
 
+// Tests the discover implementation
 #[test]
 fn discover() {
     let kernel = fake::Kernel::new();
@@ -46,6 +47,7 @@ fn discover() {
     )
 }
 
+// Tests the register and notify service implementations
 #[test]
 fn register_and_notify_service() {
     static SERVICE_NOTIFIED: AtomicBool = AtomicBool::new(false);
@@ -90,6 +92,7 @@ fn register_and_notify_service() {
     assert!(SERVICE_NOTIFIED.load(Ordering::Relaxed));
 }
 
+// Tests the register and notify client implementations
 #[test]
 fn register_and_notify_client() {
     static CLIENT_NOTIFIED: AtomicBool = AtomicBool::new(false);
@@ -131,7 +134,13 @@ fn register_and_notify_client() {
     assert!(CLIENT_NOTIFIED.load(Ordering::Relaxed));
 }
 
+// Tests the share buffer implementation
+//
+// Note that because IPC requires casting the buffer address passed to
+// upcalls from a u32 into a *mut u8, and `make test` executes Miri with
+// `-Zmiri-strict-provenance`, we need to tell Miri to ignore this test.
 #[test]
+#[cfg_attr(miri, ignore)]
 fn share() {
     static BUFFER: TakeCell<[u8; 16]> = TakeCell::new([0; 16]);
     static EXPECTED_ADDR: AtomicU32 = AtomicU32::new(0);
@@ -139,12 +148,14 @@ fn share() {
 
     fn service_callback(data: IpcCallData) {
         assert_eq!(data.caller_id, 1);
+
+        let buffer_slice = data.buffer.expect("No IPC buffer found");
         assert_eq!(
-            data.buffer.as_ptr() as u32,
+            buffer_slice.as_ptr() as u32,
             EXPECTED_ADDR.load(Ordering::Relaxed)
         );
         assert_eq!(
-            data.buffer.len() as u32,
+            buffer_slice.len() as u32,
             EXPECTED_LEN.load(Ordering::Relaxed)
         )
     }

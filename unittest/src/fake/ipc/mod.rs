@@ -1,12 +1,19 @@
-//! Fake implementation of the Ipc API, documented here:
+//! Fake implementation of the IPC API.
+//!
+//! Like the real IPC API, `Ipc` coordinates interprocess communication
+//! between a set of fake processes. It provides a function `as_process`
+//! used to mock interfacing with the IPC API as different processes.
+//!
+//! Process indexes (what the present IPC kernel driver uses to identify IPC
+//! services and clients) are assigned implicitly based on the order of
+//! processes passed in to `Ipc::new`.
 
 use libtock_platform::{CommandReturn, ErrorCode};
 use std::cell::{Cell, RefCell};
-use std::collections::HashMap;
 
 use crate::{DriverInfo, DriverShareRef, RoAllowBuffer, RwAllowBuffer};
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Process {
     pkg_name: Vec<u8>,
     process_id: u32,
@@ -31,7 +38,6 @@ pub struct Ipc<const NUM_PROCS: usize> {
     current_index: Cell<Option<u32>>,
     search_buffer: RefCell<RoAllowBuffer>,
     share_buffers: [RefCell<RwAllowBuffer>; NUM_PROCS],
-    mock_address_map: RefCell<HashMap<u32, *mut u8>>,
     share_ref: DriverShareRef,
 }
 
@@ -42,7 +48,6 @@ impl<const NUM_PROCS: usize> Ipc<NUM_PROCS> {
             current_index: Default::default(),
             search_buffer: Default::default(),
             share_buffers: std::array::from_fn(|_| Default::default()),
-            mock_address_map: Default::default(),
             share_ref: Default::default(),
         })
     }
@@ -127,21 +132,17 @@ impl<const NUM_PROCS: usize> Ipc<NUM_PROCS> {
             IpcProcessType::Client => from_index,
         };
 
-        let share_buffer = self.share_buffers.get(service_index as usize).unwrap();
-        let buffer_addr: *mut u8 = share_buffer.borrow_mut().as_mut_ptr();
-
-        self.mock_address_map
-            .borrow_mut()
-            .insert(buffer_addr as u32, buffer_addr);
+        let share_buffer = self
+            .share_buffers
+            .get(service_index as usize)
+            .expect("Unable to access share buffer");
+        let share_len = share_buffer.borrow().len() as u32;
+        let share_ptr = match share_len {
+            0 => 0,
+            _ => share_buffer.borrow().as_ptr() as u32,
+        };
         self.share_ref
-            .schedule_upcall(
-                service_index,
-                (
-                    from_index,
-                    share_buffer.borrow().len() as u32,
-                    share_buffer.borrow().as_ptr() as u32,
-                ),
-            )
+            .schedule_upcall(service_index, (from_index, share_len, share_ptr))
             .expect("Unable to schedule upcall {}");
 
         crate::command_return::success()
@@ -158,7 +159,6 @@ mod tests;
 const DRIVER_NUM: u32 = 0x10000;
 
 // Command IDs
-
 mod command {
     pub const EXISTS: u32 = 0;
     pub const DISCOVER: u32 = 1;
@@ -166,6 +166,7 @@ mod command {
     pub const CLIENT_NOTIFY: u32 = 3;
 }
 
+// Read-only allow numbers
 mod allow_ro {
     pub const SEARCH: u32 = 0;
 }

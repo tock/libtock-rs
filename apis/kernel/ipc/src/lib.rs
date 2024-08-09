@@ -1,4 +1,4 @@
-#![cfg_attr(not(test), no_std)]
+#![no_std]
 
 use libtock_platform as platform;
 use platform::{
@@ -6,26 +6,78 @@ use platform::{
     ErrorCode, Register, ReturnVariant, Syscalls, Upcall,
 };
 
+/// The IPC driver.
+///
+/// # Example
+///
+/// Service:
+///
+/// ```ignore
+/// use libtock::ipc::{Ipc, IpcCallData, IpcListener};
+/// use libtock::leds::Leds;
+///
+/// fn led_callback(data: IpcCallData) {
+///     let _ = Leds::on(0);
+/// }
+///
+/// // Creates an IPC service for turning on an LED
+/// let listener = ipc::IpcListener(led_callback);
+///
+/// // Registers the IPC service
+/// let _ = Ipc::register_service_listener(listener);
+/// ```
+///
+/// Client:
+///
+/// ```ignore
+/// use libtock::ipc::Ipc;
+///
+/// // Discovers the IPC service
+/// let service_id = Ipc::discover("org.tockos.example.led").unwrap();
+///
+/// // Runs the IPC service
+/// let _ = Ipc::notify_service(service_id);
+/// ````
+
+#[derive(Debug, Eq, PartialEq)]
+pub struct IpcCallData<'a> {
+    caller_id: u32,
+    buffer: Option<&'a mut [u8]>,
+}
+
 pub struct Ipc<S: Syscalls, C: Config = DefaultConfig>(S, C);
 
 impl<S: Syscalls, C: Config> Ipc<S, C> {
-    /// Check if the IPC kernel driver exists
+    /// Run a check against the IPC capsule to ensure it is present
+    ///
+    /// Returns Ok(()) if the driver was present. This does not necessarily mean
+    /// that the driver is working, as it may still fail to allocate grant
+    /// memory.
+    #[inline(always)]
     pub fn exists() -> Result<(), ErrorCode> {
         S::command(DRIVER_NUM, command::EXISTS, 0, 0).to_result()
     }
 
-    /// Request the service ID of an IPC service by package name
+    /// Look up the service ID of an IPC service
+    ///
+    /// The package name provided should be the one indicated in the TBF header
+    /// of the Tock binary presenting itself as an IPC service. For additional
+    /// details, see the Tock Binary Format documentation here:
+    ///
+    /// <https://book.tockos.org/doc/tock_binary_format#3-package-name>
     pub fn discover(pkg_name: &[u8]) -> Result<u32, ErrorCode> {
         share::scope(|allow_search| {
-            // Share the package name buffer with the kernel to search for
             S::allow_ro::<C, DRIVER_NUM, { allow_ro::SEARCH }>(allow_search, pkg_name)?;
-
-            // Send the command to the kernel driver to retrieve the service id for the
-            // corresponding IPC service, if it exists
             S::command(DRIVER_NUM, command::DISCOVER, 0, 0).to_result()
         })
     }
 
+    /// Register an IPC service
+    ///
+    /// This function is called by the IPC service to register a listener under
+    /// a given package name. Only a single listener can be registered per
+    /// package name. IPC clients can trigger this function to be executed by
+    /// calling `Ipc::notify_service` with the current service's service ID.
     pub fn register_service_listener<F: Fn(IpcCallData)>(
         pkg_name: &[u8],
         listener: &'static IpcListener<F>,
@@ -34,6 +86,13 @@ impl<S: Syscalls, C: Config> Ipc<S, C> {
         Self::subscribe_ipc::<C, _, DRIVER_NUM>(service_id, listener)
     }
 
+    /// Register a client IPC callback
+    ///
+    /// This function is called by the IPC client to register a listener
+    /// (callback) for a given IPC service, identified by its service ID. A
+    /// single callback can be registered per service on each client. The
+    /// corresponding service can trigger this callback using
+    /// `Ipc::notify_slicent`, returning control to the user.
     pub fn register_client_listener<F: Fn(IpcCallData)>(
         service_id: u32,
         listener: &'static IpcListener<F>,
@@ -41,26 +100,72 @@ impl<S: Syscalls, C: Config> Ipc<S, C> {
         Self::subscribe_ipc::<C, _, DRIVER_NUM>(service_id, listener)
     }
 
+    /// Notify an IPC service to run
+    ///
+    /// This function is called by the IPC client to trigger an IPC service
+    /// to run. The service ID passed to this function is the same one that
+    /// `Ipc::discover` returns.
     pub fn notify_service(service_id: u32) -> Result<(), ErrorCode> {
         S::command(DRIVER_NUM, command::SERVICE_NOTIFY, service_id, 0).to_result()
     }
 
+    /// Notify a client IPC callback to run
+    ///
+    /// This function is called by the IPC service, generally as part of its
+    /// listener, to trigger an IPC client callback to run. The client ID
+    /// passed to this function is the same one that is presented in the
+    /// `caller_id` field of the `IpcCallData` when the IPC service
+    /// listener executes.
     pub fn notify_client(client_id: u32) -> Result<(), ErrorCode> {
         S::command(DRIVER_NUM, command::CLIENT_NOTIFY, client_id, 0).to_result()
     }
 
+    /// Share a read/write buffer with an IPC service
+    ///
+    /// The client can call this function with a static mutable buffer in order
+    /// to share it via a read/write allow with an IPC service. Since the
+    /// buffer must be mutable and have static lifetime, the best way to
+    /// create a reference to it is via a TakeCell (see the `takecell` crate).
     pub fn share(service_id: u32, buffer: &'static mut [u8]) -> Result<(), ErrorCode> {
         Self::allow_rw_ipc::<C, DRIVER_NUM>(service_id, buffer)
     }
+}
 
+/// A wrapper around a function to be registered and called when an IPC notify
+/// is received.
+///
+/// The IPC API for registering listeners accepts static references to
+/// instances of this struct, so in general the IPC function this struct
+/// wraps should be an actual function instead of a short-lived closure.
+pub struct IpcListener<F: Fn(IpcCallData)>(pub F);
+
+impl<F: Fn(IpcCallData)> Upcall<subscribe::AnyId> for IpcListener<F> {
+    fn upcall(&self, caller_id: u32, buffer_len: u32, buffer_ptr: u32) {
+        let buffer_len = buffer_len as usize;
+        let buffer = match buffer_len {
+            0 => None,
+            _ => {
+                let buffer_addr = buffer_ptr as *mut u8;
+                let buffer = unsafe { core::slice::from_raw_parts_mut(buffer_addr, buffer_len) };
+                Some(buffer)
+            }
+        };
+        self.0(IpcCallData { caller_id, buffer });
+    }
+}
+
+// -----------------------------------------------------------------------------
+// Implementation details below
+// -----------------------------------------------------------------------------
+
+impl<S: Syscalls, C: Config> Ipc<S, C> {
     fn subscribe_ipc<CONFIG: subscribe::Config, F: Fn(IpcCallData), const DRIVER_NUM: u32>(
         process_id: u32,
         listener: &'static IpcListener<F>,
     ) -> Result<(), ErrorCode> {
-        // TODO: revise comments
         // The upcall function passed to the Tock kernel.
         //
-        // Safety: data must be a reference to a valid instance of U.
+        // Safety: data must be a reference to a valid instance of Fn(IpcCallData).
         unsafe extern "C" fn kernel_upcall<S: Syscalls, F: Fn(IpcCallData)>(
             arg0: u32,
             arg1: u32,
@@ -74,28 +179,22 @@ impl<S: Syscalls, C: Config> Ipc<S, C> {
         }
 
         // Inner function that does the majority of the work. This is not
-        // monomorphized over DRIVER_NUM and SUBSCRIBE_NUM to keep code size
-        // small.
+        // monomorphized over DRIVER_NUM to keep code size small.
         //
-        // Safety: upcall_fcn must be kernel_upcall<S, IDS, U> and upcall_data
-        // must be a reference to an instance of U that will remain valid as
-        // long as the 'scope lifetime is alive. Can only be called if a
-        // Subscribe<'scope, S, driver_num, subscribe_num> exists.
+        // Safety: upcall_fcn must be kernel_upcall<S, F> and upcall_data
+        // must be a static reference to an instance of Fn(IpcCallData).
         unsafe fn inner<S: Syscalls, CONFIG: subscribe::Config>(
             driver_num: u32,
             subscribe_num: u32,
             upcall_fcn: Register,
             upcall_data: Register,
         ) -> Result<(), ErrorCode> {
-            // Safety: syscall4's documentation indicates it can be used to call
-            // Subscribe. These arguments follow TRD104. kernel_upcall has the
-            // required signature. This function's preconditions mean that
-            // upcall is a reference to an instance of U that will remain valid
-            // until the 'scope lifetime is alive The existence of the
-            // Subscribe<'scope, Self, DRIVER_NUM, SUBSCRIBE_NUM> guarantees
-            // that if this Subscribe succeeds then the upcall will be cleaned
-            // up before the 'scope lifetime ends, guaranteeing that upcall is
-            // still alive when kernel_upcall is invoked.
+            // Safety: syscall4's documentation indicates it can be used to
+            // call Subscribe. These arguments follow TRD104. kernel_upcall has
+            // the required signature. This function's preconditions mean that
+            // upcall is a static reference to an instance of Fn(IpcCallData),
+            // guaranteeing that upcall is still alive when kernel_upcall is
+            // invoked.
             let [r0, r1, _, _] = unsafe {
                 S::syscall4::<{ syscall_class::SUBSCRIBE }>([
                     driver_num.into(),
@@ -144,11 +243,9 @@ impl<S: Syscalls, C: Config> Ipc<S, C> {
 
         let upcall_fcn = (kernel_upcall::<S, F> as *const ()).into();
         let upcall_data = (listener as *const IpcListener<F>).into();
-        // Safety: upcall's type guarantees it is a reference to a U that will
-        // remain valid for at least the 'scope lifetime. _subscribe is a
-        // reference to a Subscribe<'scope, Self, DRIVER_NUM, SUBSCRIBE_NUM>,
-        // proving one exists. upcall_fcn and upcall_data are derived in ways
-        // that satisfy inner's requirements.
+        // Safety: upcall is a static reference to a Fn(IpcCallData) and will
+        // therefore always be valid. upcall_fcn and upcall_data are derived in
+        // ways that satisfy inner's requirements.
         unsafe { inner::<S, CONFIG>(DRIVER_NUM, process_id, upcall_fcn, upcall_data) }
     }
 
@@ -159,12 +256,13 @@ impl<S: Syscalls, C: Config> Ipc<S, C> {
         // Inner function that does the majority of the work. This is not
         // monomorphized over DRIVER_NUM and BUFFER_NUM to keep code size small.
         //
-        // Safety: A share::Handle<AllowRw<'share, S, driver_num, buffer_num>>
-        // must exist, and `buffer` must last for at least the 'share lifetime.
+        // Safety: since `buffer` is a static reference, it will outlive
+        // the actual allow, meaning a `Handle` is not needed as in
+        // `libtock_platform::Syscalls::allow_rw`.
         unsafe fn inner<S: Syscalls, CONFIG: allow_rw::Config>(
             driver_num: u32,
             buffer_num: u32,
-            buffer: &mut [u8],
+            buffer: &'static mut [u8],
         ) -> Result<(), ErrorCode> {
             // Safety: syscall4's documentation indicates it can be used to call
             // Read-Write Allow. These arguments follow TRD104.
@@ -211,38 +309,10 @@ impl<S: Syscalls, C: Config> Ipc<S, C> {
             }
             Ok(())
         }
-
-        // Safety: The presence of the share::Handle<AllowRw<'share, ...>>
-        // guarantees that an AllowRw exists and will clean up this Allow ID
-        // before the 'share lifetime ends.
+        // Safety: since `allow_rw_ipc` never emits a call to `unallow_rw`
+        // (unlike `libtock_platform::Syscalls::allow_rw`), we are guaranteed
+        // that an AllowRw will always exist.
         unsafe { inner::<S, CONFIG>(DRIVER_NUM, buffer_num, buffer) }
-    }
-}
-
-#[derive(Debug, Eq, PartialEq)]
-pub struct IpcCallData<'a> {
-    caller_id: u32,
-    buffer: &'a mut [u8],
-}
-
-/// A wrapper around a static function to be registered as an IPC callback
-/// and called when the IPC service receives a notify.
-///
-/// ```ignore
-/// fn run_on_notify(caller_id: u32, buffer: &mut [u8]) {
-///     // make use of the caller ID and shared buffer
-/// }
-///
-/// let callback = Ipc(run_on_notify);
-/// ```
-pub struct IpcListener<F: Fn(IpcCallData)>(pub F);
-
-impl<F: Fn(IpcCallData)> Upcall<subscribe::AnyId> for IpcListener<F> {
-    fn upcall(&self, caller_id: u32, buffer_len: u32, buffer_ptr: u32) {
-        let buffer_addr = buffer_ptr as *mut u8;
-        let buffer_len = buffer_len as usize;
-        let buffer = unsafe { core::slice::from_raw_parts_mut(buffer_addr, buffer_len) };
-        self.0(IpcCallData { caller_id, buffer });
     }
 }
 
@@ -273,6 +343,7 @@ mod command {
     pub const CLIENT_NOTIFY: u32 = 3;
 }
 
+// Read-only allow numbers
 mod allow_ro {
     pub const SEARCH: u32 = 0;
 }
