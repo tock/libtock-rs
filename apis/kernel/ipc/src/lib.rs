@@ -1,19 +1,12 @@
-#![no_std]
+#![cfg_attr(not(test), no_std)]
 
-use core::slice::from_raw_parts_mut;
 use libtock_platform as platform;
-use libtock_platform::{
-    exit_on_drop, return_variant, share, subscribe, syscall_class, DefaultConfig, ErrorCode,
-    Register, ReturnVariant, Syscalls, Upcall,
+use platform::{
+    allow_rw, exit_on_drop, return_variant, share, subscribe, syscall_class, DefaultConfig,
+    ErrorCode, Register, ReturnVariant, Syscalls, Upcall,
 };
 
 pub struct Ipc<S: Syscalls, C: Config = DefaultConfig>(S, C);
-
-#[derive(Debug, Eq, PartialEq)]
-pub struct IpcCallData<'a> {
-    caller_id: u32,
-    buffer: &'a mut [u8],
-}
 
 impl<S: Syscalls, C: Config> Ipc<S, C> {
     /// Check if the IPC kernel driver exists
@@ -48,12 +41,16 @@ impl<S: Syscalls, C: Config> Ipc<S, C> {
         Self::subscribe_ipc::<C, _, DRIVER_NUM>(service_id, listener)
     }
 
-    pub fn notify_service(svc_id: u32) -> Result<(), ErrorCode> {
-        S::command(DRIVER_NUM, command::SERVICE_NOTIFY, svc_id, 0).to_result()
+    pub fn notify_service(service_id: u32) -> Result<(), ErrorCode> {
+        S::command(DRIVER_NUM, command::SERVICE_NOTIFY, service_id, 0).to_result()
     }
 
-    pub fn notify_client(svc_id: u32) -> Result<(), ErrorCode> {
-        S::command(DRIVER_NUM, command::CLIENT_NOTIFY, svc_id, 0).to_result()
+    pub fn notify_client(client_id: u32) -> Result<(), ErrorCode> {
+        S::command(DRIVER_NUM, command::CLIENT_NOTIFY, client_id, 0).to_result()
+    }
+
+    pub fn share(service_id: u32, buffer: &'static mut [u8]) -> Result<(), ErrorCode> {
+        Self::allow_rw_ipc::<C, DRIVER_NUM>(service_id, buffer)
     }
 
     fn subscribe_ipc<CONFIG: subscribe::Config, F: Fn(IpcCallData), const DRIVER_NUM: u32>(
@@ -154,6 +151,78 @@ impl<S: Syscalls, C: Config> Ipc<S, C> {
         // that satisfy inner's requirements.
         unsafe { inner::<S, CONFIG>(DRIVER_NUM, process_id, upcall_fcn, upcall_data) }
     }
+
+    fn allow_rw_ipc<CONFIG: allow_rw::Config, const DRIVER_NUM: u32>(
+        buffer_num: u32,
+        buffer: &'static mut [u8],
+    ) -> Result<(), ErrorCode> {
+        // Inner function that does the majority of the work. This is not
+        // monomorphized over DRIVER_NUM and BUFFER_NUM to keep code size small.
+        //
+        // Safety: A share::Handle<AllowRw<'share, S, driver_num, buffer_num>>
+        // must exist, and `buffer` must last for at least the 'share lifetime.
+        unsafe fn inner<S: Syscalls, CONFIG: allow_rw::Config>(
+            driver_num: u32,
+            buffer_num: u32,
+            buffer: &mut [u8],
+        ) -> Result<(), ErrorCode> {
+            // Safety: syscall4's documentation indicates it can be used to call
+            // Read-Write Allow. These arguments follow TRD104.
+            let [r0, r1, r2, _] = unsafe {
+                S::syscall4::<{ syscall_class::ALLOW_RW }>([
+                    driver_num.into(),
+                    buffer_num.into(),
+                    buffer.as_mut_ptr().into(),
+                    buffer.len().into(),
+                ])
+            };
+
+            let return_variant: ReturnVariant = r0.as_u32().into();
+            // TRD 104 guarantees that Read-Write Allow returns either Success
+            // with 2 U32 or Failure with 2 U32. We check the return variant by
+            // comparing against Failure with 2 U32 for 2 reasons:
+            //
+            //   1. On RISC-V with compressed instructions, it generates smaller
+            //      code. FAILURE_2_U32 has value 2, which can be loaded into a
+            //      register with a single compressed instruction, whereas
+            //      loading SUCCESS_2_U32 uses an uncompressed instruction.
+            //   2. In the event the kernel malfuctions and returns a different
+            //      return variant, the success path is actually safer than the
+            //      failure path. The failure path assumes that r1 contains an
+            //      ErrorCode, and produces UB if it has an out of range value.
+            //      Incorrectly assuming the call succeeded will not generate
+            //      unsoundness, and will likely lead to the application
+            //      panicing.
+            if return_variant == return_variant::FAILURE_2_U32 {
+                // Safety: TRD 104 guarantees that if r0 is Failure with 2 U32,
+                // then r1 will contain a valid error code. ErrorCode is
+                // designed to be safely transmuted directly from a kernel error
+                // code.
+                return Err(unsafe { core::mem::transmute(r1.as_u32()) });
+            }
+
+            // r0 indicates Success with 2 u32s. Confirm a zero buffer was
+            // returned, and it if wasn't then call the configured function.
+            // We're relying on the optimizer to remove this branch if
+            // returned_nozero_buffer is a no-op.
+            let returned_buffer: (usize, usize) = (r1.into(), r2.into());
+            if returned_buffer != (0, 0) {
+                CONFIG::returned_nonzero_buffer(driver_num, buffer_num);
+            }
+            Ok(())
+        }
+
+        // Safety: The presence of the share::Handle<AllowRw<'share, ...>>
+        // guarantees that an AllowRw exists and will clean up this Allow ID
+        // before the 'share lifetime ends.
+        unsafe { inner::<S, CONFIG>(DRIVER_NUM, buffer_num, buffer) }
+    }
+}
+
+#[derive(Debug, Eq, PartialEq)]
+pub struct IpcCallData<'a> {
+    caller_id: u32,
+    buffer: &'a mut [u8],
 }
 
 /// A wrapper around a static function to be registered as an IPC callback
@@ -170,16 +239,22 @@ pub struct IpcListener<F: Fn(IpcCallData)>(pub F);
 
 impl<F: Fn(IpcCallData)> Upcall<subscribe::AnyId> for IpcListener<F> {
     fn upcall(&self, caller_id: u32, buffer_len: u32, buffer_ptr: u32) {
-        // Safety: TODO
-        let buffer: &mut [u8] =
-            unsafe { from_raw_parts_mut::<u8>(buffer_ptr as *mut u8, buffer_len as usize) };
+        let buffer_addr = buffer_ptr as *mut u8;
+        let buffer_len = buffer_len as usize;
+        let buffer = unsafe { core::slice::from_raw_parts_mut(buffer_addr, buffer_len) };
         self.0(IpcCallData { caller_id, buffer });
     }
 }
 
 /// System call configuration trait for `Ipc`.
-pub trait Config: platform::allow_ro::Config + platform::subscribe::Config {}
-impl<T: platform::allow_ro::Config + platform::subscribe::Config> Config for T {}
+pub trait Config:
+    platform::allow_ro::Config + platform::allow_rw::Config + platform::subscribe::Config
+{
+}
+impl<T: platform::allow_ro::Config + platform::allow_rw::Config + platform::subscribe::Config>
+    Config for T
+{
+}
 
 #[cfg(test)]
 mod tests;

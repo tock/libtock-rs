@@ -2,8 +2,9 @@
 
 use libtock_platform::{CommandReturn, ErrorCode};
 use std::cell::{Cell, RefCell};
+use std::collections::HashMap;
 
-use crate::{DriverInfo, DriverShareRef, RoAllowBuffer};
+use crate::{DriverInfo, DriverShareRef, RoAllowBuffer, RwAllowBuffer};
 
 #[derive(Clone, Debug)]
 pub struct Process {
@@ -20,10 +21,17 @@ impl Process {
     }
 }
 
+enum IpcProcessType {
+    Service,
+    Client,
+}
+
 pub struct Ipc<const NUM_PROCS: usize> {
     processes: [Process; NUM_PROCS],
     current_index: Cell<Option<u32>>,
     search_buffer: RefCell<RoAllowBuffer>,
+    share_buffers: [RefCell<RwAllowBuffer>; NUM_PROCS],
+    mock_address_map: RefCell<HashMap<u32, *mut u8>>,
     share_ref: DriverShareRef,
 }
 
@@ -31,12 +39,13 @@ impl<const NUM_PROCS: usize> Ipc<NUM_PROCS> {
     pub fn new(processes: &[Process; NUM_PROCS]) -> std::rc::Rc<Ipc<NUM_PROCS>> {
         std::rc::Rc::new(Ipc {
             processes: Vec::from(processes).try_into().unwrap(),
-            current_index: Cell::from(None),
+            current_index: Default::default(),
             search_buffer: Default::default(),
+            share_buffers: std::array::from_fn(|_| Default::default()),
+            mock_address_map: Default::default(),
             share_ref: Default::default(),
         })
     }
-
     pub fn as_process<F: Fn()>(&self, process_id: u32, process_fn: F) -> Result<(), ErrorCode> {
         let index = self
             .processes
@@ -59,7 +68,7 @@ impl<const NUM_PROCS: usize> crate::fake::SyscallDriver for Ipc<NUM_PROCS> {
         self.share_ref.replace(share_ref);
     }
 
-    fn command(&self, command_num: u32, target_index: u32, _argument1: u32) -> CommandReturn {
+    fn command(&self, command_num: u32, to_index: u32, _argument1: u32) -> CommandReturn {
         match command_num {
             command::EXISTS => crate::command_return::success(),
             command::DISCOVER => self
@@ -76,28 +85,8 @@ impl<const NUM_PROCS: usize> crate::fake::SyscallDriver for Ipc<NUM_PROCS> {
                 })
                 .map(|index| crate::command_return::success_u32(index as u32))
                 .unwrap_or(crate::command_return::failure(ErrorCode::Invalid)),
-            command::SERVICE_NOTIFY => {
-                let index = self.current_index.get().expect("No current application");
-                if target_index < NUM_PROCS as u32 {
-                    self.share_ref
-                        .schedule_upcall(target_index, (index, 0, 0))
-                        .expect("Unable to schedule upcall {}");
-                    crate::command_return::success()
-                } else {
-                    crate::command_return::failure(ErrorCode::Invalid)
-                }
-            }
-            command::CLIENT_NOTIFY => {
-                let index = self.current_index.get().expect("No current application");
-                if target_index < NUM_PROCS as u32 {
-                    self.share_ref
-                        .schedule_upcall(index, (index, 0, 0))
-                        .expect("Unable to schedule upcall {}");
-                    crate::command_return::success()
-                } else {
-                    crate::command_return::failure(ErrorCode::Invalid)
-                }
-            }
+            command::SERVICE_NOTIFY => self.notify(IpcProcessType::Service, to_index),
+            command::CLIENT_NOTIFY => self.notify(IpcProcessType::Client, to_index),
             _ => crate::command_return::failure(ErrorCode::NoSupport),
         }
     }
@@ -111,6 +100,51 @@ impl<const NUM_PROCS: usize> crate::fake::SyscallDriver for Ipc<NUM_PROCS> {
             allow_ro::SEARCH => Ok(self.search_buffer.replace(buffer)),
             _ => Err((buffer, ErrorCode::Invalid)),
         }
+    }
+
+    fn allow_readwrite(
+        &self,
+        buffer_num: u32,
+        buffer: RwAllowBuffer,
+    ) -> Result<RwAllowBuffer, (RwAllowBuffer, ErrorCode)> {
+        if let Some(search_buffer) = self.share_buffers.get(buffer_num as usize) {
+            Ok(search_buffer.replace(buffer))
+        } else {
+            Err((buffer, ErrorCode::Invalid))
+        }
+    }
+}
+
+impl<const NUM_PROCS: usize> Ipc<NUM_PROCS> {
+    fn notify(&self, target: IpcProcessType, to_index: u32) -> CommandReturn {
+        if to_index >= NUM_PROCS as u32 {
+            return crate::command_return::failure(ErrorCode::Invalid);
+        }
+
+        let from_index = self.current_index.get().expect("No current application");
+        let service_index = match target {
+            IpcProcessType::Service => to_index,
+            IpcProcessType::Client => from_index,
+        };
+
+        let share_buffer = self.share_buffers.get(service_index as usize).unwrap();
+        let buffer_addr: *mut u8 = share_buffer.borrow_mut().as_mut_ptr();
+
+        self.mock_address_map
+            .borrow_mut()
+            .insert(buffer_addr as u32, buffer_addr);
+        self.share_ref
+            .schedule_upcall(
+                service_index,
+                (
+                    from_index,
+                    share_buffer.borrow().len() as u32,
+                    share_buffer.borrow().as_ptr() as u32,
+                ),
+            )
+            .expect("Unable to schedule upcall {}");
+
+        crate::command_return::success()
     }
 }
 

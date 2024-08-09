@@ -1,6 +1,7 @@
-use core::sync::atomic::{AtomicBool, Ordering};
+use core::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use libtock_platform::{ErrorCode, Syscalls, YieldNoWaitReturn};
 use libtock_unittest::fake;
+use takecell::TakeCell;
 
 use crate::{IpcCallData, IpcListener};
 
@@ -128,4 +129,57 @@ fn register_and_notify_client() {
     );
 
     assert!(CLIENT_NOTIFIED.load(Ordering::Relaxed));
+}
+
+#[test]
+fn share() {
+    static BUFFER: TakeCell<[u8; 16]> = TakeCell::new([0; 16]);
+    static EXPECTED_ADDR: AtomicU32 = AtomicU32::new(0);
+    static EXPECTED_LEN: AtomicU32 = AtomicU32::new(0);
+
+    fn service_callback(data: IpcCallData) {
+        assert_eq!(data.caller_id, 1);
+        assert_eq!(
+            data.buffer.as_ptr() as u32,
+            EXPECTED_ADDR.load(Ordering::Relaxed)
+        );
+        assert_eq!(
+            data.buffer.len() as u32,
+            EXPECTED_LEN.load(Ordering::Relaxed)
+        )
+    }
+
+    const SERVICE_LISTENER: IpcListener<fn(IpcCallData)> = IpcListener(service_callback);
+
+    let kernel = fake::Kernel::new();
+    let driver = fake::Ipc::new(&[
+        fake::Process::new(b"org.tockos.test.service", SERVICE_PROCESS_ID),
+        fake::Process::new(b"org.tockos.test.client", CLIENT_PROCESS_ID),
+    ]);
+    kernel.add_driver(&driver);
+
+    assert_eq!(
+        driver.as_process(SERVICE_PROCESS_ID, || {
+            assert_eq!(
+                Ipc::register_service_listener(b"org.tockos.test.service", &SERVICE_LISTENER),
+                Ok(())
+            );
+        }),
+        Ok(())
+    );
+
+    assert_eq!(
+        driver.as_process(CLIENT_PROCESS_ID, || {
+            let buffer = BUFFER.take().unwrap();
+            EXPECTED_ADDR.store(buffer.as_ptr() as u32, Ordering::Relaxed);
+            EXPECTED_LEN.store(buffer.len() as u32, Ordering::Relaxed);
+
+            assert_eq!(Ipc::share(0, buffer), Ok(()));
+            assert_eq!(Ipc::notify_service(4), Err(ErrorCode::Invalid));
+            assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::NoUpcall);
+            assert_eq!(Ipc::notify_service(0), Ok(()));
+            assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::Upcall);
+        }),
+        Ok(())
+    );
 }
