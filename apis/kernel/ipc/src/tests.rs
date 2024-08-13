@@ -1,7 +1,6 @@
 use core::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use libtock_platform::{ErrorCode, Syscalls, YieldNoWaitReturn};
 use libtock_unittest::fake;
-use takecell::TakeCell;
 
 use crate::{IpcCallData, IpcListener};
 
@@ -142,7 +141,7 @@ fn register_and_notify_client() {
 #[test]
 #[cfg_attr(miri, ignore)]
 fn share() {
-    static BUFFER: TakeCell<[u8; 16]> = TakeCell::new([0; 16]);
+    static mut BUFFER: &mut [u8] = &mut [0; 16];
     static EXPECTED_ADDR: AtomicU32 = AtomicU32::new(0);
     static EXPECTED_LEN: AtomicU32 = AtomicU32::new(0);
 
@@ -181,11 +180,10 @@ fn share() {
 
     assert_eq!(
         driver.as_process(CLIENT_PROCESS_ID, || {
-            let buffer = BUFFER.take().unwrap();
-            EXPECTED_ADDR.store(buffer.as_ptr() as u32, Ordering::Relaxed);
-            EXPECTED_LEN.store(buffer.len() as u32, Ordering::Relaxed);
+            EXPECTED_ADDR.store(unsafe { BUFFER.as_ptr() } as u32, Ordering::Relaxed);
+            EXPECTED_LEN.store(unsafe { BUFFER.len() } as u32, Ordering::Relaxed);
 
-            assert_eq!(Ipc::share(0, buffer), Ok(()));
+            assert_eq!(Ipc::share(0, unsafe { BUFFER }), Ok(()));
             assert_eq!(Ipc::notify_service(4), Err(ErrorCode::Invalid));
             assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::NoUpcall);
             assert_eq!(Ipc::notify_service(0), Ok(()));

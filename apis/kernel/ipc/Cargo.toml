@@ -13,4 +13,3 @@ libtock_platform = { path = "../../../platform" }
 
 [dev-dependencies]
 libtock_unittest = { path = "../../../unittest" }
-takecell = "0.1.1"

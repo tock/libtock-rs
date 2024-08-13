@@ -21,7 +21,7 @@ use platform::{
 /// }
 ///
 /// // Creates an IPC service for turning on an LED
-/// let listener = ipc::IpcListener(led_callback);
+/// let listener = IpcListener(led_callback);
 ///
 /// // Registers the IPC service
 /// let _ = Ipc::register_service_listener(listener);
@@ -41,8 +41,8 @@ use platform::{
 
 #[derive(Debug, Eq, PartialEq)]
 pub struct IpcCallData<'a> {
-    caller_id: u32,
-    buffer: Option<&'a mut [u8]>,
+    pub caller_id: u32,
+    pub buffer: Option<&'a mut [u8]>,
 }
 
 pub struct Ipc<S: Syscalls, C: Config = DefaultConfig>(S, C);
