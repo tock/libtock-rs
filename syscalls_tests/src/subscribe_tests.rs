@@ -2,7 +2,7 @@ use libtock_platform::{
     share, subscribe, CommandReturn, DefaultConfig, ErrorCode, Syscalls, YieldNoWaitReturn,
 };
 use libtock_unittest::{command_return, fake, DriverInfo, DriverShareRef, SyscallLogEntry};
-use std::rc::Rc;
+use std::{cell::Cell, rc::Rc};
 
 // Fake driver that accepts an upcall.
 #[derive(Default)]
@@ -28,7 +28,7 @@ impl fake::SyscallDriver for MockDriver {
 fn config() {
     // Thread local used by TestConfig to indicate that returned_nonnull_upcall
     // has been called.
-    std::thread_local! {static CALLED: core::cell::Cell<Option<(u32, u32)>> = Default::default(); }
+    std::thread_local! {static CALLED: core::cell::Cell<Option<(u32, u32)>> = const {Cell::new(None)} }
     struct TestConfig;
     impl subscribe::Config for TestConfig {
         fn returned_nonnull_upcall(driver_num: u32, subscribe_num: u32) {

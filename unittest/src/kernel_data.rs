@@ -28,7 +28,7 @@ pub(crate) struct KernelData {
 
 // KERNEL_DATA is set to Some in `fake::Kernel::new` and set to None when the
 // `fake::Kernel` is dropped.
-thread_local!(pub(crate) static KERNEL_DATA: RefCell<Option<KernelData>> = RefCell::new(None));
+thread_local!(pub(crate) static KERNEL_DATA: RefCell<Option<KernelData>> = const { RefCell::new(None) });
 
 // Convenience function to get mutable access to KERNEL_DATA.
 pub(crate) fn with_kernel_data<F: FnOnce(Option<&mut KernelData>) -> R, R>(f: F) -> R {

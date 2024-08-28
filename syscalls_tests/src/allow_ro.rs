@@ -33,7 +33,7 @@ impl fake::SyscallDriver for TestDriver {
 struct TestConfig;
 
 // CALLED is set to true when returned_nonzero_buffer is called.
-thread_local! {static CALLED: Cell<bool> = Cell::new(false); }
+thread_local! {static CALLED: Cell<bool> = const {Cell::new(false)} }
 
 impl allow_ro::Config for TestConfig {
     fn returned_nonzero_buffer(driver_num: u32, buffer_num: u32) {
