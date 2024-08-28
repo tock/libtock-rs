@@ -429,7 +429,7 @@ macro_rules! test_component {
     [$link:ident, $name:ident: $comp:ty = $init:expr] => {
         let $name = std::boxed::Box::leak(std::boxed::Box::new($init)) as &$comp;
         std::thread_local!(static GLOBAL: std::cell::Cell<Option<&'static $comp>>
-                           = std::cell::Cell::new(None));
+                           = const {std::cell::Cell::new(None)})
         GLOBAL.with(|g| g.set(Some($name)));
         struct $link;
         impl<T> libtock_platform::FreeCallback<T> for $link

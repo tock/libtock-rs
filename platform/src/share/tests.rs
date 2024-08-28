@@ -1,6 +1,6 @@
 use crate::share::{scope, Handle, List};
 
-std::thread_local! {static INSTANCE_COUNT: core::cell::Cell<u64> = core::cell::Cell::new(0)}
+std::thread_local! {static INSTANCE_COUNT: core::cell::Cell<u64> = const {core::cell::Cell::new(0)}}
 
 // InstanceCounter increments INSTANCE_COUNT when it is constructed and
 // decrements INSTANCE_COUNT when it is dropped.
