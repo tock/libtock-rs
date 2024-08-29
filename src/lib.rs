@@ -54,6 +54,11 @@ pub mod gpio {
         PullDown, PullNone, PullUp,
     };
 }
+pub mod ipc {
+    use libtock_ipc as ipc;
+    pub type Ipc = ipc::Ipc<super::runtime::TockSyscalls>;
+    pub use ipc::{IpcCallData, IpcListener};
+}
 pub mod i2c_master {
     use libtock_i2c_master as i2c_master;
     pub type I2CMaster = i2c_master::I2CMaster<super::runtime::TockSyscalls>;

@@ -188,6 +188,9 @@ $(call fixed-target, F=0x00048000 R=0x20010000 T=thumbv7em-none-eabi A=cortex-m4
 $(call fixed-target, F=0x00080000 R=0x20006000 T=thumbv7em-none-eabi A=cortex-m4)
 $(call fixed-target, F=0x00088000 R=0x2000e000 T=thumbv7em-none-eabi A=cortex-m4)
 
+$(call fixed-target, F=0x08020000 R=0x20006000 T=thumbv7em-none-eabi A=cortex-m4)
+$(call fixed-target, F=0x08028000 R=0x20007000 T=thumbv7em-none-eabi A=cortex-m4)
+
 $(call fixed-target, F=0x403b0000 R=0x3fca2000 T=riscv32imc-unknown-none-elf A=riscv32imc)
 $(call fixed-target, F=0x40440000 R=0x3fcaa000 T=riscv32imc-unknown-none-elf A=riscv32imc)
 
