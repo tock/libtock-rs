@@ -16,11 +16,11 @@ fn command() {
         Some(ErrorCode::Busy)
     );
 
-    adc.set_value(100);
+    adc.set_value(0, 100);
     assert!(adc.command(SINGLE_SAMPLE, 0, 1).is_success());
-    adc.set_value(100);
+    adc.set_value(0, 100);
 
-    adc.set_value_sync(100);
+    adc.set_value_sync(0, 100);
     assert!(adc.command(SINGLE_SAMPLE, 0, 1).is_success());
     assert!(adc.command(SINGLE_SAMPLE, 0, 1).is_success());
 }
@@ -39,7 +39,7 @@ fn kernel_integration() {
         fake::Syscalls::command(DRIVER_NUM, SINGLE_SAMPLE, 0, 0).get_failure(),
         Some(ErrorCode::Busy)
     );
-    adc.set_value(100);
+    adc.set_value(0, 100);
     assert!(fake::Syscalls::command(DRIVER_NUM, SINGLE_SAMPLE, 0, 1).is_success());
 
     let listener = Cell::<Option<(u32,)>>::new(None);
@@ -48,19 +48,18 @@ fn kernel_integration() {
             fake::Syscalls::subscribe::<_, _, DefaultConfig, DRIVER_NUM, 0>(subscribe, &listener),
             Ok(())
         );
-
-        adc.set_value(100);
+        adc.set_value(0, 100);
         assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::Upcall);
         assert_eq!(listener.get(), Some((100,)));
 
-        adc.set_value(200);
+        adc.set_value(0, 200);
         assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::NoUpcall);
 
         assert!(fake::Syscalls::command(DRIVER_NUM, SINGLE_SAMPLE, 0, 1).is_success());
-        adc.set_value(200);
+        adc.set_value(0, 200);
         assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::Upcall);
 
-        adc.set_value_sync(200);
+        adc.set_value_sync(0, 200);
         assert!(fake::Syscalls::command(DRIVER_NUM, SINGLE_SAMPLE, 0, 1).is_success());
         assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::Upcall);
     });
