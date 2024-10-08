@@ -27,6 +27,8 @@ usage:
 	@echo " - stm32f412gdiscovery"
 	@echo " - esp32_c3_devkitm_1"
 	@echo " - clue_nrf52840"
+	@echo " - raspberry_pi_pico"
+	@echo " - pico_explorer_base"
 	@echo
 	@echo "Run 'make setup' to setup Rust to build libtock-rs."
 	@echo "Run 'make <board> EXAMPLE=<>' to build EXAMPLE for that board."
@@ -273,6 +275,7 @@ $(eval $(call platform_build,nucleo_f446re,thumbv7em-none-eabi))
 $(eval $(call platform_build,nrf52840,thumbv7em-none-eabi))
 $(eval $(call platform_flash,nrf52840,thumbv7em-none-eabi))
 $(eval $(call platform_build,raspberry_pi_pico,thumbv6m-none-eabi))
+$(eval $(call platform_build,pico_explorer_base,thumbv6m-none-eabi))
 $(eval $(call platform_build,nano33ble,thumbv6m-none-eabi))
 $(eval $(call platform_build,nano_rp2040_connect,thumbv6m-none-eabi))
 $(eval $(call platform_build,stm32f3discovery,thumbv7em-none-eabi))
