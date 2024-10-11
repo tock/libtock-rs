@@ -22,7 +22,7 @@ fn get_platform_architecture(platform: &str) -> Option<&'static str> {
         | "stm32f412gdiscovery" => Some("cortex-m4"),
         "imxrt1050" | "teensy40" => Some("cortex-m7"),
         "opentitan" | "esp32_c3_devkitm_1" => Some("riscv32imc"),
-        "hifive1" => Some("riscv32imac"),
+        "hifive1" | "qemu_rv32_virt" => Some("riscv32imac"),
         _ => None,
     }
 }
