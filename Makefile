@@ -13,16 +13,19 @@ usage:
 	@echo
 	@echo "The next step is to choose a board to build Tock for. Mainline"
 	@echo "libtock-rs currently includes support for the following platforms:"
+	@echo " - apollo3"
+	@echo " - clue_nrf52840"
+	@echo " - esp32_c3_devkitm_1"
 	@echo " - hail"
-	@echo " - nrf52840"
+	@echo " - hifive1"
+	@echo " - imxrt1050"
 	@echo " - microbit_v2"
+	@echo " - nrf52"
+	@echo " - nrf52840"
 	@echo " - nucleo_f429zi"
 	@echo " - nucleo_f446re"
 	@echo " - opentitan"
-	@echo " - hifive1"
-	@echo " - nrf52"
-	@echo " - imxrt1050"
-	@echo " - apollo3"
+	@echo " - qemu_rv32_virt"
 	@echo " - stm32f3discovery"
 	@echo " - stm32f412gdiscovery"
 	@echo " - esp32_c3_devkitm_1"
@@ -278,6 +281,7 @@ $(eval $(call platform_build,raspberry_pi_pico,thumbv6m-none-eabi))
 $(eval $(call platform_build,pico_explorer_base,thumbv6m-none-eabi))
 $(eval $(call platform_build,nano33ble,thumbv6m-none-eabi))
 $(eval $(call platform_build,nano_rp2040_connect,thumbv6m-none-eabi))
+$(eval $(call platform_build,qemu_rv32_virt,riscv32imac-unknown-none-elf))
 $(eval $(call platform_build,stm32f3discovery,thumbv7em-none-eabi))
 $(eval $(call platform_build,stm32f412gdiscovery,thumbv7em-none-eabi))
 $(eval $(call platform_build,opentitan,riscv32imc-unknown-none-elf))
