@@ -37,6 +37,7 @@ libtock_ieee802154 = { path = "apis/net/ieee802154" }
 libtock_i2c_master_slave = { path = "apis/peripherals/i2c_master_slave" }
 libtock_key_value = { path = "apis/storage/key_value" }
 libtock_leds = { path = "apis/interface/leds" }
+libtock_servo = { path = "apis/interface/servo" }
 libtock_low_level_debug = { path = "apis/kernel/low_level_debug" }
 libtock_ninedof = { path = "apis/sensors/ninedof" }
 libtock_platform = { path = "platform" }
@@ -70,6 +71,7 @@ exclude = ["tock"]
 members = [
     "apis/interface/buttons",
     "apis/interface/buzzer",
+    "apis/interface/servo",
     "apis/interface/console",
     "apis/interface/leds",
     "apis/kernel/low_level_debug",
