@@ -55,7 +55,8 @@ impl<S: Syscalls, C: Config> I2CMasterSlave<S, C> {
 
             S::subscribe::<_, _, C, DRIVER_NUM, { subscribe::MASTER_WRITE }>(subscribe, &called)?;
 
-            S::command(DRIVER_NUM, i2c_master_slave_cmd::MASTER_WRITE, cmd_arg0, 0).to_result()?;
+            S::command(DRIVER_NUM, i2c_master_slave_cmd::MASTER_WRITE, cmd_arg0, 0)
+                .to_result::<(), ErrorCode>()?;
 
             loop {
                 S::yield_wait();
@@ -113,7 +114,8 @@ impl<S: Syscalls, C: Config> I2CMasterSlave<S, C> {
             S::subscribe::<_, _, C, DRIVER_NUM, { subscribe::MASTER_READ }>(subscribe, &called)?;
             // When this fails, `called` is guaranteed unmodified,
             // because upcalls are never processed until we call `yield`.
-            S::command(DRIVER_NUM, i2c_master_slave_cmd::MASTER_READ, cmd_arg0, 0).to_result()?;
+            S::command(DRIVER_NUM, i2c_master_slave_cmd::MASTER_READ, cmd_arg0, 0)
+                .to_result::<(), ErrorCode>()?;
 
             loop {
                 S::yield_wait();
@@ -208,7 +210,7 @@ impl<S: Syscalls, C: Config> I2CMasterSlave<S, C> {
                 cmd_arg0,
                 0,
             )
-            .to_result()?;
+            .to_result::<(), ErrorCode>()?;
 
             loop {
                 S::yield_wait();
@@ -293,7 +295,8 @@ impl<S: Syscalls, C: Config> I2CMasterSlave<S, C> {
             S::allow_rw::<C, DRIVER_NUM, { rw_allow::SLAVE_RX }>(allow_rw, buf)?;
             S::subscribe::<_, _, C, DRIVER_NUM, { subscribe::SLAVE_READ }>(subscribe, &called)?;
 
-            S::command(DRIVER_NUM, i2c_master_slave_cmd::SLAVE_START_LISTEN, 0, 0).to_result()?;
+            S::command(DRIVER_NUM, i2c_master_slave_cmd::SLAVE_START_LISTEN, 0, 0)
+                .to_result::<(), ErrorCode>()?;
 
             loop {
                 S::yield_wait();
@@ -356,7 +359,7 @@ impl<S: Syscalls, C: Config> I2CMasterSlave<S, C> {
                 len as u32,
                 0,
             )
-            .to_result()?;
+            .to_result::<(), ErrorCode>()?;
 
             loop {
                 S::yield_wait();

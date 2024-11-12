@@ -187,7 +187,7 @@ impl<S: Syscalls, C: Config> Ieee802154<S, C> {
                 subscribe, &called,
             )?;
 
-            S::command(DRIVER_NUM, command::TRANSMIT, 0, 0).to_result()?;
+            S::command(DRIVER_NUM, command::TRANSMIT, 0, 0).to_result::<(), ErrorCode>()?;
 
             loop {
                 S::yield_wait();

@@ -39,7 +39,7 @@ impl<S: Syscalls, C: Config> KeyValue<S, C> {
 
             S::subscribe::<_, _, C, DRIVER_NUM, { subscribe::CALLBACK }>(subscribe, &called)?;
 
-            S::command(DRIVER_NUM, command::GET, 0, 0).to_result()?;
+            S::command(DRIVER_NUM, command::GET, 0, 0).to_result::<(), ErrorCode>()?;
 
             loop {
                 S::yield_wait();
@@ -69,7 +69,7 @@ impl<S: Syscalls, C: Config> KeyValue<S, C> {
 
             S::subscribe::<_, _, C, DRIVER_NUM, { subscribe::CALLBACK }>(subscribe, &called)?;
 
-            S::command(DRIVER_NUM, command_num, 0, 0).to_result()?;
+            S::command(DRIVER_NUM, command_num, 0, 0).to_result::<(), ErrorCode>()?;
 
             loop {
                 S::yield_wait();
@@ -112,7 +112,7 @@ impl<S: Syscalls, C: Config> KeyValue<S, C> {
 
             S::subscribe::<_, _, C, DRIVER_NUM, { subscribe::CALLBACK }>(subscribe, &called)?;
 
-            S::command(DRIVER_NUM, command::DELETE, 0, 0).to_result()?;
+            S::command(DRIVER_NUM, command::DELETE, 0, 0).to_result::<(), ErrorCode>()?;
 
             loop {
                 S::yield_wait();

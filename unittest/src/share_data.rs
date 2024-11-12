@@ -80,6 +80,7 @@ mod tests {
     use super::*;
     use crate::upcall::Upcall;
     use crate::DriverInfo;
+    use libtock_platform::Register;
     use std::rc::Rc;
 
     #[derive(Default)]
@@ -140,6 +141,8 @@ mod tests {
         // is a null upcall.
         assert_eq!(mock_driver.share_ref.schedule_upcall(2, (3, 4, 5)), Ok(()));
         unsafe extern "C" fn upcall(_: u32, _: u32, _: u32, _: libtock_platform::Register) {}
+        // Cast to a pointer to get a stable address.
+        let upcall_ptr = upcall as unsafe extern "C" fn(u32, u32, u32, Register);
         with_kernel_data(|kernel_data| {
             let kernel_data = kernel_data.unwrap();
 
@@ -150,7 +153,7 @@ mod tests {
             kernel_data.drivers.get_mut(&1).unwrap().upcalls.insert(
                 2,
                 Upcall {
-                    fn_pointer: Some(upcall),
+                    fn_pointer: Some(upcall_ptr),
                     data: 1111usize.into(),
                 },
             );
@@ -171,7 +174,7 @@ mod tests {
                     subscribe_num: 2
                 }
             );
-            assert!(upcall_queue_entry.upcall.fn_pointer == Some(upcall));
+            assert!(upcall_queue_entry.upcall.fn_pointer == Some(upcall_ptr));
             let data: usize = upcall_queue_entry.upcall.data.into();
             assert_eq!(data, 1111);
 
@@ -179,7 +182,7 @@ mod tests {
             kernel_data.drivers.get_mut(&1).unwrap().upcalls.insert(
                 2,
                 Upcall {
-                    fn_pointer: Some(upcall),
+                    fn_pointer: Some(upcall_ptr),
                     data: 2222u32.into(),
                 },
             );
@@ -204,7 +207,7 @@ mod tests {
                     subscribe_num: 2
                 }
             );
-            assert!(front_queue_entry.upcall.fn_pointer == Some(upcall));
+            assert!(front_queue_entry.upcall.fn_pointer == Some(upcall_ptr));
             let front_data: usize = front_queue_entry.upcall.data.into();
             assert_eq!(front_data, 1111);
             let back_queue_entry = kernel_data.upcall_queue.back().expect("Upcall not queued");
@@ -216,7 +219,7 @@ mod tests {
                     subscribe_num: 2
                 }
             );
-            assert!(back_queue_entry.upcall.fn_pointer == Some(upcall));
+            assert!(back_queue_entry.upcall.fn_pointer == Some(upcall_ptr));
             let back_data: usize = back_queue_entry.upcall.data.into();
             assert_eq!(back_data, 2222);
         });
