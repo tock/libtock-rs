@@ -6,7 +6,7 @@
 //! execute. It reads the `LIBTOCK_PLATFORM` variable to determine what location
 //! to build for (see the `layouts/` directory to see what platforms are
 //! available). It expects the following cargo config options to be set (e.g. in
-//! `.cargo/config`):
+//! `.cargo/config.toml`):
 //! ```
 //! [build]
 //! rustflags = [

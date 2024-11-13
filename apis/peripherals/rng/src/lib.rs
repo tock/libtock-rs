@@ -59,7 +59,7 @@ impl<S: Syscalls> Rng<S> {
             S::subscribe::<_, _, DefaultConfig, DRIVER_NUM, 0>(subscribe, &called)?;
 
             // Send the command to the kernel driver to fill the allowed_readwrite buffer
-            S::command(DRIVER_NUM, GET_BYTES, n, 0).to_result()?;
+            S::command(DRIVER_NUM, GET_BYTES, n, 0).to_result::<(), ErrorCode>()?;
 
             // Wait for a callback to happen
             while !called.get() {

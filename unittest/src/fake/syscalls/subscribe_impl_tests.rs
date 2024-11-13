@@ -95,15 +95,17 @@ fn skip_with_error() {
         skip_with_error: Some(ErrorCode::NoAck),
     });
     unsafe extern "C" fn upcall_fn(_: u32, _: u32, _: u32, _: Register) {}
+    // Convert to a raw pointer to get a stable address.
+    let upcall_fn_ptr = upcall_fn as *const ();
     let [r0, r1, r2, r3] = unsafe {
         subscribe(
             1u32.into(),
             2u32.into(),
-            (upcall_fn as usize).into(),
+            upcall_fn_ptr.into(),
             1234usize.into(),
         )
     };
-    let (r0, r1, r2, r3): (u32, u32, usize, usize) = (
+    let (r0, r1, r2, r3): (u32, u32, *const (), usize) = (
         r0.try_into().expect("too large r0"),
         r1.try_into().expect("too large r1"),
         r2.into(),
@@ -111,7 +113,7 @@ fn skip_with_error() {
     );
     assert_eq!(r0, return_variant::FAILURE_2_U32.into());
     assert_eq!(r1, ErrorCode::NoAck as u32);
-    assert_eq!(r2, upcall_fn as usize);
+    assert_eq!(r2, upcall_fn_ptr);
     assert_eq!(r3, 1234);
 }
 

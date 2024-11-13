@@ -61,7 +61,7 @@ impl<S: Syscalls, C: Config> I2CMaster<S, C> {
                 cmd_arg0,
                 r_len.into(),
             )
-            .to_result()?;
+            .to_result::<(), ErrorCode>()?;
 
             loop {
                 S::yield_wait();
@@ -112,7 +112,7 @@ impl<S: Syscalls, C: Config> I2CMaster<S, C> {
                 addr.into(),
                 len.into(),
             )
-            .to_result()?;
+            .to_result::<(), ErrorCode>()?;
 
             loop {
                 S::yield_wait();
@@ -163,7 +163,7 @@ impl<S: Syscalls, C: Config> I2CMaster<S, C> {
                 addr.into(),
                 len.into(),
             )
-            .to_result()?;
+            .to_result::<(), ErrorCode>()?;
 
             loop {
                 S::yield_wait();

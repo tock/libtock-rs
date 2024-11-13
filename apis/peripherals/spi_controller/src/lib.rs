@@ -55,7 +55,8 @@ impl<S: Syscalls, C: Config> SpiController<S, C> {
             S::allow_ro::<C, DRIVER_NUM, { ro_allow::WRITE }>(allow_ro, w_buf)?;
             S::subscribe::<_, _, C, DRIVER_NUM, { subscribe::COMPLETE }>(subscribe, &called)?;
 
-            S::command(DRIVER_NUM, spi_controller_cmd::READ_WRITE_BYTES, len, 0).to_result()?;
+            S::command(DRIVER_NUM, spi_controller_cmd::READ_WRITE_BYTES, len, 0)
+                .to_result::<(), ErrorCode>()?;
 
             loop {
                 S::yield_wait();
@@ -88,7 +89,8 @@ impl<S: Syscalls, C: Config> SpiController<S, C> {
             S::allow_ro::<C, DRIVER_NUM, { ro_allow::WRITE }>(allow_ro, w_buf)?;
             S::subscribe::<_, _, C, DRIVER_NUM, { subscribe::COMPLETE }>(subscribe, &called)?;
 
-            S::command(DRIVER_NUM, spi_controller_cmd::READ_WRITE_BYTES, len, 0).to_result()?;
+            S::command(DRIVER_NUM, spi_controller_cmd::READ_WRITE_BYTES, len, 0)
+                .to_result::<(), ErrorCode>()?;
 
             loop {
                 S::yield_wait();
@@ -121,7 +123,8 @@ impl<S: Syscalls, C: Config> SpiController<S, C> {
             S::allow_rw::<C, DRIVER_NUM, { rw_allow::READ }>(allow_rw, r_buf)?;
             S::subscribe::<_, _, C, DRIVER_NUM, { subscribe::COMPLETE }>(subscribe, &called)?;
 
-            S::command(DRIVER_NUM, spi_controller_cmd::READ_BYTES, len, 0).to_result()?;
+            S::command(DRIVER_NUM, spi_controller_cmd::READ_BYTES, len, 0)
+                .to_result::<(), ErrorCode>()?;
 
             loop {
                 S::yield_wait();
@@ -163,7 +166,7 @@ impl<S: Syscalls, C: Config> SpiController<S, C> {
                 len,
                 0,
             )
-            .to_result()?;
+            .to_result::<(), ErrorCode>()?;
 
             loop {
                 S::yield_wait();

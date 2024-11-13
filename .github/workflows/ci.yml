@@ -34,15 +34,15 @@ jobs:
       # optimal for the Azure Standard_DS2_v2 VM, which is the VM type used by
       # GitHub Actions at the time of this writing.
       #
-      # We have to append the "-D warnings" flag to .cargo/config rather than
-      # using the RUSTFLAGS environment variable because if we set RUSTFLAGS
-      # cargo will ignore the rustflags config in .cargo/config, breaking
-      # relocation.
+      # We have to append the "-D warnings" flag to .cargo/config.toml rather
+      # than using the RUSTFLAGS environment variable because if we set
+      # RUSTFLAGS cargo will ignore the rustflags config in .cargo/config,
+      # breaking relocation.
       - name: Build and Test
         run: |
           sudo apt-get install ninja-build
           cd "${GITHUB_WORKSPACE}"
-          echo "[target.'cfg(all())']" >> .cargo/config
-          echo 'rustflags = ["-D", "warnings"]' >> .cargo/config
+          echo "[target.'cfg(all())']" >> .cargo/config.toml
+          echo 'rustflags = ["-D", "warnings"]' >> .cargo/config.toml
           make -j2 setup
           make -j2 test

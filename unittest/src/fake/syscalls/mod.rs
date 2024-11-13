@@ -35,5 +35,5 @@ mod yield_impl_tests;
 // executes this. It is used by submodules of fake::syscalls.
 fn assert_valid<T: core::fmt::Debug>(_value: T) {
     #[cfg(miri)]
-    format!("{:?}", _value);
+    let _ = format!("{:?}", _value);
 }
