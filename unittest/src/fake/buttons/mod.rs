@@ -118,7 +118,7 @@ mod tests;
 // Driver number and command IDs
 // -----------------------------------------------------------------------------
 
-const DRIVER_NUM: u32 = 3;
+const DRIVER_NUM: u32 = 0x3;
 
 // Command IDs
 const BUTTONS_COUNT: u32 = 0;

@@ -70,7 +70,7 @@ mod tests;
 // Implementation details below
 // -----------------------------------------------------------------------------
 
-const DRIVER_NUM: u32 = 2;
+const DRIVER_NUM: u32 = 0x2;
 
 // Command numbers
 const EXISTS: u32 = 0;

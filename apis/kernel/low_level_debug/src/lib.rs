@@ -73,7 +73,7 @@ mod tests;
 // Driver number and command IDs
 // -----------------------------------------------------------------------------
 
-const DRIVER_NUM: u32 = 8;
+const DRIVER_NUM: u32 = 0x8;
 
 // Command IDs
 const EXISTS: u32 = 0;

@@ -137,7 +137,7 @@ mod tests;
 // Driver number and command IDs
 // -----------------------------------------------------------------------------
 
-const DRIVER_NUM: u32 = 1;
+const DRIVER_NUM: u32 = 0x1;
 
 // Command IDs
 #[allow(unused)]
