@@ -118,7 +118,7 @@ impl crate::fake::SyscallDriver for Console {
 #[cfg(test)]
 mod tests;
 
-const DRIVER_NUM: u32 = 1;
+const DRIVER_NUM: u32 = 0x1;
 
 // Command numbers
 const EXISTS: u32 = 0;
