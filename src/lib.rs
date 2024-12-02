@@ -73,6 +73,10 @@ pub mod leds {
     use libtock_leds as leds;
     pub type Leds = leds::Leds<super::runtime::TockSyscalls>;
 }
+pub mod servo {
+    use libtock_servo as servo;
+    pub type Servo = servo::Servo<super::runtime::TockSyscalls>;
+}
 pub mod low_level_debug {
     use libtock_low_level_debug as lldb;
     pub type LowLevelDebug = lldb::LowLevelDebug<super::runtime::TockSyscalls>;
