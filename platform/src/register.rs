@@ -1,11 +1,16 @@
-use core::mem::transmute;
-
-/// In order to work with Miri's `-Zmiri-track-raw-pointers` flag, we cannot
-/// pass pointers to the kernel through `usize` values (as casting to and from
-/// `usize` drops the pointer`s tag). Instead, `RawSyscalls` uses the `Register`
-/// type. `Register` wraps a raw pointer type that keeps that tags around. User
-/// code should not depend on the particular type of pointer that `Register`
-/// wraps, but instead use the conversion functions in this module.
+/// `Register` represents the value of a register used in Tock's syscall ABI. It
+/// can contain integer values as well as pointer values.
+///
+/// `Register` currently wraps a raw pointer, but that is not a stable guarantee
+/// and users should not rely on it. However, `Register` does guarantee that the
+/// type it wraps is a valid operand type for inline assembly.
+///
+/// If a pointer is converted to a `Register`, that `Register` has that
+/// pointer's provenance. The provenance is not exposed. If an integer is
+/// converted to a `Register`, that `Register` has no provenance. When a
+/// `Register` with provenance is converted into a pointer, that pointer carries
+/// the `Register`'s provenance. When a `Register` without provenance is
+/// converted into a pointer, that pointer has no provenance.
 // Register is repr(transparent) so that an upcall's application data can be
 // soundly passed as a Register.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -36,22 +41,28 @@ impl From<i32> for Register {
 
 impl From<usize> for Register {
     fn from(value: usize) -> Register {
-        // Note: clippy is wrong here; transmute has different semantics than
-        // `as` casts under strict provenance.
-        #[allow(clippy::useless_transmute)]
-        // We want to convert using the same semantics as core::ptr::invalid:
-        // convert the usize into a pointer with that address without attaching
-        // provenance to it. However, core::ptr::invalid is a nightly-only
-        // function. In order to build on stable, we copy its implementation.
-        // Safety: Raw pointers do not have any validity invariants that usize
-        // does not have; a raw pointer can point to any address.
-        Register(unsafe { transmute(value) })
+        // TODO(Rust 1.84): We want to convert using the same semantics as
+        // core::ptr::without_provenance. However, until our MSRV is >= 1.84, we
+        // have to use an `as` cast instead. This may result in this Register
+        // converting into a pointer with provenance later on, but that
+        // shouldn't break any users of Register in practice.
+        #[cfg(not(miri))]
+        {
+            Register(value as *mut ())
+        }
+        // However, on Miri, we cannot do the conversion using an `as` cast.
+        // Fortunately, since Miri runs on nightly Rust, we can use
+        // `without_provenance_mut`.
+        #[cfg(miri)]
+        {
+            Register(core::ptr::without_provenance_mut(value))
+        }
     }
 }
 
 impl<T> From<*mut T> for Register {
     fn from(value: *mut T) -> Register {
-        Register(value as *mut ())
+        Register(value.cast())
     }
 }
 
@@ -89,13 +100,17 @@ impl Register {
 
 impl From<Register> for usize {
     fn from(register: Register) -> usize {
+        // TODO(Rust 1.84): We want to convert using the same semantics as
+        // .addr(). Until our MSRV is >= 1.84, we have to convert using an `as`
+        // cast instead. This exposes the provenance of the pointer, which is
+        // not correct but shouldn't break any users in practice.
         register.0 as usize
     }
 }
 
 impl<T> From<Register> for *mut T {
     fn from(register: Register) -> *mut T {
-        register.0 as *mut T
+        register.0.cast()
     }
 }
 
@@ -116,6 +131,6 @@ impl TryFrom<Register> for u32 {
     type Error = core::num::TryFromIntError;
 
     fn try_from(register: Register) -> Result<u32, core::num::TryFromIntError> {
-        (register.0 as usize).try_into()
+        usize::from(register).try_into()
     }
 }
