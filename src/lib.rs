@@ -92,6 +92,10 @@ pub mod rng {
     pub type Rng = rng::Rng<super::runtime::TockSyscalls>;
     pub use rng::RngListener;
 }
+pub mod servo {
+    use libtock_servo as servo;
+    pub type Servo = servo::Servo<super::runtime::TockSyscalls>;
+}
 pub mod sound_pressure {
     use libtock_sound_pressure as sound_pressure;
     pub type SoundPressure = sound_pressure::SoundPressure<super::runtime::TockSyscalls>;
