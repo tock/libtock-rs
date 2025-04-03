@@ -7,7 +7,7 @@ rthumbv7em = "run --release --target=thumbv7em-none-eabi --example"
 rtv7em = "rthumbv7em"
 
 # Common settings for all embedded targets
-[target.'cfg(any(target_arch = "arm", target_arch = "riscv32"))']
+[target.'cfg(any(target_arch = "arm", target_arch = "riscv32", target_arch = "x86"))']
 rustflags = [
     "-C", "relocation-model=static",
     "-C", "link-arg=-icf=all",
