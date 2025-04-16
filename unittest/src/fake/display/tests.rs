@@ -51,14 +51,14 @@ fn command() {
     assert!(screen.command(SET_PIXEL_FORMAT, 1, 0).is_success());
     let kernel = fake::Kernel::new();
     kernel.add_driver(&screen);
-    let mut buf = [0; 4];
+    let buf = [0; 4];
 
     share::scope(|allow_ro| {
         fake::Syscalls::allow_ro::<
             DefaultConfig,
             { fake::display::DRIVER_NUM },
             { fake::display::WRITE_BUFFER_ID },
-        >(allow_ro, &mut buf)
+        >(allow_ro, &buf)
         .unwrap();
         assert!(
             fake::Syscalls::command(fake::display::DRIVER_NUM, fake::display::WRITE, 4, 0)

@@ -188,19 +188,13 @@ impl<S: Syscalls, C: Config> Display<S, C> {
         })
     }
     pub fn set_write_frame(x: u32, y: u32, width: u32, height: u32) -> Result<(), ErrorCode> {
-        let data1: u32 = (((x & 0xFFFF) << (16 as u8)) | (y & 0xFFFF)) as u32;
-        let data2: u32 = (((width & 0xFFFF) << (16 as u8)) | (height & 0xFFFF)) as u32;
+        let data1: u32 = ((x & 0xFFFF) << 16_u8) | (y & 0xFFFF);
+        let data2: u32 = ((width & 0xFFFF) << 16_u8) | (height & 0xFFFF);
         let called: Cell<Option<(u32,)>> = Cell::new(None);
         share::scope(|subscribe| {
             S::subscribe::<_, _, C, DRIVER_NUM, { subscribe::WRITE }>(subscribe, &called)?;
 
-            let val = S::command(
-                DRIVER_NUM,
-                command::SET_WRITE_FRAME,
-                data1 as u32,
-                data2 as u32,
-            )
-            .to_result();
+            let val = S::command(DRIVER_NUM, command::SET_WRITE_FRAME, data1, data2).to_result();
             loop {
                 S::yield_wait();
                 if let Some((_,)) = called.get() {
