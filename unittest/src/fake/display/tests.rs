@@ -28,8 +28,8 @@ fn command() {
         Some(5)
     );
     assert_eq!(
-        screen.command(PIXEL_FORMAT, 332, 0).get_success_u32(),
-        Some(1)
+        screen.command(PIXEL_FORMAT, 0, 0).get_success_u32(),
+        Some(332)
     );
     assert!(screen.command(SET_ROTATION, 90, 0).is_success());
     assert_eq!(
@@ -48,21 +48,20 @@ fn command() {
         screen.command(GET_WRITE_FRAME, 0, 0).get_success_2_u32(),
         Some((360, 720))
     );
-    //////////////////////////
+    assert!(screen.command(SET_PIXEL_FORMAT, 1, 0).is_success());
     let kernel = fake::Kernel::new();
-    let display = fake::Screen::new();
-    kernel.add_driver(&display);
+    kernel.add_driver(&screen);
     let mut buf = [0; 4];
 
     share::scope(|allow_ro| {
         fake::Syscalls::allow_ro::<
             DefaultConfig,
             { fake::display::DRIVER_NUM },
-            { fake::display::WRITE },
+            { fake::display::WRITE_BUFFER_ID },
         >(allow_ro, &mut buf)
         .unwrap();
         assert!(
-            fake::Syscalls::command(fake::display::DRIVER_NUM, fake::display::WRITE, 3, 0)
+            fake::Syscalls::command(fake::display::DRIVER_NUM, fake::display::WRITE, 4, 0)
                 .is_success()
         );
     });

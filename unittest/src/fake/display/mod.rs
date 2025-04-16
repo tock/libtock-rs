@@ -60,6 +60,7 @@ impl Screen {
             4 => 4,            // ARGB_8888
             _ => return false, // Format necunoscut
         };
+
         buffer_len % bytes_per_pixel == 0
     }
 
