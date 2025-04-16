@@ -6,17 +6,16 @@ pub struct Screen {
     screen_setup: Option<u16>,
     resolution_modes: Option<u16>,
     invert: Cell<bool>,
-    screen_resolution_width_height: Option<(u16, u16)>,
+    screen_resolution_width_height: [Option<(u16, u16)>; 3],
     resolution_width_height: [Cell<u16>; 2],
     pixel_modes: Option<u16>,
-    screen_pixel_format: u8,
+    screen_pixel_format: [u16; 2],
     pixel_format: Cell<u32>,
     brightness: Cell<u16>,
     rotation: Cell<u16>,
     write_frame: [Cell<u16>; 2],
     power: Cell<u16>,
     share_ref: DriverShareRef,
-    // write_buffer: Cell<Option<&'static [u8]>>,
     write_buffer: Cell<Option<RoAllowBuffer>>,
     messages: Cell<Vec<u8>>,
 }
@@ -30,8 +29,12 @@ impl Screen {
         const VALUE_BOOL: Cell<bool> = Cell::new(false);
         std::rc::Rc::new(Screen {
             screen_setup: std::option::Option::Some(3),
-            screen_pixel_format: 1,
-            screen_resolution_width_height: std::option::Option::Some((1920, 1080)),
+            screen_pixel_format: [332, 565],
+            screen_resolution_width_height: [
+                std::option::Option::Some((1920, 1080)),
+                std::option::Option::Some((2560, 1440)),
+                std::option::Option::Some((1280, 720)),
+            ],
             pixel_format: VALUE_U32,
             resolution_modes: std::option::Option::Some(2),
             resolution_width_height: [VALUE_U16, VALUE_U16],
@@ -92,7 +95,7 @@ impl crate::fake::SyscallDriver for Screen {
         buffer_num: u32,
         buffer: RoAllowBuffer,
     ) -> Result<RoAllowBuffer, (RoAllowBuffer, ErrorCode)> {
-        if buffer_num == 1 {
+        if buffer_num == WRITE_BUFFER_ID {
             let old_buffer = self.write_buffer.replace(Some(buffer));
             Ok(old_buffer.unwrap_or(RoAllowBuffer::default()))
         } else {
@@ -152,17 +155,24 @@ impl crate::fake::SyscallDriver for Screen {
             }
 
             GET_RESOLUTION_WIDTH_HEIGHT => {
-                self.brightness.set(argument0 as u16);
                 self.share_ref
                     .schedule_upcall(0, (0, 0, 0))
                     .expect("Unable to schedule upcall {}");
-                if self.screen_setup != None {
-                    crate::command_return::success_2_u32(
-                        self.screen_resolution_width_height.unwrap().0 as u32,
-                        self.screen_resolution_width_height.unwrap().1 as u32,
-                    )
+                if argument0 < self.screen_resolution_width_height.len() as u32 {
+                    if self.screen_setup != None {
+                        crate::command_return::success_2_u32(
+                            self.screen_resolution_width_height[argument0 as usize]
+                                .unwrap()
+                                .0 as u32,
+                            self.screen_resolution_width_height[argument0 as usize]
+                                .unwrap()
+                                .1 as u32,
+                        )
+                    } else {
+                        crate::command_return::failure(ErrorCode::NoSupport)
+                    }
                 } else {
-                    crate::command_return::failure(ErrorCode::NoSupport)
+                    crate::command_return::failure(ErrorCode::Invalid)
                 }
             }
 
@@ -178,10 +188,16 @@ impl crate::fake::SyscallDriver for Screen {
                 self.share_ref
                     .schedule_upcall(0, (0, 0, 0))
                     .expect("Unable to schedule upcall {}");
-                if self.screen_setup != None {
-                    crate::command_return::success_u32(self.screen_pixel_format as u32)
+                if argument0 < self.screen_pixel_format.len() as u32 {
+                    if self.screen_setup != None {
+                        crate::command_return::success_u32(
+                            self.screen_pixel_format[argument0 as usize] as u32,
+                        )
+                    } else {
+                        crate::command_return::failure(ErrorCode::NoSupport)
+                    }
                 } else {
-                    crate::command_return::failure(ErrorCode::NoSupport)
+                    crate::command_return::failure(ErrorCode::Invalid)
                 }
             }
 
@@ -196,8 +212,12 @@ impl crate::fake::SyscallDriver for Screen {
                 self.share_ref
                     .schedule_upcall(0, (0, 0, 0))
                     .expect("Unable to schedule upcall {}");
-                self.rotation.set(argument0 as u16);
-                crate::command_return::success()
+                if argument0 > 359 {
+                    crate::command_return::failure(ErrorCode::Invalid)
+                } else {
+                    self.rotation.set(argument0 as u16);
+                    crate::command_return::success()
+                }
             }
 
             GET_RESOLUTION => crate::command_return::success_2_u32(
@@ -279,6 +299,8 @@ impl crate::fake::SyscallDriver for Screen {
 mod tests;
 
 const DRIVER_NUM: u32 = 0x90001;
+
+const WRITE_BUFFER_ID: u32 = 0;
 
 // Command IDs
 #[allow(unused)]

@@ -213,7 +213,7 @@ impl<S: Syscalls, C: Config> Display<S, C> {
         let called: Cell<Option<(u32,)>> = Cell::new(None);
         share::scope::<
             (
-                AllowRo<_, DRIVER_NUM, { allow_ro::SHARED }>,
+                AllowRo<_, DRIVER_NUM, { allow_ro::WRITE_BUFFER_ID }>,
                 Subscribe<_, DRIVER_NUM, { subscribe::WRITE }>,
             ),
             _,
@@ -221,7 +221,7 @@ impl<S: Syscalls, C: Config> Display<S, C> {
         >(|handle| {
             let (allow_ro, subscribe) = handle.split();
 
-            S::allow_ro::<C, DRIVER_NUM, { allow_ro::SHARED }>(allow_ro, s)?;
+            S::allow_ro::<C, DRIVER_NUM, { allow_ro::WRITE_BUFFER_ID }>(allow_ro, s)?;
 
             S::subscribe::<_, _, C, DRIVER_NUM, { subscribe::WRITE }>(subscribe, &called)?;
 
@@ -236,34 +236,37 @@ impl<S: Syscalls, C: Config> Display<S, C> {
         })
     }
     pub fn fill(s: &mut [u8], color: u16) -> Result<(), ErrorCode> {
-        if s.len() - 2 > 0 {
+        if s.len() >= 2 {
             s[0] = ((color >> 8) & 0xFF) as u8;
             s[1] = (color & 0xFF) as u8;
-        }
-        let called: Cell<Option<(u32,)>> = Cell::new(None);
-        share::scope::<
-            (
-                AllowRo<_, DRIVER_NUM, { allow_ro::SHARED }>,
-                Subscribe<_, DRIVER_NUM, { subscribe::WRITE }>,
-            ),
-            _,
-            _,
-        >(|handle| {
-            let (allow_ro, subscribe) = handle.split();
 
-            S::allow_ro::<C, DRIVER_NUM, { allow_ro::SHARED }>(allow_ro, s)?;
+            let called: Cell<Option<(u32,)>> = Cell::new(None);
+            share::scope::<
+                (
+                    AllowRo<_, DRIVER_NUM, { allow_ro::WRITE_BUFFER_ID }>,
+                    Subscribe<_, DRIVER_NUM, { subscribe::WRITE }>,
+                ),
+                _,
+                _,
+            >(|handle| {
+                let (allow_ro, subscribe) = handle.split();
 
-            S::subscribe::<_, _, C, DRIVER_NUM, { subscribe::WRITE }>(subscribe, &called)?;
+                S::allow_ro::<C, DRIVER_NUM, { allow_ro::WRITE_BUFFER_ID }>(allow_ro, s)?;
 
-            let val = S::command(DRIVER_NUM, command::FILL, 0, 0).to_result();
+                S::subscribe::<_, _, C, DRIVER_NUM, { subscribe::WRITE }>(subscribe, &called)?;
 
-            loop {
-                S::yield_wait();
-                if let Some((_,)) = called.get() {
-                    return val;
+                let val = S::command(DRIVER_NUM, command::FILL, 0, 0).to_result();
+
+                loop {
+                    S::yield_wait();
+                    if let Some((_,)) = called.get() {
+                        return val;
+                    }
                 }
-            }
-        })
+            })
+        } else {
+            Err(ErrorCode::Fail)
+        }
     }
 }
 pub trait Config:
@@ -314,5 +317,5 @@ mod subscribe {
     pub const WRITE: u32 = 0;
 }
 mod allow_ro {
-    pub const SHARED: u32 = 0;
+    pub const WRITE_BUFFER_ID: u32 = 0;
 }
