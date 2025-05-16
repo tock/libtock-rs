@@ -4,11 +4,13 @@ use libtock_unittest::{fake, ExpectedSyscall};
 type Screen = super::Display<fake::Syscalls>;
 
 #[test]
+// Test fails when no screen driver is registered.
 fn no_driver() {
     let _kernel = fake::Kernel::new();
     assert_eq!(Screen::exists(), Err(ErrorCode::Fail))
 }
 #[test]
+// Test passes when screen driver is present.
 fn exists() {
     let kernel = fake::Kernel::new();
     let driver = fake::Screen::new();
@@ -17,6 +19,7 @@ fn exists() {
 }
 
 #[test]
+// Tests basic screen setup returns expected value (3).
 fn screen_setup() {
     let kernel = fake::Kernel::new();
     let driver = fake::Screen::new();
@@ -25,6 +28,7 @@ fn screen_setup() {
 }
 
 #[test]
+// Tests setting screen power to ON.
 fn set_power() {
     let kernel = fake::Kernel::new();
     let driver = fake::Screen::new();
@@ -33,6 +37,7 @@ fn set_power() {
 }
 
 #[test]
+// Tests setting brightness.
 fn set_brightness() {
     let kernel = fake::Kernel::new();
     let driver = fake::Screen::new();
@@ -46,6 +51,7 @@ fn set_brightness() {
 }
 
 #[test]
+// Turns inversion ON.
 fn set_invert_on() {
     let kernel = fake::Kernel::new();
     let driver = fake::Screen::new();
@@ -59,6 +65,7 @@ fn set_invert_on() {
 }
 
 #[test]
+// Turns inversion OFF.
 fn set_invert_off() {
     let kernel = fake::Kernel::new();
     let driver = fake::Screen::new();
@@ -72,6 +79,7 @@ fn set_invert_off() {
 }
 
 #[test]
+// Tests invert value.
 fn set_invert() {
     let kernel = fake::Kernel::new();
     let driver = fake::Screen::new();
@@ -80,6 +88,7 @@ fn set_invert() {
 }
 
 #[test]
+// Checks number of supported resolution modes.
 fn get_resolution_modes_count() {
     let kernel = fake::Kernel::new();
     let driver = fake::Screen::new();
@@ -88,6 +97,7 @@ fn get_resolution_modes_count() {
 }
 
 #[test]
+// Tests fetching resolutions for indices 0-2.
 fn get_resolution_width_height() {
     let kernel = fake::Kernel::new();
     let driver = fake::Screen::new();
@@ -97,6 +107,7 @@ fn get_resolution_width_height() {
     assert_eq!(Screen::get_resolution_width_height(2), Ok((1280, 720)));
 }
 #[test]
+// Invalid resolution index returns error.
 fn get_resolution_width_height_fail() {
     let kernel = fake::Kernel::new();
     let driver = fake::Screen::new();
@@ -107,6 +118,7 @@ fn get_resolution_width_height_fail() {
     );
 }
 #[test]
+// Checks total available pixel modes.
 fn pixel_modes_count() {
     let kernel = fake::Kernel::new();
     let driver = fake::Screen::new();
@@ -115,6 +127,7 @@ fn pixel_modes_count() {
 }
 
 #[test]
+// Gets pixel format for valid indices.
 fn get_screen_pixel_format_success() {
     let kernel = fake::Kernel::new();
     let driver = fake::Screen::new();
@@ -124,6 +137,7 @@ fn get_screen_pixel_format_success() {
 }
 
 #[test]
+// Invalid index returns error.
 fn get_screen_pixel_format_fail() {
     let kernel = fake::Kernel::new();
     let driver = fake::Screen::new();
@@ -132,6 +146,7 @@ fn get_screen_pixel_format_fail() {
 }
 
 #[test]
+// Sets screen rotation.
 fn set_rotation_success() {
     let kernel = fake::Kernel::new();
     let driver = fake::Screen::new();
@@ -145,6 +160,7 @@ fn set_rotation_success() {
 }
 
 #[test]
+// Invalid rotation (>=360 degrees) fails.
 fn set_rotation_fail() {
     let kernel = fake::Kernel::new();
     let driver = fake::Screen::new();
@@ -153,6 +169,7 @@ fn set_rotation_fail() {
 }
 
 #[test]
+// Sets and then reads rotation.
 fn get_rotation_success() {
     let kernel = fake::Kernel::new();
     let driver = fake::Screen::new();
@@ -172,6 +189,7 @@ fn get_rotation_success() {
 }
 
 #[test]
+// Gets default rotation (0) without prior set.
 fn get_rotation_fail() {
     let kernel = fake::Kernel::new();
     let driver = fake::Screen::new();
@@ -185,6 +203,7 @@ fn get_rotation_fail() {
 }
 
 #[test]
+// Sets resolution to custom dimensions.
 fn set_resolution() {
     let kernel = fake::Kernel::new();
     let driver = fake::Screen::new();
@@ -198,6 +217,7 @@ fn set_resolution() {
 }
 
 #[test]
+// Verifies resolution was correctly set and retrieved.
 fn get_resolution_sucess() {
     let kernel = fake::Kernel::new();
     let driver = fake::Screen::new();
@@ -212,6 +232,7 @@ fn get_resolution_sucess() {
 }
 
 #[test]
+// Returns (0,0) when no resolution was set.
 fn get_resolution_fail() {
     let kernel = fake::Kernel::new();
     let driver = fake::Screen::new();
@@ -220,6 +241,7 @@ fn get_resolution_fail() {
 }
 
 #[test]
+// Sets pixel format.
 fn set_pixel_format() {
     let kernel = fake::Kernel::new();
     let driver = fake::Screen::new();
@@ -233,6 +255,7 @@ fn set_pixel_format() {
 }
 
 #[test]
+// Retrieves the pixel format that was previously set.
 fn get_pixel_format_success() {
     let kernel = fake::Kernel::new();
     let driver = fake::Screen::new();
@@ -247,6 +270,7 @@ fn get_pixel_format_success() {
 }
 
 #[test]
+// Returns 0 if format was never set.
 fn get_pixel_format_fail() {
     let kernel = fake::Kernel::new();
     let driver = fake::Screen::new();
@@ -255,6 +279,7 @@ fn get_pixel_format_fail() {
 }
 
 #[test]
+// Sets the region of screen to write pixels to.
 fn set_write_frame() {
     let kernel = fake::Kernel::new();
     let driver = fake::Screen::new();
@@ -263,6 +288,7 @@ fn set_write_frame() {
 }
 
 #[test]
+// Writes pixel data to screen using a buffer.
 fn write_buffer() {
     let kernel = fake::Kernel::new();
     let driver = fake::Screen::new();
@@ -287,6 +313,7 @@ fn write_buffer() {
 
 #[test]
 fn fill_success() {
+    // Fills buffer with a color and writes to screen.
     let kernel = fake::Kernel::new();
     let driver = fake::Screen::new();
     kernel.add_driver(&driver);
@@ -310,6 +337,7 @@ fn fill_success() {
 
 #[test]
 fn fill_fail() {
+    // Buffer too small causes fill failure.
     let kernel = fake::Kernel::new();
     let driver = fake::Screen::new();
     kernel.add_driver(&driver);
