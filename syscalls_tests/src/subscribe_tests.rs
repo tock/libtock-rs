@@ -104,10 +104,6 @@ fn success() {
     assert_eq!(fake::Syscalls::yield_no_wait(), YieldNoWaitReturn::NoUpcall);
 }
 
-// The toolchain update from 1.78 to 1.82 broke this test. However, this test will start working
-// again as of Rust 1.84. See https://github.com/tock/libtock-rs/pull/565#issuecomment-2546915870
-// for more details.
-/*
 #[cfg(not(miri))]
 #[test]
 fn unwinding_upcall() {
@@ -135,4 +131,3 @@ fn unwinding_upcall() {
     });
     assert_eq!(exit, libtock_unittest::ExitCall::Terminate(0));
 }
-*/
