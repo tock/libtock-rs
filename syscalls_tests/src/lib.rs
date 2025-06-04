@@ -7,6 +7,7 @@
 //!   1. The `libtock_platform` with `cfg(test)` enabled
 //!   2. The `libtock_platform` that `libtock_unittest` depends on, which has
 //!      `cfg(test)` disabled.
+//!
 //! Mixing types from the two `libtock_platform` instantiations in tests results
 //! in confusing error messages, so instead those tests live in this crate.
 

@@ -29,8 +29,8 @@ pub struct Subscribe<'share, S: Syscalls, const DRIVER_NUM: u32, const SUBSCRIBE
 // We can't derive(Default) because S is not Default, and derive(Default)
 // generates a Default implementation that requires S to be Default. Instead, we
 // manually implement Default.
-impl<'share, S: Syscalls, const DRIVER_NUM: u32, const SUBSCRIBE_NUM: u32> Default
-    for Subscribe<'share, S, DRIVER_NUM, SUBSCRIBE_NUM>
+impl<S: Syscalls, const DRIVER_NUM: u32, const SUBSCRIBE_NUM: u32> Default
+    for Subscribe<'_, S, DRIVER_NUM, SUBSCRIBE_NUM>
 {
     fn default() -> Self {
         Self {
@@ -40,16 +40,16 @@ impl<'share, S: Syscalls, const DRIVER_NUM: u32, const SUBSCRIBE_NUM: u32> Defau
     }
 }
 
-impl<'share, S: Syscalls, const DRIVER_NUM: u32, const SUBSCRIBE_NUM: u32> Drop
-    for Subscribe<'share, S, DRIVER_NUM, SUBSCRIBE_NUM>
+impl<S: Syscalls, const DRIVER_NUM: u32, const SUBSCRIBE_NUM: u32> Drop
+    for Subscribe<'_, S, DRIVER_NUM, SUBSCRIBE_NUM>
 {
     fn drop(&mut self) {
         S::unsubscribe(DRIVER_NUM, SUBSCRIBE_NUM);
     }
 }
 
-impl<'share, S: Syscalls, const DRIVER_NUM: u32, const SUBSCRIBE_NUM: u32> List
-    for Subscribe<'share, S, DRIVER_NUM, SUBSCRIBE_NUM>
+impl<S: Syscalls, const DRIVER_NUM: u32, const SUBSCRIBE_NUM: u32> List
+    for Subscribe<'_, S, DRIVER_NUM, SUBSCRIBE_NUM>
 {
 }
 

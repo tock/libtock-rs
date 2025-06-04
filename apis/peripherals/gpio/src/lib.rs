@@ -1,21 +1,20 @@
 #![no_std]
+//! The GPIO driver.
+//!
+//! # Example
+//! ```ignore
+//! use libtock::gpio;
+//!
+//! // Set pin to high.
+//! let pin = gpio::Gpio::get_pin(0).unwrap().make_output().unwrap();
+//! let _ = pin.set();
+//! ```
 
 use core::marker::PhantomData;
 
 use libtock_platform::{
     share::Handle, subscribe::OneId, DefaultConfig, ErrorCode, Subscribe, Syscalls, Upcall,
 };
-
-/// The GPIO driver.
-///
-/// # Example
-/// ```ignore
-/// use libtock::gpio;
-///
-/// // Set pin to high.
-/// let pin = gpio::Gpio::get_pin(0).unwrap().make_output().unwrap();
-/// let _ = pin.set();
-/// ```
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
 pub enum GpioState {
@@ -145,7 +144,7 @@ pub struct OutputPin<'a, S: Syscalls> {
     pin: &'a Pin<S>,
 }
 
-impl<'a, S: Syscalls> OutputPin<'a, S> {
+impl<S: Syscalls> OutputPin<'_, S> {
     pub fn toggle(&mut self) -> Result<(), ErrorCode> {
         Gpio::<S>::toggle(self.pin.pin_number)
     }
@@ -162,7 +161,7 @@ pub struct InputPin<'a, S: Syscalls, P: Pull> {
     _pull: PhantomData<P>,
 }
 
-impl<'a, S: Syscalls, P: Pull> InputPin<'a, S, P> {
+impl<S: Syscalls, P: Pull> InputPin<'_, S, P> {
     pub fn read(&self) -> Result<GpioState, ErrorCode> {
         Gpio::<S>::read(self.pin.pin_number)
     }
@@ -232,12 +231,12 @@ impl<S: Syscalls> Gpio<S> {
 }
 
 #[cfg(feature = "rust_embedded")]
-impl<'a, S: Syscalls> embedded_hal::digital::ErrorType for OutputPin<'a, S> {
+impl<S: Syscalls> embedded_hal::digital::ErrorType for OutputPin<'_, S> {
     type Error = ErrorCode;
 }
 
 #[cfg(feature = "rust_embedded")]
-impl<'a, S: Syscalls> embedded_hal::digital::OutputPin for OutputPin<'a, S> {
+impl<S: Syscalls> embedded_hal::digital::OutputPin for OutputPin<'_, S> {
     fn set_low(&mut self) -> Result<(), Self::Error> {
         self.clear()
     }

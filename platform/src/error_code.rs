@@ -277,7 +277,7 @@ impl TryFrom<u32> for ErrorCode {
 
     fn try_from(value: u32) -> Result<Self, Self::Error> {
         if (1..=1024).contains(&value) {
-            Ok(unsafe { transmute(value) })
+            Ok(unsafe { transmute::<u32, ErrorCode>(value) })
         } else {
             Err(NotAnErrorCode)
         }

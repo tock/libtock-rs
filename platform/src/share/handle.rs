@@ -22,13 +22,13 @@ pub struct Handle<'handle, L: List> {
 // We can't #[derive(Clone, Copy)] because derive's implementations of Clone and
 // Copy have `L: Clone` and `L: Copy` constraints, respectively. We don't want
 // those constraints, so we manually implement Clone and Copy.
-impl<'handle, L: List> Clone for Handle<'handle, L> {
+impl<L: List> Clone for Handle<'_, L> {
     fn clone(&self) -> Self {
         *self
     }
 }
 
-impl<'handle, L: List> Copy for Handle<'handle, L> {}
+impl<L: List> Copy for Handle<'_, L> {}
 
 impl<'handle, L: List> Handle<'handle, L> {
     /// Constructs a new `Handle`, typing its lifetime to the provided list.

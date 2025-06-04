@@ -174,7 +174,10 @@ mod tests {
                     subscribe_num: 2
                 }
             );
-            assert!(upcall_queue_entry.upcall.fn_pointer == Some(upcall_ptr));
+            assert!(
+                upcall_queue_entry.upcall.fn_pointer.map(|f| f as *const ())
+                    == Some(upcall_ptr as *const _)
+            );
             let data: usize = upcall_queue_entry.upcall.data.into();
             assert_eq!(data, 1111);
 
@@ -207,7 +210,10 @@ mod tests {
                     subscribe_num: 2
                 }
             );
-            assert!(front_queue_entry.upcall.fn_pointer == Some(upcall_ptr));
+            assert!(
+                front_queue_entry.upcall.fn_pointer.map(|f| f as *const ())
+                    == Some(upcall_ptr as *const _)
+            );
             let front_data: usize = front_queue_entry.upcall.data.into();
             assert_eq!(front_data, 1111);
             let back_queue_entry = kernel_data.upcall_queue.back().expect("Upcall not queued");
@@ -219,7 +225,10 @@ mod tests {
                     subscribe_num: 2
                 }
             );
-            assert!(back_queue_entry.upcall.fn_pointer == Some(upcall_ptr));
+            assert!(
+                back_queue_entry.upcall.fn_pointer.map(|f| f as *const ())
+                    == Some(upcall_ptr as *const _)
+            );
             let back_data: usize = back_queue_entry.upcall.data.into();
             assert_eq!(back_data, 2222);
         });

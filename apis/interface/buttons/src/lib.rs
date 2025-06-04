@@ -1,30 +1,29 @@
 #![no_std]
+//! The Buttons driver
+//!
+//! # Example
+//! ```ignore
+//! use libtock::Buttons;
+//!
+//! // Read button state
+//! Buttons::is_pressed(0);
+//!
+//! // Register for events
+//!
+//! let listener = ButtonListener(|button, state| {
+//!     // make use of the button's state
+//! });
+//!
+//! share::scope(|subscribe| {
+//!     if let Ok(()) = Buttons::register_listener(&listener, subscribe) {
+//!         // yield
+//!     }
+//! });
+//! ```
 
 use libtock_platform::{
     share::Handle, subscribe::OneId, DefaultConfig, ErrorCode, Subscribe, Syscalls, Upcall,
 };
-
-/// The Buttons driver
-///
-/// # Example
-/// ```ignore
-/// use libtock::Buttons;
-///
-/// // Read button state
-/// Buttons::is_pressed(0);
-///
-/// // Register for events
-///
-/// let listener = ButtonListener(|button, state| {
-///     // make use of the button's state
-/// });
-///
-/// share::scope(|subscribe| {
-///     if let Ok(()) = Buttons::register_listener(&listener, subscribe) {
-///         // yield
-///     }
-/// });
-/// ```
 
 pub struct Buttons<S: Syscalls>(S);
 

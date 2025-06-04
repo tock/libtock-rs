@@ -1,19 +1,18 @@
 #![no_std]
+//! The alarm driver
+//!
+//! # Example
+//! ```ignore
+//! use libtock2::Alarm;
+//!
+//! // Wait for timeout
+//! Alarm::sleep(Alarm::Milliseconds(2500));
+//! ```
 
 use core::cell::Cell;
 use libtock_platform as platform;
 use libtock_platform::share;
 use libtock_platform::{DefaultConfig, ErrorCode, Syscalls};
-
-/// The alarm driver
-///
-/// # Example
-/// ```ignore
-/// use libtock2::Alarm;
-///
-/// // Wait for timeout
-/// Alarm::sleep(Alarm::Milliseconds(2500));
-/// ```
 
 pub struct Alarm<S: Syscalls, C: platform::subscribe::Config = DefaultConfig>(S, C);
 
