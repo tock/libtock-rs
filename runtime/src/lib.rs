@@ -19,6 +19,7 @@
 //! and provide its own layout file.
 
 #![no_std]
+#![allow(clippy::pointers_in_nomem_asm_block)]
 #![warn(unsafe_op_in_unsafe_fn)]
 
 pub mod startup;
