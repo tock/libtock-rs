@@ -199,6 +199,9 @@ $(call fixed-target, F=0x40440000 R=0x3fcaa000 T=riscv32imc-unknown-none-elf A=r
 $(call fixed-target, F=0x10020000 R=0x20004000 T=thumbv6m-none-eabi A=cortex-m0)
 $(call fixed-target, F=0x10028000 R=0x2000c000 T=thumbv6m-none-eabi A=cortex-m0)
 
+$(call fixed-target, F=0x10040000 R=0x20020000 T=thumbv8m.main-none-eabi A=cortex-m33)
+$(call fixed-target, F=0x10060000 R=0x20028000 T=thumbv8m.main-none-eabi A=cortex-m33)
+
 $(ELF_TARGETS): toolchain
 	LIBTOCK_LINKER_FLASH=$(F) LIBTOCK_LINKER_RAM=$(R) cargo build --example $(EXAMPLE) $(features) --target=$(T) $(release)
 	@mkdir -p target/$(A).$(F).$(R)/
