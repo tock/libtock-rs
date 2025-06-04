@@ -6,7 +6,6 @@ use libtock_platform::{ErrorCode, Syscalls};
 use libtock_runtime::TockSyscalls;
 
 /// This handler requires some 0x400 bytes of stack
-
 #[panic_handler]
 fn panic_handler(info: &core::panic::PanicInfo) -> ! {
     // Signal a panic using the LowLevelDebug capsule (if available).

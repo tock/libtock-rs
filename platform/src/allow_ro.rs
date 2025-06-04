@@ -34,8 +34,8 @@ pub struct AllowRo<'share, S: Syscalls, const DRIVER_NUM: u32, const BUFFER_NUM:
 // We can't derive(Default) because S is not Default, and derive(Default)
 // generates a Default implementation that requires S to be Default. Instead, we
 // manually implement Default.
-impl<'share, S: Syscalls, const DRIVER_NUM: u32, const BUFFER_NUM: u32> Default
-    for AllowRo<'share, S, DRIVER_NUM, BUFFER_NUM>
+impl<S: Syscalls, const DRIVER_NUM: u32, const BUFFER_NUM: u32> Default
+    for AllowRo<'_, S, DRIVER_NUM, BUFFER_NUM>
 {
     fn default() -> Self {
         Self {
@@ -45,16 +45,16 @@ impl<'share, S: Syscalls, const DRIVER_NUM: u32, const BUFFER_NUM: u32> Default
     }
 }
 
-impl<'share, S: Syscalls, const DRIVER_NUM: u32, const BUFFER_NUM: u32> Drop
-    for AllowRo<'share, S, DRIVER_NUM, BUFFER_NUM>
+impl<S: Syscalls, const DRIVER_NUM: u32, const BUFFER_NUM: u32> Drop
+    for AllowRo<'_, S, DRIVER_NUM, BUFFER_NUM>
 {
     fn drop(&mut self) {
         S::unallow_ro(DRIVER_NUM, BUFFER_NUM);
     }
 }
 
-impl<'share, S: Syscalls, const DRIVER_NUM: u32, const BUFFER_NUM: u32> List
-    for AllowRo<'share, S, DRIVER_NUM, BUFFER_NUM>
+impl<S: Syscalls, const DRIVER_NUM: u32, const BUFFER_NUM: u32> List
+    for AllowRo<'_, S, DRIVER_NUM, BUFFER_NUM>
 {
 }
 

@@ -15,7 +15,6 @@ use libtock_platform::Syscalls;
 /// // Prints 0x45 and the app which called it.
 /// LowLevelDebug::print_1(0x45);
 /// ```
-
 pub struct LowLevelDebug<S: Syscalls>(S);
 
 impl<S: Syscalls> LowLevelDebug<S> {
