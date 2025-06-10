@@ -13,7 +13,7 @@ use std::cell::Cell;
 // because it was impossible to schedule an upcall during the `synchronous` read in other ways.
 pub struct Adc {
     busy: Cell<bool>,
-    upcall_on_command: Cell<Option<i32>>,
+    upcall_on_command: [Cell<Option<i32>>; 3],
     share_ref: DriverShareRef,
 }
 
@@ -21,7 +21,7 @@ impl Adc {
     pub fn new() -> std::rc::Rc<Adc> {
         std::rc::Rc::new(Adc {
             busy: Cell::new(false),
-            upcall_on_command: Cell::new(None),
+            upcall_on_command: [Cell::new(None), Cell::new(None), Cell::new(None)],
             share_ref: Default::default(),
         })
     }
@@ -29,16 +29,18 @@ impl Adc {
     pub fn is_busy(&self) -> bool {
         self.busy.get()
     }
-    pub fn set_value(&self, value: i32) {
+    pub fn set_value(&self, channel: i32, sample: i32) {
         if self.busy.get() {
             self.share_ref
-                .schedule_upcall(0, (value as u32, 0, 0))
+                .schedule_upcall(0, (0, channel as u32, sample as u32))
                 .expect("Unable to schedule upcall");
             self.busy.set(false);
         }
     }
-    pub fn set_value_sync(&self, value: i32) {
-        self.upcall_on_command.set(Some(value));
+    pub fn set_value_sync(&self, channel: i32, sample: i32) {
+        self.upcall_on_command[0].set(Some(0));
+        self.upcall_on_command[1].set(Some(channel));
+        self.upcall_on_command[2].set(Some(sample));
     }
 }
 
@@ -60,8 +62,12 @@ impl crate::fake::SyscallDriver for Adc {
                     return crate::command_return::failure(ErrorCode::Busy);
                 }
                 self.busy.set(true);
-                if let Some(val) = self.upcall_on_command.take() {
-                    self.set_value(val);
+                if let (Some(0), Some(channel), Some(sample)) = (
+                    self.upcall_on_command[0].take(),
+                    self.upcall_on_command[1].take(),
+                    self.upcall_on_command[2].take(),
+                ) {
+                    self.set_value(channel, sample);
                 }
                 crate::command_return::success()
             }
