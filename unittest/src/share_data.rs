@@ -81,6 +81,7 @@ mod tests {
     use crate::upcall::Upcall;
     use crate::DriverInfo;
     use libtock_platform::Register;
+    use std::ptr::fn_addr_eq;
     use std::rc::Rc;
 
     #[derive(Default)]
@@ -174,7 +175,10 @@ mod tests {
                     subscribe_num: 2
                 }
             );
-            assert!(upcall_queue_entry.upcall.fn_pointer == Some(upcall_ptr));
+            assert!(fn_addr_eq(
+                upcall_queue_entry.upcall.fn_pointer.unwrap(),
+                upcall_ptr
+            ));
             let data: usize = upcall_queue_entry.upcall.data.into();
             assert_eq!(data, 1111);
 
@@ -207,7 +211,10 @@ mod tests {
                     subscribe_num: 2
                 }
             );
-            assert!(front_queue_entry.upcall.fn_pointer == Some(upcall_ptr));
+            assert!(fn_addr_eq(
+                front_queue_entry.upcall.fn_pointer.unwrap(),
+                upcall_ptr
+            ));
             let front_data: usize = front_queue_entry.upcall.data.into();
             assert_eq!(front_data, 1111);
             let back_queue_entry = kernel_data.upcall_queue.back().expect("Upcall not queued");
@@ -219,7 +226,10 @@ mod tests {
                     subscribe_num: 2
                 }
             );
-            assert!(back_queue_entry.upcall.fn_pointer == Some(upcall_ptr));
+            assert!(fn_addr_eq(
+                back_queue_entry.upcall.fn_pointer.unwrap(),
+                upcall_ptr
+            ));
             let back_data: usize = back_queue_entry.upcall.data.into();
             assert_eq!(back_data, 2222);
         });

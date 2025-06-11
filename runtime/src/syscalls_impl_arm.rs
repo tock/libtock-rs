@@ -47,6 +47,7 @@ unsafe impl RawSyscalls for crate::TockSyscalls {
         let r1;
         // Safety: This matches the invariants required by the documentation on
         // RawSyscalls::syscall1
+        #[allow(clippy::pointers_in_nomem_asm_block)]
         unsafe {
             // Syscall class 5 is Memop, the only syscall class that syscall1
             // supports.
@@ -70,6 +71,7 @@ unsafe impl RawSyscalls for crate::TockSyscalls {
             // this match statement.
             //
             // [1] https://github.com/rust-lang/rust/issues/93332
+            #[allow(clippy::pointers_in_nomem_asm_block)]
             match CLASS {
                 syscall_class::MEMOP => asm!("svc 5",
                      inlateout("r0") r0,

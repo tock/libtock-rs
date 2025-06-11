@@ -113,14 +113,14 @@ impl Kernel {
     /// Returns true if the specified driver installed.
     pub fn is_driver_present(driver_num: u32) -> bool {
         with_kernel_data(|kernel_data| {
-            kernel_data.map_or(false, |kernel| kernel.drivers.contains_key(&driver_num))
+            kernel_data.is_some_and(|kernel| kernel.drivers.contains_key(&driver_num))
         })
     }
 
     /// Returns true if there are any pending upcalls.
     pub fn is_upcall_pending() -> bool {
         with_kernel_data(|kernel_data| {
-            kernel_data.map_or(false, |kernel| !kernel.upcall_queue.is_empty())
+            kernel_data.is_some_and(|kernel| !kernel.upcall_queue.is_empty())
         })
     }
 }
