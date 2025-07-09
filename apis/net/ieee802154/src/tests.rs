@@ -20,6 +20,9 @@ unsafe impl RawSyscalls for FakeSyscalls {
         libtock_unittest::fake::Syscalls::yield2([r0, r1])
     }
 
+    unsafe fn yield3([r0, r1, r2]: [Register; 3]) {
+        libtock_unittest::fake::Syscalls::yield3([r0, r1, r2])
+    }
     unsafe fn syscall1<const CLASS: usize>([r0]: [Register; 1]) -> [Register; 2] {
         libtock_unittest::fake::Syscalls::syscall1::<CLASS>([r0])
     }

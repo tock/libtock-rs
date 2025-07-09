@@ -17,4 +17,5 @@ pub mod syscall_class {
 pub mod yield_id {
     pub const NO_WAIT: u32 = 0;
     pub const WAIT: u32 = 1;
+    pub const WAIT_FOR: u32 = 2;
 }

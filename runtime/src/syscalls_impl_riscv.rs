@@ -68,6 +68,37 @@ unsafe impl RawSyscalls for crate::TockSyscalls {
         }
     }
 
+    #[cfg(not(any(target_feature = "d", target_feature = "f")))]
+    unsafe fn yield3([Register(r0), Register(r1), Register(r2)]: [Register; 3]) {
+        // Safety: This matches the invariants required by the documentation on
+        // RawSyscalls::yield2
+        unsafe {
+            asm!("ecall",
+                 // x0 is the zero register.
+                 lateout("x1") _, // Return address
+                 // x2-x4 are stack, global, and thread pointers. sp is
+                 // callee-saved.
+                 lateout("x5") _, // t0
+                 lateout("x6") _, // t1
+                 lateout("x7") _, // t2
+                 // x8 and x9 are s0 and s1 and are callee-saved.
+                 inlateout("x10") r0 => _, // a0
+                 inlateout("x11") r1 => _, // a1
+                 lateout("x12") _,         // a2
+                 lateout("x13") _,         // a3
+                 inlateout("x14") 0 => _,  // a4
+                 lateout("x15") _,         // a5
+                 lateout("x16") _,         // a6
+                 lateout("x17") _,         // a7
+                 // x18-27 are s2-s11 and are callee-saved
+                 lateout("x28") _, // t3
+                 lateout("x29") _, // t4
+                 lateout("x30") _, // t5
+                 lateout("x31") _, // t6
+            );
+        }
+    }
+
     unsafe fn syscall1<const CLASS: usize>([Register(mut r0)]: [Register; 1]) -> [Register; 2] {
         let r1;
         // Safety: This matches the invariants required by the documentation on

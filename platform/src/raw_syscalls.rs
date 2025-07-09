@@ -103,6 +103,9 @@ pub unsafe trait RawSyscalls: Sized {
     /// yield2 may only be used for yield operations that do not return a value.
     /// It has the same safety invariants as the underlying system call.
     unsafe fn yield2(_: [Register; 2]);
+        
+    // yield3 can only be used to call `yield-wait-for`
+    unsafe fn yield3(_: [Register; 3]);
 
     // syscall1 is only used to invoke Memop operations. Because there are no
     // Memop commands that set r2 or r3, raw_syscall1 only needs to return r0

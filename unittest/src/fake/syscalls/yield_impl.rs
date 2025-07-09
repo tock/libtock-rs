@@ -64,6 +64,44 @@ pub(super) fn yield_wait() {
     );
 }
 
+pub(super) unsafe fn yield_wait_for(
+    driver_number: libtock_platform::Register,
+    subscribe_number: libtock_platform::Register,
+) {
+    let upcall_found = KERNEL_DATA.with(|refcell| {
+        let mut refmut = refcell.borrow_mut();
+        let kernel_data = refmut
+            .as_mut()
+            .expect("yield-wait-for called but no fake::Kernel exists");
+
+        kernel_data.syscall_log.push(SyscallLogEntry::YieldWaitFor);
+
+        match kernel_data.expected_syscalls.pop_front() {
+            None => false,
+            Some(ExpectedSyscall::YieldWaitFor { driver, subscribe })
+                if <libtock_platform::Register as From<u32>>::from(driver) == driver_number
+                    && <libtock_platform::Register as From<u32>>::from(subscribe)
+                        == subscribe_number =>
+            {
+                true
+            }
+            Some(expected_syscall) => {
+                kernel_data.expected_syscalls.push_front(expected_syscall);
+                false
+            }
+        }
+    });
+
+    if upcall_found {
+        return;
+    }
+
+    assert!(
+        invoke_next_upcall(),
+        "yield-wait-for called with no queueued upcall"
+    );
+}
+
 // Pops the next upcall off the kernel data's upcall queue and invokes it, or
 // does nothing if the upcall queue was entry. The return value indicates
 // whether an upcall was run. Panics if no kernel data is present.
