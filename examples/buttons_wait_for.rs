@@ -7,7 +7,7 @@ use libtock::buttons::{ButtonListener, Buttons};
 use libtock::console::Console;
 use libtock::leds::Leds;
 use libtock::runtime::{set_main, stack_size};
-use libtock_platform::{share, Syscalls};
+use libtock_platform::share;
 // use libtock_runtime::TockSyscalls;
 
 set_main! {main}
@@ -15,7 +15,7 @@ stack_size! {0x1000}
 
 fn main() {
     writeln!(Console::writer(), "main!").unwrap();
-    let listener = ButtonListener(|button, state| {
+    let listener = ButtonListener(|button, _state| {
         let _ = Leds::toggle(button);
         // writeln!(Console::writer(), "button {:?}: {:?}", button, state).unwrap();
     });

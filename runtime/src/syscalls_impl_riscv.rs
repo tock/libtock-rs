@@ -69,7 +69,7 @@ unsafe impl RawSyscalls for crate::TockSyscalls {
     }
 
     #[cfg(not(any(target_feature = "d", target_feature = "f")))]
-    unsafe fn yield3([Register(r0), Register(r1), Register(r2)]: [Register; 3]) {
+    unsafe fn yield3([Register(r0), Register(r1), Register(_r2)]: [Register; 3]) {
         // Safety: This matches the invariants required by the documentation on
         // RawSyscalls::yield2
         unsafe {
