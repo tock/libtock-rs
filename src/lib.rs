@@ -46,6 +46,11 @@ pub mod console {
     pub type Console = console::Console<super::runtime::TockSyscalls>;
     pub use console::ConsoleWriter;
 }
+pub mod display {
+    use libtock_display as display;
+    pub type Display = display::Display<super::runtime::TockSyscalls>;
+    pub use display::Screen;
+}
 pub mod gpio {
     use libtock_gpio as gpio;
     pub type Gpio = gpio::Gpio<super::runtime::TockSyscalls>;
