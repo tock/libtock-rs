@@ -89,6 +89,7 @@ members = [
     "apis/storage/key_value",
     "demos/st7789",
     "demos/st7789-slint",
+    "libraries/embedded_graphics_libtock",
     "panic_handlers/debug_panic",
     "panic_handlers/small_panic",
     "platform",
