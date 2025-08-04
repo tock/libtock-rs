@@ -223,8 +223,16 @@ fn yield1() {
     }
     assert_eq!(kernel.take_syscall_log(), [SyscallLogEntry::YieldWait]);
 
-    // Call yield1 with a yield ID that is unknown but which fits in a u32.
+    // Call yield-no-wait through yield1, which is not valid.
     let result = catch_unwind(|| unsafe { fake::Syscalls::yield1([2u32.into()]) });
+    assert!(result
+        .expect_err("failed to catch yield-no-wait without arg")
+        .downcast_ref::<&'static str>()
+        .expect("wrong panic payload type")
+        .contains("yield-wait-for called without arguments"));
+
+    // Call yield1 with a yield ID that is unknown but which fits in a u32.
+    let result = catch_unwind(|| unsafe { fake::Syscalls::yield1([3u32.into()]) });
     assert!(result
         .expect_err("failed to catch incorrect yield ID -- new ID added?")
         .downcast_ref::<String>()
@@ -262,6 +270,14 @@ fn yield2() {
     assert_eq!(kernel.take_syscall_log(), [SyscallLogEntry::YieldNoWait]);
     assert_eq!(return_value, YieldNoWaitReturn::Upcall);
 
+    // // Call yield-no-wait through yield2, which should be rejected.
+    // let result = catch_unwind(|| unsafe { fake::Syscalls::yield2([0u32.into(), 0u32.into()]) });
+    // assert!(result
+    //     .expect_err("failed to catch yield-wait with arg")
+    //     .downcast_ref::<&'static str>()
+    //     .expect("wrong panic payload type")
+    //     .contains("yield-no-wait called with an argument"));
+
     // Call yield-wait through yield2, which should be rejected.
     let result = catch_unwind(|| unsafe { fake::Syscalls::yield2([1u32.into(), 0u32.into()]) });
     assert!(result
@@ -270,8 +286,15 @@ fn yield2() {
         .expect("wrong panic payload type")
         .contains("yield-wait called with an argument"));
 
-    // Call yield2 with a yield ID that is unknown but which fits in a u32.
+    // Call yield-wait-for through yield2, which should be rejected.
     let result = catch_unwind(|| unsafe { fake::Syscalls::yield2([2u32.into(), 0u32.into()]) });
+    assert!(result
+        .expect_err("failed to catch yield-wait-for with arg")
+        .downcast_ref::<&'static str>()
+        .expect("wrong panic payload type")
+        .contains("yield-wait-for called with just one argument"));
+    // Call yield2 with a yield ID that is unknown but which fits in a u32.
+    let result = catch_unwind(|| unsafe { fake::Syscalls::yield2([3u32.into(), 0u32.into()]) });
     assert!(result
         .expect_err("failed to catch incorrect yield ID -- new ID added?")
         .downcast_ref::<String>()

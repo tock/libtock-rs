@@ -35,7 +35,7 @@ impl<S: RawSyscalls> Syscalls for S {
         }
     }
 
-        fn yield_wait_for(driver_number: u32, subscribe_number: u32) {
+    fn yield_wait_for(driver_number: u32, subscribe_number: u32) {
         // Safety: yield-wait does not return a value, which satisfies yield1's
         // requirement. The yield-wait system call cannot trigger undefined
         // behavior on its own in any other way.

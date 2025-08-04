@@ -103,7 +103,7 @@ pub unsafe trait RawSyscalls: Sized {
     /// yield2 may only be used for yield operations that do not return a value.
     /// It has the same safety invariants as the underlying system call.
     unsafe fn yield2(_: [Register; 2]);
-        
+
     // yield3 can only be used to call `yield-wait-for`
     unsafe fn yield3(_: [Register; 3]);
 

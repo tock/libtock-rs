@@ -22,7 +22,7 @@ unsafe impl RawSyscalls for crate::fake::Syscalls {
                 // we fail the test case regardless.
                 panic!("yield-wait called with an argument");
             }
-            yield_id::WAIT_FOR => panic!("yield wait for called with just one argument"),
+            yield_id::WAIT_FOR => panic!("yield-wait-for called with just one argument"),
             id => panic!("unknown yield ID {}", id),
         }
     }
