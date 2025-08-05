@@ -41,6 +41,7 @@ libtock_low_level_debug = { path = "apis/kernel/low_level_debug" }
 libtock_ninedof = { path = "apis/sensors/ninedof" }
 libtock_platform = { path = "platform" }
 libtock_proximity = { path = "apis/sensors/proximity" }
+libtock_display = { path = "apis/display" }
 libtock_rng = { path = "apis/peripherals/rng" }
 libtock_runtime = { path = "runtime" }
 libtock_small_panic = { path = "panic_handlers/small_panic" }
@@ -82,6 +83,7 @@ members = [
     "apis/sensors/air_quality",
     "apis/sensors/ambient_light",
     "apis/sensors/ninedof",
+    "apis/display",
     "apis/sensors/proximity",
     "apis/sensors/temperature",
     "apis/storage/key_value",
