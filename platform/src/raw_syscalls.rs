@@ -105,6 +105,21 @@ pub unsafe trait RawSyscalls: Sized {
     unsafe fn yield2(_: [Register; 2]);
 
     // yield3 can only be used to call `yield-wait-for`
+    // yield3 should:
+    //     1. Call syscall class 0
+    //     2. Pass in r0 and r1 as inlateout registers.
+    //     3. Mark all caller-saved registers as lateout clobbers.
+    //     4. NOT provide any of the following options:
+    //            pure             (yield has side effects)
+    //            nomem            (a callback can read + write globals)
+    //            readonly         (a callback can write globals)
+    //            preserves_flags  (a callback can change flags)
+    //            noreturn         (yield is expected to return)
+    //            nostack          (a callback needs the stack)
+    /// `yield3` should only be called by `libtock_platform`.
+    /// # Safety
+    /// yield3 may only be used for yield operations that do not return a value.
+    /// It has the same safety invariants as the underlying system call.
     unsafe fn yield3(_: [Register; 3]);
 
     // syscall1 is only used to invoke Memop operations. Because there are no
