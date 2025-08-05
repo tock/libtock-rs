@@ -32,7 +32,7 @@ unsafe impl RawSyscalls for crate::fake::Syscalls {
             yield_id::NO_WAIT => panic!("yield-no-wait called with 2 arguments"),
             yield_id::WAIT => panic!("yield-wait called with 2 arguments"),
             yield_id::WAIT_FOR => unsafe {
-                super::yield_impl::yield_wait_for(r1.into(), r2.into());
+                super::yield_impl::yield_wait_for(r1, r2);
             },
             id => panic!("unknown yield ID {}", id),
         }
