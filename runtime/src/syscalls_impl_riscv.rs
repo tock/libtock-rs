@@ -69,9 +69,12 @@ unsafe impl RawSyscalls for crate::TockSyscalls {
     }
 
     #[cfg(not(any(target_feature = "d", target_feature = "f")))]
-    unsafe fn yield3([Register(r0), Register(r1), Register(_r2)]: [Register; 3]) {
+    unsafe fn yield3(
+        [Register(mut r0), Register(mut r1), Register(mut r2)]: [Register; 3],
+    ) -> (Register, Register, Register) {
         // Safety: This matches the invariants required by the documentation on
         // RawSyscalls::yield2
+        #![allow(clippy::pointers_in_nomem_asm_block)]
         unsafe {
             asm!("ecall",
                  // x0 is the zero register.
@@ -82,9 +85,9 @@ unsafe impl RawSyscalls for crate::TockSyscalls {
                  lateout("x6") _, // t1
                  lateout("x7") _, // t2
                  // x8 and x9 are s0 and s1 and are callee-saved.
-                 inlateout("x10") r0 => _, // a0
-                 inlateout("x11") r1 => _, // a1
-                 lateout("x12") _,         // a2
+                 inlateout("x10") r0, // a0
+                 inlateout("x11") r1, // a1
+                 inlateout("x12") r2,         // a2
                  lateout("x13") _,         // a3
                  inlateout("x14") 0 => _,  // a4
                  lateout("x15") _,         // a5
@@ -95,8 +98,11 @@ unsafe impl RawSyscalls for crate::TockSyscalls {
                  lateout("x29") _, // t4
                  lateout("x30") _, // t5
                  lateout("x31") _, // t6
+                 options(preserves_flags, nostack, nomem),
+
             );
         }
+        (Register(r0), Register(r1), Register(r2))
     }
 
     unsafe fn syscall1<const CLASS: usize>([Register(mut r0)]: [Register; 1]) -> [Register; 2] {

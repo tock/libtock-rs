@@ -23,7 +23,6 @@ fn main() {
         writeln!(Console::writer(), "button count: {}", buttons_count).unwrap();
 
         share::scope(|subscribe| {
-            // Subscribe to the button callback.
             Buttons::register_listener(&listener, subscribe).unwrap();
             // Enable interrupts for each button press.
             for i in 0..buttons_count {
@@ -35,8 +34,14 @@ fn main() {
                 for i in 0..buttons_count {
                     let driver_number: u32 = 0x3;
                     let subscribe_number: u32 = i as u32;
-                    Buttons::wait_for_button(driver_number, subscribe_number);
-                    writeln!(Console::writer(), "button pressed (yield_wait_for)").unwrap();
+                    let (status, state) = Buttons::wait_for_button(driver_number, subscribe_number);
+                    writeln!(
+                        Console::writer(),
+                        "Button pressed (yield_wait_for), status: {:?}, state: {:?}",
+                        status,
+                        state
+                    )
+                    .unwrap();
                 }
             }
         });

@@ -35,16 +35,22 @@ impl<S: RawSyscalls> Syscalls for S {
         }
     }
 
-    fn yield_wait_for(driver_number: u32, subscribe_number: u32) {
+    fn yield_wait_for(_r0: u32, driver_number: u32, subscribe_number: u32) -> (u32, u32, u32) {
         // Safety: yield-wait does not return a value, which satisfies yield1's
         // requirement. The yield-wait system call cannot trigger undefined
         // behavior on its own in any other way.
         unsafe {
-            Self::yield3([
+            let (r0, r1, r2) = Self::yield3([
                 yield_id::WAIT_FOR.into(),
                 driver_number.into(),
                 subscribe_number.into(),
             ]);
+
+            (
+                r0.try_into().unwrap(),
+                r1.try_into().unwrap(),
+                r2.try_into().unwrap(),
+            )
         }
     }
 

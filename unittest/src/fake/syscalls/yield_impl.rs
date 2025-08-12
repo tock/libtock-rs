@@ -65,8 +65,13 @@ pub(super) fn yield_wait() {
 }
 
 pub(super) unsafe fn yield_wait_for(
+    r0: libtock_platform::Register,
     driver_number: libtock_platform::Register,
     subscribe_number: libtock_platform::Register,
+) -> (
+    libtock_platform::Register,
+    libtock_platform::Register,
+    libtock_platform::Register,
 ) {
     let upcall_found = KERNEL_DATA.with(|refcell| {
         let mut refmut = refcell.borrow_mut();
@@ -93,13 +98,14 @@ pub(super) unsafe fn yield_wait_for(
     });
 
     if upcall_found {
-        return;
+        return (r0, driver_number, subscribe_number);
     }
 
     assert!(
         invoke_next_upcall(),
         "yield-wait-for called with no queueued upcall"
     );
+    (r0, driver_number, subscribe_number)
 }
 
 // Pops the next upcall off the kernel data's upcall queue and invokes it, or
