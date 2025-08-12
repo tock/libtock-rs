@@ -1,5 +1,5 @@
 use crate::fake;
-use fake::display::*;
+use fake::screen::*;
 use fake::SyscallDriver;
 use libtock_platform::share;
 use libtock_platform::CommandReturn;
@@ -8,7 +8,7 @@ use libtock_platform::Syscalls;
 // Tests the command implementation.
 #[test]
 fn command() {
-    let screen = fake::display::Screen::new();
+    let screen = fake::screen::Screen::new();
 
     // Check if the driver exists
     let value = screen.command(EXISTS, 0, 0);
@@ -78,14 +78,14 @@ fn command() {
     share::scope(|allow_ro| {
         fake::Syscalls::allow_ro::<
             DefaultConfig,
-            { fake::display::DRIVER_NUM },
-            { fake::display::WRITE_BUFFER_ID },
+            { fake::screen::DRIVER_NUM },
+            { fake::screen::WRITE_BUFFER_ID },
         >(allow_ro, &buf)
         .unwrap();
 
         // Execute write operation
         assert!(
-            fake::Syscalls::command(fake::display::DRIVER_NUM, fake::display::WRITE, 4, 0)
+            fake::Syscalls::command(fake::screen::DRIVER_NUM, fake::screen::WRITE, 4, 0)
                 .is_success()
         );
     });

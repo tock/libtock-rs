@@ -75,7 +75,7 @@ fn main() {
                 0
             }
         };
-        let _ = writeln!(Console::writer(), "  {format} bbp\n");
+        let _ = writeln!(Console::writer(), "  {format} bpp\n");
     }
 
     // Initialize the Screen screen buffer

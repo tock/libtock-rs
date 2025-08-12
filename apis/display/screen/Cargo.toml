@@ -9,7 +9,7 @@ rust-version.workspace = true
 description = "libtock display driver"
 
 [dependencies]
-libtock_platform = { path = "../../platform" }
+libtock_platform = { path = "../../../platform" }
 
 [dev-dependencies]
-libtock_unittest = { path = "../../unittest" }
+libtock_unittest = { path = "../../../unittest" }
