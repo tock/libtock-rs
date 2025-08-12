@@ -6,34 +6,9 @@ use libtock_platform::subscribe::Subscribe;
 use libtock_platform::{self as platform, DefaultConfig};
 use libtock_platform::{ErrorCode, Syscalls};
 
-// Define buffer size for the screen's frame buffer (10 KB)
-const BUFFER_SIZE: usize = 10 * 1024;
-
-static mut STATIC_BUFFER: Option<[u8; BUFFER_SIZE]> = None;
-
 pub struct Screen<S: Syscalls, C: Config = DefaultConfig>(S, C);
 
 impl<S: Syscalls, C: Config> Screen<S, C> {
-    /// Initialize the static buffer and provide a mutable reference to it.
-    #[inline(always)]
-    pub fn screen_buffer_init(buffer: &mut Option<*mut u8>) -> &'static mut [u8] {
-        if buffer.is_some() {
-            panic!("Buffer is already initialized!");
-        }
-        unsafe {
-            if let Some(_) = STATIC_BUFFER {
-                panic!("Buffer is already initialized!");
-            }
-            STATIC_BUFFER = Some([0; BUFFER_SIZE]);
-            if let Some(ref mut initialized_buffer) = STATIC_BUFFER {
-                *buffer = Some(initialized_buffer.as_mut_ptr());
-                &mut *initialized_buffer
-            } else {
-                panic!("Buffer initialization failed!");
-            }
-        }
-    }
-
     /// Check if the Screen driver exists
     pub fn exists() -> Result<(), ErrorCode> {
         let val = S::command(DRIVER_NUM, command::EXISTS, 0, 0).is_success();

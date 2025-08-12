@@ -8,7 +8,7 @@ use libtock::display::Screen;
 use libtock::runtime::{set_main, stack_size};
 
 set_main! {main}
-stack_size! {800}
+stack_size! {11*1024}
 
 fn main() {
     // Output a message to the console
@@ -78,10 +78,10 @@ fn main() {
         let _ = writeln!(Console::writer(), "  {format} bpp\n");
     }
 
+    const BUFFER_SIZE: usize = 10 * 1024;
+
     // Initialize the Screen screen buffer
-    let mut buffer: Option<*mut u8> = None;
-    let status = Screen::screen_buffer_init(&mut buffer);
-    let _ = writeln!(Console::writer(), "screen init\n");
+    let mut buffer = [0u8; BUFFER_SIZE];
 
     // Set Screen brightness to 100%
     let _ = match Screen::set_brightness(100) {
@@ -115,7 +115,7 @@ fn main() {
             let _ = writeln!(Console::writer(), "{:?}\n", e);
         }
     };
-    let _ = match Screen::fill(status, 0x0) {
+    let _ = match Screen::fill(&mut buffer, 0x0) {
         Ok(()) => (),
         Err(e) => {
             let _ = writeln!(Console::writer(), "{:?}\n", e);
@@ -150,7 +150,7 @@ fn main() {
                 let _ = writeln!(Console::writer(), "{:?}\n", e);
             }
         };
-        let _ = match Screen::fill(status, 0xF800) {
+        let _ = match Screen::fill(&mut buffer, 0xF800) {
             Ok(()) => (),
             Err(e) => {
                 let _ = writeln!(Console::writer(), "{:?}\n", e);
@@ -164,7 +164,7 @@ fn main() {
                 let _ = writeln!(Console::writer(), "{:?}\n", e);
             }
         };
-        let _ = match Screen::fill(status, 0x0) {
+        let _ = match Screen::fill(&mut buffer, 0x0) {
             Ok(()) => (),
             Err(e) => {
                 let _ = writeln!(Console::writer(), "{:?}\n", e);
@@ -181,7 +181,7 @@ fn main() {
                 let _ = writeln!(Console::writer(), "{:?}\n", e);
             }
         };
-        let _ = match Screen::fill(status, 0x0) {
+        let _ = match Screen::fill(&mut buffer, 0x0) {
             Ok(()) => (),
             Err(e) => {
                 let _ = writeln!(Console::writer(), "{:?}\n", e);
@@ -195,7 +195,7 @@ fn main() {
                 let _ = writeln!(Console::writer(), "{:?}\n", e);
             }
         };
-        let _ = match Screen::fill(status, 0x07F0) {
+        let _ = match Screen::fill(&mut buffer, 0x07F0) {
             Ok(()) => (),
             Err(e) => {
                 let _ = writeln!(Console::writer(), "{:?}\n", e);
@@ -212,7 +212,7 @@ fn main() {
                 let _ = writeln!(Console::writer(), "{:?}\n", e);
             }
         };
-        let _ = match Screen::fill(status, 0x0) {
+        let _ = match Screen::fill(&mut buffer, 0x0) {
             Ok(()) => (),
             Err(e) => {
                 let _ = writeln!(Console::writer(), "{:?}\n", e);
