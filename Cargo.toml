@@ -41,7 +41,7 @@ libtock_low_level_debug = { path = "apis/kernel/low_level_debug" }
 libtock_ninedof = { path = "apis/sensors/ninedof" }
 libtock_platform = { path = "platform" }
 libtock_proximity = { path = "apis/sensors/proximity" }
-libtock_display = { path = "apis/display/screen" }
+libtock_screen = { path = "apis/display/screen" }
 libtock_rng = { path = "apis/peripherals/rng" }
 libtock_runtime = { path = "runtime" }
 libtock_small_panic = { path = "panic_handlers/small_panic" }

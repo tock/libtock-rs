@@ -15,9 +15,8 @@ pub mod adc {
     pub use adc::ADCListener;
 }
 pub mod display {
-    use libtock_display as display;
-    pub type Screen = display::Screen<super::runtime::TockSyscalls>;
-    // pub use display::Screen;
+    use libtock_screen as screen;
+    pub type Screen = screen::Screen<super::runtime::TockSyscalls>;
 }
 pub mod air_quality {
     use libtock_air_quality as air_quality;
