@@ -113,7 +113,7 @@ impl<S: Syscalls> Buttons<S> {
 
     // Wrapper for yield_wait_for
     pub fn wait_for_button(driver_number: u32, subscribe_number: u32) -> (u32, ButtonState) {
-        let (status, raw_state, _) = S::yield_wait_for(2, driver_number, subscribe_number);
+        let (status, raw_state, _) = S::yield_wait_for(driver_number, subscribe_number);
         let state = ButtonState::from(raw_state);
         (status, state)
     }

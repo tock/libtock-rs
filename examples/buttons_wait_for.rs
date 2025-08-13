@@ -31,18 +31,16 @@ fn main() {
 
             // Wait for buttons to be pressed.
             loop {
-                for i in 0..buttons_count {
-                    let driver_number: u32 = 0x3;
-                    let subscribe_number: u32 = i as u32;
-                    let (status, state) = Buttons::wait_for_button(driver_number, subscribe_number);
-                    writeln!(
-                        Console::writer(),
-                        "Button pressed (yield_wait_for), status: {:?}, state: {:?}",
-                        status,
-                        state
-                    )
-                    .unwrap();
-                }
+                let driver_number: u32 = 0x3;
+                let subscribe_number: u32 = 0;
+                let (status, state) = Buttons::wait_for_button(driver_number, subscribe_number);
+                writeln!(
+                    Console::writer(),
+                    "Button pressed (yield_wait_for), status: {:?}, state: {:?}",
+                    status,
+                    state
+                )
+                .unwrap();
             }
         });
     }
