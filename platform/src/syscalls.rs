@@ -59,14 +59,13 @@ pub trait Syscalls: RawSyscalls + Sized {
 
     /// Shares a read-write buffer with the kernel.
     fn allow_rw_buffer<
-        'share,
         CONFIG: allow_rw::Config,
         const DRIVER_NUM: u32,
         const BUFFER_NUM: u32,
         const BUFFER_SIZE: usize,
     >(
         allow_rw_buffer: core::pin::Pin<
-            &'share mut allow_rw::AllowRwBuffer<Self, DRIVER_NUM, BUFFER_NUM, BUFFER_SIZE>,
+            &mut allow_rw::AllowRwBuffer<Self, DRIVER_NUM, BUFFER_NUM, BUFFER_SIZE>,
         >,
     ) -> Result<(), ErrorCode>;
 
