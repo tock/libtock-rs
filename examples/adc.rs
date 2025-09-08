@@ -19,13 +19,19 @@ fn main() {
         writeln!(Console::writer(), "adc driver unavailable").unwrap();
         return;
     }
-
+    //getting the number of channels
+    let Ok(number_channels) = Adc::get_number_of_channels() else {
+        writeln!(Console::writer(), "can't get number of channels").unwrap();
+        return;
+    };
     loop {
-        match Adc::read_single_sample_sync() {
-            Ok(adc_val) => writeln!(Console::writer(), "Sample: {}\n", adc_val).unwrap(),
-            Err(_) => writeln!(Console::writer(), "error while reading sample",).unwrap(),
-        }
+        for i in 0..number_channels {
+            match Adc::read_single_sample_sync(i as usize) {
+                Ok(adc_val) => writeln!(Console::writer(), "Sample: {}\n", adc_val).unwrap(),
+                Err(_) => writeln!(Console::writer(), "error while reading sample",).unwrap(),
+            }
 
-        Alarm::sleep_for(Milliseconds(2000)).unwrap();
+            Alarm::sleep_for(Milliseconds(2000)).unwrap();
+        }
     }
 }
