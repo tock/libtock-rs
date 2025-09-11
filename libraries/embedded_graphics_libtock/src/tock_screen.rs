@@ -9,6 +9,12 @@ pub struct TockMonochromeScreen {
     height: u32,
 }
 
+impl Default for TockMonochromeScreen {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl TockMonochromeScreen {
     pub fn new() -> Self {
         let (width, height) = Screen::get_resolution().unwrap_or((0, 0));
