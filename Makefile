@@ -113,7 +113,7 @@ examples: toolchain
 # Used when we need to build a crate for the host OS, as libtock_runtime only
 # supports running on Tock.
 EXCLUDE_RUNTIME := --exclude libtock --exclude libtock_runtime \
-	--exclude libtock_debug_panic --exclude libtock_small_panic
+	--exclude libtock_debug_panic --exclude libtock_small_panic --exclude embedded_graphics_libtock
 
 # Arguments to pass to cargo to exclude demo crates.
 EXCLUDE_RUNTIME := $(EXCLUDE_RUNTIME) --exclude st7789 --exclude st7789-slint
