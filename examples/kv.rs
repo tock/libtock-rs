@@ -19,16 +19,16 @@ fn get_and_print(key: &[u8], value: &mut [u8]) {
     match KeyValue::get(key, value) {
         Ok(val_length) => {
             let val_length: usize = val_length as usize;
-            writeln!(Console::writer(), "Got value len: {}", val_length).unwrap();
+            writeln!(Console::writer(), "Got value len: {val_length}").unwrap();
 
             match str::from_utf8(&value[0..val_length]) {
-                Ok(val_str) => writeln!(Console::writer(), "Value: {}", val_str).unwrap(),
+                Ok(val_str) => writeln!(Console::writer(), "Value: {val_str}").unwrap(),
                 Err(_) => {
                     write!(Console::writer(), "Value: ").unwrap();
-                    for i in 0..val_length {
-                        write!(Console::writer(), "{:02x}", value[i]).unwrap();
+                    for val in &value[0..val_length] {
+                        write!(Console::writer(), "{val:02x}").unwrap();
                     }
-                    write!(Console::writer(), "\n").unwrap();
+                    writeln!(Console::writer()).unwrap();
                 }
             }
         }

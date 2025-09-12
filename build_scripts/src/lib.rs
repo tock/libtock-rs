@@ -70,12 +70,12 @@ pub fn auto_layout() {
 
     // Note: we need to print these rerun-if commands before using the variable
     // or file, so that if the build script fails cargo knows when to re-run it.
-    println!("cargo:rerun-if-env-changed={}", LINKER_FLASH_VAR);
-    println!("cargo:rerun-if-env-changed={}", LINKER_FLASH_LEN_VAR);
-    println!("cargo:rerun-if-env-changed={}", LINKER_RAM_VAR);
-    println!("cargo:rerun-if-env-changed={}", LINKER_RAM_LEN_VAR);
-    println!("cargo:rerun-if-env-changed={}", PLATFORM_VAR);
-    println!("cargo:rerun-if-env-changed={}", TBF_HEADER_SIZE_VAR);
+    println!("cargo:rerun-if-env-changed={LINKER_FLASH_VAR}");
+    println!("cargo:rerun-if-env-changed={LINKER_FLASH_LEN_VAR}");
+    println!("cargo:rerun-if-env-changed={LINKER_RAM_VAR}");
+    println!("cargo:rerun-if-env-changed={LINKER_RAM_LEN_VAR}");
+    println!("cargo:rerun-if-env-changed={PLATFORM_VAR}");
+    println!("cargo:rerun-if-env-changed={TBF_HEADER_SIZE_VAR}");
 
     let platform = get_env_var(PLATFORM_VAR);
     let flash_start = get_env_var(LINKER_FLASH_VAR);
@@ -103,16 +103,15 @@ pub fn auto_layout() {
                 .iter()
                 .find(|&&(name, _, _, _, _)| name == platform)
             {
-                None => panic!("Unknown platform: {}", platform),
+                None => panic!("Unknown platform: {platform}"),
                 Some(&(_, flash_start, flash_len, ram_start, ram_len)) => {
                     (flash_start, flash_len, ram_start, ram_len)
                 }
             }
         }
         _ => panic!(
-            "Must specify either {} or both {} and {}; please see \
-                     libtock_build_scripts' documentation for more information.",
-            PLATFORM_VAR, LINKER_FLASH_VAR, LINKER_RAM_VAR
+            "Must specify either {PLATFORM_VAR} or both {LINKER_FLASH_VAR} and {LINKER_RAM_VAR}; please see \
+                     libtock_build_scripts' documentation for more information."
         ),
     };
     let tbf_header_size;
@@ -147,7 +146,7 @@ pub fn auto_layout() {
     let layout_name = format!("{flash_start}.{flash_len}.{ram_start}.{ram_len}.ld");
     let layout_path: PathBuf = [out_dir, &layout_name].iter().collect();
     let mut layout_file =
-        File::create(&layout_path).unwrap_or_else(|e| panic!("Could not open layout file: {}", e));
+        File::create(&layout_path).unwrap_or_else(|e| panic!("Could not open layout file: {e}"));
     writeln!(
         layout_file,
         "\
@@ -156,8 +155,7 @@ pub fn auto_layout() {
         FLASH_LENGTH = {flash_len};\n\
         RAM_START = {ram_start};\n\
         RAM_LENGTH = {ram_len};\n\
-        INCLUDE {};",
-        LIBTOCK_LAYOUT_NAME
+        INCLUDE {LIBTOCK_LAYOUT_NAME};"
     )
     .expect("Failed to write layout file");
     drop(layout_file);
@@ -166,7 +164,7 @@ pub fn auto_layout() {
     // string, and copy those contents into out_dir at runtime.
     let libtock_layout_path: PathBuf = [out_dir, LIBTOCK_LAYOUT_NAME].iter().collect();
     let mut libtock_layout_file = File::create(libtock_layout_path)
-        .unwrap_or_else(|e| panic!("Could not open {}: {}", LIBTOCK_LAYOUT_NAME, e));
+        .unwrap_or_else(|e| panic!("Could not open {LIBTOCK_LAYOUT_NAME}: {e}"));
     write!(
         libtock_layout_file,
         "{}",
@@ -177,7 +175,7 @@ pub fn auto_layout() {
 
     // Tell rustc which linker script to use and where to find it.
     println!("cargo:rustc-link-arg=-T{}", layout_path.display());
-    println!("cargo:rustc-link-search={}", out_dir);
+    println!("cargo:rustc-link-search={out_dir}");
 
     // Configure the alignment size for the linker. This prevents the linker
     // from assuming very large pages (i.e. 65536 bytes) and unnecessarily
@@ -192,6 +190,6 @@ fn get_env_var(name: &str) -> Option<String> {
     match var(name) {
         Ok(value) => Some(value),
         Err(VarError::NotPresent) => None,
-        Err(VarError::NotUnicode(value)) => panic!("Non-Unicode value in {}: {:?}", name, value),
+        Err(VarError::NotUnicode(value)) => panic!("Non-Unicode value in {name}: {value:?}"),
     }
 }

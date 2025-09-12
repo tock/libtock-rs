@@ -18,7 +18,7 @@ fn main() {
     let resolutions = match Screen::get_resolution_modes_count() {
         Ok(val) => val,
         Err(e) => {
-            let _ = writeln!(Console::writer(), "{:?}\n", e);
+            let _ = writeln!(Console::writer(), "{e:?}\n");
             0
         }
     };
@@ -35,7 +35,7 @@ fn main() {
         let (width, height) = match Screen::get_resolution_width_height(index as usize) {
             Ok((width, height)) => (width, height),
             Err(e) => {
-                let _ = writeln!(Console::writer(), "{:?}\n", e);
+                let _ = writeln!(Console::writer(), "{e:?}\n");
                 (0, 0)
             }
         };
@@ -57,7 +57,7 @@ fn main() {
     let pixel_format = match Screen::get_pixel_format() {
         Ok(val) => val,
         Err(e) => {
-            let _ = writeln!(Console::writer(), "{:?}\n", e);
+            let _ = writeln!(Console::writer(), "{e:?}\n");
             0
         }
     };
@@ -71,7 +71,7 @@ fn main() {
         let format = match Screen::pixel_format(index as usize) {
             Ok(val) => val,
             Err(e) => {
-                let _ = writeln!(Console::writer(), "{:?}\n", e);
+                let _ = writeln!(Console::writer(), "{e:?}\n");
                 0
             }
         };
@@ -84,10 +84,10 @@ fn main() {
     let mut buffer = [0u8; BUFFER_SIZE];
 
     // Set Screen brightness to 100%
-    let _ = match Screen::set_brightness(100) {
+    match Screen::set_brightness(100) {
         Ok(()) => (),
         Err(e) => {
-            let _ = writeln!(Console::writer(), "{:?}\n", e);
+            let _ = writeln!(Console::writer(), "{e:?}\n");
         }
     };
 
@@ -95,7 +95,7 @@ fn main() {
     let (width, height) = match Screen::get_resolution() {
         Ok((width, height)) => (width, height),
         Err(e) => {
-            let _ = writeln!(Console::writer(), "{:?}\n", e);
+            let _ = writeln!(Console::writer(), "{e:?}\n");
             (0, 0)
         }
     };
@@ -109,16 +109,16 @@ fn main() {
     };
 
     // Set full-screen write frame and clear screen
-    let _ = match Screen::set_write_frame(0, 0, width, height) {
+    match Screen::set_write_frame(0, 0, width, height) {
         Ok(()) => (),
         Err(e) => {
-            let _ = writeln!(Console::writer(), "{:?}\n", e);
+            let _ = writeln!(Console::writer(), "{e:?}\n");
         }
     };
-    let _ = match Screen::fill(&mut buffer, 0x0) {
+    match Screen::fill(&mut buffer, 0x0) {
         Ok(()) => (),
         Err(e) => {
-            let _ = writeln!(Console::writer(), "{:?}\n", e);
+            let _ = writeln!(Console::writer(), "{e:?}\n");
         }
     };
 
@@ -136,38 +136,38 @@ fn main() {
         }
 
         // Set Screen rotation (0 to 3)
-        let _ = match Screen::set_rotation(i % 4) {
+        match Screen::set_rotation(i % 4) {
             Ok(()) => (),
             Err(e) => {
-                let _ = writeln!(Console::writer(), "{:?}\n", e);
+                let _ = writeln!(Console::writer(), "{e:?}\n");
             }
         };
 
         // Draw a red square at (10, 20)
-        let _ = match Screen::set_write_frame(10, 20, 30, 30) {
+        match Screen::set_write_frame(10, 20, 30, 30) {
             Ok(()) => (),
             Err(e) => {
-                let _ = writeln!(Console::writer(), "{:?}\n", e);
+                let _ = writeln!(Console::writer(), "{e:?}\n");
             }
         };
-        let _ = match Screen::fill(&mut buffer, 0xF800) {
+        match Screen::fill(&mut buffer, 0xF800) {
             Ok(()) => (),
             Err(e) => {
-                let _ = writeln!(Console::writer(), "{:?}\n", e);
+                let _ = writeln!(Console::writer(), "{e:?}\n");
             }
         };
 
         // Draw a black square at (88, 20)
-        let _ = match Screen::set_write_frame(88, 20, 30, 30) {
+        match Screen::set_write_frame(88, 20, 30, 30) {
             Ok(()) => (),
             Err(e) => {
-                let _ = writeln!(Console::writer(), "{:?}\n", e);
+                let _ = writeln!(Console::writer(), "{e:?}\n");
             }
         };
-        let _ = match Screen::fill(&mut buffer, 0x0) {
+        match Screen::fill(&mut buffer, 0x0) {
             Ok(()) => (),
             Err(e) => {
-                let _ = writeln!(Console::writer(), "{:?}\n", e);
+                let _ = writeln!(Console::writer(), "{e:?}\n");
             }
         };
 
@@ -175,30 +175,30 @@ fn main() {
         Alarm::sleep_for(Milliseconds(1000)).unwrap();
 
         // Clear the red square
-        let _ = match Screen::set_write_frame(10, 20, 30, 30) {
+        match Screen::set_write_frame(10, 20, 30, 30) {
             Ok(()) => (),
             Err(e) => {
-                let _ = writeln!(Console::writer(), "{:?}\n", e);
+                let _ = writeln!(Console::writer(), "{e:?}\n");
             }
         };
-        let _ = match Screen::fill(&mut buffer, 0x0) {
+        match Screen::fill(&mut buffer, 0x0) {
             Ok(()) => (),
             Err(e) => {
-                let _ = writeln!(Console::writer(), "{:?}\n", e);
+                let _ = writeln!(Console::writer(), "{e:?}\n");
             }
         };
 
         // Draw a green square at (88, 20)
-        let _ = match Screen::set_write_frame(88, 20, 30, 30) {
+        match Screen::set_write_frame(88, 20, 30, 30) {
             Ok(()) => (),
             Err(e) => {
-                let _ = writeln!(Console::writer(), "{:?}\n", e);
+                let _ = writeln!(Console::writer(), "{e:?}\n");
             }
         };
-        let _ = match Screen::fill(&mut buffer, 0x07F0) {
+        match Screen::fill(&mut buffer, 0x07F0) {
             Ok(()) => (),
             Err(e) => {
-                let _ = writeln!(Console::writer(), "{:?}\n", e);
+                let _ = writeln!(Console::writer(), "{e:?}\n");
             }
         };
 
@@ -206,16 +206,16 @@ fn main() {
         Alarm::sleep_for(Milliseconds(1000)).unwrap();
 
         // Clear screen
-        let _ = match Screen::set_write_frame(0, 0, width, height) {
+        match Screen::set_write_frame(0, 0, width, height) {
             Ok(()) => (),
             Err(e) => {
-                let _ = writeln!(Console::writer(), "{:?}\n", e);
+                let _ = writeln!(Console::writer(), "{e:?}\n");
             }
         };
-        let _ = match Screen::fill(&mut buffer, 0x0) {
+        match Screen::fill(&mut buffer, 0x0) {
             Ok(()) => (),
             Err(e) => {
-                let _ = writeln!(Console::writer(), "{:?}\n", e);
+                let _ = writeln!(Console::writer(), "{e:?}\n");
             }
         };
     }

@@ -17,7 +17,7 @@ fn main() {
     // Configure the radio
     let pan: u16 = 0xcafe;
     let addr_short: u16 = 0xdead;
-    let addr_long: u64 = 0xdead_dad;
+    let addr_long: u64 = 0xdeaddad;
     let tx_power: i8 = 5;
     let channel: u8 = 11;
 
@@ -53,7 +53,7 @@ fn main() {
         // Transmit a frame
         Ieee802154::transmit_frame(&buf).unwrap();
 
-        writeln!(Console::writer(), "Transmitted frame {}!\n", counter).unwrap();
+        writeln!(Console::writer(), "Transmitted frame {counter}!\n").unwrap();
 
         counter += 1;
     }

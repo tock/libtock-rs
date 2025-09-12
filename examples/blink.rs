@@ -16,9 +16,9 @@ fn main() {
         loop {
             for led_index in 0..leds_count {
                 if count & (1 << led_index) > 0 {
-                    let _ = Leds::on(led_index as u32);
+                    let _ = Leds::on(led_index);
                 } else {
-                    let _ = Leds::off(led_index as u32);
+                    let _ = Leds::off(led_index);
                 }
             }
 

@@ -14,8 +14,8 @@ struct Randomness<'a, const N: usize>(&'a [u8; N]);
 
 impl<'a, const N: usize> core::fmt::Display for Randomness<'a, N> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        let mut bytes = self.0.iter();
-        while let Some(&byte) = bytes.next() {
+        let bytes = self.0.iter();
+        for &byte in bytes {
             write!(f, "{byte:02x}")?;
         }
         Ok(())

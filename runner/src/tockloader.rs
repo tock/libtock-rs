@@ -21,10 +21,10 @@ pub fn deploy(cli: &Cli, platform: String, tab_path: PathBuf) -> Child {
             "--jtag-device",
             "nrf52",
         ],
-        _ => panic!("Cannot deploy to platform {} via tockloader", platform),
+        _ => panic!("Cannot deploy to platform {platform} via tockloader"),
     };
     if cli.verbose {
-        println!("Tockloader flags: {:?}", flags);
+        println!("Tockloader flags: {flags:?}");
     }
 
     // Tockloader listen's ability to receive every message from the Tock system
@@ -48,13 +48,10 @@ pub fn deploy(cli: &Cli, platform: String, tab_path: PathBuf) -> Child {
 
         // We shouldn't hit this case, because the flag determination code above
         // should error out on unknown platforms.
-        _ => panic!("Unknown reliability for {}", platform),
+        _ => panic!("Unknown reliability for {platform}"),
     };
     if !reliable_listen {
-        println!(
-            "Warning: tockloader listen may miss early messages on platform {}",
-            platform
-        );
+        println!("Warning: tockloader listen may miss early messages on platform {platform}");
     }
 
     // Invoke tockloader uninstall to remove the process binary, if present.
@@ -62,7 +59,7 @@ pub fn deploy(cli: &Cli, platform: String, tab_path: PathBuf) -> Child {
     uninstall.arg("uninstall");
     uninstall.args(flags);
     if cli.verbose {
-        println!("tockloader uninstall command: {:?}", uninstall);
+        println!("tockloader uninstall command: {uninstall:?}");
     }
     let mut child = uninstall
         .spawn()
@@ -71,7 +68,7 @@ pub fn deploy(cli: &Cli, platform: String, tab_path: PathBuf) -> Child {
         .wait()
         .expect("failed to wait for tockloader uninstall");
     if cli.verbose {
-        println!("tockloader uninstall finished. {}", status);
+        println!("tockloader uninstall finished. {status}");
     }
 
     // Invoke tockloader install to deploy the new process binary.
@@ -80,17 +77,16 @@ pub fn deploy(cli: &Cli, platform: String, tab_path: PathBuf) -> Child {
     install.args(flags);
     install.arg(tab_path);
     if cli.verbose {
-        println!("tockloader install command: {:?}", install);
+        println!("tockloader install command: {install:?}");
     }
     let mut child = install.spawn().expect("failed to spawn tockloader install");
     let status = child.wait().expect("failed to wait for tockloader install");
     if cli.verbose {
-        println!("tockloader install finished. {}", status);
+        println!("tockloader install finished. {status}");
     }
     assert!(
         status.success(),
-        "tockloader install returned unsuccessful status {}",
-        status
+        "tockloader install returned unsuccessful status {status}"
     );
 
     // Invoke tockloader listen to receive messages from the Tock system.
@@ -99,7 +95,7 @@ pub fn deploy(cli: &Cli, platform: String, tab_path: PathBuf) -> Child {
     listen.args(flags);
     listen.stdout(Stdio::piped());
     if cli.verbose {
-        println!("tockloader listen command: {:?}", listen);
+        println!("tockloader listen command: {listen:?}");
     }
     listen.spawn().expect("failed to spawn tockloader listen")
 }

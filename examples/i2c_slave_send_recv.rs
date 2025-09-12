@@ -26,12 +26,12 @@ fn main() {
     assert!(addr <= 0x7f);
 
     writeln!(Console::writer(), "i2c-slave: setting up\r").unwrap();
-    writeln!(Console::writer(), "i2c-slave: address 0x{:x}!\r", addr).unwrap();
+    writeln!(Console::writer(), "i2c-slave: address 0x{addr:x}!\r").unwrap();
 
     I2CMasterSlave::i2c_master_slave_set_slave_address(addr).expect("i2c-target: Failed to listen");
     let mut i: u32 = 0;
     loop {
-        writeln!(Console::writer(), "i2c-slave: operation {:?}\r", i).unwrap();
+        writeln!(Console::writer(), "i2c-slave: operation {i:?}\r").unwrap();
 
         // Expect a write, if the master reads here, the IP may stretch clocks!
         let r = I2CMasterSlave::i2c_master_slave_write_recv_sync(&mut rx_buf);
@@ -39,8 +39,7 @@ fn main() {
         if let Err(why) = r.1 {
             writeln!(
                 Console::writer(),
-                "i2c-slave: error to receiving data {:?}\r",
-                why
+                "i2c-slave: error to receiving data {why:?}\r"
             )
             .unwrap();
         } else {
@@ -73,8 +72,7 @@ fn main() {
                 Err(why) => {
                     writeln!(
                         Console::writer(),
-                        "i2c-slave: error setting up read_send {:?}\r",
-                        why
+                        "i2c-slave: error setting up read_send {why:?}\r"
                     )
                     .unwrap();
                 }

@@ -14,7 +14,7 @@ fn main() {
     if let Ok(leds_count) = Leds::count() {
         loop {
             for led_index in 0..leds_count {
-                let _ = Leds::toggle(led_index as u32);
+                let _ = Leds::toggle(led_index);
             }
             Alarm::sleep_for(Milliseconds(250)).unwrap();
         }
