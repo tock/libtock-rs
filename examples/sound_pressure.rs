@@ -27,12 +27,10 @@ fn main() {
             writeln!(Console::writer(), "Sound pressure driver enabled").unwrap();
             loop {
                 match SoundPressure::read_sync() {
-                    Ok(sound_pressure_val) => writeln!(
-                        Console::writer(),
-                        "Sound Pressure: {}\n",
-                        sound_pressure_val
-                    )
-                    .unwrap(),
+                    Ok(sound_pressure_val) => {
+                        writeln!(Console::writer(), "Sound Pressure: {sound_pressure_val}\n")
+                            .unwrap()
+                    }
                     Err(_) => {
                         writeln!(Console::writer(), "error while reading sound pressure",).unwrap()
                     }

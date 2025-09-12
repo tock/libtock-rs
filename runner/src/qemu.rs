@@ -29,7 +29,7 @@ pub fn deploy(cli: &Cli, platform: String, tbf_path: PathBuf) -> Child {
     // QEMU's stderr through us and output_processor converts the line endings.
     qemu.stderr(Stdio::piped());
     if cli.verbose {
-        println!("QEMU command: {:?}", qemu);
+        println!("QEMU command: {qemu:?}");
         println!("Spawning QEMU")
     }
     qemu.spawn().expect("failed to spawn QEMU")
@@ -56,7 +56,7 @@ fn get_platform_args(platform: String) -> PlatformConfig {
             ],
             process_binary_load_address: "0x20030000",
         },
-        _ => panic!("Cannot deploy to platform {} via QEMU.", platform),
+        _ => panic!("Cannot deploy to platform {platform} via QEMU."),
     }
 }
 

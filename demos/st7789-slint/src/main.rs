@@ -105,7 +105,7 @@ impl slint::platform::Platform for SlintPlatform {
     }
 
     fn debug_log(&self, arguments: core::fmt::Arguments) {
-        writeln!(Console::writer(), "{}\r", arguments).unwrap();
+        writeln!(Console::writer(), "{arguments}\r").unwrap();
     }
 
     fn run_event_loop(&self) -> Result<(), slint::PlatformError> {
