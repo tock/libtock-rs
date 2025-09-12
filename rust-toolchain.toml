@@ -6,7 +6,7 @@
 # includes that feature. Whenever this value is updated, the rust-version field
 # in Cargo.toml must be updated as well.
 channel = "1.87"
-components = ["clippy", "rustfmt"]
+components = ["clippy", "rustfmt", "rust-analyzer"]
 targets = [
     "thumbv6m-none-eabi",
     "thumbv7em-none-eabi",
