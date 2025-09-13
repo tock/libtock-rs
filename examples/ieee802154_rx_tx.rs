@@ -56,7 +56,7 @@ fn main() {
         // Transmit a frame
         Ieee802154::transmit_frame(&buf).unwrap();
 
-        writeln!(Console::writer(), "Transmitted frame {}!\n", counter).unwrap();
+        writeln!(Console::writer(), "Transmitted frame {counter}!\n").unwrap();
 
         let frame = operator.receive_frame().unwrap();
 

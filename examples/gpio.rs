@@ -19,7 +19,7 @@ stack_size! {0x1000}
 
 fn main() {
     let listener = gpio::GpioInterruptListener(|gpio_index, state| {
-        writeln!(Console::writer(), "GPIO[{}]: {:?}", gpio_index, state).unwrap();
+        writeln!(Console::writer(), "GPIO[{gpio_index}]: {state:?}").unwrap();
     });
 
     if !Gpio::count().is_ok_and(|c| c > 0) {

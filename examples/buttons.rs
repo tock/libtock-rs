@@ -17,10 +17,10 @@ stack_size! {0x1000}
 fn main() {
     let listener = ButtonListener(|button, state| {
         let _ = Leds::toggle(button);
-        writeln!(Console::writer(), "button {:?}: {:?}", button, state).unwrap();
+        writeln!(Console::writer(), "button {button:?}: {state:?}").unwrap();
     });
     if let Ok(buttons_count) = Buttons::count() {
-        writeln!(Console::writer(), "button count: {}", buttons_count).unwrap();
+        writeln!(Console::writer(), "button count: {buttons_count}").unwrap();
 
         share::scope(|subscribe| {
             // Subscribe to the button callback.

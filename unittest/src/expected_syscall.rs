@@ -93,9 +93,6 @@ impl ExpectedSyscall {
     // incorrect system calls.
     pub(crate) fn panic_wrong_call(&self, called: &str) -> ! {
         // TODO: Implement Display for ExpectedSyscall and replace {:?} with {}
-        panic!(
-            "Expected system call {:?}, but {} was called instead.",
-            self, called
-        );
+        panic!("Expected system call {self:?}, but {called} was called instead.");
     }
 }

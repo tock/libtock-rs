@@ -180,9 +180,9 @@ fn main() {
         assert_ne!(msg_len, 0);
 
         if let Err(why) = I2CMasterSlave::i2c_master_slave_write_sync(
-            target_id as u16,
+            target_id,
             &mut rx_buf[HEADER_LEN..HEADER_LEN + msg_len as usize],
-            msg_len as u16,
+            msg_len,
         ) {
             led_on(PANIC_LED);
             panic!("i2c-master: write operation failed {:?}", why);

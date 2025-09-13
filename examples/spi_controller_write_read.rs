@@ -22,16 +22,13 @@ fn main() {
     {
         writeln!(
             Console::writer(),
-            "spi-controller: write-read operation failed {:?}\r",
-            why
+            "spi-controller: write-read operation failed {why:?}\r"
         )
         .unwrap();
     } else {
         writeln!(
             Console::writer(),
-            "spi-controller: write-read: wrote {:x?}: read {:x?}\r",
-            tx_buf,
-            rx_buf
+            "spi-controller: write-read: wrote {tx_buf:x?}: read {rx_buf:x?}\r"
         )
         .unwrap();
     }
@@ -40,24 +37,22 @@ fn main() {
     if let Err(why) = SpiController::spi_controller_write_sync(&tx_buf, OPERATION_LEN as u32) {
         writeln!(
             Console::writer(),
-            "spi-controller: write operation failed {:?}\r",
-            why
+            "spi-controller: write operation failed {why:?}\r"
         )
         .unwrap();
     } else {
-        writeln!(Console::writer(), "spi-controller: wrote {:x?}\r", tx_buf).unwrap();
+        writeln!(Console::writer(), "spi-controller: wrote {tx_buf:x?}\r").unwrap();
     }
 
     writeln!(Console::writer(), "spi-controller: read\r").unwrap();
     if let Err(why) = SpiController::spi_controller_read_sync(&mut rx_buf, OPERATION_LEN as u32) {
         writeln!(
             Console::writer(),
-            "spi-controller: read operation failed {:?}\r",
-            why
+            "spi-controller: read operation failed {why:?}\r"
         )
         .unwrap();
     } else {
-        writeln!(Console::writer(), "spi-controller: read {:x?}\r", rx_buf).unwrap();
+        writeln!(Console::writer(), "spi-controller: read {rx_buf:x?}\r").unwrap();
     }
 
     writeln!(Console::writer(), "spi-controller: inplace write-read\r").unwrap();
@@ -66,16 +61,13 @@ fn main() {
     {
         writeln!(
             Console::writer(),
-            "spi-controller: inplace write-read operation failed {:?}\r",
-            why
+            "spi-controller: inplace write-read operation failed {why:?}\r"
         )
         .unwrap();
     } else {
         writeln!(
             Console::writer(),
-            "spi-controller: inplace write-read: wrote {:x?}: read {:x?}\r",
-            tx_buf,
-            rx_buf
+            "spi-controller: inplace write-read: wrote {tx_buf:x?}: read {rx_buf:x?}\r"
         )
         .unwrap();
     }

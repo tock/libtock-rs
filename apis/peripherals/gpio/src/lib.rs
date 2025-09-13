@@ -126,12 +126,12 @@ pub struct Pin<S: Syscalls> {
 }
 
 impl<S: Syscalls> Pin<S> {
-    pub fn make_output(&mut self) -> Result<OutputPin<S>, ErrorCode> {
+    pub fn make_output(&mut self) -> Result<OutputPin<'_, S>, ErrorCode> {
         Gpio::<S>::enable_gpio_output(self.pin_number)?;
         Ok(OutputPin { pin: self })
     }
 
-    pub fn make_input<P: Pull>(&self) -> Result<InputPin<S, P>, ErrorCode> {
+    pub fn make_input<P: Pull>(&self) -> Result<InputPin<'_, S, P>, ErrorCode> {
         Gpio::<S>::enable_gpio_input(self.pin_number, P::MODE)?;
         Ok(InputPin {
             pin: self,

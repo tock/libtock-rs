@@ -13,7 +13,7 @@ fn panic_handler(info: &core::panic::PanicInfo) -> ! {
 
     let mut writer = Console::<TockSyscalls>::writer();
     // If this printing fails, we can't panic harder, and we can't print it either.
-    let _ = writeln!(writer, "{}", info);
+    let _ = writeln!(writer, "{info}");
     // Exit with a non-zero exit code to indicate failure.
     TockSyscalls::exit_terminate(ErrorCode::Fail as u32);
 }

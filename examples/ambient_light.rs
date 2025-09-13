@@ -22,12 +22,9 @@ fn main() {
 
     loop {
         match AmbientLight::read_intensity_sync() {
-            Ok(intensity_val) => writeln!(
-                Console::writer(),
-                "Light intensity: {} lux\n",
-                intensity_val
-            )
-            .unwrap(),
+            Ok(intensity_val) => {
+                writeln!(Console::writer(), "Light intensity: {intensity_val} lux\n").unwrap()
+            }
             Err(_) => writeln!(Console::writer(), "error while reading light intensity",).unwrap(),
         }
 

@@ -32,19 +32,13 @@ fn main() {
     let rx_len = 2;
 
     writeln!(Console::writer(), "i2c-master: write-read sample\r").unwrap();
-    writeln!(
-        Console::writer(),
-        "i2c-master: slave address 0x{:x}!\r",
-        addr
-    )
-    .unwrap();
+    writeln!(Console::writer(), "i2c-master: slave address 0x{addr:x}!\r").unwrap();
 
     let mut i: u32 = 0;
     loop {
         writeln!(
             Console::writer(),
-            "i2c-master: write-read operation {:?}\r",
-            i
+            "i2c-master: write-read operation {i:?}\r"
         )
         .unwrap();
 
@@ -57,8 +51,7 @@ fn main() {
         if let Err(why) = I2CMasterSlave::i2c_master_slave_write_sync(addr, &tx_buf, tx_len) {
             writeln!(
                 Console::writer(),
-                "i2c-master: write operation failed {:?}",
-                why
+                "i2c-master: write operation failed {why:?}"
             )
             .unwrap();
         } else {
@@ -80,8 +73,7 @@ fn main() {
                 Err(why) => {
                     writeln!(
                         Console::writer(),
-                        "i2c-master: read operation failed {:?}",
-                        why
+                        "i2c-master: read operation failed {why:?}"
                     )
                     .unwrap();
                 }

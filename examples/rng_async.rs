@@ -37,7 +37,7 @@ fn main() {
         buffer.iter().for_each(|&byte| {
             let _ = write!(console_writer, "{byte:02x}");
         });
-        let _ = writeln!(console_writer, "");
+        let _ = writeln!(console_writer);
 
         let _ = Alarm::sleep_for(Milliseconds(2000));
     }

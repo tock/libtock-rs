@@ -266,7 +266,7 @@ impl ErrorCode {
 impl fmt::Debug for ErrorCode {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self.as_str() {
-            Some(s) => write!(f, "{}", s),
+            Some(s) => write!(f, "{s}"),
             None => write!(f, "code {}", *self as u16),
         }
     }
