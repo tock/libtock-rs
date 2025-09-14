@@ -2,3 +2,4 @@
 /nightly/target
 /target
 /demos/*/target
+/demos/*/*/target
