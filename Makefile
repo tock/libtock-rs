@@ -113,7 +113,7 @@ examples: toolchain
 # Used when we need to build a crate for the host OS, as libtock_runtime only
 # supports running on Tock.
 EXCLUDE_RUNTIME := --exclude libtock --exclude libtock_runtime \
-	--exclude libtock_debug_panic --exclude libtock_small_panic
+	--exclude libtock_debug_panic --exclude libtock_small_panic --exclude embedded_graphics_libtock
 
 # Arguments to pass to cargo to exclude demo crates.
 EXCLUDE_RUNTIME := $(EXCLUDE_RUNTIME) --exclude st7789 --exclude st7789-slint
@@ -241,6 +241,11 @@ $(eval $(call platform_build,imxrt1050,thumbv7em-none-eabi))
 $(eval $(call platform_build,msp432,thumbv7em-none-eabi))
 $(eval $(call platform_build,clue_nrf52840,thumbv7em-none-eabi))
 $(eval $(call platform_flash,clue_nrf52840,thumbv7em-none-eabi))
+
+.PHONY: demos
+demos:
+	$(MAKE) -C demos/embedded_graphics/spin
+	$(MAKE) -C demos/embedded_graphics/buttons
 
 # clean cannot safely be invoked concurrently with other actions, so we don't
 # need to depend on toolchain. We also manually remove the nightly toolchain's

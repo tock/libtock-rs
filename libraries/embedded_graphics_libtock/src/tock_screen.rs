@@ -1,0 +1,97 @@
+//! Implementations of `DrawTarget` using the screen system call.
+
+use libtock::display::Screen;
+use libtock_platform::ErrorCode;
+
+/// An implementation of a `DrawTarget` for monochromatic, 128x64 pixel screens
+/// where the pixels in each byte are vertical on the screen.
+///
+/// This corresponds to the `Mono_8BitPage` pixel format documented
+/// [here](https://github.com/tock/tock/blob/master/doc/syscalls/90001_screen.md#command-number-25).
+pub struct TockMonochrome8BitPage128x64Screen {
+    /// The framebuffer for the max supported screen size (128x64). Each pixel
+    /// is a bit.
+    framebuffer: [u8; (128 * 64) / 8],
+    width: u32,
+    height: u32,
+}
+
+impl Default for TockMonochrome8BitPage128x64Screen {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl TockMonochrome8BitPage128x64Screen {
+    pub fn new() -> Self {
+        let (width, height) = Screen::get_resolution().unwrap_or((0, 0));
+
+        // Because this is a specific type of screen with a specific pixel
+        // format, we tell the kernel that is the pixel format we expect.
+        let mono_8_bit_page = 6;
+        let _ = Screen::set_pixel_format(mono_8_bit_page);
+
+        Self {
+            framebuffer: [0; 1024],
+            width,
+            height,
+        }
+    }
+
+    pub fn get_width(&self) -> u32 {
+        self.width
+    }
+
+    pub fn get_height(&self) -> u32 {
+        self.height
+    }
+
+    /// Updates the screen from the framebuffer.
+    pub fn flush(&self) -> Result<(), ErrorCode> {
+        Screen::set_write_frame(0, 0, self.width, self.height)?;
+        Screen::write(&self.framebuffer)?;
+        Ok(())
+    }
+}
+
+impl embedded_graphics::draw_target::DrawTarget for TockMonochrome8BitPage128x64Screen {
+    type Color = embedded_graphics::pixelcolor::BinaryColor;
+    type Error = core::convert::Infallible;
+
+    fn draw_iter<I>(&mut self, pixels: I) -> Result<(), Self::Error>
+    where
+        I: IntoIterator<Item = embedded_graphics::Pixel<Self::Color>>,
+    {
+        for embedded_graphics::Pixel(coord, color) in pixels.into_iter() {
+            if coord.x >= 0
+                && coord.x < self.width as i32
+                && coord.y >= 0
+                && coord.y < self.height as i32
+            {
+                const X_FACTOR: usize = 1;
+                const Y_FACTOR: usize = 8;
+                const X_COLS: usize = 128;
+
+                let x = coord.x as usize;
+                let y = coord.y as usize;
+
+                let byte_index = (x / X_FACTOR) + ((y / Y_FACTOR) * X_COLS);
+                let bit_index = y % Y_FACTOR;
+
+                if color.is_on() {
+                    self.framebuffer[byte_index] |= 1 << bit_index;
+                } else {
+                    self.framebuffer[byte_index] &= !(1 << bit_index);
+                }
+            }
+        }
+
+        Ok(())
+    }
+}
+
+impl embedded_graphics::geometry::OriginDimensions for TockMonochrome8BitPage128x64Screen {
+    fn size(&self) -> embedded_graphics::geometry::Size {
+        embedded_graphics::geometry::Size::new(128, 64)
+    }
+}
