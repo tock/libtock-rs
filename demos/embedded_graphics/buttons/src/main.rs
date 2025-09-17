@@ -9,7 +9,7 @@ use libtock_platform::share;
 use libtock_platform::ErrorCode;
 use libtock_platform::Syscalls;
 
-use embedded_graphics_libtock::tock_screen::TockMonochromeScreen;
+use embedded_graphics_libtock::tock_screen::TockMonochrome8BitPage128x64Screen;
 
 use embedded_graphics::pixelcolor::BinaryColor;
 use embedded_graphics::prelude::Point;
@@ -21,7 +21,7 @@ set_main! {main}
 stack_size! {4000}
 
 fn run() -> Result<(), ErrorCode> {
-    let mut screen = TockMonochromeScreen::new();
+    let mut screen = TockMonochrome8BitPage128x64Screen::new();
 
     let width = screen.get_width();
     let height = screen.get_height();
@@ -76,7 +76,7 @@ fn run() -> Result<(), ErrorCode> {
             if changed.get() {
                 changed.set(false);
 
-                let mut screen = TockMonochromeScreen::new();
+                let mut screen = TockMonochrome8BitPage128x64Screen::new();
 
                 // Draw Circles
                 for i in 0..button_count {

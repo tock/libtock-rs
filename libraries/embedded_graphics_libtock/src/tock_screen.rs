@@ -1,7 +1,14 @@
+//! Implementations of `DrawTarget` using the screen system call.
+
 use libtock::display::Screen;
 use libtock_platform::ErrorCode;
 
-pub struct TockMonochromeScreen {
+/// An implementation of a `DrawTarget` for monochromatic, 128x64 pixel screens
+/// where the pixels in each byte are vertical on the screen.
+///
+/// This corresponds to the `Mono_8BitPage` pixel format documented
+/// [here](https://github.com/tock/tock/blob/master/doc/syscalls/90001_screen.md#command-number-25).
+pub struct TockMonochrome8BitPage128x64Screen {
     /// The framebuffer for the max supported screen size (128x64). Each pixel
     /// is a bit.
     framebuffer: [u8; (128 * 64) / 8],
@@ -9,15 +16,20 @@ pub struct TockMonochromeScreen {
     height: u32,
 }
 
-impl Default for TockMonochromeScreen {
+impl Default for TockMonochrome8BitPage128x64Screen {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl TockMonochromeScreen {
+impl TockMonochrome8BitPage128x64Screen {
     pub fn new() -> Self {
         let (width, height) = Screen::get_resolution().unwrap_or((0, 0));
+
+        // Because this is a specific type of screen with a specific pixel
+        // format, we tell the kernel that is the pixel format we expect.
+        let mono_8_bit_page = 6;
+        let _ = Screen::set_pixel_format(mono_8_bit_page);
 
         Self {
             framebuffer: [0; 1024],
@@ -42,7 +54,7 @@ impl TockMonochromeScreen {
     }
 }
 
-impl embedded_graphics::draw_target::DrawTarget for TockMonochromeScreen {
+impl embedded_graphics::draw_target::DrawTarget for TockMonochrome8BitPage128x64Screen {
     type Color = embedded_graphics::pixelcolor::BinaryColor;
     type Error = core::convert::Infallible;
 
@@ -78,7 +90,7 @@ impl embedded_graphics::draw_target::DrawTarget for TockMonochromeScreen {
     }
 }
 
-impl embedded_graphics::geometry::OriginDimensions for TockMonochromeScreen {
+impl embedded_graphics::geometry::OriginDimensions for TockMonochrome8BitPage128x64Screen {
     fn size(&self) -> embedded_graphics::geometry::Size {
         embedded_graphics::geometry::Size::new(128, 64)
     }

@@ -4,7 +4,7 @@ use libtock::alarm::Alarm;
 use libtock::alarm::Milliseconds;
 use libtock::runtime::{set_main, stack_size};
 
-use embedded_graphics_libtock::tock_screen::TockMonochromeScreen;
+use embedded_graphics_libtock::tock_screen::TockMonochrome8BitPage128x64Screen;
 
 use embedded_graphics::draw_target::DrawTarget;
 use embedded_graphics::pixelcolor::BinaryColor;
@@ -17,7 +17,7 @@ set_main! {main}
 stack_size! {4000}
 
 fn main() {
-    let mut screen = TockMonochromeScreen::new();
+    let mut screen = TockMonochrome8BitPage128x64Screen::new();
 
     let width = screen.get_width() as i32;
     let height = screen.get_height() as i32;
