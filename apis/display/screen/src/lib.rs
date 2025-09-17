@@ -120,9 +120,7 @@ impl<S: Syscalls, C: Config> Screen<S, C> {
         share::scope(|subscribe| {
             S::subscribe::<_, _, C, DRIVER_NUM, { subscribe::WRITE }>(subscribe, &called)?;
             let val = S::command(DRIVER_NUM, command::GET_ROTATION, 0, 0).to_result();
-            if val.is_err() {
-                return val;
-            }
+            val?;
             loop {
                 S::yield_wait();
                 if let Some((_,)) = called.get() {
