@@ -69,6 +69,9 @@ fn command() {
     // Set and validate pixel format
     assert!(screen.command(SET_PIXEL_FORMAT, 1, 0).is_success());
 
+    // Ensure that an invalid pixel format returns an error.
+    assert!(screen.command(SET_PIXEL_FORMAT, 99999, 0).is_failure());
+
     // Kernel setup for screen and buffer simulation
     let kernel = fake::Kernel::new();
     kernel.add_driver(&screen);
