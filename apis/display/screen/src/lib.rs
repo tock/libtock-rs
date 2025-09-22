@@ -135,11 +135,12 @@ impl<S: Syscalls, C: Config> Screen<S, C> {
         let called: Cell<Option<(u32,)>> = Cell::new(None);
         share::scope(|subscribe| {
             S::subscribe::<_, _, C, DRIVER_NUM, { subscribe::WRITE }>(subscribe, &called)?;
-            let val = S::command(DRIVER_NUM, command::SET_ROTATION, rotation as u32, 0).to_result();
+            S::command(DRIVER_NUM, command::SET_ROTATION, rotation as u32, 0)
+                .to_result::<(), _>()?;
             loop {
                 S::yield_wait();
                 if let Some((_,)) = called.get() {
-                    return val;
+                    return Ok(());
                 }
             }
         })
