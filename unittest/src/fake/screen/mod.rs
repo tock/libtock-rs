@@ -163,11 +163,11 @@ impl crate::fake::SyscallDriver for Screen {
             }
 
             GET_RESOLUTION_WIDTH_HEIGHT => {
-                self.share_ref
-                    .schedule_upcall(0, (0, 0, 0))
-                    .expect("Unable to schedule upcall {}");
                 if argument0 < self.screen_resolution_width_height.len() as u32 {
                     if Option::is_some(&self.screen_setup) {
+                        self.share_ref
+                            .schedule_upcall(0, (0, 0, 0))
+                            .expect("Unable to schedule upcall {}");
                         crate::command_return::success_2_u32(
                             self.screen_resolution_width_height[argument0 as usize]
                                 .unwrap()
@@ -193,11 +193,11 @@ impl crate::fake::SyscallDriver for Screen {
             }
 
             PIXEL_FORMAT => {
-                self.share_ref
-                    .schedule_upcall(0, (0, 0, 0))
-                    .expect("Unable to schedule upcall {}");
                 if argument0 < self.screen_pixel_format.len() as u32 {
                     if Option::is_some(&self.screen_setup) {
+                        self.share_ref
+                            .schedule_upcall(0, (0, 0, 0))
+                            .expect("Unable to schedule upcall {}");
                         crate::command_return::success_u32(
                             self.screen_pixel_format[argument0 as usize] as u32,
                         )
@@ -217,13 +217,13 @@ impl crate::fake::SyscallDriver for Screen {
             }
 
             SET_ROTATION => {
-                self.share_ref
-                    .schedule_upcall(0, (0, 0, 0))
-                    .expect("Unable to schedule upcall {}");
                 if argument0 > 359 {
                     command_return::failure(ErrorCode::Invalid)
                 } else {
                     self.rotation.set(argument0 as u16);
+                    self.share_ref
+                        .schedule_upcall(0, (0, 0, 0))
+                        .expect("Unable to schedule upcall {}");
                     command_return::success()
                 }
             }
@@ -245,11 +245,11 @@ impl crate::fake::SyscallDriver for Screen {
             GET_PIXEL_FORMAT => command_return::success_u32(self.pixel_format.get()),
 
             SET_PIXEL_FORMAT => {
-                self.share_ref
-                    .schedule_upcall(0, (0, 0, 0))
-                    .expect("Unable to schedule upcall {}");
                 if argument0 < self.pixel_modes.unwrap() as u32 {
                     self.pixel_format.set(argument0);
+                    self.share_ref
+                        .schedule_upcall(0, (0, 0, 0))
+                        .expect("Unable to schedule upcall {}");
                     command_return::success()
                 } else {
                     command_return::failure(ErrorCode::Invalid)
