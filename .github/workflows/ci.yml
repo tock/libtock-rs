@@ -46,3 +46,4 @@ jobs:
           echo 'rustflags = ["-D", "warnings"]' >> .cargo/config.toml
           make -j2 setup
           make -j2 test
+          make demos

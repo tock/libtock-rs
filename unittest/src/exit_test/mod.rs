@@ -88,8 +88,8 @@ pub(crate) fn signal_exit(exit_call: ExitCall) {
 impl std::fmt::Display for ExitCall {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
         match self {
-            ExitCall::Terminate(code) => write!(f, "exit-terminate({})", code),
-            ExitCall::Restart(code) => write!(f, "exit-restart({})", code),
+            ExitCall::Terminate(code) => write!(f, "exit-terminate({code})"),
+            ExitCall::Restart(code) => write!(f, "exit-restart({code})"),
         }
     }
 }
@@ -136,7 +136,7 @@ enum ExitMessage {
 impl std::fmt::Display for ExitMessage {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
         match self {
-            ExitMessage::ExitCall(exit_call) => write!(f, "ExitCall({})", exit_call),
+            ExitMessage::ExitCall(exit_call) => write!(f, "ExitCall({exit_call})"),
             ExitMessage::WrongCase => write!(f, "WrongCase"),
             ExitMessage::DidNotExit => write!(f, "DidNotExit"),
         }
@@ -175,9 +175,9 @@ fn spawn_test(test_name: &str) -> ExitCall {
         .output()
         .expect("Subprocess exec failed");
     let stdout = String::from_utf8(output.stdout).expect("Subprocess produced invalid UTF-8");
-    println!("{} subprocess stdout:\n{}", test_name, stdout);
+    println!("{test_name} subprocess stdout:\n{stdout}");
     let stderr = String::from_utf8(output.stderr).expect("Subprocess produced invalid UTF-8");
-    println!("{} subprocess stderr:\n{}", test_name, stderr);
+    println!("{test_name} subprocess stderr:\n{stderr}");
 
     // Search for the exit message in stdout.
     for line in stdout.lines() {
@@ -199,7 +199,7 @@ fn spawn_test(test_name: &str) -> ExitCall {
 
 // Used by process B to send a message to process A.
 fn signal_message(message: ExitMessage) {
-    println!("{}{}", EXIT_STRING, message);
+    println!("{EXIT_STRING}{message}");
 }
 
 // Implements process B's behavior for exit_test. Verifies the test case was

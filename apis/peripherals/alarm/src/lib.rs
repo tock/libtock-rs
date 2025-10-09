@@ -14,7 +14,6 @@ use libtock_platform::{DefaultConfig, ErrorCode, Syscalls};
 /// // Wait for timeout
 /// Alarm::sleep(Alarm::Milliseconds(2500));
 /// ```
-
 pub struct Alarm<S: Syscalls, C: platform::subscribe::Config = DefaultConfig>(S, C);
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]

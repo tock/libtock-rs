@@ -39,7 +39,7 @@ jobs:
           make -j2 EXAMPLE=low_level_debug nrf52
 
       - name: Archive artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: libtock-rs examples
           path: target/tbf

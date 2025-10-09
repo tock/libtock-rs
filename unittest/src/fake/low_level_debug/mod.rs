@@ -56,8 +56,8 @@ impl core::fmt::Display for Message {
             Message::AlertCode(code) => {
                 write!(f, "alert code 0x{:x} ({})", code, alert_description(code))
             }
-            Message::Print1(arg0) => write!(f, "prints 0x{:x}", arg0),
-            Message::Print2(arg0, arg1) => write!(f, "prints 0x{:x} 0x{:x}", arg0, arg1),
+            Message::Print1(arg0) => write!(f, "prints 0x{arg0:x}"),
+            Message::Print2(arg0, arg1) => write!(f, "prints 0x{arg0:x} 0x{arg1:x}"),
         }
     }
 }
@@ -86,7 +86,7 @@ impl LowLevelDebug {
         // Format the message the same way as the real LowLevelDebug.
         // `libtock_unittest` doesn't support multiple processes, so we pretend
         // this is the first process (number 0).
-        println!("LowLevelDebug: App 0x0 {}", message);
+        println!("LowLevelDebug: App 0x0 {message}");
         let mut messages = self.messages.take();
         messages.push(message);
         self.messages.set(messages);

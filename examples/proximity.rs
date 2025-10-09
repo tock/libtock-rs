@@ -22,7 +22,7 @@ fn main() {
     writeln!(Console::writer(), "proximity driver available").unwrap();
     loop {
         match Proximity::read_sync() {
-            Ok(prox_val) => writeln!(Console::writer(), "Proximity: {}\n", prox_val).unwrap(),
+            Ok(prox_val) => writeln!(Console::writer(), "Proximity: {prox_val}\n").unwrap(),
             Err(_) => writeln!(Console::writer(), "error while reading proximity",).unwrap(),
         }
 

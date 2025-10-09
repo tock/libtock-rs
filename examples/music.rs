@@ -84,7 +84,7 @@ const TEMPO: u32 = 114;
 const WHOLE_NOTE: u32 = (60000 * 4) / TEMPO;
 
 fn main() {
-    if let Err(_) = Buzzer::exists() {
+    if Buzzer::exists().is_err() {
         writeln!(Console::writer(), "There is no available buzzer").unwrap();
         return;
     }

@@ -34,7 +34,7 @@ pub fn convert_elf(cli: &Cli, platform: &str) -> OutFiles {
     let mut tab_path = cli.elf.clone();
     tab_path.set_extension("tab");
     if cli.verbose {
-        println!("Package name: {:?}", package_name);
+        println!("Package name: {package_name:?}");
         println!("TAB path: {}", tab_path.display());
     }
     let stack_size = read_stack_size(cli);
@@ -44,7 +44,7 @@ pub fn convert_elf(cli: &Cli, platform: &str) -> OutFiles {
     let architecture =
         get_platform_architecture(platform).expect("Failed to determine ELF's architecture");
     if cli.verbose {
-        println!("ELF file: {:?}", elf);
+        println!("ELF file: {elf:?}");
         println!("TBF path: {}", tbf_path.display());
     }
 
@@ -55,7 +55,7 @@ pub fn convert_elf(cli: &Cli, platform: &str) -> OutFiles {
     if let Err(io_error) = remove_file(&tbf_path) {
         // Ignore file-no-found errors, panic on any other error.
         if io_error.kind() != ErrorKind::NotFound {
-            panic!("Unable to remove the TBF file. Error: {}", io_error);
+            panic!("Unable to remove the TBF file. Error: {io_error}");
         }
     }
 
@@ -74,15 +74,15 @@ pub fn convert_elf(cli: &Cli, platform: &str) -> OutFiles {
     ]);
     if cli.verbose {
         command.arg("-v");
-        println!("elf2tab command: {:?}", command);
+        println!("elf2tab command: {command:?}");
         println!("Spawning elf2tab");
     }
     let mut child = command.spawn().expect("failed to spawn elf2tab");
     let status = child.wait().expect("failed to wait for elf2tab");
     if cli.verbose {
-        println!("elf2tab finished. {}", status);
+        println!("elf2tab finished. {status}");
     }
-    assert!(status.success(), "elf2tab returned an error. {}", status);
+    assert!(status.success(), "elf2tab returned an error. {status}");
 
     // Verify that elf2tab created the TBF file, and that it is a file.
     match metadata(&tbf_path) {
@@ -120,7 +120,7 @@ fn read_stack_size(cli: &Cli) -> String {
         if section.shdr.name == ".stack" {
             let stack_size = section.shdr.size.to_string();
             if cli.verbose {
-                println!("Found .stack section, size: {}", stack_size);
+                println!("Found .stack section, size: {stack_size}");
             }
             return stack_size;
         }

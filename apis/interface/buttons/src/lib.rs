@@ -25,7 +25,6 @@ use libtock_platform::{
 ///     }
 /// });
 /// ```
-
 pub struct Buttons<S: Syscalls>(S);
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]

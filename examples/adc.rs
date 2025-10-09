@@ -22,7 +22,7 @@ fn main() {
 
     loop {
         match Adc::read_single_sample_sync() {
-            Ok(adc_val) => writeln!(Console::writer(), "Sample: {}\n", adc_val).unwrap(),
+            Ok(adc_val) => writeln!(Console::writer(), "Sample: {adc_val}\n").unwrap(),
             Err(_) => writeln!(Console::writer(), "error while reading sample",).unwrap(),
         }
 

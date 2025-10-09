@@ -72,6 +72,7 @@ unsafe impl RawSyscalls for crate::TockSyscalls {
         let r1;
         // Safety: This matches the invariants required by the documentation on
         // RawSyscalls::syscall1
+        #[allow(clippy::pointers_in_nomem_asm_block)]
         unsafe {
             asm!("ecall",
                  inlateout("a0") r0,
@@ -88,6 +89,7 @@ unsafe impl RawSyscalls for crate::TockSyscalls {
     ) -> [Register; 2] {
         // Safety: This matches the invariants required by the documentation on
         // RawSyscalls::syscall2
+        #[allow(clippy::pointers_in_nomem_asm_block)]
         unsafe {
             asm!("ecall",
                  inlateout("a0") r0,

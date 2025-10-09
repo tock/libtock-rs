@@ -113,7 +113,7 @@ examples: toolchain
 # Used when we need to build a crate for the host OS, as libtock_runtime only
 # supports running on Tock.
 EXCLUDE_RUNTIME := --exclude libtock --exclude libtock_runtime \
-	--exclude libtock_debug_panic --exclude libtock_small_panic
+	--exclude libtock_debug_panic --exclude libtock_small_panic --exclude embedded_graphics_libtock
 
 # Arguments to pass to cargo to exclude demo crates.
 EXCLUDE_RUNTIME := $(EXCLUDE_RUNTIME) --exclude st7789 --exclude st7789-slint
@@ -146,58 +146,7 @@ test: examples
 		--target-dir=target --workspace
 	echo '[ SUCCESS ] libtock-rs tests pass'
 
-# Helper functions to define make targets to build for specific (flash, ram,
-# target) compilation tuples.
-#
-# Inspiration from these answers:
-# - https://stackoverflow.com/a/50357925
-# - https://stackoverflow.com/a/9458230
-#
-# To create a compilation target for a specific architecture with specific flash
-# and RAM addresses, use `fixed-target`:
-#
-# ```
-# $(call fixed-target, F=0x00030000 R=0x20008000 T=thumbv7em-none-eabi A=cortex-m4)
-# ```
-#
-# The "arguments" if you will are:
-# - F = Flash Address: The address in flash the app is compiled for.
-# - R = RAM Address: The address in RAM the app is compiled for.
-# - T = Target: The cargo target to compile for.
-# - A = Architecture: The Tock architecture name the target corresponds to.
-#
-# This technique uses two make variables internally to keep track of state:
-# - `ELF_TARGETS`: This is the list of unique targets for each compilation
-#   tuple. Each target invokes `cargo build` with the specified settings.
-# - `ELF_LIST`: The is a list of .elf paths of the generated elfs (one per
-#   compilation tuple). This is passed to `elf2tab` to generate the output .tab
-#   file.
-#
-# Internally, what `fixed-target` does is define a new make target named the
-# join of all of the F/R/T/A variables (with the `=` characters removed) and
-# then assigns target variables to that new target to represent the compilation
-# tuple values.
-concat = $(subst =,,$(subst $(eval ) ,,$1))
-fixed-target = $(foreach A,$1,$(eval $(call concat,$1): $A)) $(eval ELF_TARGETS += $(call concat,$1))
-
-$(call fixed-target, F=0x00030000 R=0x20008000 T=thumbv7em-none-eabi A=cortex-m4)
-$(call fixed-target, F=0x00038000 R=0x20010000 T=thumbv7em-none-eabi A=cortex-m4)
-
-$(call fixed-target, F=0x00040000 R=0x10002000 T=thumbv7em-none-eabi A=cortex-m4)
-$(call fixed-target, F=0x00048000 R=0x1000a000 T=thumbv7em-none-eabi A=cortex-m4)
-
-$(call fixed-target, F=0x00040000 R=0x20008000 T=thumbv7em-none-eabi A=cortex-m4)
-$(call fixed-target, F=0x00042000 R=0x2000a000 T=thumbv7em-none-eabi A=cortex-m4)
-$(call fixed-target, F=0x00048000 R=0x20010000 T=thumbv7em-none-eabi A=cortex-m4)
-
-$(call fixed-target, F=0x00080000 R=0x20006000 T=thumbv7em-none-eabi A=cortex-m4)
-$(call fixed-target, F=0x00088000 R=0x2000e000 T=thumbv7em-none-eabi A=cortex-m4)
-
-$(call fixed-target, F=0x403b0000 R=0x3fca2000 T=riscv32imc-unknown-none-elf A=riscv32imc)
-$(call fixed-target, F=0x40440000 R=0x3fcaa000 T=riscv32imc-unknown-none-elf A=riscv32imc)
-
-$(call fixed-target, F=0x10020000 R=0x20004000 T=thumbv6m-none-eabi A=cortex-m0)
-$(call fixed-target, F=0x10028000 R=0x2000c000 T=thumbv6m-none-eabi A=cortex-m0)
+include Targets.mk
 
 $(ELF_TARGETS): toolchain
 	LIBTOCK_LINKER_FLASH=$(F) LIBTOCK_LINKER_RAM=$(R) cargo build --example $(EXAMPLE) $(features) --target=$(T) $(release)
@@ -292,6 +241,11 @@ $(eval $(call platform_build,imxrt1050,thumbv7em-none-eabi))
 $(eval $(call platform_build,msp432,thumbv7em-none-eabi))
 $(eval $(call platform_build,clue_nrf52840,thumbv7em-none-eabi))
 $(eval $(call platform_flash,clue_nrf52840,thumbv7em-none-eabi))
+
+.PHONY: demos
+demos:
+	$(MAKE) -C demos/embedded_graphics/spin
+	$(MAKE) -C demos/embedded_graphics/buttons
 
 # clean cannot safely be invoked concurrently with other actions, so we don't
 # need to depend on toolchain. We also manually remove the nightly toolchain's

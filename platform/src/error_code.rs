@@ -266,7 +266,7 @@ impl ErrorCode {
 impl fmt::Debug for ErrorCode {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self.as_str() {
-            Some(s) => write!(f, "{}", s),
+            Some(s) => write!(f, "{s}"),
             None => write!(f, "code {}", *self as u16),
         }
     }
@@ -277,7 +277,7 @@ impl TryFrom<u32> for ErrorCode {
 
     fn try_from(value: u32) -> Result<Self, Self::Error> {
         if (1..=1024).contains(&value) {
-            Ok(unsafe { transmute(value) })
+            Ok(unsafe { transmute::<u32, ErrorCode>(value) })
         } else {
             Err(NotAnErrorCode)
         }

@@ -38,12 +38,12 @@ fn main() {
             panic!("LIBTOCK_PLATFORM must be specified to deploy")
         }
         Err(VarError::NotUnicode(platform)) => {
-            panic!("Non-UTF-8 LIBTOCK_PLATFORM value: {:?}", platform)
+            panic!("Non-UTF-8 LIBTOCK_PLATFORM value: {platform:?}")
         }
         Ok(platform) => platform,
     };
     if cli.verbose {
-        println!("Detected platform {}", platform);
+        println!("Detected platform {platform}");
     }
     let paths = elf2tab::convert_elf(&cli, &platform);
     let deploy = match cli.deploy {

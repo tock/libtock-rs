@@ -46,8 +46,7 @@ pub fn process(cli: &Cli, mut child: Child) {
     drop(raw_mode);
     assert!(
         status.success(),
-        "Child process did not exit successfully. {}",
-        status
+        "Child process did not exit successfully. {status}"
     );
 }
 
@@ -80,7 +79,7 @@ fn forward_stdin_if_piped(child: &mut Child) -> Option<RawTerminal<Stdout>> {
                 // without sending SIGINT.
                 Err(error) if error.kind() == ErrorKind::BrokenPipe => return,
 
-                Err(error) => panic!("Failed to forward stdin: {}", error),
+                Err(error) => panic!("Failed to forward stdin: {error}"),
                 Ok(bytes) => our_stdin.consume(bytes),
             }
         }

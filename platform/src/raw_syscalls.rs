@@ -9,7 +9,6 @@ use crate::Register;
 /// # Safety
 /// `RawSyscalls` is unsafe because `unsafe` code depends on its methods to
 /// return the correct register values.
-
 // The RawSyscalls trait is designed to minimize the complexity and size of its
 // implementation, as its implementation is difficult to test (it cannot be used
 // in unit tests, with sanitizers, or in Miri). It is also designed to minimize

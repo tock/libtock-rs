@@ -139,7 +139,7 @@ impl CommandReturn {
         if !self.is_failure() {
             return None;
         }
-        Some(unsafe { transmute(self.r1) })
+        Some(unsafe { transmute::<u32, ErrorCode>(self.r1) })
     }
 
     /// Returns the error code and value if this CommandReturn is of type
@@ -148,7 +148,7 @@ impl CommandReturn {
         if !self.is_failure_u32() {
             return None;
         }
-        Some((unsafe { transmute(self.r1) }, self.r2))
+        Some((unsafe { transmute::<u32, ErrorCode>(self.r1) }, self.r2))
     }
 
     /// Returns the error code and return values if this CommandReturn is of
@@ -157,7 +157,11 @@ impl CommandReturn {
         if !self.is_failure_2_u32() {
             return None;
         }
-        Some((unsafe { transmute(self.r1) }, self.r2, self.r3))
+        Some((
+            unsafe { transmute::<u32, ErrorCode>(self.r1) },
+            self.r2,
+            self.r3,
+        ))
     }
 
     /// Returns the error code and return value if this CommandReturn is of type
@@ -167,7 +171,7 @@ impl CommandReturn {
             return None;
         }
         Some((
-            unsafe { transmute(self.r1) },
+            unsafe { transmute::<u32, ErrorCode>(self.r1) },
             self.r2 as u64 + ((self.r3 as u64) << 32),
         ))
     }
@@ -244,7 +248,7 @@ impl CommandReturn {
         let ec: ErrorCode = if return_variant == E::RETURN_VARIANT {
             // Safety: E::RETURN_VARIANT must be a failure variant, and
             // failure variants must contain a valid ErrorCode in r1.
-            unsafe { transmute(r1) }
+            unsafe { transmute::<u32, ErrorCode>(r1) }
         } else {
             r2 = 0;
             r3 = 0;

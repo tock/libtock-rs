@@ -13,7 +13,7 @@ version = "0.1.0"
 [workspace.package]
 # This must be kept in sync with rust-toolchain.toml; please see that file for
 # more information.
-rust-version = "1.77"
+rust-version = "1.87"
 
 [features]
 rust_embedded = [
@@ -41,6 +41,7 @@ libtock_low_level_debug = { path = "apis/kernel/low_level_debug" }
 libtock_ninedof = { path = "apis/sensors/ninedof" }
 libtock_platform = { path = "platform" }
 libtock_proximity = { path = "apis/sensors/proximity" }
+libtock_screen = { path = "apis/display/screen" }
 libtock_rng = { path = "apis/peripherals/rng" }
 libtock_runtime = { path = "runtime" }
 libtock_small_panic = { path = "panic_handlers/small_panic" }
@@ -82,11 +83,13 @@ members = [
     "apis/sensors/air_quality",
     "apis/sensors/ambient_light",
     "apis/sensors/ninedof",
+    "apis/display/screen",
     "apis/sensors/proximity",
     "apis/sensors/temperature",
     "apis/storage/key_value",
     "demos/st7789",
     "demos/st7789-slint",
+    "libraries/embedded_graphics_libtock",
     "panic_handlers/debug_panic",
     "panic_handlers/small_panic",
     "platform",

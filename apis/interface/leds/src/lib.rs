@@ -11,7 +11,6 @@ use libtock_platform::{ErrorCode, Syscalls};
 /// // Turn on led 0
 /// let _ = Leds::on(0);
 /// ```
-
 pub struct Leds<S: Syscalls>(S);
 
 impl<S: Syscalls> Leds<S> {

@@ -40,7 +40,7 @@ fn find_examples() -> Vec<Example> {
 
                 // Skip entries that are not files. If file_type() returns
                 // Err(_) we skip the entry as well.
-                if !file.file_type().map_or(false, |t| t.is_file()) {
+                if !file.file_type().is_ok_and(|t| t.is_file()) {
                     continue;
                 }
 
