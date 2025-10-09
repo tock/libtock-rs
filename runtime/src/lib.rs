@@ -30,3 +30,5 @@ pub struct TockSyscalls;
 mod syscalls_impl_arm;
 #[cfg(target_arch = "riscv32")]
 mod syscalls_impl_riscv;
+#[cfg(target_arch = "x86")]
+mod syscalls_impl_x86;
