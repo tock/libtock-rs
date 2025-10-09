@@ -131,7 +131,7 @@ unsafe impl RawSyscalls for crate::TockSyscalls {
                 "popl {1:e}", // r1
                 "popl {2:e}", // r2
                 "popl {3:e}", // r3
-                
+
                 inlateout(reg) r0,
                 inlateout(reg) r1,
                 inlateout(reg) r2,
