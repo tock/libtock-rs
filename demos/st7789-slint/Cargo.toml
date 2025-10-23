@@ -2,7 +2,7 @@
 name = "st7789-slint"
 version = "0.1.0"
 edition = "2021"
-rust-version.workspace = true
+rust-version = "1.87"
 authors = ["Alistair Francis <alistair.francis@wdc.com>"]
 description = """A demo to use the Slint GUI library with a ST7789 display via SPI using libtock-rs."""
 license = "Apache-2.0 OR MIT"
@@ -29,3 +29,5 @@ display-interface = "0.5"
 libtock_build_scripts = { path = "../../build_scripts" }
 
 slint-build = { git = "https://github.com/slint-ui/slint" }
+
+[workspace]
