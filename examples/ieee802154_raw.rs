@@ -11,6 +11,7 @@
 
 #![no_main]
 #![no_std]
+use core::fmt::Write;
 use libtock::console::Console;
 use libtock::ieee802154::{Ieee802154, RxOperator as _, RxRingBuffer, RxSingleBufferOperator};
 use libtock::runtime::{set_main, stack_size};
