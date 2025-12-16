@@ -1,6 +1,15 @@
 //! An example showing use of IEEE 802.15.4 networking.
 //! It infinitely sends a frame with a constantly incremented counter,
 //! and after each send receives a frame and prints it to Console.
+//!
+//! The kernel contains a standard and phy 15.4 driver. This example
+//! expects the kernel to be configured with the phy 15.4 driver to
+//! allow direct access to the radio and the ability to send "raw"
+//! frames. An example board file using this driver is provided at
+//!
+//! "No Support" Errors for setting the channel/tx power are a telltale
+//! sign that the kernel is not configured with the phy 15.4 driver.
+//! `boards/tutorials/nrf52840dk-thread-tutorial`.
 
 #![no_main]
 #![no_std]
@@ -18,7 +27,7 @@ fn main() {
     let pan: u16 = 0xcafe;
     let addr_short: u16 = 0xdead;
     let addr_long: u64 = 0xdead_dad;
-    let tx_power: i8 = 5;
+    let tx_power: i8 = 4;
     let channel: u8 = 11;
 
     Ieee802154::set_pan(pan);
@@ -54,7 +63,7 @@ fn main() {
         set_buf_cnt(&mut buf, &mut counter);
 
         // Transmit a frame
-        Ieee802154::transmit_frame(&buf).unwrap();
+        Ieee802154::transmit_frame_raw(&buf).unwrap();
 
         writeln!(Console::writer(), "Transmitted frame {counter}!\n").unwrap();
 
