@@ -70,12 +70,19 @@ fn main() {
         let frame = operator.receive_frame().unwrap();
 
         let body_len = frame.payload_len;
+
+        // Parse the counter.
+        let text = &frame.body[..body_len as usize - core::mem::size_of::<usize>()];
+        let counter_bytes =
+            &frame.body[body_len as usize - core::mem::size_of::<usize>()..body_len as usize];
+        let counter = usize::from_be_bytes(counter_bytes.try_into().unwrap());
+
         writeln!(
             Console::writer(),
-            "Received frame with body of len {}: {} {:?}!\n",
+            "Received frame with body of len {}: \"{} {}\"\n",
             body_len,
-            core::str::from_utf8(&frame.body).unwrap(),
-            &frame.body[..frame.body.len() - core::mem::size_of::<usize>()]
+            core::str::from_utf8(text).unwrap_or("-- error decoding utf8 string --"),
+            counter,
         )
         .unwrap();
     }
