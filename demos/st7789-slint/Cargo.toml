@@ -31,3 +31,4 @@ libtock_build_scripts = { path = "../../build_scripts" }
 slint-build = { git = "https://github.com/slint-ui/slint" }
 
 [workspace]
+resolver = "3"
