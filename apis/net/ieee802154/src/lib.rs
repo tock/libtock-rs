@@ -169,7 +169,8 @@ impl<S: Syscalls, C: Config> Ieee802154<S, C> {
 
 // Transmission
 impl<S: Syscalls, C: Config> Ieee802154<S, C> {
-    pub fn transmit_frame(frame: &[u8]) -> Result<(), ErrorCode> {
+    /// Transmit a frame using the IEEE 802.15.4 Phy Driver.
+    pub fn transmit_frame_raw(frame: &[u8]) -> Result<(), ErrorCode> {
         let called: Cell<Option<(u32,)>> = Cell::new(None);
         share::scope::<
             (
@@ -187,7 +188,7 @@ impl<S: Syscalls, C: Config> Ieee802154<S, C> {
                 subscribe, &called,
             )?;
 
-            S::command(DRIVER_NUM, command::TRANSMIT, 0, 0).to_result::<(), ErrorCode>()?;
+            S::command(DRIVER_NUM, command::TRANSMIT_RAW, 0, 0).to_result::<(), ErrorCode>()?;
 
             loop {
                 S::yield_wait();
@@ -253,7 +254,7 @@ mod command {
     pub const GET_PAN: u32 = 10;
     pub const GET_CHAN: u32 = 11;
     pub const GET_TX_PWR: u32 = 12;
-    pub const TRANSMIT: u32 = 27;
+    pub const TRANSMIT_RAW: u32 = 27;
     pub const SET_LONG_ADDR: u32 = 28;
     pub const GET_LONG_ADDR: u32 = 29;
     pub const TURN_ON: u32 = 30;

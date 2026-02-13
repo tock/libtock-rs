@@ -111,8 +111,8 @@ fn transmit_frame() {
     let driver = fake::Ieee802154Phy::new();
     kernel.add_driver(&driver);
 
-    Ieee802154::transmit_frame(b"foo").unwrap();
-    Ieee802154::transmit_frame(b"bar").unwrap();
+    Ieee802154::transmit_frame_raw(b"foo").unwrap();
+    Ieee802154::transmit_frame_raw(b"bar").unwrap();
     assert_eq!(
         driver.take_transmitted_frames(),
         &[&b"foo"[..], &b"bar"[..]],
