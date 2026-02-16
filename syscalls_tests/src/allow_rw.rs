@@ -1,3 +1,4 @@
+use libtock_platform::allow_rw::AllowRwBuffer;
 use libtock_platform::{allow_rw, share, CommandReturn, ErrorCode, Syscalls};
 use libtock_unittest::{command_return, fake, DriverInfo, RwAllowBuffer, SyscallLogEntry};
 use std::cell::Cell;
@@ -122,4 +123,69 @@ fn allow_rw() {
 
     // Verify the buffer write occurred.
     assert_eq!(buffer2, [5, 31]);
+}
+
+#[test]
+fn allow_rw_buffer() {
+    let kernel = fake::Kernel::new();
+    let driver = Rc::new(TestDriver::default());
+    kernel.add_driver(&driver);
+
+    // Tests a call that should fail because it has an incorrect buffer
+    // number.
+    let buffer = [1, 2, 3, 4];
+    let mut allow_buf = std::pin::pin!(AllowRwBuffer::from_array(buffer));
+    let result = fake::Syscalls::allow_rw_buffer::<TestConfig, 42, 1, 4>(allow_buf.as_mut());
+
+    assert!(!CALLED.with(|c| c.get()));
+    assert_eq!(result, Err(ErrorCode::NoSupport));
+    assert_eq!(
+        kernel.take_syscall_log(),
+        [SyscallLogEntry::AllowRw {
+            driver_num: 42,
+            buffer_num: 1,
+            len: 4,
+        }]
+    );
+
+    // Verify that no unallow occurred.
+    let _ = allow_buf.get_mut_buffer();
+    assert_eq!(kernel.take_syscall_log(), []);
+
+    // Tests a call that should succeed and return a nonzero buffer.
+    let buffer = [0, 0];
+    let mut allow_buf = std::pin::pin!(AllowRwBuffer::from_array(buffer));
+    let result = fake::Syscalls::allow_rw_buffer::<TestConfig, 42, 0, 2>(allow_buf.as_mut());
+
+    assert!(!CALLED.with(|c| c.get()));
+    assert_eq!(result, Ok(()));
+    assert_eq!(
+        kernel.take_syscall_log(),
+        [SyscallLogEntry::AllowRw {
+            driver_num: 42,
+            buffer_num: 0,
+            len: 2,
+        }]
+    );
+
+    // Mutate the buffer, which under Miri will verify the buffer has been
+    // shared with the kernel properly.
+    let mut buffer = driver.buffer_0.take();
+    buffer[0] = 32;
+    driver.buffer_0.set(buffer);
+
+    let buffer_ref = allow_buf.get_mut_buffer();
+
+    // Verify that the buffer take unallowed the buffer.
+    assert_eq!(
+        kernel.take_syscall_log(),
+        [SyscallLogEntry::AllowRw {
+            driver_num: 42,
+            buffer_num: 0,
+            len: 0,
+        }]
+    );
+
+    // Verify the buffer write occurred.
+    assert_eq!(*buffer_ref, [32, 0]);
 }
