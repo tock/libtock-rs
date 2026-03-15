@@ -40,6 +40,7 @@ impl Frame {
     }
 }
 
+/// Fake IEEE 802.15.4 PHY driver implementation.
 pub struct Ieee802154Phy {
     pan: Cell<u16>,
     addr_short: Cell<u16>,
