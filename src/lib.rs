@@ -115,3 +115,5 @@ pub mod key_value {
     use libtock_key_value as key_value;
     pub type KeyValue = key_value::KeyValue<super::runtime::TockSyscalls>;
 }
+
+pub mod signal_generator_cli_logic;
