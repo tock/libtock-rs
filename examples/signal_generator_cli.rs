@@ -12,6 +12,10 @@ use libtock::alarm::Alarm;
 use libtock::console::Console;
 use libtock::gpio::Gpio;
 use libtock::runtime::{set_main, stack_size};
+use libtock::signal_generator_cli_logic::{
+    i2s_capability_response, parse_hex_bytes, parse_hex_u64_ascii, parse_repeat_count,
+    parse_u32_ascii, tokenize_command, uart_capability_response, CapabilityResponse, RepeatCount,
+};
 use libtock::spi_controller::SpiController;
 
 set_main! {main}
@@ -505,74 +509,6 @@ fn emit_driver_err(command: &str, message: &str) {
 
 fn secondary_uart_available() -> bool {
     UART_SECONDARY_SUPPORTED
-}
-
-fn emit_uart_unsupported() {
-    emit_err("uart", "ERR_UNSUPPORTED", "secondary_uart_not_available");
-}
-
-fn parse_u32_ascii(token: &str) -> Result<u32, &'static str> {
-    if token.is_empty() {
-        return Err("empty_number");
-    }
-
-    if let Some(hex) = token.strip_prefix("0x") {
-        return u32::from_str_radix(hex, 16).map_err(|_| "invalid_hex");
-    }
-
-    if let Some(hex) = token.strip_prefix("0X") {
-        return u32::from_str_radix(hex, 16).map_err(|_| "invalid_hex");
-    }
-
-    token.parse::<u32>().map_err(|_| "invalid_decimal")
-}
-
-fn parse_hex_bytes(token: &str, out: &mut [u8]) -> Result<(usize, bool), &'static str> {
-    let raw = token
-        .strip_prefix("0x")
-        .or_else(|| token.strip_prefix("0X"))
-        .unwrap_or(token);
-    if raw.is_empty() {
-        return Err("empty_hex_payload");
-    }
-    if !raw.len().is_multiple_of(2) {
-        return Err("odd_hex_length");
-    }
-
-    let mut len = 0usize;
-    let mut truncated = false;
-    let bytes = raw.as_bytes();
-    let mut idx = 0usize;
-    while idx < bytes.len() {
-        if len >= out.len() {
-            truncated = true;
-            break;
-        }
-        let chunk = &raw[idx..idx + 2];
-        out[len] = u8::from_str_radix(chunk, 16).map_err(|_| "invalid_hex_payload")?;
-        len += 1;
-        idx += 2;
-    }
-    Ok((len, truncated))
-}
-
-fn parse_hex_u64_ascii(token: &str) -> Result<(u64, u8), &'static str> {
-    let raw = token
-        .strip_prefix("0x")
-        .or_else(|| token.strip_prefix("0X"))
-        .unwrap_or(token);
-    if raw.is_empty() {
-        return Err("empty_pattern");
-    }
-    let bits = u64::from_str_radix(raw, 16).map_err(|_| "invalid_hex")?;
-    let mut bit_len = (raw.len() * 4) as u8;
-    if bit_len == 0 {
-        bit_len = 1;
-    }
-    if bit_len > 64 {
-        bit_len = 64;
-    }
-    Ok((bits, bit_len))
 }
 
 fn parse_channel(token: &str) -> Result<usize, &'static str> {
@@ -1356,8 +1292,10 @@ fn execute_uart_command<'a, I>(parts: &mut I, state: &mut SignalState)
 where
     I: Iterator<Item = &'a str>,
 {
-    if !secondary_uart_available() {
-        emit_uart_unsupported();
+    if let CapabilityResponse::Unsupported(message) =
+        uart_capability_response(secondary_uart_available())
+    {
+        emit_err("uart", "ERR_UNSUPPORTED", message);
         return;
     }
 
@@ -1567,19 +1505,16 @@ where
                 emit_err("uart repeat", "ERR_RANGE", "payload_too_long");
                 return;
             }
-            let (repeat_infinite, repeat_count) = if count_token == "infinite" {
-                (true, 0)
-            } else {
-                match parse_u32_ascii(count_token) {
-                    Ok(v) if v > 0 => (false, v),
-                    Ok(_) => {
-                        emit_err("uart repeat", "ERR_RANGE", "count_must_be_nonzero");
-                        return;
-                    }
-                    Err(msg) => {
-                        emit_parse_err("uart repeat", msg);
-                        return;
-                    }
+            let (repeat_infinite, repeat_count) = match parse_repeat_count(count_token) {
+                Ok(RepeatCount::Infinite) => (true, 0),
+                Ok(RepeatCount::Finite(v)) => (false, v),
+                Err("count_must_be_nonzero") => {
+                    emit_err("uart repeat", "ERR_RANGE", "count_must_be_nonzero");
+                    return;
+                }
+                Err(msg) => {
+                    emit_parse_err("uart repeat", msg);
+                    return;
                 }
             };
             let interval_us = match parse_u32_ascii(interval_token) {
@@ -1686,7 +1621,7 @@ where
 }
 
 fn execute_command(line: &str, state: &mut SignalState) {
-    let mut parts = line.split_whitespace();
+    let mut parts = tokenize_command(line);
     let Some(command) = parts.next() else {
         emit_err("input", "ERR_PARSE", "empty_command");
         return;
@@ -1786,7 +1721,10 @@ fn execute_command(line: &str, state: &mut SignalState) {
         "gpio" => execute_gpio_command(&mut parts, state),
         "spi" => execute_spi_command(&mut parts, state),
         "uart" => execute_uart_command(&mut parts, state),
-        "i2s" => emit_err("i2s", "ERR_UNSUPPORTED", "i2s_not_available"),
+        "i2s" => match i2s_capability_response() {
+            CapabilityResponse::Supported => emit_ok("i2s", "supported=1"),
+            CapabilityResponse::Unsupported(message) => emit_err("i2s", "ERR_UNSUPPORTED", message),
+        },
         _ => emit_err(command, "ERR_UNKNOWN", "unknown_command"),
     }
 }
