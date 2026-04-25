@@ -22,6 +22,10 @@ const MAX_LINE_LEN: usize = 96;
 const GPIO_CHANNEL_COUNT: usize = 8;
 const SPI_BUF_MAX: usize = 64;
 const UART_BUF_MAX: usize = 64;
+const I2S_BUF_MAX: usize = 64;
+const MIN_INTERVAL_US: u32 = 100;
+const MAX_INTERVAL_US: u32 = 60_000_000;
+const MAX_ACTIVE_GENERATORS: usize = 4;
 const UART_SECONDARY_SUPPORTED: bool = cfg!(feature = "secondary_uart");
 
 struct SignalState {
@@ -44,11 +48,30 @@ impl SignalState {
     }
 
     fn reset(&mut self) {
-        self.running = false;
+        self.stop_all_outputs();
         self.frequency_hz = 1_000;
-        self.gpio.reset();
+        self.gpio = GpioEngine::new();
         self.spi = SpiState::new();
         self.uart = UartState::new();
+    }
+
+    fn stop_all_outputs(&mut self) {
+        self.running = false;
+        self.gpio.stop_all();
+        self.gpio.reset();
+        self.spi.repeat_active = false;
+        self.uart.repeat_active = false;
+        self.uart.repeat_count = 0;
+        self.uart.repeat_infinite = false;
+    }
+
+    fn active_generator_count(&self) -> usize {
+        let gpio_active = self.gpio.runtime.iter().filter(|rt| rt.active).count();
+        gpio_active + usize::from(self.spi.repeat_active) + usize::from(self.uart.repeat_active)
+    }
+
+    fn can_activate_generators(&self, additional: usize) -> bool {
+        self.active_generator_count().saturating_add(additional) <= MAX_ACTIVE_GENERATORS
     }
 }
 
@@ -455,7 +478,7 @@ impl GpioEngine {
 fn print_boot_banner() {
     writeln!(
         Console::writer(),
-        "signal-generator-cli v{VERSION} caps=help,caps,reset,start,stop,setfreq,status,gpio,spi,uart radix=dec,0x max_line={MAX_LINE_LEN}"
+        "signal-generator-cli v{VERSION} caps=help,caps,reset,start,stop,setfreq,status,gpio,spi,uart,i2s radix=dec,0x max_line={MAX_LINE_LEN}"
     )
     .unwrap();
 }
@@ -472,12 +495,20 @@ fn emit_err(command: &str, code: &str, message: &str) {
     writeln!(Console::writer(), "ERR {command} {code} {message}").unwrap();
 }
 
+fn emit_parse_err(command: &str, message: &str) {
+    emit_err(command, "ERR_PARSE", message);
+}
+
+fn emit_driver_err(command: &str, message: &str) {
+    emit_err(command, "ERR_DRIVER", message);
+}
+
 fn secondary_uart_available() -> bool {
     UART_SECONDARY_SUPPORTED
 }
 
 fn emit_uart_unsupported() {
-    emit_err("uart", "UNSUPPORTED", "secondary_uart_not_available");
+    emit_err("uart", "ERR_UNSUPPORTED", "secondary_uart_not_available");
 }
 
 fn parse_u32_ascii(token: &str) -> Result<u32, &'static str> {
@@ -594,6 +625,16 @@ fn parse_uart_port(token: &str) -> Result<u32, &'static str> {
     Ok(port)
 }
 
+fn validate_interval_us(interval_us: u32) -> Result<(), &'static str> {
+    if interval_us < MIN_INTERVAL_US {
+        return Err("interval_us_too_small");
+    }
+    if interval_us > MAX_INTERVAL_US {
+        return Err("interval_us_too_large");
+    }
+    Ok(())
+}
+
 fn parse_uart_payload_ascii<'a, I>(parts: I, out: &mut [u8]) -> (usize, bool)
 where
     I: Iterator<Item = &'a str>,
@@ -677,36 +718,36 @@ where
     I: Iterator<Item = &'a str>,
 {
     let Some(subcommand) = parts.next() else {
-        emit_err("gpio", "ARG", "missing_subcommand");
+        emit_parse_err("gpio", "missing_subcommand");
         return;
     };
 
     match subcommand {
         "map" => {
             let Some(ch_token) = parts.next() else {
-                emit_err("gpio map", "ARG", "missing_channel");
+                emit_parse_err("gpio map", "missing_channel");
                 return;
             };
             let Some(pin_token) = parts.next() else {
-                emit_err("gpio map", "ARG", "missing_pin");
+                emit_parse_err("gpio map", "missing_pin");
                 return;
             };
             if parts.next().is_some() {
-                emit_err("gpio map", "ARG", "too_many_arguments");
+                emit_parse_err("gpio map", "too_many_arguments");
                 return;
             }
 
             let ch = match parse_channel(ch_token) {
                 Ok(v) => v,
                 Err(msg) => {
-                    emit_err("gpio map", "ARG", msg);
+                    emit_parse_err("gpio map", msg);
                     return;
                 }
             };
             let pin = match parse_u32_ascii(pin_token) {
                 Ok(v) => v,
                 Err(msg) => {
-                    emit_err("gpio map", "ARG", msg);
+                    emit_parse_err("gpio map", msg);
                     return;
                 }
             };
@@ -717,27 +758,27 @@ where
         }
         "mode" => {
             let Some(ch_token) = parts.next() else {
-                emit_err("gpio mode", "ARG", "missing_channel");
+                emit_parse_err("gpio mode", "missing_channel");
                 return;
             };
             let Some(mode_token) = parts.next() else {
-                emit_err("gpio mode", "ARG", "missing_mode");
+                emit_parse_err("gpio mode", "missing_mode");
                 return;
             };
             if parts.next().is_some() {
-                emit_err("gpio mode", "ARG", "too_many_arguments");
+                emit_parse_err("gpio mode", "too_many_arguments");
                 return;
             }
 
             let ch = match parse_channel(ch_token) {
                 Ok(v) => v,
                 Err(msg) => {
-                    emit_err("gpio mode", "ARG", msg);
+                    emit_parse_err("gpio mode", msg);
                     return;
                 }
             };
             let Some(mode) = ChannelMode::parse(mode_token) else {
-                emit_err("gpio mode", "ARG", "invalid_mode");
+                emit_parse_err("gpio mode", "invalid_mode");
                 return;
             };
 
@@ -752,31 +793,31 @@ where
         }
         "timing" => {
             let Some(ch_token) = parts.next() else {
-                emit_err("gpio timing", "ARG", "missing_channel");
+                emit_parse_err("gpio timing", "missing_channel");
                 return;
             };
             let Some(period_token) = parts.next() else {
-                emit_err("gpio timing", "ARG", "missing_period_us");
+                emit_parse_err("gpio timing", "missing_period_us");
                 return;
             };
 
             let high_token = parts.next();
             if parts.next().is_some() {
-                emit_err("gpio timing", "ARG", "too_many_arguments");
+                emit_parse_err("gpio timing", "too_many_arguments");
                 return;
             }
 
             let ch = match parse_channel(ch_token) {
                 Ok(v) => v,
                 Err(msg) => {
-                    emit_err("gpio timing", "ARG", msg);
+                    emit_parse_err("gpio timing", msg);
                     return;
                 }
             };
             let period_us = match parse_u32_ascii(period_token) {
                 Ok(v) => v,
                 Err(msg) => {
-                    emit_err("gpio timing", "ARG", msg);
+                    emit_parse_err("gpio timing", msg);
                     return;
                 }
             };
@@ -784,12 +825,20 @@ where
                 Some(token) => match parse_u32_ascii(token) {
                     Ok(v) => v,
                     Err(msg) => {
-                        emit_err("gpio timing", "ARG", msg);
+                        emit_parse_err("gpio timing", msg);
                         return;
                     }
                 },
                 None => period_us / 2,
             };
+            if let Err(msg) = validate_interval_us(period_us) {
+                emit_err("gpio timing", "ERR_RANGE", msg);
+                return;
+            }
+            if high_us > period_us {
+                emit_err("gpio timing", "ERR_RANGE", "high_us_exceeds_period_us");
+                return;
+            }
 
             state.gpio.set_timing(ch, period_us, high_us);
             state.gpio.service(now_us());
@@ -801,43 +850,47 @@ where
         }
         "pattern" => {
             let Some(ch_token) = parts.next() else {
-                emit_err("gpio pattern", "ARG", "missing_channel");
+                emit_parse_err("gpio pattern", "missing_channel");
                 return;
             };
             let Some(pattern_token) = parts.next() else {
-                emit_err("gpio pattern", "ARG", "missing_hex_bits");
+                emit_parse_err("gpio pattern", "missing_hex_bits");
                 return;
             };
             let Some(step_token) = parts.next() else {
-                emit_err("gpio pattern", "ARG", "missing_step_us");
+                emit_parse_err("gpio pattern", "missing_step_us");
                 return;
             };
             if parts.next().is_some() {
-                emit_err("gpio pattern", "ARG", "too_many_arguments");
+                emit_parse_err("gpio pattern", "too_many_arguments");
                 return;
             }
 
             let ch = match parse_channel(ch_token) {
                 Ok(v) => v,
                 Err(msg) => {
-                    emit_err("gpio pattern", "ARG", msg);
+                    emit_parse_err("gpio pattern", msg);
                     return;
                 }
             };
             let (bits, bit_len) = match parse_hex_u64_ascii(pattern_token) {
                 Ok(v) => v,
                 Err(msg) => {
-                    emit_err("gpio pattern", "ARG", msg);
+                    emit_parse_err("gpio pattern", msg);
                     return;
                 }
             };
             let step_us = match parse_u32_ascii(step_token) {
                 Ok(v) => v,
                 Err(msg) => {
-                    emit_err("gpio pattern", "ARG", msg);
+                    emit_parse_err("gpio pattern", msg);
                     return;
                 }
             };
+            if let Err(msg) = validate_interval_us(step_us) {
+                emit_err("gpio pattern", "ERR_RANGE", msg);
+                return;
+            }
 
             state.gpio.set_pattern(ch, bits, bit_len, step_us);
             state.gpio.service(now_us());
@@ -849,16 +902,22 @@ where
         }
         "start" => {
             let Some(target) = parts.next() else {
-                emit_err("gpio start", "ARG", "missing_channel_or_all");
+                emit_parse_err("gpio start", "missing_channel_or_all");
                 return;
             };
             if parts.next().is_some() {
-                emit_err("gpio start", "ARG", "too_many_arguments");
+                emit_parse_err("gpio start", "too_many_arguments");
                 return;
             }
 
             let now = now_us();
             if target == "all" {
+                let active = state.gpio.runtime.iter().filter(|rt| rt.active).count();
+                let inactive = GPIO_CHANNEL_COUNT.saturating_sub(active);
+                if !state.can_activate_generators(inactive) {
+                    emit_err("gpio start", "ERR_RANGE", "max_active_generators_exceeded");
+                    return;
+                }
                 let changed = state.gpio.start_all(now);
                 writeln!(
                     Console::writer(),
@@ -869,10 +928,14 @@ where
                 let ch = match parse_channel(target) {
                     Ok(v) => v,
                     Err(msg) => {
-                        emit_err("gpio start", "ARG", msg);
+                        emit_parse_err("gpio start", msg);
                         return;
                     }
                 };
+                if !state.gpio.runtime[ch].active && !state.can_activate_generators(1) {
+                    emit_err("gpio start", "ERR_RANGE", "max_active_generators_exceeded");
+                    return;
+                }
                 let changed = if state.gpio.start_channel(ch, now) {
                     1
                 } else {
@@ -887,11 +950,11 @@ where
         }
         "stop" => {
             let Some(target) = parts.next() else {
-                emit_err("gpio stop", "ARG", "missing_channel_or_all");
+                emit_parse_err("gpio stop", "missing_channel_or_all");
                 return;
             };
             if parts.next().is_some() {
-                emit_err("gpio stop", "ARG", "too_many_arguments");
+                emit_parse_err("gpio stop", "too_many_arguments");
                 return;
             }
 
@@ -906,7 +969,7 @@ where
                 let ch = match parse_channel(target) {
                     Ok(v) => v,
                     Err(msg) => {
-                        emit_err("gpio stop", "ARG", msg);
+                        emit_parse_err("gpio stop", msg);
                         return;
                     }
                 };
@@ -921,7 +984,7 @@ where
         "status" => {
             let target = parts.next();
             if parts.next().is_some() {
-                emit_err("gpio status", "ARG", "too_many_arguments");
+                emit_parse_err("gpio status", "too_many_arguments");
                 return;
             }
 
@@ -931,7 +994,7 @@ where
                     let ch = match parse_channel(ch_token) {
                         Ok(v) => v,
                         Err(msg) => {
-                            emit_err("gpio status", "ARG", msg);
+                            emit_parse_err("gpio status", msg);
                             return;
                         }
                     };
@@ -944,7 +1007,7 @@ where
                 }
             }
         }
-        _ => emit_err("gpio", "UNKNOWN", "unknown_subcommand"),
+        _ => emit_err("gpio", "ERR_UNKNOWN", "unknown_subcommand"),
     }
 }
 
@@ -953,66 +1016,62 @@ where
     I: Iterator<Item = &'a str>,
 {
     let Some(subcommand) = parts.next() else {
-        emit_err("spi", "ARG", "missing_subcommand");
+        emit_parse_err("spi", "missing_subcommand");
         return;
     };
 
     match subcommand {
         "cfg" => {
             let Some(hz_token) = parts.next() else {
-                emit_err("spi cfg", "ARG", "missing_hz");
+                emit_parse_err("spi cfg", "missing_hz");
                 return;
             };
             let Some(mode_token) = parts.next() else {
-                emit_err("spi cfg", "ARG", "missing_mode");
+                emit_parse_err("spi cfg", "missing_mode");
                 return;
             };
             let Some(cs_token) = parts.next() else {
-                emit_err("spi cfg", "ARG", "missing_cs");
+                emit_parse_err("spi cfg", "missing_cs");
                 return;
             };
             if parts.next().is_some() {
-                emit_err("spi cfg", "ARG", "too_many_arguments");
+                emit_parse_err("spi cfg", "too_many_arguments");
                 return;
             }
 
             let hz = match parse_u32_ascii(hz_token) {
                 Ok(v) if v > 0 => v,
                 Ok(_) => {
-                    emit_err("spi cfg", "RANGE", "hz_must_be_nonzero");
+                    emit_err("spi cfg", "ERR_RANGE", "hz_must_be_nonzero");
                     return;
                 }
                 Err(msg) => {
-                    emit_err("spi cfg", "ARG", msg);
+                    emit_parse_err("spi cfg", msg);
                     return;
                 }
             };
             let Some(mode) = SpiMode::parse(mode_token) else {
-                emit_err("spi cfg", "ARG", "invalid_mode");
+                emit_parse_err("spi cfg", "invalid_mode");
                 return;
             };
             let cs = match parse_u32_ascii(cs_token) {
                 Ok(v) => v,
                 Err(msg) => {
-                    emit_err("spi cfg", "ARG", msg);
+                    emit_parse_err("spi cfg", msg);
                     return;
                 }
             };
 
-            if let Err(why) = SpiController::set_baud_rate(hz) {
-                writeln!(Console::writer(), "ERR spi cfg IO set_baud_failed_{why:?}").unwrap();
+            if let Err(_why) = SpiController::set_baud_rate(hz) {
+                emit_driver_err("spi cfg", "set_baud_failed");
                 return;
             }
-            if let Err(why) = SpiController::set_polarity(mode.polarity()) {
-                writeln!(
-                    Console::writer(),
-                    "ERR spi cfg IO set_polarity_failed_{why:?}"
-                )
-                .unwrap();
+            if let Err(_why) = SpiController::set_polarity(mode.polarity()) {
+                emit_driver_err("spi cfg", "set_polarity_failed");
                 return;
             }
-            if let Err(why) = SpiController::set_phase(mode.phase()) {
-                writeln!(Console::writer(), "ERR spi cfg IO set_phase_failed_{why:?}").unwrap();
+            if let Err(_why) = SpiController::set_phase(mode.phase()) {
+                emit_driver_err("spi cfg", "set_phase_failed");
                 return;
             }
 
@@ -1030,32 +1089,36 @@ where
         }
         "tx" => {
             let Some(payload_token) = parts.next() else {
-                emit_err("spi tx", "ARG", "missing_hex_bytes");
+                emit_parse_err("spi tx", "missing_hex_bytes");
                 return;
             };
             if parts.next().is_some() {
-                emit_err("spi tx", "ARG", "too_many_arguments");
+                emit_parse_err("spi tx", "too_many_arguments");
                 return;
             }
 
             let (tx_len, truncated) = match parse_hex_bytes(payload_token, &mut state.spi.last_tx) {
                 Ok(v) => v,
                 Err(msg) => {
-                    emit_err("spi tx", "ARG", msg);
+                    emit_parse_err("spi tx", msg);
                     return;
                 }
             };
             if tx_len == 0 {
-                emit_err("spi tx", "RANGE", "empty_tx_payload");
+                emit_err("spi tx", "ERR_RANGE", "empty_tx_payload");
+                return;
+            }
+            if truncated {
+                emit_err("spi tx", "ERR_RANGE", "payload_too_long");
                 return;
             }
 
-            if let Err(why) = SpiController::spi_controller_write_sync_with_chip_select(
+            if let Err(_why) = SpiController::spi_controller_write_sync_with_chip_select(
                 &state.spi.last_tx[..tx_len],
                 tx_len as u32,
                 state.spi.cs,
             ) {
-                writeln!(Console::writer(), "ERR spi tx IO write_failed_{why:?}").unwrap();
+                emit_driver_err("spi tx", "write_failed");
                 return;
             }
 
@@ -1073,53 +1136,61 @@ where
         }
         "txrx" => {
             let Some(payload_token) = parts.next() else {
-                emit_err("spi txrx", "ARG", "missing_hex_bytes");
+                emit_parse_err("spi txrx", "missing_hex_bytes");
                 return;
             };
             let Some(rx_len_token) = parts.next() else {
-                emit_err("spi txrx", "ARG", "missing_rx_len");
+                emit_parse_err("spi txrx", "missing_rx_len");
                 return;
             };
             if parts.next().is_some() {
-                emit_err("spi txrx", "ARG", "too_many_arguments");
+                emit_parse_err("spi txrx", "too_many_arguments");
                 return;
             }
 
             let (tx_len, truncated) = match parse_hex_bytes(payload_token, &mut state.spi.last_tx) {
                 Ok(v) => v,
                 Err(msg) => {
-                    emit_err("spi txrx", "ARG", msg);
+                    emit_parse_err("spi txrx", msg);
                     return;
                 }
             };
             let rx_requested = match parse_u32_ascii(rx_len_token) {
                 Ok(v) => v as usize,
                 Err(msg) => {
-                    emit_err("spi txrx", "ARG", msg);
+                    emit_parse_err("spi txrx", msg);
                     return;
                 }
             };
             let rx_len = rx_requested.min(SPI_BUF_MAX);
 
             if tx_len == 0 {
-                emit_err("spi txrx", "RANGE", "empty_tx_payload");
+                emit_err("spi txrx", "ERR_RANGE", "empty_tx_payload");
+                return;
+            }
+            if truncated {
+                emit_err("spi txrx", "ERR_RANGE", "tx_payload_too_long");
+                return;
+            }
+            if rx_requested > SPI_BUF_MAX {
+                emit_err("spi txrx", "ERR_RANGE", "rx_payload_too_long");
                 return;
             }
 
-            if let Err(why) = SpiController::spi_controller_write_sync_with_chip_select(
+            if let Err(_why) = SpiController::spi_controller_write_sync_with_chip_select(
                 &state.spi.last_tx[..tx_len],
                 tx_len as u32,
                 state.spi.cs,
             ) {
-                writeln!(Console::writer(), "ERR spi txrx IO write_failed_{why:?}").unwrap();
+                emit_driver_err("spi txrx", "write_failed");
                 return;
             }
-            if let Err(why) = SpiController::spi_controller_read_sync_with_chip_select(
+            if let Err(_why) = SpiController::spi_controller_read_sync_with_chip_select(
                 &mut state.spi.last_rx[..rx_len],
                 rx_len as u32,
                 state.spi.cs,
             ) {
-                writeln!(Console::writer(), "ERR spi txrx IO read_failed_{why:?}").unwrap();
+                emit_driver_err("spi txrx", "read_failed");
                 return;
             }
 
@@ -1145,63 +1216,75 @@ where
         }
         "repeat" => {
             let Some(payload_token) = parts.next() else {
-                emit_err("spi repeat", "ARG", "missing_hex_bytes");
+                emit_parse_err("spi repeat", "missing_hex_bytes");
                 return;
             };
             let Some(count_token) = parts.next() else {
-                emit_err("spi repeat", "ARG", "missing_count");
+                emit_parse_err("spi repeat", "missing_count");
                 return;
             };
             let Some(interval_token) = parts.next() else {
-                emit_err("spi repeat", "ARG", "missing_interval_us");
+                emit_parse_err("spi repeat", "missing_interval_us");
                 return;
             };
             if parts.next().is_some() {
-                emit_err("spi repeat", "ARG", "too_many_arguments");
+                emit_parse_err("spi repeat", "too_many_arguments");
                 return;
             }
 
             let (tx_len, truncated) = match parse_hex_bytes(payload_token, &mut state.spi.last_tx) {
                 Ok(v) => v,
                 Err(msg) => {
-                    emit_err("spi repeat", "ARG", msg);
+                    emit_parse_err("spi repeat", msg);
                     return;
                 }
             };
             let count = match parse_u32_ascii(count_token) {
                 Ok(v) => v,
                 Err(msg) => {
-                    emit_err("spi repeat", "ARG", msg);
+                    emit_parse_err("spi repeat", msg);
                     return;
                 }
             };
             let interval_us = match parse_u32_ascii(interval_token) {
                 Ok(v) => v,
                 Err(msg) => {
-                    emit_err("spi repeat", "ARG", msg);
+                    emit_parse_err("spi repeat", msg);
                     return;
                 }
             };
 
             if tx_len == 0 {
-                emit_err("spi repeat", "RANGE", "empty_tx_payload");
+                emit_err("spi repeat", "ERR_RANGE", "empty_tx_payload");
+                return;
+            }
+            if truncated {
+                emit_err("spi repeat", "ERR_RANGE", "payload_too_long");
                 return;
             }
             if count == 0 {
-                emit_err("spi repeat", "RANGE", "count_must_be_nonzero");
+                emit_err("spi repeat", "ERR_RANGE", "count_must_be_nonzero");
+                return;
+            }
+            if let Err(msg) = validate_interval_us(interval_us) {
+                emit_err("spi repeat", "ERR_RANGE", msg);
+                return;
+            }
+            if !state.spi.repeat_active && !state.can_activate_generators(1) {
+                emit_err("spi repeat", "ERR_RANGE", "max_active_generators_exceeded");
                 return;
             }
 
             let mut sent = 0u32;
             state.spi.repeat_active = true;
             while sent < count && state.spi.repeat_active {
-                if let Err(why) = SpiController::spi_controller_write_sync_with_chip_select(
+                if let Err(_why) = SpiController::spi_controller_write_sync_with_chip_select(
                     &state.spi.last_tx[..tx_len],
                     tx_len as u32,
                     state.spi.cs,
                 ) {
                     state.spi.repeat_active = false;
-                    writeln!(Console::writer(), "ERR spi repeat IO write_failed_{why:?}").unwrap();
+                    emit_driver_err("spi repeat", "write_failed");
                     return;
                 }
                 sent = sent.saturating_add(1);
@@ -1226,7 +1309,7 @@ where
         }
         "stop" => {
             if parts.next().is_some() {
-                emit_err("spi stop", "ARG", "unexpected_arguments");
+                emit_parse_err("spi stop", "unexpected_arguments");
                 return;
             }
             state.spi.repeat_active = false;
@@ -1234,7 +1317,7 @@ where
         }
         "status" => {
             if parts.next().is_some() {
-                emit_err("spi status", "ARG", "unexpected_arguments");
+                emit_parse_err("spi status", "unexpected_arguments");
                 return;
             }
             let baud = SpiController::get_baud_rate().unwrap_or(state.spi.baud_hz);
@@ -1265,7 +1348,7 @@ where
             emit_hex_bytes(&state.spi.last_rx[..state.spi.last_rx_len]);
             writeln!(Console::writer()).unwrap();
         }
-        _ => emit_err("spi", "UNKNOWN", "unknown_subcommand"),
+        _ => emit_err("spi", "ERR_UNKNOWN", "unknown_subcommand"),
     }
 }
 
@@ -1279,78 +1362,78 @@ where
     }
 
     let Some(subcommand) = parts.next() else {
-        emit_err("uart", "ARG", "missing_subcommand");
+        emit_parse_err("uart", "missing_subcommand");
         return;
     };
 
     match subcommand {
         "cfg" => {
             let Some(port_token) = parts.next() else {
-                emit_err("uart cfg", "ARG", "missing_port");
+                emit_parse_err("uart cfg", "missing_port");
                 return;
             };
             let Some(baud_token) = parts.next() else {
-                emit_err("uart cfg", "ARG", "missing_baud");
+                emit_parse_err("uart cfg", "missing_baud");
                 return;
             };
             let Some(data_bits_token) = parts.next() else {
-                emit_err("uart cfg", "ARG", "missing_data_bits");
+                emit_parse_err("uart cfg", "missing_data_bits");
                 return;
             };
             let Some(parity_token) = parts.next() else {
-                emit_err("uart cfg", "ARG", "missing_parity");
+                emit_parse_err("uart cfg", "missing_parity");
                 return;
             };
             let Some(stop_bits_token) = parts.next() else {
-                emit_err("uart cfg", "ARG", "missing_stop_bits");
+                emit_parse_err("uart cfg", "missing_stop_bits");
                 return;
             };
             if parts.next().is_some() {
-                emit_err("uart cfg", "ARG", "too_many_arguments");
+                emit_parse_err("uart cfg", "too_many_arguments");
                 return;
             }
 
             let port = match parse_uart_port(port_token) {
                 Ok(v) => v,
                 Err(msg) => {
-                    emit_err("uart cfg", "ARG", msg);
+                    emit_parse_err("uart cfg", msg);
                     return;
                 }
             };
             let baud = match parse_u32_ascii(baud_token) {
                 Ok(v) if v > 0 => v,
                 Ok(_) => {
-                    emit_err("uart cfg", "RANGE", "baud_must_be_nonzero");
+                    emit_err("uart cfg", "ERR_RANGE", "baud_must_be_nonzero");
                     return;
                 }
                 Err(msg) => {
-                    emit_err("uart cfg", "ARG", msg);
+                    emit_parse_err("uart cfg", msg);
                     return;
                 }
             };
             let data_bits = match parse_u32_ascii(data_bits_token) {
                 Ok(v @ 5..=8) => v as u8,
                 Ok(_) => {
-                    emit_err("uart cfg", "RANGE", "data_bits_must_be_5_to_8");
+                    emit_err("uart cfg", "ERR_RANGE", "data_bits_must_be_5_to_8");
                     return;
                 }
                 Err(msg) => {
-                    emit_err("uart cfg", "ARG", msg);
+                    emit_parse_err("uart cfg", msg);
                     return;
                 }
             };
             let Some(parity) = UartParity::parse(parity_token) else {
-                emit_err("uart cfg", "ARG", "invalid_parity");
+                emit_parse_err("uart cfg", "invalid_parity");
                 return;
             };
             let stop_bits = match parse_u32_ascii(stop_bits_token) {
                 Ok(v @ 1..=2) => v as u8,
                 Ok(_) => {
-                    emit_err("uart cfg", "RANGE", "stop_bits_must_be_1_or_2");
+                    emit_err("uart cfg", "ERR_RANGE", "stop_bits_must_be_1_or_2");
                     return;
                 }
                 Err(msg) => {
-                    emit_err("uart cfg", "ARG", msg);
+                    emit_parse_err("uart cfg", msg);
                     return;
                 }
             };
@@ -1373,17 +1456,17 @@ where
         }
         "tx" => {
             let Some(port_token) = parts.next() else {
-                emit_err("uart tx", "ARG", "missing_port");
+                emit_parse_err("uart tx", "missing_port");
                 return;
             };
             let Some(format_token) = parts.next() else {
-                emit_err("uart tx", "ARG", "missing_payload_format");
+                emit_parse_err("uart tx", "missing_payload_format");
                 return;
             };
             let port = match parse_uart_port(port_token) {
                 Ok(v) => v,
                 Err(msg) => {
-                    emit_err("uart tx", "ARG", msg);
+                    emit_parse_err("uart tx", msg);
                     return;
                 }
             };
@@ -1392,7 +1475,7 @@ where
                 {
                     Ok((len, truncated)) => (UartFormat::Hex, len, truncated),
                     Err(msg) => {
-                        emit_err("uart tx", "ARG", msg);
+                        emit_parse_err("uart tx", msg);
                         return;
                     }
                 },
@@ -1402,13 +1485,17 @@ where
                     (UartFormat::Ascii, len, truncated)
                 }
                 _ => {
-                    emit_err("uart tx", "ARG", "invalid_payload_format");
+                    emit_parse_err("uart tx", "invalid_payload_format");
                     return;
                 }
             };
 
             if len == 0 {
-                emit_err("uart tx", "RANGE", "empty_payload");
+                emit_err("uart tx", "ERR_RANGE", "empty_payload");
+                return;
+            }
+            if truncated {
+                emit_err("uart tx", "ERR_RANGE", "payload_too_long");
                 return;
             }
 
@@ -1429,30 +1516,30 @@ where
         }
         "repeat" => {
             let Some(port_token) = parts.next() else {
-                emit_err("uart repeat", "ARG", "missing_port");
+                emit_parse_err("uart repeat", "missing_port");
                 return;
             };
             let Some(payload_token) = parts.next() else {
-                emit_err("uart repeat", "ARG", "missing_payload");
+                emit_parse_err("uart repeat", "missing_payload");
                 return;
             };
             let Some(count_token) = parts.next() else {
-                emit_err("uart repeat", "ARG", "missing_count_or_infinite");
+                emit_parse_err("uart repeat", "missing_count_or_infinite");
                 return;
             };
             let Some(interval_token) = parts.next() else {
-                emit_err("uart repeat", "ARG", "missing_interval_us");
+                emit_parse_err("uart repeat", "missing_interval_us");
                 return;
             };
             if parts.next().is_some() {
-                emit_err("uart repeat", "ARG", "too_many_arguments");
+                emit_parse_err("uart repeat", "too_many_arguments");
                 return;
             }
 
             let port = match parse_uart_port(port_token) {
                 Ok(v) => v,
                 Err(msg) => {
-                    emit_err("uart repeat", "ARG", msg);
+                    emit_parse_err("uart repeat", msg);
                     return;
                 }
             };
@@ -1461,7 +1548,7 @@ where
                     match parse_hex_bytes(payload_token, &mut state.uart.last_payload) {
                         Ok(v) => v,
                         Err(msg) => {
-                            emit_err("uart repeat", "ARG", msg);
+                            emit_parse_err("uart repeat", msg);
                             return;
                         }
                     }
@@ -1473,7 +1560,11 @@ where
                     (len, truncated)
                 };
             if len == 0 {
-                emit_err("uart repeat", "RANGE", "empty_payload");
+                emit_err("uart repeat", "ERR_RANGE", "empty_payload");
+                return;
+            }
+            if truncated {
+                emit_err("uart repeat", "ERR_RANGE", "payload_too_long");
                 return;
             }
             let (repeat_infinite, repeat_count) = if count_token == "infinite" {
@@ -1482,11 +1573,11 @@ where
                 match parse_u32_ascii(count_token) {
                     Ok(v) if v > 0 => (false, v),
                     Ok(_) => {
-                        emit_err("uart repeat", "RANGE", "count_must_be_nonzero");
+                        emit_err("uart repeat", "ERR_RANGE", "count_must_be_nonzero");
                         return;
                     }
                     Err(msg) => {
-                        emit_err("uart repeat", "ARG", msg);
+                        emit_parse_err("uart repeat", msg);
                         return;
                     }
                 }
@@ -1494,10 +1585,18 @@ where
             let interval_us = match parse_u32_ascii(interval_token) {
                 Ok(v) => v,
                 Err(msg) => {
-                    emit_err("uart repeat", "ARG", msg);
+                    emit_parse_err("uart repeat", msg);
                     return;
                 }
             };
+            if let Err(msg) = validate_interval_us(interval_us) {
+                emit_err("uart repeat", "ERR_RANGE", msg);
+                return;
+            }
+            if !state.uart.repeat_active && !state.can_activate_generators(1) {
+                emit_err("uart repeat", "ERR_RANGE", "max_active_generators_exceeded");
+                return;
+            }
 
             state.uart.port = port;
             state.uart.repeat_active = true;
@@ -1527,17 +1626,17 @@ where
         }
         "stop" => {
             let Some(port_token) = parts.next() else {
-                emit_err("uart stop", "ARG", "missing_port");
+                emit_parse_err("uart stop", "missing_port");
                 return;
             };
             if parts.next().is_some() {
-                emit_err("uart stop", "ARG", "too_many_arguments");
+                emit_parse_err("uart stop", "too_many_arguments");
                 return;
             }
             let port = match parse_uart_port(port_token) {
                 Ok(v) => v,
                 Err(msg) => {
-                    emit_err("uart stop", "ARG", msg);
+                    emit_parse_err("uart stop", msg);
                     return;
                 }
             };
@@ -1552,14 +1651,14 @@ where
                 Some(token) => match parse_uart_port(token) {
                     Ok(v) => v,
                     Err(msg) => {
-                        emit_err("uart status", "ARG", msg);
+                        emit_parse_err("uart status", msg);
                         return;
                     }
                 },
                 None => state.uart.port,
             };
             if parts.next().is_some() {
-                emit_err("uart status", "ARG", "too_many_arguments");
+                emit_parse_err("uart status", "too_many_arguments");
                 return;
             }
             state.uart.port = port;
@@ -1582,54 +1681,54 @@ where
             emit_hex_bytes(&state.uart.last_payload[..state.uart.last_payload_len]);
             writeln!(Console::writer()).unwrap();
         }
-        _ => emit_err("uart", "UNKNOWN", "unknown_subcommand"),
+        _ => emit_err("uart", "ERR_UNKNOWN", "unknown_subcommand"),
     }
 }
 
 fn execute_command(line: &str, state: &mut SignalState) {
     let mut parts = line.split_whitespace();
     let Some(command) = parts.next() else {
-        emit_err("input", "EMPTY", "empty_command");
+        emit_err("input", "ERR_PARSE", "empty_command");
         return;
     };
 
     match command {
         "help" => {
             if parts.next().is_some() {
-                emit_err("help", "ARG", "unexpected_arguments");
+                emit_parse_err("help", "unexpected_arguments");
                 return;
             }
             emit_ok(
                 "help",
-                "commands=help,caps,reset,start,stop,setfreq,status,gpio,spi,uart gpio_subcommands=map,mode,timing,pattern,start,stop,status spi_subcommands=cfg,tx,txrx,repeat,stop,status uart_subcommands=cfg,tx,repeat,stop,status",
+                "commands=help,caps,reset,start,stop,setfreq,status,gpio,spi,uart,i2s gpio_subcommands=map,mode,timing,pattern,start,stop,status spi_subcommands=cfg,tx,txrx,repeat,stop,status uart_subcommands=cfg,tx,repeat,stop,status i2s_subcommands=cfg,tx,stop,status",
             );
         }
         "caps" => {
             if parts.next().is_some() {
-                emit_err("caps", "ARG", "unexpected_arguments");
+                emit_parse_err("caps", "unexpected_arguments");
                 return;
             }
             writeln!(
                 Console::writer(),
-                "OK caps features=help,caps,reset,start,stop,setfreq,status,gpio,spi,uart ascii=1 radix=dec,0x max_line=96 gpio_channels=8 gpio_modes=off,high,low,square,burst,pattern spi_buf_max=64 spi_modes=mode0,mode1,mode2,mode3 uart_secondary={} uart_buf_max=64",
+                "OK caps features=help,caps,reset,start,stop,setfreq,status,gpio,spi,uart,i2s ascii=1 radix=dec,0x max_line=96 gpio_channels=8 gpio_modes=off,high,low,square,burst,pattern spi_buf_max=64 spi_modes=mode0,mode1,mode2,mode3 uart_secondary={} uart_buf_max=64 i2s_supported=false i2s_buf_max={I2S_BUF_MAX} min_interval_us={MIN_INTERVAL_US} max_interval_us={MAX_INTERVAL_US} max_active_generators={MAX_ACTIVE_GENERATORS}",
                 if secondary_uart_available() { "true" } else { "false" }
             )
             .unwrap();
         }
         "reset" => {
             if parts.next().is_some() {
-                emit_err("reset", "ARG", "unexpected_arguments");
+                emit_parse_err("reset", "unexpected_arguments");
                 return;
             }
             state.reset();
             emit_ok(
                 "reset",
-                "running=0 frequency_hz=1000 gpio_active=0 uart_active=0",
+                "running=0 frequency_hz=1000 gpio_active=0 spi_active=0 uart_active=0",
             );
         }
         "start" => {
             if parts.next().is_some() {
-                emit_err("start", "ARG", "unexpected_arguments");
+                emit_parse_err("start", "unexpected_arguments");
                 return;
             }
             state.running = true;
@@ -1637,15 +1736,15 @@ fn execute_command(line: &str, state: &mut SignalState) {
         }
         "stop" => {
             if parts.next().is_some() {
-                emit_err("stop", "ARG", "unexpected_arguments");
+                emit_parse_err("stop", "unexpected_arguments");
                 return;
             }
-            state.running = false;
+            state.stop_all_outputs();
             emit_ok("stop", "running=0");
         }
         "status" => {
             if parts.next().is_some() {
-                emit_err("status", "ARG", "unexpected_arguments");
+                emit_parse_err("status", "unexpected_arguments");
                 return;
             }
             state.gpio.service(now_us());
@@ -1659,25 +1758,25 @@ fn execute_command(line: &str, state: &mut SignalState) {
         }
         "setfreq" => {
             let Some(token) = parts.next() else {
-                emit_err("setfreq", "ARG", "missing_frequency");
+                emit_parse_err("setfreq", "missing_frequency");
                 return;
             };
 
             if parts.next().is_some() {
-                emit_err("setfreq", "ARG", "too_many_arguments");
+                emit_parse_err("setfreq", "too_many_arguments");
                 return;
             }
 
             let frequency_hz = match parse_u32_ascii(token) {
                 Ok(v) => v,
                 Err(msg) => {
-                    emit_err("setfreq", "ARG", msg);
+                    emit_parse_err("setfreq", msg);
                     return;
                 }
             };
 
             if frequency_hz == 0 {
-                emit_err("setfreq", "RANGE", "frequency_must_be_nonzero");
+                emit_err("setfreq", "ERR_RANGE", "frequency_must_be_nonzero");
                 return;
             }
 
@@ -1687,7 +1786,8 @@ fn execute_command(line: &str, state: &mut SignalState) {
         "gpio" => execute_gpio_command(&mut parts, state),
         "spi" => execute_spi_command(&mut parts, state),
         "uart" => execute_uart_command(&mut parts, state),
-        _ => emit_err(command, "UNKNOWN", "unknown_command"),
+        "i2s" => emit_err("i2s", "ERR_UNSUPPORTED", "i2s_not_available"),
+        _ => emit_err(command, "ERR_UNKNOWN", "unknown_command"),
     }
 }
 
@@ -1704,14 +1804,14 @@ fn main() {
 
         let (_, err) = Console::read(&mut single_byte_buf);
         if err.is_err() {
-            emit_err("input", "IO", "read_failed");
+            emit_err("input", "ERR_DRIVER", "read_failed");
             continue;
         }
 
         let byte = single_byte_buf[0];
 
         if byte > 0x7F {
-            emit_err("input", "ASCII", "non_ascii_input");
+            emit_err("input", "ERR_PARSE", "non_ascii_input");
             line_len = 0;
             continue;
         }
@@ -1728,13 +1828,13 @@ fn main() {
         }
 
         if byte.is_ascii_control() {
-            emit_err("input", "ASCII", "unsupported_control_character");
+            emit_err("input", "ERR_PARSE", "unsupported_control_character");
             line_len = 0;
             continue;
         }
 
         if line_len >= MAX_LINE_LEN {
-            emit_err("input", "TOO_LONG", "line_too_long");
+            emit_err("input", "ERR_PARSE", "line_too_long");
             line_len = 0;
             continue;
         }
