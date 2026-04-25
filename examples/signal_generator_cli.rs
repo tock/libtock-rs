@@ -12,6 +12,7 @@ use libtock::alarm::Alarm;
 use libtock::console::Console;
 use libtock::gpio::Gpio;
 use libtock::runtime::{set_main, stack_size};
+use libtock::spi_controller::SpiController;
 
 set_main! {main}
 stack_size! {0x600}
@@ -19,11 +20,13 @@ stack_size! {0x600}
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 const MAX_LINE_LEN: usize = 96;
 const GPIO_CHANNEL_COUNT: usize = 8;
+const SPI_BUF_MAX: usize = 64;
 
 struct SignalState {
     running: bool,
     frequency_hz: u32,
     gpio: GpioEngine,
+    spi: SpiState,
 }
 
 impl SignalState {
@@ -32,6 +35,7 @@ impl SignalState {
             running: false,
             frequency_hz: 1_000,
             gpio: GpioEngine::new(),
+            spi: SpiState::new(),
         }
     }
 
@@ -39,6 +43,71 @@ impl SignalState {
         self.running = false;
         self.frequency_hz = 1_000;
         self.gpio.reset();
+        self.spi = SpiState::new();
+    }
+}
+
+#[derive(Copy, Clone)]
+enum SpiMode {
+    Mode0,
+    Mode1,
+    Mode2,
+    Mode3,
+}
+
+impl SpiMode {
+    fn as_str(&self) -> &'static str {
+        match self {
+            SpiMode::Mode0 => "mode0",
+            SpiMode::Mode1 => "mode1",
+            SpiMode::Mode2 => "mode2",
+            SpiMode::Mode3 => "mode3",
+        }
+    }
+
+    fn parse(token: &str) -> Option<Self> {
+        match token {
+            "mode0" => Some(SpiMode::Mode0),
+            "mode1" => Some(SpiMode::Mode1),
+            "mode2" => Some(SpiMode::Mode2),
+            "mode3" => Some(SpiMode::Mode3),
+            _ => None,
+        }
+    }
+
+    fn phase(self) -> bool {
+        matches!(self, SpiMode::Mode1 | SpiMode::Mode3)
+    }
+
+    fn polarity(self) -> bool {
+        matches!(self, SpiMode::Mode2 | SpiMode::Mode3)
+    }
+}
+
+#[derive(Copy, Clone)]
+struct SpiState {
+    baud_hz: u32,
+    mode: SpiMode,
+    cs: u32,
+    repeat_active: bool,
+    last_tx: [u8; SPI_BUF_MAX],
+    last_tx_len: usize,
+    last_rx: [u8; SPI_BUF_MAX],
+    last_rx_len: usize,
+}
+
+impl SpiState {
+    const fn new() -> Self {
+        Self {
+            baud_hz: 1_000_000,
+            mode: SpiMode::Mode0,
+            cs: 0,
+            repeat_active: false,
+            last_tx: [0; SPI_BUF_MAX],
+            last_tx_len: 0,
+            last_rx: [0; SPI_BUF_MAX],
+            last_rx_len: 0,
+        }
     }
 }
 
@@ -305,7 +374,7 @@ impl GpioEngine {
 fn print_boot_banner() {
     writeln!(
         Console::writer(),
-        "signal-generator-cli v{VERSION} caps=help,caps,reset,start,stop,setfreq,status,gpio radix=dec,0x max_line={MAX_LINE_LEN}"
+        "signal-generator-cli v{VERSION} caps=help,caps,reset,start,stop,setfreq,status,gpio,spi radix=dec,0x max_line={MAX_LINE_LEN}"
     )
     .unwrap();
 }
@@ -336,6 +405,35 @@ fn parse_u32_ascii(token: &str) -> Result<u32, &'static str> {
     }
 
     token.parse::<u32>().map_err(|_| "invalid_decimal")
+}
+
+fn parse_hex_bytes(token: &str, out: &mut [u8]) -> Result<(usize, bool), &'static str> {
+    let raw = token
+        .strip_prefix("0x")
+        .or_else(|| token.strip_prefix("0X"))
+        .unwrap_or(token);
+    if raw.is_empty() {
+        return Err("empty_hex_payload");
+    }
+    if !raw.len().is_multiple_of(2) {
+        return Err("odd_hex_length");
+    }
+
+    let mut len = 0usize;
+    let mut truncated = false;
+    let bytes = raw.as_bytes();
+    let mut idx = 0usize;
+    while idx < bytes.len() {
+        if len >= out.len() {
+            truncated = true;
+            break;
+        }
+        let chunk = &raw[idx..idx + 2];
+        out[len] = u8::from_str_radix(chunk, 16).map_err(|_| "invalid_hex_payload")?;
+        len += 1;
+        idx += 2;
+    }
+    Ok((len, truncated))
 }
 
 fn parse_hex_u64_ascii(token: &str) -> Result<(u64, u8), &'static str> {
@@ -372,6 +470,31 @@ fn now_us() -> u64 {
         return 0;
     }
     ticks.saturating_mul(1_000_000).saturating_div(freq)
+}
+
+fn sleep_us(interval_us: u32) {
+    if interval_us == 0 {
+        return;
+    }
+    let Ok(freq) = Alarm::get_frequency() else {
+        return;
+    };
+    let ticks = ((interval_us as u64)
+        .saturating_mul(freq.0 as u64)
+        .saturating_add(999_999))
+    .saturating_div(1_000_000);
+    if ticks == 0 {
+        return;
+    }
+    let ticks = ticks.min(u32::MAX as u64) as u32;
+    let _ = Alarm::sleep_for(libtock::alarm::Ticks(ticks));
+}
+
+fn emit_hex_bytes(bytes: &[u8]) {
+    write!(Console::writer(), "0x").unwrap();
+    for byte in bytes {
+        write!(Console::writer(), "{byte:02x}").unwrap();
+    }
 }
 
 fn emit_gpio_status(engine: &GpioEngine, ch: usize) {
@@ -678,6 +801,327 @@ where
     }
 }
 
+fn execute_spi_command<'a, I>(parts: &mut I, state: &mut SignalState)
+where
+    I: Iterator<Item = &'a str>,
+{
+    let Some(subcommand) = parts.next() else {
+        emit_err("spi", "ARG", "missing_subcommand");
+        return;
+    };
+
+    match subcommand {
+        "cfg" => {
+            let Some(hz_token) = parts.next() else {
+                emit_err("spi cfg", "ARG", "missing_hz");
+                return;
+            };
+            let Some(mode_token) = parts.next() else {
+                emit_err("spi cfg", "ARG", "missing_mode");
+                return;
+            };
+            let Some(cs_token) = parts.next() else {
+                emit_err("spi cfg", "ARG", "missing_cs");
+                return;
+            };
+            if parts.next().is_some() {
+                emit_err("spi cfg", "ARG", "too_many_arguments");
+                return;
+            }
+
+            let hz = match parse_u32_ascii(hz_token) {
+                Ok(v) if v > 0 => v,
+                Ok(_) => {
+                    emit_err("spi cfg", "RANGE", "hz_must_be_nonzero");
+                    return;
+                }
+                Err(msg) => {
+                    emit_err("spi cfg", "ARG", msg);
+                    return;
+                }
+            };
+            let Some(mode) = SpiMode::parse(mode_token) else {
+                emit_err("spi cfg", "ARG", "invalid_mode");
+                return;
+            };
+            let cs = match parse_u32_ascii(cs_token) {
+                Ok(v) => v,
+                Err(msg) => {
+                    emit_err("spi cfg", "ARG", msg);
+                    return;
+                }
+            };
+
+            if let Err(why) = SpiController::set_baud_rate(hz) {
+                writeln!(Console::writer(), "ERR spi cfg IO set_baud_failed_{why:?}").unwrap();
+                return;
+            }
+            if let Err(why) = SpiController::set_polarity(mode.polarity()) {
+                writeln!(
+                    Console::writer(),
+                    "ERR spi cfg IO set_polarity_failed_{why:?}"
+                )
+                .unwrap();
+                return;
+            }
+            if let Err(why) = SpiController::set_phase(mode.phase()) {
+                writeln!(Console::writer(), "ERR spi cfg IO set_phase_failed_{why:?}").unwrap();
+                return;
+            }
+
+            state.spi.baud_hz = hz;
+            state.spi.mode = mode;
+            state.spi.cs = cs;
+            writeln!(
+                Console::writer(),
+                "OK spi cfg hz={} mode={} cs={}",
+                state.spi.baud_hz,
+                state.spi.mode.as_str(),
+                state.spi.cs
+            )
+            .unwrap();
+        }
+        "tx" => {
+            let Some(payload_token) = parts.next() else {
+                emit_err("spi tx", "ARG", "missing_hex_bytes");
+                return;
+            };
+            if parts.next().is_some() {
+                emit_err("spi tx", "ARG", "too_many_arguments");
+                return;
+            }
+
+            let (tx_len, truncated) = match parse_hex_bytes(payload_token, &mut state.spi.last_tx) {
+                Ok(v) => v,
+                Err(msg) => {
+                    emit_err("spi tx", "ARG", msg);
+                    return;
+                }
+            };
+            if tx_len == 0 {
+                emit_err("spi tx", "RANGE", "empty_tx_payload");
+                return;
+            }
+
+            if let Err(why) = SpiController::spi_controller_write_sync_with_chip_select(
+                &state.spi.last_tx[..tx_len],
+                tx_len as u32,
+                state.spi.cs,
+            ) {
+                writeln!(Console::writer(), "ERR spi tx IO write_failed_{why:?}").unwrap();
+                return;
+            }
+
+            state.spi.last_tx_len = tx_len;
+            state.spi.last_rx_len = 0;
+            write!(
+                Console::writer(),
+                "OK spi tx tx_len={} truncated={} tx=",
+                tx_len,
+                if truncated { 1 } else { 0 }
+            )
+            .unwrap();
+            emit_hex_bytes(&state.spi.last_tx[..tx_len]);
+            writeln!(Console::writer()).unwrap();
+        }
+        "txrx" => {
+            let Some(payload_token) = parts.next() else {
+                emit_err("spi txrx", "ARG", "missing_hex_bytes");
+                return;
+            };
+            let Some(rx_len_token) = parts.next() else {
+                emit_err("spi txrx", "ARG", "missing_rx_len");
+                return;
+            };
+            if parts.next().is_some() {
+                emit_err("spi txrx", "ARG", "too_many_arguments");
+                return;
+            }
+
+            let (tx_len, truncated) = match parse_hex_bytes(payload_token, &mut state.spi.last_tx) {
+                Ok(v) => v,
+                Err(msg) => {
+                    emit_err("spi txrx", "ARG", msg);
+                    return;
+                }
+            };
+            let rx_requested = match parse_u32_ascii(rx_len_token) {
+                Ok(v) => v as usize,
+                Err(msg) => {
+                    emit_err("spi txrx", "ARG", msg);
+                    return;
+                }
+            };
+            let rx_len = rx_requested.min(SPI_BUF_MAX);
+
+            if tx_len == 0 {
+                emit_err("spi txrx", "RANGE", "empty_tx_payload");
+                return;
+            }
+
+            if let Err(why) = SpiController::spi_controller_write_sync_with_chip_select(
+                &state.spi.last_tx[..tx_len],
+                tx_len as u32,
+                state.spi.cs,
+            ) {
+                writeln!(Console::writer(), "ERR spi txrx IO write_failed_{why:?}").unwrap();
+                return;
+            }
+            if let Err(why) = SpiController::spi_controller_read_sync_with_chip_select(
+                &mut state.spi.last_rx[..rx_len],
+                rx_len as u32,
+                state.spi.cs,
+            ) {
+                writeln!(Console::writer(), "ERR spi txrx IO read_failed_{why:?}").unwrap();
+                return;
+            }
+
+            state.spi.last_tx_len = tx_len;
+            state.spi.last_rx_len = rx_len;
+            write!(
+                Console::writer(),
+                "OK spi txrx tx_len={} rx_len={} rx_requested={} truncated={} tx=",
+                tx_len,
+                rx_len,
+                rx_requested,
+                if truncated || rx_requested > SPI_BUF_MAX {
+                    1
+                } else {
+                    0
+                }
+            )
+            .unwrap();
+            emit_hex_bytes(&state.spi.last_tx[..tx_len]);
+            write!(Console::writer(), " rx=").unwrap();
+            emit_hex_bytes(&state.spi.last_rx[..rx_len]);
+            writeln!(Console::writer()).unwrap();
+        }
+        "repeat" => {
+            let Some(payload_token) = parts.next() else {
+                emit_err("spi repeat", "ARG", "missing_hex_bytes");
+                return;
+            };
+            let Some(count_token) = parts.next() else {
+                emit_err("spi repeat", "ARG", "missing_count");
+                return;
+            };
+            let Some(interval_token) = parts.next() else {
+                emit_err("spi repeat", "ARG", "missing_interval_us");
+                return;
+            };
+            if parts.next().is_some() {
+                emit_err("spi repeat", "ARG", "too_many_arguments");
+                return;
+            }
+
+            let (tx_len, truncated) = match parse_hex_bytes(payload_token, &mut state.spi.last_tx) {
+                Ok(v) => v,
+                Err(msg) => {
+                    emit_err("spi repeat", "ARG", msg);
+                    return;
+                }
+            };
+            let count = match parse_u32_ascii(count_token) {
+                Ok(v) => v,
+                Err(msg) => {
+                    emit_err("spi repeat", "ARG", msg);
+                    return;
+                }
+            };
+            let interval_us = match parse_u32_ascii(interval_token) {
+                Ok(v) => v,
+                Err(msg) => {
+                    emit_err("spi repeat", "ARG", msg);
+                    return;
+                }
+            };
+
+            if tx_len == 0 {
+                emit_err("spi repeat", "RANGE", "empty_tx_payload");
+                return;
+            }
+            if count == 0 {
+                emit_err("spi repeat", "RANGE", "count_must_be_nonzero");
+                return;
+            }
+
+            let mut sent = 0u32;
+            state.spi.repeat_active = true;
+            while sent < count && state.spi.repeat_active {
+                if let Err(why) = SpiController::spi_controller_write_sync_with_chip_select(
+                    &state.spi.last_tx[..tx_len],
+                    tx_len as u32,
+                    state.spi.cs,
+                ) {
+                    state.spi.repeat_active = false;
+                    writeln!(Console::writer(), "ERR spi repeat IO write_failed_{why:?}").unwrap();
+                    return;
+                }
+                sent = sent.saturating_add(1);
+                if sent < count {
+                    sleep_us(interval_us);
+                }
+            }
+            state.spi.repeat_active = false;
+            state.spi.last_tx_len = tx_len;
+            state.spi.last_rx_len = 0;
+            write!(
+                Console::writer(),
+                "OK spi repeat count={} sent={} interval_us={} truncated={} tx=",
+                count,
+                sent,
+                interval_us,
+                if truncated { 1 } else { 0 }
+            )
+            .unwrap();
+            emit_hex_bytes(&state.spi.last_tx[..tx_len]);
+            writeln!(Console::writer()).unwrap();
+        }
+        "stop" => {
+            if parts.next().is_some() {
+                emit_err("spi stop", "ARG", "unexpected_arguments");
+                return;
+            }
+            state.spi.repeat_active = false;
+            emit_ok("spi stop", "active=0");
+        }
+        "status" => {
+            if parts.next().is_some() {
+                emit_err("spi status", "ARG", "unexpected_arguments");
+                return;
+            }
+            let baud = SpiController::get_baud_rate().unwrap_or(state.spi.baud_hz);
+            let mode = match (
+                SpiController::get_polarity().unwrap_or(state.spi.mode.polarity()),
+                SpiController::get_phase().unwrap_or(state.spi.mode.phase()),
+            ) {
+                (false, false) => SpiMode::Mode0,
+                (false, true) => SpiMode::Mode1,
+                (true, false) => SpiMode::Mode2,
+                (true, true) => SpiMode::Mode3,
+            };
+            state.spi.baud_hz = baud;
+            state.spi.mode = mode;
+            write!(
+                Console::writer(),
+                "OK spi status active={} hz={} mode={} cs={} tx_len={} rx_len={} tx=",
+                if state.spi.repeat_active { 1 } else { 0 },
+                state.spi.baud_hz,
+                state.spi.mode.as_str(),
+                state.spi.cs,
+                state.spi.last_tx_len,
+                state.spi.last_rx_len
+            )
+            .unwrap();
+            emit_hex_bytes(&state.spi.last_tx[..state.spi.last_tx_len]);
+            write!(Console::writer(), " rx=").unwrap();
+            emit_hex_bytes(&state.spi.last_rx[..state.spi.last_rx_len]);
+            writeln!(Console::writer()).unwrap();
+        }
+        _ => emit_err("spi", "UNKNOWN", "unknown_subcommand"),
+    }
+}
+
 fn execute_command(line: &str, state: &mut SignalState) {
     let mut parts = line.split_whitespace();
     let Some(command) = parts.next() else {
@@ -693,7 +1137,7 @@ fn execute_command(line: &str, state: &mut SignalState) {
             }
             emit_ok(
                 "help",
-                "commands=help,caps,reset,start,stop,setfreq,status,gpio gpio_subcommands=map,mode,timing,pattern,start,stop,status",
+                "commands=help,caps,reset,start,stop,setfreq,status,gpio,spi gpio_subcommands=map,mode,timing,pattern,start,stop,status spi_subcommands=cfg,tx,txrx,repeat,stop,status",
             );
         }
         "caps" => {
@@ -703,7 +1147,7 @@ fn execute_command(line: &str, state: &mut SignalState) {
             }
             emit_ok(
                 "caps",
-                "features=help,caps,reset,start,stop,setfreq,status,gpio ascii=1 radix=dec,0x max_line=96 gpio_channels=8 gpio_modes=off,high,low,square,burst,pattern",
+                "features=help,caps,reset,start,stop,setfreq,status,gpio,spi ascii=1 radix=dec,0x max_line=96 gpio_channels=8 gpio_modes=off,high,low,square,burst,pattern spi_buf_max=64 spi_modes=mode0,mode1,mode2,mode3",
             );
         }
         "reset" => {
@@ -772,6 +1216,7 @@ fn execute_command(line: &str, state: &mut SignalState) {
             writeln!(Console::writer(), "OK setfreq frequency_hz={frequency_hz}").unwrap();
         }
         "gpio" => execute_gpio_command(&mut parts, state),
+        "spi" => execute_spi_command(&mut parts, state),
         _ => emit_err(command, "UNKNOWN", "unknown_command"),
     }
 }

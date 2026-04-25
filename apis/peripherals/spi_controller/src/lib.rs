@@ -36,6 +36,15 @@ impl<S: Syscalls, C: Config> SpiController<S, C> {
         r_buf: &mut [u8],
         len: u32,
     ) -> Result<(), ErrorCode> {
+        Self::spi_controller_write_read_sync_with_chip_select(w_buf, r_buf, len, 0)
+    }
+
+    pub fn spi_controller_write_read_sync_with_chip_select(
+        w_buf: &[u8],
+        r_buf: &mut [u8],
+        len: u32,
+        chip_select: u32,
+    ) -> Result<(), ErrorCode> {
         if len as usize > w_buf.len() || len as usize > r_buf.len() {
             return Err(ErrorCode::NoMem);
         }
@@ -55,8 +64,13 @@ impl<S: Syscalls, C: Config> SpiController<S, C> {
             S::allow_ro::<C, DRIVER_NUM, { ro_allow::WRITE }>(allow_ro, w_buf)?;
             S::subscribe::<_, _, C, DRIVER_NUM, { subscribe::COMPLETE }>(subscribe, &called)?;
 
-            S::command(DRIVER_NUM, spi_controller_cmd::READ_WRITE_BYTES, len, 0)
-                .to_result::<(), ErrorCode>()?;
+            S::command(
+                DRIVER_NUM,
+                spi_controller_cmd::READ_WRITE_BYTES,
+                len,
+                chip_select,
+            )
+            .to_result::<(), ErrorCode>()?;
 
             loop {
                 S::yield_wait();
@@ -72,6 +86,14 @@ impl<S: Syscalls, C: Config> SpiController<S, C> {
     }
 
     pub fn spi_controller_write_sync(w_buf: &[u8], len: u32) -> Result<(), ErrorCode> {
+        Self::spi_controller_write_sync_with_chip_select(w_buf, len, 0)
+    }
+
+    pub fn spi_controller_write_sync_with_chip_select(
+        w_buf: &[u8],
+        len: u32,
+        chip_select: u32,
+    ) -> Result<(), ErrorCode> {
         if len as usize > w_buf.len() {
             return Err(ErrorCode::NoMem);
         }
@@ -89,8 +111,13 @@ impl<S: Syscalls, C: Config> SpiController<S, C> {
             S::allow_ro::<C, DRIVER_NUM, { ro_allow::WRITE }>(allow_ro, w_buf)?;
             S::subscribe::<_, _, C, DRIVER_NUM, { subscribe::COMPLETE }>(subscribe, &called)?;
 
-            S::command(DRIVER_NUM, spi_controller_cmd::READ_WRITE_BYTES, len, 0)
-                .to_result::<(), ErrorCode>()?;
+            S::command(
+                DRIVER_NUM,
+                spi_controller_cmd::READ_WRITE_BYTES,
+                len,
+                chip_select,
+            )
+            .to_result::<(), ErrorCode>()?;
 
             loop {
                 S::yield_wait();
@@ -106,6 +133,14 @@ impl<S: Syscalls, C: Config> SpiController<S, C> {
     }
 
     pub fn spi_controller_read_sync(r_buf: &mut [u8], len: u32) -> Result<(), ErrorCode> {
+        Self::spi_controller_read_sync_with_chip_select(r_buf, len, 0)
+    }
+
+    pub fn spi_controller_read_sync_with_chip_select(
+        r_buf: &mut [u8],
+        len: u32,
+        chip_select: u32,
+    ) -> Result<(), ErrorCode> {
         if len as usize > r_buf.len() {
             return Err(ErrorCode::NoMem);
         }
@@ -123,7 +158,7 @@ impl<S: Syscalls, C: Config> SpiController<S, C> {
             S::allow_rw::<C, DRIVER_NUM, { rw_allow::READ }>(allow_rw, r_buf)?;
             S::subscribe::<_, _, C, DRIVER_NUM, { subscribe::COMPLETE }>(subscribe, &called)?;
 
-            S::command(DRIVER_NUM, spi_controller_cmd::READ_BYTES, len, 0)
+            S::command(DRIVER_NUM, spi_controller_cmd::READ_BYTES, len, chip_select)
                 .to_result::<(), ErrorCode>()?;
 
             loop {
@@ -142,6 +177,14 @@ impl<S: Syscalls, C: Config> SpiController<S, C> {
     pub fn spi_controller_inplace_write_read_sync(
         r_buf: &mut [u8],
         len: u32,
+    ) -> Result<(), ErrorCode> {
+        Self::spi_controller_inplace_write_read_sync_with_chip_select(r_buf, len, 0)
+    }
+
+    pub fn spi_controller_inplace_write_read_sync_with_chip_select(
+        r_buf: &mut [u8],
+        len: u32,
+        chip_select: u32,
     ) -> Result<(), ErrorCode> {
         if len as usize > r_buf.len() {
             return Err(ErrorCode::NoMem);
@@ -164,7 +207,7 @@ impl<S: Syscalls, C: Config> SpiController<S, C> {
                 DRIVER_NUM,
                 spi_controller_cmd::INPLACE_READ_WRITE_BYTES,
                 len,
-                0,
+                chip_select,
             )
             .to_result::<(), ErrorCode>()?;
 
@@ -179,6 +222,46 @@ impl<S: Syscalls, C: Config> SpiController<S, C> {
                 }
             }
         })
+    }
+
+    pub fn set_baud_rate(baud_hz: u32) -> Result<(), ErrorCode> {
+        S::command(DRIVER_NUM, spi_controller_cmd::SET_BAUD, baud_hz, 0).to_result()
+    }
+
+    pub fn get_baud_rate() -> Result<u32, ErrorCode> {
+        S::command(DRIVER_NUM, spi_controller_cmd::GET_BAUD, 0, 0).to_result()
+    }
+
+    pub fn set_phase(is_leading: bool) -> Result<(), ErrorCode> {
+        S::command(
+            DRIVER_NUM,
+            spi_controller_cmd::SET_PHASE,
+            if is_leading { 1 } else { 0 },
+            0,
+        )
+        .to_result()
+    }
+
+    pub fn get_phase() -> Result<bool, ErrorCode> {
+        S::command(DRIVER_NUM, spi_controller_cmd::GET_PHASE, 0, 0)
+            .to_result::<u32, ErrorCode>()
+            .map(|v| v != 0)
+    }
+
+    pub fn set_polarity(is_idle_high: bool) -> Result<(), ErrorCode> {
+        S::command(
+            DRIVER_NUM,
+            spi_controller_cmd::SET_POLARITY,
+            if is_idle_high { 1 } else { 0 },
+            0,
+        )
+        .to_result()
+    }
+
+    pub fn get_polarity() -> Result<bool, ErrorCode> {
+        S::command(DRIVER_NUM, spi_controller_cmd::GET_POLARITY, 0, 0)
+            .to_result::<u32, ErrorCode>()
+            .map(|v| v != 0)
     }
 }
 
