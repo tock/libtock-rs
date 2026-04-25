@@ -16,6 +16,7 @@ version = "0.1.0"
 rust-version = "1.87"
 
 [features]
+secondary_uart = []
 rust_embedded = [
     "embedded-hal",
     "libtock_platform/rust_embedded",
