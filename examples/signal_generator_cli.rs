@@ -21,12 +21,15 @@ const VERSION: &str = env!("CARGO_PKG_VERSION");
 const MAX_LINE_LEN: usize = 96;
 const GPIO_CHANNEL_COUNT: usize = 8;
 const SPI_BUF_MAX: usize = 64;
+const UART_BUF_MAX: usize = 64;
+const UART_SECONDARY_SUPPORTED: bool = cfg!(feature = "secondary_uart");
 
 struct SignalState {
     running: bool,
     frequency_hz: u32,
     gpio: GpioEngine,
     spi: SpiState,
+    uart: UartState,
 }
 
 impl SignalState {
@@ -36,6 +39,7 @@ impl SignalState {
             frequency_hz: 1_000,
             gpio: GpioEngine::new(),
             spi: SpiState::new(),
+            uart: UartState::new(),
         }
     }
 
@@ -44,6 +48,83 @@ impl SignalState {
         self.frequency_hz = 1_000;
         self.gpio.reset();
         self.spi = SpiState::new();
+        self.uart = UartState::new();
+    }
+}
+
+#[derive(Copy, Clone)]
+enum UartParity {
+    None,
+    Even,
+    Odd,
+}
+
+impl UartParity {
+    fn as_str(self) -> &'static str {
+        match self {
+            UartParity::None => "none",
+            UartParity::Even => "even",
+            UartParity::Odd => "odd",
+        }
+    }
+
+    fn parse(token: &str) -> Option<Self> {
+        match token {
+            "none" => Some(UartParity::None),
+            "even" => Some(UartParity::Even),
+            "odd" => Some(UartParity::Odd),
+            _ => None,
+        }
+    }
+}
+
+#[derive(Copy, Clone)]
+enum UartFormat {
+    Hex,
+    Ascii,
+}
+
+impl UartFormat {
+    fn as_str(self) -> &'static str {
+        match self {
+            UartFormat::Hex => "hex",
+            UartFormat::Ascii => "ascii",
+        }
+    }
+}
+
+#[derive(Copy, Clone)]
+struct UartState {
+    port: u32,
+    baud: u32,
+    data_bits: u8,
+    parity: UartParity,
+    stop_bits: u8,
+    repeat_active: bool,
+    repeat_interval_us: u32,
+    repeat_count: u32,
+    repeat_infinite: bool,
+    last_payload: [u8; UART_BUF_MAX],
+    last_payload_len: usize,
+    last_payload_format: UartFormat,
+}
+
+impl UartState {
+    const fn new() -> Self {
+        Self {
+            port: 1,
+            baud: 115_200,
+            data_bits: 8,
+            parity: UartParity::None,
+            stop_bits: 1,
+            repeat_active: false,
+            repeat_interval_us: 0,
+            repeat_count: 0,
+            repeat_infinite: false,
+            last_payload: [0; UART_BUF_MAX],
+            last_payload_len: 0,
+            last_payload_format: UartFormat::Hex,
+        }
     }
 }
 
@@ -374,7 +455,7 @@ impl GpioEngine {
 fn print_boot_banner() {
     writeln!(
         Console::writer(),
-        "signal-generator-cli v{VERSION} caps=help,caps,reset,start,stop,setfreq,status,gpio,spi radix=dec,0x max_line={MAX_LINE_LEN}"
+        "signal-generator-cli v{VERSION} caps=help,caps,reset,start,stop,setfreq,status,gpio,spi,uart radix=dec,0x max_line={MAX_LINE_LEN}"
     )
     .unwrap();
 }
@@ -389,6 +470,14 @@ fn emit_ok(command: &str, fields: &str) {
 
 fn emit_err(command: &str, code: &str, message: &str) {
     writeln!(Console::writer(), "ERR {command} {code} {message}").unwrap();
+}
+
+fn secondary_uart_available() -> bool {
+    UART_SECONDARY_SUPPORTED
+}
+
+fn emit_uart_unsupported() {
+    emit_err("uart", "UNSUPPORTED", "secondary_uart_not_available");
 }
 
 fn parse_u32_ascii(token: &str) -> Result<u32, &'static str> {
@@ -495,6 +584,64 @@ fn emit_hex_bytes(bytes: &[u8]) {
     for byte in bytes {
         write!(Console::writer(), "{byte:02x}").unwrap();
     }
+}
+
+fn parse_uart_port(token: &str) -> Result<u32, &'static str> {
+    let port = parse_u32_ascii(token)?;
+    if port == 0 {
+        return Err("port_must_be_nonzero");
+    }
+    Ok(port)
+}
+
+fn parse_uart_payload_ascii<'a, I>(parts: I, out: &mut [u8]) -> (usize, bool)
+where
+    I: Iterator<Item = &'a str>,
+{
+    let mut written = 0usize;
+    let mut truncated = false;
+    let mut first = true;
+    for token in parts {
+        if !first {
+            if written < out.len() {
+                out[written] = b' ';
+                written += 1;
+            } else {
+                truncated = true;
+            }
+        }
+        first = false;
+        for byte in token.bytes() {
+            if written < out.len() {
+                out[written] = byte;
+                written += 1;
+            } else {
+                truncated = true;
+            }
+        }
+    }
+    (written, truncated)
+}
+
+fn parse_uart_payload_hex<'a, I>(parts: I, out: &mut [u8]) -> Result<(usize, bool), &'static str>
+where
+    I: Iterator<Item = &'a str>,
+{
+    let mut written = 0usize;
+    let mut truncated = false;
+    let mut saw_token = false;
+    for token in parts {
+        saw_token = true;
+        let (len, token_truncated) = parse_hex_bytes(token, &mut out[written..])?;
+        written += len;
+        if token_truncated || written == out.len() {
+            truncated = token_truncated;
+        }
+    }
+    if !saw_token {
+        return Err("missing_payload");
+    }
+    Ok((written, truncated))
 }
 
 fn emit_gpio_status(engine: &GpioEngine, ch: usize) {
@@ -1122,6 +1269,323 @@ where
     }
 }
 
+fn execute_uart_command<'a, I>(parts: &mut I, state: &mut SignalState)
+where
+    I: Iterator<Item = &'a str>,
+{
+    if !secondary_uart_available() {
+        emit_uart_unsupported();
+        return;
+    }
+
+    let Some(subcommand) = parts.next() else {
+        emit_err("uart", "ARG", "missing_subcommand");
+        return;
+    };
+
+    match subcommand {
+        "cfg" => {
+            let Some(port_token) = parts.next() else {
+                emit_err("uart cfg", "ARG", "missing_port");
+                return;
+            };
+            let Some(baud_token) = parts.next() else {
+                emit_err("uart cfg", "ARG", "missing_baud");
+                return;
+            };
+            let Some(data_bits_token) = parts.next() else {
+                emit_err("uart cfg", "ARG", "missing_data_bits");
+                return;
+            };
+            let Some(parity_token) = parts.next() else {
+                emit_err("uart cfg", "ARG", "missing_parity");
+                return;
+            };
+            let Some(stop_bits_token) = parts.next() else {
+                emit_err("uart cfg", "ARG", "missing_stop_bits");
+                return;
+            };
+            if parts.next().is_some() {
+                emit_err("uart cfg", "ARG", "too_many_arguments");
+                return;
+            }
+
+            let port = match parse_uart_port(port_token) {
+                Ok(v) => v,
+                Err(msg) => {
+                    emit_err("uart cfg", "ARG", msg);
+                    return;
+                }
+            };
+            let baud = match parse_u32_ascii(baud_token) {
+                Ok(v) if v > 0 => v,
+                Ok(_) => {
+                    emit_err("uart cfg", "RANGE", "baud_must_be_nonzero");
+                    return;
+                }
+                Err(msg) => {
+                    emit_err("uart cfg", "ARG", msg);
+                    return;
+                }
+            };
+            let data_bits = match parse_u32_ascii(data_bits_token) {
+                Ok(v @ 5..=8) => v as u8,
+                Ok(_) => {
+                    emit_err("uart cfg", "RANGE", "data_bits_must_be_5_to_8");
+                    return;
+                }
+                Err(msg) => {
+                    emit_err("uart cfg", "ARG", msg);
+                    return;
+                }
+            };
+            let Some(parity) = UartParity::parse(parity_token) else {
+                emit_err("uart cfg", "ARG", "invalid_parity");
+                return;
+            };
+            let stop_bits = match parse_u32_ascii(stop_bits_token) {
+                Ok(v @ 1..=2) => v as u8,
+                Ok(_) => {
+                    emit_err("uart cfg", "RANGE", "stop_bits_must_be_1_or_2");
+                    return;
+                }
+                Err(msg) => {
+                    emit_err("uart cfg", "ARG", msg);
+                    return;
+                }
+            };
+
+            state.uart.port = port;
+            state.uart.baud = baud;
+            state.uart.data_bits = data_bits;
+            state.uart.parity = parity;
+            state.uart.stop_bits = stop_bits;
+            writeln!(
+                Console::writer(),
+                "OK uart cfg port={} baud={} data_bits={} parity={} stop_bits={}",
+                state.uart.port,
+                state.uart.baud,
+                state.uart.data_bits,
+                state.uart.parity.as_str(),
+                state.uart.stop_bits
+            )
+            .unwrap();
+        }
+        "tx" => {
+            let Some(port_token) = parts.next() else {
+                emit_err("uart tx", "ARG", "missing_port");
+                return;
+            };
+            let Some(format_token) = parts.next() else {
+                emit_err("uart tx", "ARG", "missing_payload_format");
+                return;
+            };
+            let port = match parse_uart_port(port_token) {
+                Ok(v) => v,
+                Err(msg) => {
+                    emit_err("uart tx", "ARG", msg);
+                    return;
+                }
+            };
+            let (format, len, truncated) = match format_token {
+                "hex" => match parse_uart_payload_hex(parts.by_ref(), &mut state.uart.last_payload)
+                {
+                    Ok((len, truncated)) => (UartFormat::Hex, len, truncated),
+                    Err(msg) => {
+                        emit_err("uart tx", "ARG", msg);
+                        return;
+                    }
+                },
+                "ascii" => {
+                    let (len, truncated) =
+                        parse_uart_payload_ascii(parts.by_ref(), &mut state.uart.last_payload);
+                    (UartFormat::Ascii, len, truncated)
+                }
+                _ => {
+                    emit_err("uart tx", "ARG", "invalid_payload_format");
+                    return;
+                }
+            };
+
+            if len == 0 {
+                emit_err("uart tx", "RANGE", "empty_payload");
+                return;
+            }
+
+            state.uart.port = port;
+            state.uart.last_payload_len = len;
+            state.uart.last_payload_format = format;
+            write!(
+                Console::writer(),
+                "OK uart tx port={} len={} format={} truncated={} payload=",
+                state.uart.port,
+                state.uart.last_payload_len,
+                state.uart.last_payload_format.as_str(),
+                if truncated { 1 } else { 0 }
+            )
+            .unwrap();
+            emit_hex_bytes(&state.uart.last_payload[..state.uart.last_payload_len]);
+            writeln!(Console::writer()).unwrap();
+        }
+        "repeat" => {
+            let Some(port_token) = parts.next() else {
+                emit_err("uart repeat", "ARG", "missing_port");
+                return;
+            };
+            let Some(payload_token) = parts.next() else {
+                emit_err("uart repeat", "ARG", "missing_payload");
+                return;
+            };
+            let Some(count_token) = parts.next() else {
+                emit_err("uart repeat", "ARG", "missing_count_or_infinite");
+                return;
+            };
+            let Some(interval_token) = parts.next() else {
+                emit_err("uart repeat", "ARG", "missing_interval_us");
+                return;
+            };
+            if parts.next().is_some() {
+                emit_err("uart repeat", "ARG", "too_many_arguments");
+                return;
+            }
+
+            let port = match parse_uart_port(port_token) {
+                Ok(v) => v,
+                Err(msg) => {
+                    emit_err("uart repeat", "ARG", msg);
+                    return;
+                }
+            };
+            let (len, truncated) =
+                if payload_token.starts_with("0x") || payload_token.starts_with("0X") {
+                    match parse_hex_bytes(payload_token, &mut state.uart.last_payload) {
+                        Ok(v) => v,
+                        Err(msg) => {
+                            emit_err("uart repeat", "ARG", msg);
+                            return;
+                        }
+                    }
+                } else {
+                    let (len, truncated) = parse_uart_payload_ascii(
+                        core::iter::once(payload_token),
+                        &mut state.uart.last_payload,
+                    );
+                    (len, truncated)
+                };
+            if len == 0 {
+                emit_err("uart repeat", "RANGE", "empty_payload");
+                return;
+            }
+            let (repeat_infinite, repeat_count) = if count_token == "infinite" {
+                (true, 0)
+            } else {
+                match parse_u32_ascii(count_token) {
+                    Ok(v) if v > 0 => (false, v),
+                    Ok(_) => {
+                        emit_err("uart repeat", "RANGE", "count_must_be_nonzero");
+                        return;
+                    }
+                    Err(msg) => {
+                        emit_err("uart repeat", "ARG", msg);
+                        return;
+                    }
+                }
+            };
+            let interval_us = match parse_u32_ascii(interval_token) {
+                Ok(v) => v,
+                Err(msg) => {
+                    emit_err("uart repeat", "ARG", msg);
+                    return;
+                }
+            };
+
+            state.uart.port = port;
+            state.uart.repeat_active = true;
+            state.uart.repeat_infinite = repeat_infinite;
+            state.uart.repeat_count = repeat_count;
+            state.uart.repeat_interval_us = interval_us;
+            state.uart.last_payload_len = len;
+            state.uart.last_payload_format =
+                if payload_token.starts_with("0x") || payload_token.starts_with("0X") {
+                    UartFormat::Hex
+                } else {
+                    UartFormat::Ascii
+                };
+
+            write!(
+                Console::writer(),
+                "OK uart repeat port={} active=1 count={} infinite={} interval_us={} truncated={} payload=",
+                state.uart.port,
+                state.uart.repeat_count,
+                if state.uart.repeat_infinite { 1 } else { 0 },
+                state.uart.repeat_interval_us,
+                if truncated { 1 } else { 0 }
+            )
+            .unwrap();
+            emit_hex_bytes(&state.uart.last_payload[..state.uart.last_payload_len]);
+            writeln!(Console::writer()).unwrap();
+        }
+        "stop" => {
+            let Some(port_token) = parts.next() else {
+                emit_err("uart stop", "ARG", "missing_port");
+                return;
+            };
+            if parts.next().is_some() {
+                emit_err("uart stop", "ARG", "too_many_arguments");
+                return;
+            }
+            let port = match parse_uart_port(port_token) {
+                Ok(v) => v,
+                Err(msg) => {
+                    emit_err("uart stop", "ARG", msg);
+                    return;
+                }
+            };
+            state.uart.port = port;
+            state.uart.repeat_active = false;
+            state.uart.repeat_count = 0;
+            state.uart.repeat_infinite = false;
+            emit_ok("uart stop", "active=0");
+        }
+        "status" => {
+            let port = match parts.next() {
+                Some(token) => match parse_uart_port(token) {
+                    Ok(v) => v,
+                    Err(msg) => {
+                        emit_err("uart status", "ARG", msg);
+                        return;
+                    }
+                },
+                None => state.uart.port,
+            };
+            if parts.next().is_some() {
+                emit_err("uart status", "ARG", "too_many_arguments");
+                return;
+            }
+            state.uart.port = port;
+            write!(
+                Console::writer(),
+                "OK uart status port={} active={} baud={} data_bits={} parity={} stop_bits={} repeat_count={} repeat_infinite={} interval_us={} payload_len={} payload_format={} payload=",
+                state.uart.port,
+                if state.uart.repeat_active { 1 } else { 0 },
+                state.uart.baud,
+                state.uart.data_bits,
+                state.uart.parity.as_str(),
+                state.uart.stop_bits,
+                state.uart.repeat_count,
+                if state.uart.repeat_infinite { 1 } else { 0 },
+                state.uart.repeat_interval_us,
+                state.uart.last_payload_len,
+                state.uart.last_payload_format.as_str(),
+            )
+            .unwrap();
+            emit_hex_bytes(&state.uart.last_payload[..state.uart.last_payload_len]);
+            writeln!(Console::writer()).unwrap();
+        }
+        _ => emit_err("uart", "UNKNOWN", "unknown_subcommand"),
+    }
+}
+
 fn execute_command(line: &str, state: &mut SignalState) {
     let mut parts = line.split_whitespace();
     let Some(command) = parts.next() else {
@@ -1137,7 +1601,7 @@ fn execute_command(line: &str, state: &mut SignalState) {
             }
             emit_ok(
                 "help",
-                "commands=help,caps,reset,start,stop,setfreq,status,gpio,spi gpio_subcommands=map,mode,timing,pattern,start,stop,status spi_subcommands=cfg,tx,txrx,repeat,stop,status",
+                "commands=help,caps,reset,start,stop,setfreq,status,gpio,spi,uart gpio_subcommands=map,mode,timing,pattern,start,stop,status spi_subcommands=cfg,tx,txrx,repeat,stop,status uart_subcommands=cfg,tx,repeat,stop,status",
             );
         }
         "caps" => {
@@ -1145,10 +1609,12 @@ fn execute_command(line: &str, state: &mut SignalState) {
                 emit_err("caps", "ARG", "unexpected_arguments");
                 return;
             }
-            emit_ok(
-                "caps",
-                "features=help,caps,reset,start,stop,setfreq,status,gpio,spi ascii=1 radix=dec,0x max_line=96 gpio_channels=8 gpio_modes=off,high,low,square,burst,pattern spi_buf_max=64 spi_modes=mode0,mode1,mode2,mode3",
-            );
+            writeln!(
+                Console::writer(),
+                "OK caps features=help,caps,reset,start,stop,setfreq,status,gpio,spi,uart ascii=1 radix=dec,0x max_line=96 gpio_channels=8 gpio_modes=off,high,low,square,burst,pattern spi_buf_max=64 spi_modes=mode0,mode1,mode2,mode3 uart_secondary={} uart_buf_max=64",
+                if secondary_uart_available() { "true" } else { "false" }
+            )
+            .unwrap();
         }
         "reset" => {
             if parts.next().is_some() {
@@ -1156,7 +1622,10 @@ fn execute_command(line: &str, state: &mut SignalState) {
                 return;
             }
             state.reset();
-            emit_ok("reset", "running=0 frequency_hz=1000 gpio_active=0");
+            emit_ok(
+                "reset",
+                "running=0 frequency_hz=1000 gpio_active=0 uart_active=0",
+            );
         }
         "start" => {
             if parts.next().is_some() {
@@ -1217,6 +1686,7 @@ fn execute_command(line: &str, state: &mut SignalState) {
         }
         "gpio" => execute_gpio_command(&mut parts, state),
         "spi" => execute_spi_command(&mut parts, state),
+        "uart" => execute_uart_command(&mut parts, state),
         _ => emit_err(command, "UNKNOWN", "unknown_command"),
     }
 }
