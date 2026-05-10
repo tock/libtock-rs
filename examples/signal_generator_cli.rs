@@ -19,9 +19,9 @@ use libtock::signal_generator_cli_logic::{
 use libtock::spi_controller::SpiController;
 
 set_main! {main}
-stack_size! {0x600}
+stack_size! {0x1000}
 
-const VERSION: &str = env!("CARGO_PKG_VERSION");
+const VERSION: &str = "0.1.5";
 const MAX_LINE_LEN: usize = 96;
 const GPIO_CHANNEL_COUNT: usize = 8;
 const SPI_BUF_MAX: usize = 64;
@@ -31,6 +31,10 @@ const MIN_INTERVAL_US: u32 = 100;
 const MAX_INTERVAL_US: u32 = 60_000_000;
 const MAX_ACTIVE_GENERATORS: usize = 4;
 const UART_SECONDARY_SUPPORTED: bool = cfg!(feature = "secondary_uart");
+
+fn write_console(bytes: &[u8]) {
+    let _ = Console::write(bytes);
+}
 
 struct SignalState {
     running: bool,
@@ -480,23 +484,33 @@ impl GpioEngine {
 }
 
 fn print_boot_banner() {
-    writeln!(
-        Console::writer(),
-        "signal-generator-cli v{VERSION} caps=help,caps,reset,start,stop,setfreq,status,gpio,spi,uart,i2s radix=dec,0x max_line={MAX_LINE_LEN}"
-    )
-    .unwrap();
+    write_console(b"signal-generator-cli v");
+    write_console(VERSION.as_bytes());
+    write_console(
+        b" caps=help,caps,reset,start,stop,setfreq,status,gpio,spi,uart,i2s radix=dec,0x max_line=96\r\n",
+    );
 }
 
 fn emit_ok(command: &str, fields: &str) {
+    write_console(b"OK ");
+    write_console(command.as_bytes());
     if fields.is_empty() {
-        writeln!(Console::writer(), "OK {command}").unwrap();
+        write_console(b"\r\n");
     } else {
-        writeln!(Console::writer(), "OK {command} {fields}").unwrap();
+        write_console(b" ");
+        write_console(fields.as_bytes());
+        write_console(b"\r\n");
     }
 }
 
 fn emit_err(command: &str, code: &str, message: &str) {
-    writeln!(Console::writer(), "ERR {command} {code} {message}").unwrap();
+    write_console(b"ERR ");
+    write_console(command.as_bytes());
+    write_console(b" ");
+    write_console(code.as_bytes());
+    write_console(b" ");
+    write_console(message.as_bytes());
+    write_console(b"\r\n");
 }
 
 fn emit_parse_err(command: &str, message: &str) {
@@ -547,9 +561,9 @@ fn sleep_us(interval_us: u32) {
 }
 
 fn emit_hex_bytes(bytes: &[u8]) {
-    write!(Console::writer(), "0x").unwrap();
+    let _ = write!(Console::writer(), "0x");
     for byte in bytes {
-        write!(Console::writer(), "{byte:02x}").unwrap();
+        let _ = write!(Console::writer(), "{byte:02x}");
     }
 }
 
@@ -630,7 +644,7 @@ fn emit_gpio_status(engine: &GpioEngine, ch: usize) {
         Some(false) => 0,
         None => -1,
     };
-    writeln!(
+    let _ = writeln!(
         Console::writer(),
         "OK gpio status ch={} pin={} mode={} active={} period_us={} high_us={} reps={} pattern_bits={} pattern_len={} step_us={} level={} transitions={}",
         ch,
@@ -645,8 +659,7 @@ fn emit_gpio_status(engine: &GpioEngine, ch: usize) {
         cfg.pattern_step_us,
         level,
         rt.transitions,
-    )
-    .unwrap();
+    );
 }
 
 fn execute_gpio_command<'a, I>(parts: &mut I, state: &mut SignalState)
@@ -690,7 +703,7 @@ where
 
             state.gpio.map_pin(ch, pin);
             state.gpio.service(now_us());
-            writeln!(Console::writer(), "OK gpio map ch={ch} pin={pin}").unwrap();
+            let _ = writeln!(Console::writer(), "OK gpio map ch={ch} pin={pin}");
         }
         "mode" => {
             let Some(ch_token) = parts.next() else {
@@ -720,12 +733,11 @@ where
 
             state.gpio.set_mode(ch, mode);
             state.gpio.service(now_us());
-            writeln!(
+            let _ = writeln!(
                 Console::writer(),
                 "OK gpio mode ch={ch} mode={}",
                 mode.as_str()
-            )
-            .unwrap();
+            );
         }
         "timing" => {
             let Some(ch_token) = parts.next() else {
@@ -778,11 +790,10 @@ where
 
             state.gpio.set_timing(ch, period_us, high_us);
             state.gpio.service(now_us());
-            writeln!(
+            let _ = writeln!(
                 Console::writer(),
                 "OK gpio timing ch={ch} period_us={period_us} high_us={high_us}"
-            )
-            .unwrap();
+            );
         }
         "pattern" => {
             let Some(ch_token) = parts.next() else {
@@ -830,11 +841,10 @@ where
 
             state.gpio.set_pattern(ch, bits, bit_len, step_us);
             state.gpio.service(now_us());
-            writeln!(
+            let _ = writeln!(
                 Console::writer(),
                 "OK gpio pattern ch={ch} bits=0x{bits:016X} bit_len={bit_len} step_us={step_us}"
-            )
-            .unwrap();
+            );
         }
         "start" => {
             let Some(target) = parts.next() else {
@@ -855,11 +865,10 @@ where
                     return;
                 }
                 let changed = state.gpio.start_all(now);
-                writeln!(
+                let _ = writeln!(
                     Console::writer(),
                     "OK gpio start target=all changed={changed} active=8"
-                )
-                .unwrap();
+                );
             } else {
                 let ch = match parse_channel(target) {
                     Ok(v) => v,
@@ -877,11 +886,10 @@ where
                 } else {
                     0
                 };
-                writeln!(
+                let _ = writeln!(
                     Console::writer(),
                     "OK gpio start target={ch} changed={changed} active=1"
-                )
-                .unwrap();
+                );
             }
         }
         "stop" => {
@@ -896,11 +904,10 @@ where
 
             if target == "all" {
                 let changed = state.gpio.stop_all();
-                writeln!(
+                let _ = writeln!(
                     Console::writer(),
                     "OK gpio stop target=all changed={changed} active=0"
-                )
-                .unwrap();
+                );
             } else {
                 let ch = match parse_channel(target) {
                     Ok(v) => v,
@@ -910,11 +917,10 @@ where
                     }
                 };
                 let changed = if state.gpio.stop_channel(ch) { 1 } else { 0 };
-                writeln!(
+                let _ = writeln!(
                     Console::writer(),
                     "OK gpio stop target={ch} changed={changed} active=0"
-                )
-                .unwrap();
+                );
             }
         }
         "status" => {
@@ -1014,14 +1020,13 @@ where
             state.spi.baud_hz = hz;
             state.spi.mode = mode;
             state.spi.cs = cs;
-            writeln!(
+            let _ = writeln!(
                 Console::writer(),
                 "OK spi cfg hz={} mode={} cs={}",
                 state.spi.baud_hz,
                 state.spi.mode.as_str(),
                 state.spi.cs
-            )
-            .unwrap();
+            );
         }
         "tx" => {
             let Some(payload_token) = parts.next() else {
@@ -1060,15 +1065,14 @@ where
 
             state.spi.last_tx_len = tx_len;
             state.spi.last_rx_len = 0;
-            write!(
+            let _ = write!(
                 Console::writer(),
                 "OK spi tx tx_len={} truncated={} tx=",
                 tx_len,
                 if truncated { 1 } else { 0 }
-            )
-            .unwrap();
+            );
             emit_hex_bytes(&state.spi.last_tx[..tx_len]);
-            writeln!(Console::writer()).unwrap();
+            let _ = writeln!(Console::writer());
         }
         "txrx" => {
             let Some(payload_token) = parts.next() else {
@@ -1132,7 +1136,7 @@ where
 
             state.spi.last_tx_len = tx_len;
             state.spi.last_rx_len = rx_len;
-            write!(
+            let _ = write!(
                 Console::writer(),
                 "OK spi txrx tx_len={} rx_len={} rx_requested={} truncated={} tx=",
                 tx_len,
@@ -1143,12 +1147,11 @@ where
                 } else {
                     0
                 }
-            )
-            .unwrap();
+            );
             emit_hex_bytes(&state.spi.last_tx[..tx_len]);
-            write!(Console::writer(), " rx=").unwrap();
+            let _ = write!(Console::writer(), " rx=");
             emit_hex_bytes(&state.spi.last_rx[..rx_len]);
-            writeln!(Console::writer()).unwrap();
+            let _ = writeln!(Console::writer());
         }
         "repeat" => {
             let Some(payload_token) = parts.next() else {
@@ -1231,17 +1234,16 @@ where
             state.spi.repeat_active = false;
             state.spi.last_tx_len = tx_len;
             state.spi.last_rx_len = 0;
-            write!(
+            let _ = write!(
                 Console::writer(),
                 "OK spi repeat count={} sent={} interval_us={} truncated={} tx=",
                 count,
                 sent,
                 interval_us,
                 if truncated { 1 } else { 0 }
-            )
-            .unwrap();
+            );
             emit_hex_bytes(&state.spi.last_tx[..tx_len]);
-            writeln!(Console::writer()).unwrap();
+            let _ = writeln!(Console::writer());
         }
         "stop" => {
             if parts.next().is_some() {
@@ -1268,7 +1270,7 @@ where
             };
             state.spi.baud_hz = baud;
             state.spi.mode = mode;
-            write!(
+            let _ = write!(
                 Console::writer(),
                 "OK spi status active={} hz={} mode={} cs={} tx_len={} rx_len={} tx=",
                 if state.spi.repeat_active { 1 } else { 0 },
@@ -1277,12 +1279,11 @@ where
                 state.spi.cs,
                 state.spi.last_tx_len,
                 state.spi.last_rx_len
-            )
-            .unwrap();
+            );
             emit_hex_bytes(&state.spi.last_tx[..state.spi.last_tx_len]);
-            write!(Console::writer(), " rx=").unwrap();
+            let _ = write!(Console::writer(), " rx=");
             emit_hex_bytes(&state.spi.last_rx[..state.spi.last_rx_len]);
-            writeln!(Console::writer()).unwrap();
+            let _ = writeln!(Console::writer());
         }
         _ => emit_err("spi", "ERR_UNKNOWN", "unknown_subcommand"),
     }
@@ -1381,7 +1382,7 @@ where
             state.uart.data_bits = data_bits;
             state.uart.parity = parity;
             state.uart.stop_bits = stop_bits;
-            writeln!(
+            let _ = writeln!(
                 Console::writer(),
                 "OK uart cfg port={} baud={} data_bits={} parity={} stop_bits={}",
                 state.uart.port,
@@ -1389,8 +1390,7 @@ where
                 state.uart.data_bits,
                 state.uart.parity.as_str(),
                 state.uart.stop_bits
-            )
-            .unwrap();
+            );
         }
         "tx" => {
             let Some(port_token) = parts.next() else {
@@ -1440,17 +1440,16 @@ where
             state.uart.port = port;
             state.uart.last_payload_len = len;
             state.uart.last_payload_format = format;
-            write!(
+            let _ = write!(
                 Console::writer(),
                 "OK uart tx port={} len={} format={} truncated={} payload=",
                 state.uart.port,
                 state.uart.last_payload_len,
                 state.uart.last_payload_format.as_str(),
                 if truncated { 1 } else { 0 }
-            )
-            .unwrap();
+            );
             emit_hex_bytes(&state.uart.last_payload[..state.uart.last_payload_len]);
-            writeln!(Console::writer()).unwrap();
+            let _ = writeln!(Console::writer());
         }
         "repeat" => {
             let Some(port_token) = parts.next() else {
@@ -1546,7 +1545,7 @@ where
                     UartFormat::Ascii
                 };
 
-            write!(
+            let _ = write!(
                 Console::writer(),
                 "OK uart repeat port={} active=1 count={} infinite={} interval_us={} truncated={} payload=",
                 state.uart.port,
@@ -1554,10 +1553,9 @@ where
                 if state.uart.repeat_infinite { 1 } else { 0 },
                 state.uart.repeat_interval_us,
                 if truncated { 1 } else { 0 }
-            )
-            .unwrap();
+            );
             emit_hex_bytes(&state.uart.last_payload[..state.uart.last_payload_len]);
-            writeln!(Console::writer()).unwrap();
+            let _ = writeln!(Console::writer());
         }
         "stop" => {
             let Some(port_token) = parts.next() else {
@@ -1597,7 +1595,7 @@ where
                 return;
             }
             state.uart.port = port;
-            write!(
+            let _ = write!(
                 Console::writer(),
                 "OK uart status port={} active={} baud={} data_bits={} parity={} stop_bits={} repeat_count={} repeat_infinite={} interval_us={} payload_len={} payload_format={} payload=",
                 state.uart.port,
@@ -1611,10 +1609,9 @@ where
                 state.uart.repeat_interval_us,
                 state.uart.last_payload_len,
                 state.uart.last_payload_format.as_str(),
-            )
-            .unwrap();
+            );
             emit_hex_bytes(&state.uart.last_payload[..state.uart.last_payload_len]);
-            writeln!(Console::writer()).unwrap();
+            let _ = writeln!(Console::writer());
         }
         _ => emit_err("uart", "ERR_UNKNOWN", "unknown_subcommand"),
     }
@@ -1643,12 +1640,11 @@ fn execute_command(line: &str, state: &mut SignalState) {
                 emit_parse_err("caps", "unexpected_arguments");
                 return;
             }
-            writeln!(
+            let _ = writeln!(
                 Console::writer(),
                 "OK caps features=help,caps,reset,start,stop,setfreq,status,gpio,spi,uart,i2s ascii=1 radix=dec,0x max_line=96 gpio_channels=8 gpio_modes=off,high,low,square,burst,pattern spi_buf_max=64 spi_modes=mode0,mode1,mode2,mode3 uart_secondary={} uart_buf_max=64 i2s_supported=false i2s_buf_max={I2S_BUF_MAX} min_interval_us={MIN_INTERVAL_US} max_interval_us={MAX_INTERVAL_US} max_active_generators={MAX_ACTIVE_GENERATORS}",
                 if secondary_uart_available() { "true" } else { "false" }
-            )
-            .unwrap();
+            );
         }
         "reset" => {
             if parts.next().is_some() {
@@ -1683,13 +1679,12 @@ fn execute_command(line: &str, state: &mut SignalState) {
                 return;
             }
             state.gpio.service(now_us());
-            writeln!(
+            let _ = writeln!(
                 Console::writer(),
                 "OK status running={} frequency_hz={}",
                 if state.running { 1 } else { 0 },
                 state.frequency_hz
-            )
-            .unwrap();
+            );
         }
         "setfreq" => {
             let Some(token) = parts.next() else {
@@ -1716,7 +1711,7 @@ fn execute_command(line: &str, state: &mut SignalState) {
             }
 
             state.frequency_hz = frequency_hz;
-            writeln!(Console::writer(), "OK setfreq frequency_hz={frequency_hz}").unwrap();
+            let _ = writeln!(Console::writer(), "OK setfreq frequency_hz={frequency_hz}");
         }
         "gpio" => execute_gpio_command(&mut parts, state),
         "spi" => execute_spi_command(&mut parts, state),
@@ -1759,9 +1754,18 @@ fn main() {
                 continue;
             }
 
+            write_console(b"\r\n");
             let line = core::str::from_utf8(&line_buf[..line_len]).unwrap_or_default();
             execute_command(line, &mut state);
             line_len = 0;
+            continue;
+        }
+
+        if byte == 0x08 || byte == 0x7F {
+            if line_len > 0 {
+                line_len -= 1;
+                write_console(b"\x08 \x08");
+            }
             continue;
         }
 
@@ -1777,6 +1781,7 @@ fn main() {
             continue;
         }
 
+        write_console(&single_byte_buf);
         line_buf[line_len] = byte;
         line_len += 1;
     }
