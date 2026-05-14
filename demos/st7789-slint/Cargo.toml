@@ -5,7 +5,7 @@ edition = "2021"
 rust-version = "1.87"
 authors = ["Alistair Francis <alistair.francis@wdc.com>"]
 description = """A demo to use the Slint GUI library with a ST7789 display via SPI using libtock-rs."""
-license = "Apache-2.0 OR MIT"
+license = "GPL-3.0-only"
 
 [dependencies]
 libtock = { path = "../../", features = ["rust_embedded"] }
@@ -28,7 +28,7 @@ display-interface = "0.5"
 [build-dependencies]
 libtock_build_scripts = { path = "../../build_scripts" }
 
-slint-build = { git = "https://github.com/slint-ui/slint" }
+slint-build = { git = "https://github.com/slint-ui/slint", tag = "v1.16.1" }
 
 [workspace]
 resolver = "3"
