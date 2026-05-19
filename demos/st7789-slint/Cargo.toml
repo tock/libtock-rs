@@ -20,10 +20,15 @@ embedded-graphics = "0.8"
 embedded-alloc = "0.5.1"
 critical-section = "1.0"
 
-slint = { git = "https://github.com/slint-ui/slint", default-features = false, features = ["libm", "unsafe-single-threaded"] }
-mcu-board-support = { git = "https://github.com/slint-ui/slint" }
+mcu-board-support = { git = "https://github.com/slint-ui/slint", tag = "v1.16.1" }
 
 display-interface = "0.5"
+
+[dependencies.slint]
+default-features = false
+features = ["libm", "unsafe-single-threaded"]
+git = "https://github.com/slint-ui/slint"
+tag = "v1.16.1"
 
 [build-dependencies]
 libtock_build_scripts = { path = "../../build_scripts" }
