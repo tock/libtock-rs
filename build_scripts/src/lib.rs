@@ -25,6 +25,7 @@ const PLATFORMS: &[(&str, &str, &str, &str, &str)] = &[
     ("stm32f3discovery"   , "0x08020000", "0x0020000", "0x20004000", "48K"    ),
     ("stm32f412gdiscovery", "0x08030000", "256K"     , "0x20004000", "112K"   ),
     ("nano33ble"          , "0x00050000", "704K"     , "0x20005000", "240K"   ),
+    ("psc3m5_evk"         , "0x32020000", "0x20000"  , "0x34006000", "0x5800" ),
 ];
 
 /// Helper function to configure cargo to use suitable linker scripts for

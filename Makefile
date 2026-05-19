@@ -208,6 +208,7 @@ $(eval $(call platform_build,imxrt1050,thumbv7em-none-eabi))
 $(eval $(call platform_build,msp432,thumbv7em-none-eabi))
 $(eval $(call platform_build,clue_nrf52840,thumbv7em-none-eabi))
 $(eval $(call platform_flash,clue_nrf52840,thumbv7em-none-eabi))
+$(eval $(call platform_build,psc3m5_evk,thumbv8m.main-none-eabi))
 
 .PHONY: demos
 demos:
