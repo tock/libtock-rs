@@ -30,7 +30,7 @@ const I2S_BUF_MAX: usize = 64;
 const MIN_INTERVAL_US: u32 = 100;
 const MAX_INTERVAL_US: u32 = 60_000_000;
 const MAX_ACTIVE_GENERATORS: usize = 4;
-const UART_SECONDARY_SUPPORTED: bool = cfg!(feature = "secondary_uart");
+const UART_SECONDARY_SUPPORTED: bool = true; //cfg!(feature = "secondary_uart");
 
 fn write_console(bytes: &[u8]) {
     let _ = Console::write(bytes);
