@@ -1,3 +1,6 @@
+use libtock_runtime::TockSyscalls;
+use libtock_uart_controller::UartController;
+
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum RepeatCount {
     Finite(u32),
@@ -125,7 +128,10 @@ pub fn parse_repeat_count(token: &str) -> Result<RepeatCount, &'static str> {
 }
 
 pub fn uart_capability_response(secondary_uart_available: bool) -> CapabilityResponse {
-    if secondary_uart_available {
+    if secondary_uart_available
+        && UartController::<TockSyscalls>::is_supported_port(0)
+        && UartController::<TockSyscalls>::is_supported_port(1)
+    {
         CapabilityResponse::Supported
     } else {
         CapabilityResponse::Unsupported("secondary_uart_not_available")
