@@ -127,11 +127,12 @@ pub fn parse_repeat_count(token: &str) -> Result<RepeatCount, &'static str> {
     }
 }
 
+pub fn uart_port_supported(port: u32) -> bool {
+    UartController::<TockSyscalls>::is_supported_port(port)
+}
+
 pub fn uart_capability_response(secondary_uart_available: bool) -> CapabilityResponse {
-    if secondary_uart_available
-        && UartController::<TockSyscalls>::is_supported_port(0)
-        && UartController::<TockSyscalls>::is_supported_port(1)
-    {
+    if secondary_uart_available && uart_port_supported(0) && uart_port_supported(1) {
         CapabilityResponse::Supported
     } else {
         CapabilityResponse::Unsupported("secondary_uart_not_available")
@@ -308,5 +309,12 @@ mod tests {
             i2s_capability_response(),
             CapabilityResponse::Unsupported("i2s_not_available")
         );
+    }
+
+    #[test]
+    fn uart_ports_zero_and_one_are_supported() {
+        assert!(uart_port_supported(0));
+        assert!(uart_port_supported(1));
+        assert!(!uart_port_supported(2));
     }
 }

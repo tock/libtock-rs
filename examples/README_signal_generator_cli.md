@@ -376,13 +376,15 @@ spi tx 0x02000000AABBCCDD
 
 UART commands are enabled by the example's secondary-UART capability gate.
 
-Important: in the current implementation, these commands manage and report UART state, but they do not actually transmit bytes to hardware yet.
+`uart tx` and `uart repeat` transmit through the Tock kernel virtual UART controller syscall driver, where logical `port 0` maps to physical `uart0` and logical `port 1` maps to physical `uart1`.
 
 ### `uart cfg <port> <baud> <data_bits> <parity> <stop_bits>`
 
-Configures logical UART state.
+Configures stored UART state for status reporting and future command context.
 
-- `port` must be non-zero
+Important: this command does not currently reconfigure the board-side UART hardware. The board transmit path currently runs at the board default `115200 8N1`.
+
+- `port` must be `0` or `1`
 - `data_bits` must be `5` through `8`
 - `parity` must be `none`, `even`, or `odd`
 - `stop_bits` must be `1` or `2`
@@ -390,51 +392,54 @@ Configures logical UART state.
 Examples:
 
 ```text
+uart cfg 0 115200 8 none 1
 uart cfg 1 115200 8 none 1
 uart cfg 1 9600 7 even 1
-uart cfg 1 57600 8 odd 2
+uart cfg 0 57600 8 odd 2
 ```
 
 ### `uart tx <port> <hex|ascii> <payload...>`
 
-Stores a UART payload and reports what would be transmitted.
+Transmits a UART payload immediately and reports what was sent.
 
 Hex payload examples:
 
 ```text
+uart tx 0 hex 0x55
 uart tx 1 hex 0x55
-uart tx 1 hex 0x48656C6C6F0D0A
+uart tx 0 hex 0x48656C6C6F0D0A
 uart tx 1 hex 0xAABBCCDDEEFF
 ```
 
 ASCII payload examples:
 
 ```text
+uart tx 0 ascii hello
 uart tx 1 ascii hello
-uart tx 1 ascii hello world
+uart tx 0 ascii hello world
 uart tx 1 ascii AT+GMR
 ```
 
 ### `uart repeat <port> <payload> <count|infinite> <interval_us>`
 
-Stores a repeating UART payload plan and reports the configured repeat state.
+Transmits a UART payload repeatedly for a finite count and reports the completed send count.
 
 - If the payload starts with `0x` or `0X`, it is treated as hex.
 - Otherwise it is treated as ASCII.
-- `count` may be a positive integer or `infinite`.
+- `count` must currently be a positive integer. `infinite` is parsed but rejected.
 
 Hex payload examples:
 
 ```text
+uart repeat 0 0x55AA 10 1000
 uart repeat 1 0x55AA 10 1000
-uart repeat 1 0x0D0A infinite 500000
 ```
 
 ASCII payload examples:
 
 ```text
+uart repeat 0 ping 5 1000000
 uart repeat 1 ping 5 1000000
-uart repeat 1 hello infinite 2000000
 ```
 
 ### `uart stop <port>`
@@ -444,6 +449,7 @@ Stops the stored UART repeat state.
 Example:
 
 ```text
+uart stop 0
 uart stop 1
 ```
 
@@ -455,35 +461,45 @@ Examples:
 
 ```text
 uart status
+uart status 0
 uart status 1
 ```
 
 ### Common UART workflows
 
-Configure a typical 115200 8N1 UART state:
+Configure both UART ports for typical 115200 8N1 state:
 
 ```text
+uart cfg 0 115200 8 none 1
+uart status 0
 uart cfg 1 115200 8 none 1
 uart status 1
 ```
 
-Prepare a one-shot ASCII payload:
+Prepare one-shot ASCII payloads for both ports:
 
 ```text
+uart tx 0 ascii Hello UART0
+uart status 0
 uart tx 1 ascii Hello UART
 uart status 1
 ```
 
-Prepare a hex payload:
+Prepare hex payloads for both ports:
 
 ```text
+uart tx 0 hex 0x01020304
+uart status 0
 uart tx 1 hex 0x01020304
 uart status 1
 ```
 
-Prepare a repeated message plan:
+Prepare repeated message plans for both ports:
 
 ```text
+uart repeat 0 ping 10 500000
+uart status 0
+uart stop 0
 uart repeat 1 ping 10 500000
 uart status 1
 uart stop 1

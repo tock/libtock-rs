@@ -14,9 +14,11 @@ use libtock::gpio::Gpio;
 use libtock::runtime::{set_main, stack_size};
 use libtock::signal_generator_cli_logic::{
     i2s_capability_response, parse_hex_bytes, parse_hex_u64_ascii, parse_repeat_count,
-    parse_u32_ascii, tokenize_command, uart_capability_response, CapabilityResponse, RepeatCount,
+    parse_u32_ascii, tokenize_command, uart_capability_response, uart_port_supported,
+    CapabilityResponse, RepeatCount,
 };
 use libtock::spi_controller::SpiController;
+use libtock::uart_controller::UartController;
 
 set_main! {main}
 stack_size! {0x1000}
@@ -143,7 +145,7 @@ struct UartState {
 impl UartState {
     const fn new() -> Self {
         Self {
-            port: 1,
+            port: 0,
             baud: 115_200,
             data_bits: 8,
             parity: UartParity::None,
@@ -569,8 +571,8 @@ fn emit_hex_bytes(bytes: &[u8]) {
 
 fn parse_uart_port(token: &str) -> Result<u32, &'static str> {
     let port = parse_u32_ascii(token)?;
-    if port == 0 {
-        return Err("port_must_be_nonzero");
+    if !uart_port_supported(port) {
+        return Err("unsupported_uart_port");
     }
     Ok(port)
 }
@@ -1440,6 +1442,14 @@ where
             state.uart.port = port;
             state.uart.last_payload_len = len;
             state.uart.last_payload_format = format;
+            if let Err(_why) = UartController::uart_controller_write_sync(
+                state.uart.port,
+                &state.uart.last_payload[..state.uart.last_payload_len],
+                state.uart.last_payload_len as u32,
+            ) {
+                emit_driver_err("uart tx", "write_failed");
+                return;
+            }
             let _ = write!(
                 Console::writer(),
                 "OK uart tx port={} len={} format={} truncated={} payload=",
@@ -1527,11 +1537,16 @@ where
                 emit_err("uart repeat", "ERR_RANGE", msg);
                 return;
             }
+            if repeat_infinite {
+                emit_err("uart repeat", "ERR_UNSUPPORTED", "infinite_repeat_not_supported");
+                return;
+            }
             if !state.uart.repeat_active && !state.can_activate_generators(1) {
                 emit_err("uart repeat", "ERR_RANGE", "max_active_generators_exceeded");
                 return;
             }
 
+            let mut sent = 0u32;
             state.uart.port = port;
             state.uart.repeat_active = true;
             state.uart.repeat_infinite = repeat_infinite;
@@ -1545,11 +1560,29 @@ where
                     UartFormat::Ascii
                 };
 
+            while sent < repeat_count && state.uart.repeat_active {
+                if let Err(_why) = UartController::uart_controller_write_sync(
+                    state.uart.port,
+                    &state.uart.last_payload[..state.uart.last_payload_len],
+                    state.uart.last_payload_len as u32,
+                ) {
+                    state.uart.repeat_active = false;
+                    emit_driver_err("uart repeat", "write_failed");
+                    return;
+                }
+                sent = sent.saturating_add(1);
+                if sent < repeat_count {
+                    sleep_us(interval_us);
+                }
+            }
+            state.uart.repeat_active = false;
+
             let _ = write!(
                 Console::writer(),
-                "OK uart repeat port={} active=1 count={} infinite={} interval_us={} truncated={} payload=",
+                "OK uart repeat port={} active=0 count={} sent={} infinite={} interval_us={} truncated={} payload=",
                 state.uart.port,
                 state.uart.repeat_count,
+                sent,
                 if state.uart.repeat_infinite { 1 } else { 0 },
                 state.uart.repeat_interval_us,
                 if truncated { 1 } else { 0 }
