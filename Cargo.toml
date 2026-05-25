@@ -49,6 +49,7 @@ libtock_small_panic = { path = "panic_handlers/small_panic" }
 libtock_sound_pressure = { path = "apis/sensors/sound_pressure" }
 libtock_spi_controller = { path = "apis/peripherals/spi_controller" }
 libtock_temperature = { path = "apis/sensors/temperature" }
+libtock_uart_controller = { path = "apis/peripherals/uart_controller" }
 
 embedded-hal = { version = "1.0", optional = true }
 
@@ -81,6 +82,7 @@ members = [
     "apis/peripherals/i2c_master",
     "apis/peripherals/i2c_master_slave",
     "apis/peripherals/rng",
+    "apis/peripherals/uart_controller",
     "apis/sensors/air_quality",
     "apis/sensors/ambient_light",
     "apis/sensors/ninedof",
