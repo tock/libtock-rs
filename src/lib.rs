@@ -111,7 +111,14 @@ pub mod temperature {
     pub type Temperature = temperature::Temperature<super::runtime::TockSyscalls>;
     pub use temperature::TemperatureListener;
 }
+pub mod uart_controller {
+    use libtock_uart_controller as uart_controller;
+    pub type UartController = uart_controller::UartController<super::runtime::TockSyscalls>;
+}
+
 pub mod key_value {
     use libtock_key_value as key_value;
     pub type KeyValue = key_value::KeyValue<super::runtime::TockSyscalls>;
 }
+
+pub mod signal_generator_cli_logic;
