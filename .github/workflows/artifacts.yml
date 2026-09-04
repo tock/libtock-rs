@@ -16,27 +16,27 @@ jobs:
 
       - name: Build LEDs
         run: |
-          make -j2 EXAMPLE=leds apollo3
-          make -j2 EXAMPLE=leds hail
-          make -j2 EXAMPLE=leds imix
-          make -j2 EXAMPLE=leds nucleo_f429zi
-          make -j2 EXAMPLE=leds nucleo_f446re
-          make -j2 EXAMPLE=leds nrf52840
-          make -j2 EXAMPLE=leds opentitan
-          make -j2 EXAMPLE=leds hifive1
-          make -j2 EXAMPLE=leds nrf52
+          make -j$(nproc) EXAMPLE=leds apollo3
+          make -j$(nproc) EXAMPLE=leds hail
+          make -j$(nproc) EXAMPLE=leds imix
+          make -j$(nproc) EXAMPLE=leds nucleo_f429zi
+          make -j$(nproc) EXAMPLE=leds nucleo_f446re
+          make -j$(nproc) EXAMPLE=leds nrf52840
+          make -j$(nproc) EXAMPLE=leds opentitan
+          make -j$(nproc) EXAMPLE=leds hifive1
+          make -j$(nproc) EXAMPLE=leds nrf52
 
       - name: Build Low Level Debug
         run: |
-          make -j2 EXAMPLE=low_level_debug apollo3
-          make -j2 EXAMPLE=low_level_debug hail
-          make -j2 EXAMPLE=low_level_debug imix
-          make -j2 EXAMPLE=low_level_debug nucleo_f429zi
-          make -j2 EXAMPLE=low_level_debug nucleo_f446re
-          make -j2 EXAMPLE=low_level_debug nrf52840
-          make -j2 EXAMPLE=low_level_debug opentitan
-          make -j2 EXAMPLE=low_level_debug hifive1
-          make -j2 EXAMPLE=low_level_debug nrf52
+          make -j$(nproc) EXAMPLE=low_level_debug apollo3
+          make -j$(nproc) EXAMPLE=low_level_debug hail
+          make -j$(nproc) EXAMPLE=low_level_debug imix
+          make -j$(nproc) EXAMPLE=low_level_debug nucleo_f429zi
+          make -j$(nproc) EXAMPLE=low_level_debug nucleo_f446re
+          make -j$(nproc) EXAMPLE=low_level_debug nrf52840
+          make -j$(nproc) EXAMPLE=low_level_debug opentitan
+          make -j$(nproc) EXAMPLE=low_level_debug hifive1
+          make -j$(nproc) EXAMPLE=low_level_debug nrf52
 
       - name: Archive artifacts
         uses: actions/upload-artifact@v4
