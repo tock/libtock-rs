@@ -30,9 +30,7 @@ jobs:
           submodules: true
 
       # The main test step. We let the makefile do most of the work because the
-      # makefile can be tested locally. We experimentally determined that -j2 is
-      # optimal for the Azure Standard_DS2_v2 VM, which is the VM type used by
-      # GitHub Actions at the time of this writing.
+      # makefile can be tested locally.
       #
       # We have to append the "-D warnings" flag to .cargo/config.toml rather
       # than using the RUSTFLAGS environment variable because if we set
@@ -44,6 +42,6 @@ jobs:
           cd "${GITHUB_WORKSPACE}"
           echo "[target.'cfg(all())']" >> .cargo/config.toml
           echo 'rustflags = ["-D", "warnings"]' >> .cargo/config.toml
-          make -j2 setup
-          make -j2 test
+          make -j$(nproc) setup
+          make -j$(nproc) test
           make demos

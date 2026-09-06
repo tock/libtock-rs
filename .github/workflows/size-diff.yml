@@ -31,21 +31,20 @@ jobs:
       # the merge commit and the target branch. We display the diff in a
       # separate step to make it easy to navigate to in the GitHub Actions UI.
       #
-      # If the build on master doesn't work (`make -j2 examples` fails), we
-      # output a warning message and ignore the error. Ignoring the error
-      # prevents this workflow from blocking PRs that fix a broken build in
-      # master.
+      # If the build on master doesn't work (`make examples` fails), we output
+      # a warning message and ignore the error. Ignoring the error prevents
+      # this workflow from blocking PRs that fix a broken build in master.
       - name: Compute sizes
         run: |
           UPSTREAM_REMOTE_NAME="${UPSTREAM_REMOTE_NAME:-origin}"
           GITHUB_BASE_REF="${GITHUB_BASE_REF:-master}"
           cd "${GITHUB_WORKSPACE}"
-          make -j2 examples  # The VM this runs on has 2 logical cores.
+          make -j$(nproc) examples
           cargo run --release -p print_sizes >'${{runner.temp}}/merge-sizes'
           git remote set-branches "${UPSTREAM_REMOTE_NAME}" "${GITHUB_BASE_REF}"
           git fetch --depth=1 "${UPSTREAM_REMOTE_NAME}" "${GITHUB_BASE_REF}"
           git checkout "${UPSTREAM_REMOTE_NAME}/${GITHUB_BASE_REF}"
-          make -j2 examples && \
+          make -j$(nproc) examples && \
             cargo run --release -p print_sizes >'${{runner.temp}}/base-sizes' || \
             echo 'Broken build on the master branch.'
 
