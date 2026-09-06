@@ -10,6 +10,7 @@ on: pull_request
 jobs:
   ci-mac-os:
     runs-on: macos-latest
+    timeout-minutes: 30
 
     steps:
       # Clones a single commit from the libtock-rs repository. The commit cloned
@@ -24,3 +25,16 @@ jobs:
             --target=thumbv7em-none-eabi
           LIBTOCK_PLATFORM=hifive1 cargo build -p libtock \
             --target=riscv32imac-unknown-none-elf
+
+      - name: Install QEMU
+        run: brew install qemu
+
+      # The primary purpose of this check is verifying the QEMU infrastructure
+      # works on Mac, so we don't need to re-run every board here, just one.
+      - name: Run an example under QEMU
+        run: |
+          cd "${GITHUB_WORKSPACE}"
+          make setup
+          make setup-qemu
+          make qemu-example-qemu_rv32_virt EXAMPLE=console \
+            QEMU_EXPECT='Hello world!' QEMU_TIMEOUT=120 </dev/null

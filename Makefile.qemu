@@ -1,0 +1,215 @@
+# Rules for building Tock kernels and running libtock-rs examples under QEMU.
+#
+# Everything that knows about a Tock kernel source tree or about QEMU lives in
+# this file; the main Makefile just includes it.
+
+# Where we keep a Tock checkout when the user hasn't pointed us at one.
+ifeq ($(shell uname -s),Darwin)
+LIBTOCK_CACHE_DIR ?= $(HOME)/Library/Caches/libtock-rs
+else
+LIBTOCK_CACHE_DIR ?= $(if $(XDG_CACHE_HOME),$(XDG_CACHE_HOME),$(HOME)/.cache)/libtock-rs
+endif
+
+# The Tock revision we build kernels from.
+# Pinned to a recent master (2026-09-01). To move it, change TOCK_COMMIT; the
+# next build refetches, and `make clean-tock-cache` discards the old tree.
+TOCK_URL ?= https://github.com/tock/tock.git
+TOCK_COMMIT ?= 0aca6dae5307c35ff19856449891d5cb10342061
+
+# A Tock source tree to build kernels from.
+#
+# If you set this, libtock-rs treats the tree as yours: it is used exactly as it
+# is, and is never fetched, checked out, or cleaned. That is the way to test
+# against a Tock branch you are working on. If you don't set it, we maintain a
+# checkout pinned to TOCK_COMMIT under LIBTOCK_CACHE_DIR.
+TOCK_DIR ?= $(LIBTOCK_CACHE_DIR)/tock
+TOCK_DIR_IS_OURS := $(if $(filter $(LIBTOCK_CACHE_DIR)/tock,$(TOCK_DIR)),true,)
+
+# Tock's board build scripts require the rustflags from Tock's own cargo
+# configuration, including a sentinel cfg that their build.rs asserts on. A
+# `target.'cfg(...)'.rustflags` entry replaces rather than merges with a
+# `build.rustflags` entry, so libtock-rs' .cargo/config.toml silently displaces
+# Tock's flags for any tree underneath this repository, and the kernel build
+# fails with "Incorrect build configuration". Catch that here, where we can
+# explain it, rather than letting it surface from a build script.
+#
+# TOCK_DIR need not exist yet, so resolve it lexically when it is not there to
+# be resolved for real. That does not follow symlinks, but it is better than
+# having no path to compare at all.
+.PHONY: check-tock-dir
+check-tock-dir:
+	@if [ -d "$(TOCK_DIR)" ]; then dir="$$(cd "$(TOCK_DIR)" && pwd -P)"; \
+	else dir="$(abspath $(TOCK_DIR))"; fi; \
+	case "$$dir/" in \
+		"$(CURDIR)"/*) \
+			echo "TOCK_DIR ($(TOCK_DIR)) is inside the libtock-rs repository."; \
+			echo "Tock kernels cannot be built there: libtock-rs' .cargo/config.toml"; \
+			echo "applies to every tree beneath it and displaces the rustflags Tock's"; \
+			echo "boards require. Point TOCK_DIR somewhere outside $(CURDIR)."; \
+			exit 1;; \
+	esac
+
+# Makes sure a Tock source tree is available at TOCK_DIR.
+#
+# A tree the user supplied is only checked for existence. One of ours is created
+# on demand and pinned to TOCK_COMMIT; we fetch a single commit rather than
+# cloning, as Tock's history is an order of magnitude larger than its worktree.
+#
+# Every git command names the repository explicitly, because git searches parent
+# directories for one: without that, a cache directory that happens to sit
+# inside a repository -- a home directory under version control, say -- would be
+# the repository we fetched into and checked out.
+.PHONY: setup-tock
+setup-tock: check-tock-dir
+	@if [ -n "$(TOCK_DIR_IS_OURS)" ]; then \
+		head=""; \
+		if [ -e "$(TOCK_DIR)/.git" ]; then \
+			head="$$(git --git-dir="$(TOCK_DIR)/.git" rev-parse HEAD 2>/dev/null)"; \
+		fi; \
+		if [ "$$head" != "$(TOCK_COMMIT)" ]; then \
+			echo "Fetching Tock $(TOCK_COMMIT) into $(TOCK_DIR)"; \
+			git init -q "$(TOCK_DIR)" && \
+			git -C "$(TOCK_DIR)" fetch -q --depth 1 "$(TOCK_URL)" "$(TOCK_COMMIT)" && \
+			git -C "$(TOCK_DIR)" checkout -q --detach FETCH_HEAD; \
+		fi; \
+	elif [ ! -d "$(TOCK_DIR)" ]; then \
+		echo "TOCK_DIR ($(TOCK_DIR)) does not exist."; \
+		echo "TOCK_DIR names a Tock checkout to build kernels from. libtock-rs does"; \
+		echo "not create or modify a tree you provide. Either create it, or unset"; \
+		echo "TOCK_DIR to use a managed checkout under $(LIBTOCK_CACHE_DIR)."; \
+		exit 1; \
+	fi
+	@if [ -e "$(TOCK_DIR)/.git" ]; then \
+		echo "Using Tock at $(TOCK_DIR) ($$(git -C "$(TOCK_DIR)" describe --always --dirty))"; \
+	else \
+		echo "Using Tock at $(TOCK_DIR) (not a git checkout)"; \
+	fi
+
+# The QEMU to run. libtock-rs uses whichever QEMU is installed on the system
+# rather than building one; set this if yours is not on your PATH.
+LIBTOCK_QEMU ?= qemu-system-riscv32
+
+# What an emulated board is expected to print. An emulated board runs until it
+# is interrupted, so a run with nobody at the keyboard -- a script, or a CI job
+# -- has to say what it came to see; the board is shut down and the run reported
+# as a success as soon as that text appears. Unset means run until interrupted,
+# which is what you want interactively.
+QEMU_EXPECT ?=
+
+# Give up on an emulated board after this many seconds, and fail. A backstop for
+# a QEMU_EXPECT that never arrives, so that the run fails rather than waiting
+# forever. On its own it only bounds a board that would otherwise run until it
+# is interrupted, which every emulated board does.
+QEMU_TIMEOUT ?=
+
+# Passed through the environment rather than interpolated into the recipe, so
+# that the text can contain whatever the board prints, quotes included.
+export QEMU_EXPECT
+qemu_run_args = $(if $(QEMU_EXPECT),--expect "$$QEMU_EXPECT",) \
+	$(if $(QEMU_TIMEOUT),--timeout $(QEMU_TIMEOUT),)
+
+# QEMU version(s) we have tested and know work. Non-exhaustive.
+WORKING_QEMU_VERSIONS := 10.2.1
+
+# Checks that a usable QEMU is present, and says which one is about to be used.
+# $(1) is the QEMU machine, or the machines, the caller needs. $(2) is the
+# oldest QEMU those machines are known to work on.
+#
+# Supporting a machine is not the same as running the board on it: an emulated
+# board whose model is older than the kernel expects can start, execute, and
+# print nothing at all, which from the outside is indistinguishable from a
+# hang. Checking the version is what turns that into an answer.
+define check_qemu
+	@command -v "$(LIBTOCK_QEMU)" >/dev/null 2>&1 || { \
+		echo "Could not find '$(LIBTOCK_QEMU)'."; \
+		echo "Install a QEMU with 32-bit RISC-V support -- qemu-system-misc on"; \
+		echo "Debian and Ubuntu, qemu-system-riscv on Fedora, qemu on Homebrew --"; \
+		echo "or set LIBTOCK_QEMU to a qemu-system-riscv32 binary."; \
+		exit 1; \
+	}
+	@for machine in $(1); do \
+		"$(LIBTOCK_QEMU)" -M help | grep -q "^$$machine " || { \
+			echo "$$("$(LIBTOCK_QEMU)" --version | head -n1) does not support the" \
+				"'$$machine' machine. (tested: $(WORKING_QEMU_VERSIONS))"; \
+			exit 1; \
+		}; \
+	done
+	@have="$$("$(LIBTOCK_QEMU)" --version | sed -n '1s/.*version \([0-9][0-9.]*\).*/\1/p')"; \
+	[ -n "$$have" ] || have="0"; \
+	[ "$$(printf '%s\n%s\n' "$(2)" "$$have" | sort -V | head -n1)" = "$(2)" ] || { \
+		echo "$$("$(LIBTOCK_QEMU)" --version | head -n1) is older than the oldest"; \
+		echo "QEMU that runs '$(1)': $(2). Older ones can start the board and"; \
+		echo "print nothing, so this stops here rather than looking like a hang."; \
+		echo "(tested: $(WORKING_QEMU_VERSIONS))"; \
+		exit 1; \
+	}
+	@echo "Running $$("$(LIBTOCK_QEMU)" --version | head -n1) with machine(s) '$(1)'" \
+		"(needs $(2) or newer; tested: $(WORKING_QEMU_VERSIONS))"
+endef
+
+# Reports whether a usable QEMU is installed, and what it is. Every machine is
+# checked, as this is the answer to "will the QEMU I have run these boards?".
+.PHONY: setup-qemu
+setup-qemu:
+	$(call check_qemu,$(sort $(QEMU_MACHINES)),$(QEMU_MIN_VERSION))
+
+# Creates the `make kernel-<PLATFORM>` and `make qemu-example-<PLATFORM>`
+# targets for a board that QEMU can emulate. Arguments:
+#  1) The libtock-rs platform name.
+#  2) The rust target the platform uses.
+#  3) The board's directory under the Tock tree's boards/.
+#  4) The name of the kernel binary that board produces.
+#  5) The QEMU machine the board runs on, checked before the board is started.
+#  6) The oldest QEMU known to run this board, checked along with the machine.
+#
+# Each platform is added to QEMU_PLATFORMS, which the `usage` target prints.
+define qemu_platform
+QEMU_PLATFORMS += $(1)
+QEMU_MACHINES += $(5)
+QEMU_MIN_VERSIONS += $(6)
+
+.PHONY: kernel-$(1)
+kernel-$(1): setup-tock
+	CARGO_TARGET_$(shell echo $(2) | tr 'a-z-' 'A-Z_')_RUNNER="[]" \
+		$$(MAKE) -C $$(TOCK_DIR)/boards/$(3) \
+		$$(TOCK_DIR)/target/$(2)/release/$(4).elf
+
+.PHONY: qemu-example-$(1)
+qemu-example-$(1): kernel-$(1) toolchain
+	$$(call check_qemu,$(5),$(6))
+	LIBTOCK_PLATFORM="$(1)" cargo run --example "$$(EXAMPLE)" -p libtock \
+		--release --target=$(2) --target-dir=target/qemu-$(1) -- --deploy qemu \
+		--qemu "$$(LIBTOCK_QEMU)" \
+		--kernel $$(TOCK_DIR)/target/$(2)/release/$(4).elf $$(qemu_run_args)
+endef
+
+# The minimums below are the oldest QEMU each board is known to run on, not the
+# oldest that works. hifive1 is what CI has run on 8.2.2. Tock's own
+# qemu_rv32_virt README records 8.2.7. opentitan is the one that needs a recent
+# QEMU: 8.2.2 boots it to silence, and Tock's CI builds QEMU from a commit in
+# the 9.2 development cycle to run this board, so 9.2 is the floor we can point
+# at. All three have been run here on 10.2.1.
+$(eval $(call qemu_platform,hifive1,riscv32imac-unknown-none-elf,hifive1,hifive1,sifive_e,8.2))
+$(eval $(call qemu_platform,opentitan,riscv32imc-unknown-none-elf,opentitan/earlgrey-cw310,earlgrey-cw310,opentitan,9.2))
+$(eval $(call qemu_platform,qemu_rv32_virt,riscv32imac-unknown-none-elf,qemu_rv32_virt,qemu_rv32_virt,virt,8.2))
+
+# The oldest QEMU that runs every board, for the checks that cover all of them.
+QEMU_MIN_VERSION := $(lastword $(shell printf '%s\n' $(QEMU_MIN_VERSIONS) | sort -V))
+
+# Runs EXAMPLE on every board QEMU can emulate.
+.PHONY: qemu-examples
+qemu-examples: $(foreach platform,$(QEMU_PLATFORMS),qemu-example-$(platform))
+
+# Removes the build artifacts in a Tock source tree we manage. A tree the user
+# supplied is left alone; its build artifacts are theirs, not ours.
+.PHONY: clean-qemu
+clean-qemu:
+	@if [ -n "$(TOCK_DIR_IS_OURS)" ] && [ -f "$(TOCK_DIR)/Makefile" ]; then \
+		$(MAKE) -C "$(TOCK_DIR)" clean; \
+	fi
+
+# Removes the managed Tock checkout entirely. Not part of `clean`, as refetching
+# it is far more expensive than rebuilding it.
+.PHONY: clean-tock-cache
+clean-tock-cache:
+	@[ -z "$(LIBTOCK_CACHE_DIR)" ] || rm -rf "$(LIBTOCK_CACHE_DIR)/tock"

@@ -16,18 +16,18 @@ jobs:
     # we can update when we need to. This *could* break if we don't update it
     # until support for this version is dropped, but it is likely we'll have a
     # reason to update to a newer Ubuntu before then anyway.
-    runs-on: ubuntu-22.04
+    #
+    # Sep 2026: Bumped to ubuntu-26.04 to get a new enough QEMU version
+    runs-on: ubuntu-26.04
+
+    # Sep 2026: About 3x margin over worst-case run currently
+    timeout-minutes: 30
 
     steps:
       # Clones a single commit from the libtock-rs repository. The commit cloned
       # is a merge commit between the PR's target branch and the PR's source.
-      # Note that we checkout submodules so that we can invoke Tock's CI setup
-      # scripts, but we do not recursively checkout submodules as we need Tock's
-      # makefile to set up the qemu submodule itself.
       - name: Clone repository
         uses: actions/checkout@v7
-        with:
-          submodules: true
 
       # The main test step. We let the makefile do most of the work because the
       # makefile can be tested locally.
@@ -38,10 +38,22 @@ jobs:
       # breaking relocation.
       - name: Build and Test
         run: |
-          sudo apt-get install ninja-build
           cd "${GITHUB_WORKSPACE}"
           echo "[target.'cfg(all())']" >> .cargo/config.toml
           echo 'rustflags = ["-D", "warnings"]' >> .cargo/config.toml
           make -j$(nproc) setup
           make -j$(nproc) test
           make demos
+
+      # Install and run QEMU after main library build so code errors fail-fast.
+      - name: Install QEMU
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y qemu-system-riscv
+
+      - name: Run the examples under emulation
+        run: |
+          cd "${GITHUB_WORKSPACE}"
+          make setup-qemu
+          make qemu-examples EXAMPLE=console \
+            QEMU_EXPECT='Hello world!' QEMU_TIMEOUT=120 </dev/null
