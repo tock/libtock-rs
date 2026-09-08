@@ -1,6 +1,10 @@
 use crate::share::List;
 use crate::Syscalls;
-use core::marker::PhantomData;
+use core::{
+    cell::Cell,
+    marker::{PhantomData, PhantomPinned},
+    pin::Pin,
+};
 
 // -----------------------------------------------------------------------------
 // `AllowRw` struct
@@ -70,4 +74,57 @@ pub trait Config {
     /// buffer. In some applications, this may indicate unexpected reentrance.
     /// By default, the non-zero buffer is ignored.
     fn returned_nonzero_buffer(_driver_num: u32, _buffer_num: u32) {}
+}
+
+// -----------------------------------------------------------------------------
+// `AllowRwBuffer` struct
+// -----------------------------------------------------------------------------
+
+pub struct AllowRwBuffer<
+    S: Syscalls,
+    const DRIVER_NUM: u32,
+    const BUFFER_NUM: u32,
+    const BUFFER_SIZE: usize,
+> {
+    _syscalls: PhantomData<S>,
+    // Flag to mark whether the buffer is shared with the kernel or not.
+    pub(crate) allowed: Cell<bool>,
+    pub(crate) buffer: [u8; BUFFER_SIZE],
+    // This field makes the AllowRwBuffer !Unpin so that the buffer
+    // cannot be moved after pinning.
+    _pinned: PhantomPinned,
+}
+
+impl<S: Syscalls, const DRIVER_NUM: u32, const BUFFER_NUM: u32, const BUFFER_SIZE: usize>
+    AllowRwBuffer<S, DRIVER_NUM, BUFFER_NUM, BUFFER_SIZE>
+{
+    pub fn from_array(buffer: [u8; BUFFER_SIZE]) -> Self {
+        Self {
+            allowed: core::cell::Cell::new(false),
+            buffer,
+            _syscalls: Default::default(),
+            _pinned: Default::default(),
+        }
+    }
+
+    pub fn get_mut_buffer(self: Pin<&mut Self>) -> &mut [u8; BUFFER_SIZE] {
+        if self.allowed.get() {
+            self.allowed.set(false);
+            S::unallow_rw(DRIVER_NUM, BUFFER_NUM);
+        }
+
+        // SAFETY: The reference is used only to return a mutable reference
+        // to the `buffer` field.
+        &mut (unsafe { self.get_unchecked_mut() }.buffer)
+    }
+}
+
+impl<S: Syscalls, const DRIVER_NUM: u32, const BUFFER_NUM: u32, const BUFFER_SIZE: usize> Drop
+    for AllowRwBuffer<S, DRIVER_NUM, BUFFER_NUM, BUFFER_SIZE>
+{
+    fn drop(&mut self) {
+        if self.allowed.get() {
+            S::unallow_rw(DRIVER_NUM, BUFFER_NUM);
+        }
+    }
 }
